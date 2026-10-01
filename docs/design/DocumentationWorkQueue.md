@@ -133,7 +133,7 @@ Na końcu, po zebraniu wystarczającej liczby danych i przetestowaniu świata:
 - [x] główny finał;
 - [x] warianty zakończeń;
 - [x] epilogi;
-- [ ] ostateczna chronologia tajemnicy.
+- [x] ostateczna chronologia tajemnicy.
 
 Te decyzje mają największy koszt retconu, więc robimy je dopiero wtedy, gdy wcześniejsze warstwy są stabilne.
 
