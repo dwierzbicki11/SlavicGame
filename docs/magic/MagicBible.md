@@ -1,4 +1,4 @@
-# Magic Bible — v0.1
+# Magic Bible — v0.2
 
 Etap 8 roadmapy. Cały system mechaniczny magii jest **fikcją SlavicGame (F)**. Inspiracje historyczne dotyczą obrzędowości, symboliki i materiałów, ale magiczny alfabet, reguły energii i czary nie są prezentowane jako autentyczny system dawnych Słowian.
 
@@ -161,3 +161,29 @@ Każda moc powinna odpowiadać na pytania:
 ## Status
 
 Model danych dla czarów, rytuałów, alchemii i kosztów istnieje w kodzie. Wykonywanie, VFX, UI, crafting i nauka znaków pozostają do implementacji.
+
+
+## Author truth: pochodzenie znaków i „dawnej mocy”
+
+Po ustaleniu centralnego lore wiadomo, że najstarsza warstwa magicznego alfabetu jest uproszczonym potomkiem **notacji Sieci Progów**.
+
+Pierwotnie znaki opisywały relacje takie jak:
+- identity;
+- boundary;
+- direction;
+- condition;
+- exchange;
+- closure;
+- repetition.
+
+To tłumaczy, dlaczego rytuały są skuteczniejsze, gdy:
+- poprawnie rozpoznają osobę/cel;
+- definiują granicę;
+- podają warunek;
+- nie próbują wymusić sprzecznego stanu.
+
+Współczesne kultury świata interpretują te znaki religijnie, magicznie albo praktycznie, ale **nie muszą znać ich pierwotnej funkcji techniczno-rytualnej**.
+
+Czwarta Sfera/Splot nie jest normalnym zasobem many ani „szkołą czarów”. Praca bezpośrednio na Splotcie jest późnogrowa, ryzykowna i może naruszać ciągłość tożsamości lub stabilność węzła.
+
+Szczegóły: [FourthSphereTruth.md](../world/FourthSphereTruth.md).
