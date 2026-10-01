@@ -44,7 +44,7 @@ public sealed class GameWindow : IDisposable
         _window.KeyUp += OnKeyUp;
         _window.Resized += () => Resized?.Invoke();
         _window.Closing += () => Closing?.Invoke();
-        _window.CursorVisible = false;
+        _window.CursorVisible = true;
 
         EngineLog.Info($"Created SDL2 window {Width}x{Height} ({_window.WindowState}).");
     }
@@ -61,7 +61,7 @@ public sealed class GameWindow : IDisposable
             ? WindowState.Normal
             : WindowState.BorderlessFullScreen;
 
-        _window.CursorVisible = false;
+        _window.CursorVisible = true;
         EngineLog.Info($"Fullscreen: {IsFullscreen}.");
     }
 
