@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using System.Numerics;
 using Veldrid;
 using SlavicGame.Engine.Diagnostics;
+using SlavicGame.Engine.Input;
 using SlavicGame.Engine.Renderer;
 using SlavicGame.Engine.Windowing;
 using SlavicGame.Engine.World;
@@ -113,23 +113,14 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
-        var mouse = _window.MouseDelta;
-        _camera.Rotate(mouse.X, mouse.Y);
-
-        var move = Vector3.Zero;
-        if (_window.IsKeyDown(Key.W)) move += _camera.GetMoveForward();
-        if (_window.IsKeyDown(Key.S)) move -= _camera.GetMoveForward();
-        if (_window.IsKeyDown(Key.D)) move += _camera.GetMoveRight();
-        if (_window.IsKeyDown(Key.A)) move -= _camera.GetMoveRight();
-
-        if (move.LengthSquared() > 0.001f)
-        {
-            move = Vector3.Normalize(move);
-            var speed = _window.IsKeyDown(Key.ShiftLeft) ? 9f : 5f;
-            _world.SetPlayerPosition(_world.PlayerPosition + move * speed * (float)deltaSeconds);
-        }
-
-        _camera.Follow(_world.PlayerPosition, (float)deltaSeconds);
+        var input = new PlayerInput(
+            _window.IsKeyDown(Key.W),
+            _window.IsKeyDown(Key.S),
+            _window.IsKeyDown(Key.D),
+            _window.IsKeyDown(Key.A),
+            _window.IsKeyDown(Key.ShiftLeft),
+            _window.MouseDelta);
+        PlayerController.Update(_world, _camera, input, deltaSeconds);
     }
 
     private void OnWindowResized()

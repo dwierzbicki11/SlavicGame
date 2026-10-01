@@ -12,6 +12,8 @@ public sealed class GameWindow : IDisposable
 {
     private readonly Sdl2Window _window;
     private bool _disposed;
+    private bool _relativeMouseEnabled;
+    private bool _discardMouseDelta;
     private readonly HashSet<Key> _keysDown = [];
     private readonly HashSet<Key> _keysPressed = [];
 
@@ -19,7 +21,7 @@ public sealed class GameWindow : IDisposable
     public bool Exists => _window.Exists;
     public int Width => _window.Bounds.Width;
     public int Height => _window.Bounds.Height;
-    public Vector2 MouseDelta => _window.MouseDelta;
+    public Vector2 MouseDelta { get; private set; }
     public bool IsFullscreen =>
         _window.WindowState == WindowState.FullScreen ||
         _window.WindowState == WindowState.BorderlessFullScreen;
@@ -60,6 +62,14 @@ public sealed class GameWindow : IDisposable
     {
         _keysPressed.Clear();
         _window.PumpEvents();
+        if (!_window.Exists) return;
+
+        // Read relative motion once per frame; keyboard repeat events do not consume it.
+        var delta = _relativeMouseEnabled
+            ? Sdl2NativeCompat.GetRelativeMouseDelta()
+            : _window.MouseDelta;
+        MouseDelta = _window.Focused && !_discardMouseDelta ? delta : Vector2.Zero;
+        _discardMouseDelta = false;
     }
 
     public bool IsKeyDown(Key key) => _keysDown.Contains(key);
@@ -90,10 +100,8 @@ public sealed class GameWindow : IDisposable
 
     private void SetRelativeMouseMode(bool enabled)
     {
-        // Veldrid exposes SDL's relative mouse delta through MouseDelta.
-        // We only enable/disable SDL relative mode here; the delta itself
-        // always comes from Veldrid so keyboard and mouse processing stay
-        // independent.
+        MouseDelta = Vector2.Zero;
+        _discardMouseDelta = true;
         try
         {
             var result = Sdl2NativeCompat.SetRelativeMouseMode(enabled);
@@ -103,17 +111,14 @@ public sealed class GameWindow : IDisposable
                 EngineLog.Warn($"SDL relative mouse mode returned {result}.");
             }
 
-            _window.CursorVisible = !enabled;
+            _relativeMouseEnabled = enabled && result == 0;
+            _window.CursorVisible = !_relativeMouseEnabled;
         }
-        catch (DllNotFoundException exception)
+        catch (InvalidOperationException exception)
         {
+            _relativeMouseEnabled = false;
             _window.CursorVisible = true;
-            EngineLog.Warn($"SDL2 library not found: {exception.Message}");
-        }
-        catch (EntryPointNotFoundException exception)
-        {
-            _window.CursorVisible = true;
-            EngineLog.Warn($"SDL_SetRelativeMouseMode not found: {exception.Message}");
+            EngineLog.Warn($"SDL relative mouse input unavailable: {exception.Message}");
         }
     }
 
@@ -144,15 +149,31 @@ public sealed class GameWindow : IDisposable
 
     private static class Sdl2NativeCompat
     {
-        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl, EntryPoint = "SDL_SetRelativeMouseMode")]
-        private static extern int SetRelativeMouseModeWindows(int enabled);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int SetRelativeMouseModeDelegate(int enabled);
 
-        [DllImport("libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl, EntryPoint = "SDL_SetRelativeMouseMode")]
-        private static extern int SetRelativeMouseModeLinux(int enabled);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate uint GetRelativeMouseStateDelegate(out int x, out int y);
+
+        // Resolve both functions through Veldrid's loader so the window, capture mode
+        // and relative-motion accumulator always use the same SDL library instance.
+        private static readonly SetRelativeMouseModeDelegate? SetMode =
+            Sdl2Native.LoadFunction<SetRelativeMouseModeDelegate>("SDL_SetRelativeMouseMode");
+        private static readonly GetRelativeMouseStateDelegate? GetState =
+            Sdl2Native.LoadFunction<GetRelativeMouseStateDelegate>("SDL_GetRelativeMouseState");
 
         public static int SetRelativeMouseMode(bool enabled)
-            => OperatingSystem.IsLinux()
-                ? SetRelativeMouseModeLinux(enabled ? 1 : 0)
-                : SetRelativeMouseModeWindows(enabled ? 1 : 0);
+        {
+            if (SetMode is null || GetState is null)
+                throw new InvalidOperationException("SDL relative mouse functions could not be loaded.");
+            return SetMode(enabled ? 1 : 0);
+        }
+
+        public static Vector2 GetRelativeMouseDelta()
+        {
+            if (GetState is null) return Vector2.Zero;
+            GetState(out var x, out var y);
+            return new Vector2(x, y);
+        }
     }
 }
