@@ -95,4 +95,21 @@ Check(stationaryWorld.PlayerPosition.X == 0 && stationaryWorld.PlayerPosition.Z 
     "Opposite movement keys cancel");
 Check(stationaryCamera.Yaw != MathF.PI && stationaryCamera.Pitch != -0.25f,
     "Looking still works when movement cancels");
+var mouseEvent = new Vector2(12, -4);
+Check(MouseMotion.Select(mouseEvent, Vector2.Zero) == mouseEvent,
+    "Delivered mouse event survives a drained SDL accumulator");
+Check(MouseMotion.Select(mouseEvent, mouseEvent) == mouseEvent,
+    "Mouse event and polled motion are not counted twice");
+Check(MouseMotion.Select(Vector2.Zero, mouseEvent) == mouseEvent,
+    "Polled motion covers a missing mouse event");
+Check(MouseMotion.Select(Vector2.Zero, Vector2.Zero) == Vector2.Zero,
+    "Idle mouse produces no look movement");
+var eventOnlyWorld = WorldGenerator.Generate();
+var eventOnlyCamera = new Camera3D();
+var eventOnlyYaw = eventOnlyCamera.Yaw;
+var eventOnlyPosition = eventOnlyWorld.PlayerPosition;
+PlayerController.Update(eventOnlyWorld, eventOnlyCamera,
+    new PlayerInput(true, false, false, false, true, MouseMotion.Select(mouseEvent, Vector2.Zero)), 0.1);
+Check(eventOnlyWorld.PlayerPosition != eventOnlyPosition && eventOnlyCamera.Yaw != eventOnlyYaw,
+    "Running and turning work when only SDL events contain motion");
 Console.WriteLine($"PASS: {checks} regression checks.");
