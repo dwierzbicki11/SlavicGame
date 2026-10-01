@@ -85,3 +85,18 @@ Pozostaje otwarta do czasu:
 - osi fabularnej;
 - kosztu produkcji regionu;
 - pomiarów wydajności streamingu.
+
+
+## Geografia makro v0.1
+
+Szczegółowy układ znajduje się w [MacroGeography.md](MacroGeography.md).
+
+Kolejność regionów kampanii:
+1. Pogranicze Żarnowca;
+2. Nadborze / Wielki Bór;
+3. Przymorze / Kamienne Wyżyny;
+4. Równiny Arel;
+5. Pustkowie Pierwszego Progu;
+6. przestrzenie Nawii i finałowy próg.
+
+To **regiony produkcyjne**, nie obietnica jednej seamless mapy.
