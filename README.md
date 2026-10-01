@@ -29,28 +29,14 @@ Historical inspiration includes architecture, weapons, clothing, crafts, agricul
 
 ## Jawia, Nawia and the Divine Realm
 
-```text
-                 ????
-                  |
-           something older
-             than gods
-                  |
-          +-------+-------+
-          |               |
-      DIVINE REALM      NAWIA
-          |               |
-          +-------+-------+
-                  |
-                 JAWIA
-            world of living
-```
-
 - **Jawia** — the world of the living.
 - **Nawia** — the world of the dead.
 - **Divine Realm** — a layer in which gods may exist or manifest.
 - **Fourth Sphere** — something older than the gods and one of the central mysteries of the setting.
 
 The boundary between Jawia and Nawia is beginning to break. Spirits, monsters, anomalies, returning dead, changing locations, and other supernatural phenomena appear. This is initially understood as the main crisis, but later becomes a symptom of something deeper.
+
+This four-sphere model is original game fiction, not a claim that all historical Slavs shared one documented cosmology. Rules for boundaries, divine manifestations, death and magic are developed in [Cosmology](docs/world/Cosmology.md). The Fourth Sphere, the protagonist's family and the possibility of true divine death remain unresolved.
 
 ## Historical & Cultural Foundation
 
@@ -77,38 +63,18 @@ Important research rules:
 |---|---|
 | A | Strongly attested |
 | B | Attested / ambiguous |
-| C | Regional |
+| C | Regional scope; can accompany A or B |
 | D | Late / disputed |
 | E | Reconstruction |
 | F | Original SlavicGame material |
 
-### Initial Pantheon Register
+### Pantheon Register
 
-| Figure | Working status | Planned role |
-|---|---|---|
-| Perun | A | Thunder, warfare, oaths, authority, divine conflict |
-| Veles / Volos | A/B | Cattle, wealth, earth/underworld associations, magic, boundaries |
-| Mokosh | A | Female deity; weaving, fertility, fate-related and household associations |
-| Dazhbog | A/B | Solar/wealth-related divine figure |
-| Stribog | A/B | Wind/air-related divine figure |
-| Khors | A/B | Attested in the Kievan context; interpretation disputed |
-| Simargl | A/B | Attested in the Kievan context; identity and nature disputed |
-| Svarog | B/E | Important mythological figure with complex textual interpretation |
-| Svarožič | B/C | Fire-related deity/tradition; regional and textual interpretation |
-| Radegast / Rethra tradition | C/D | Polabian regional cult tradition |
-| Triglav | C | Regional deity associated with several Polabian traditions |
-| Svantevit / Svetovit | C | Major regional deity associated with Arkona/Rügen |
-| Rugievit | C | Regional deity associated with Rügen |
-| Porevit | C | Regional deity associated with Rügen |
-| Porenut / Potenut | C/D | Regional figure from the Rügen tradition; interpretation uncertain |
-| Jarovit / Gerovit | C | Regional deity/tradition; sources and interpretation vary |
-| Rod | B/E | Important but debated figure in later and scholarly discussions |
-| Rozhanitsy / Rodzanice | B/E | Female supernatural/divine figures associated with birth/fate traditions |
-| Živa / Zhiva | D | Later/medieval source tradition; status debated |
-| Marzanna / Morena | C/D | Seasonal/death-associated tradition with strong later folklore development |
-| Troján / Trojan | B/D | Figure appearing in medieval Slavic textual tradition; interpretation disputed |
-| Other documented regional figures | B-D | To be researched and added |
-| Original SlavicGame deities | F | Used to connect the fictional cosmology and the Fourth Sphere |
+The [Pantheon Bible v0.1](docs/pantheon/PantheonBible.md) contains **52 research entries**, covering deity names, groups, literary candidates, ritual personifications and a research queue. This is not a claim of 52 verified historical gods or a completed survey of every tradition.
+
+Each entry identifies its region, variants, evidence class, uncertainty and consultation status. Historical material and proposed fantasy roles are recorded separately. Jarovit/Gerovit is one name record; the relationships between Svarožič and Radegast, and between Siwa/Živa and Żywie, remain open. Regional evidence is not automatically weak evidence.
+
+The [source register](docs/pantheon/Sources.md) records what was actually consulted, including abstracts, excerpts, older scholarship and primary texts still awaiting critical-edition checks.
 
 ### Gods and Player Choice
 
@@ -143,7 +109,7 @@ Forms of magic include:
 - Nawia magic;
 - ancient magic.
 
-The game will contain an original magical alphabet and language. Signs can combine into words, symbols, spells, and rituals.
+The game will contain an original magical alphabet and language. Signs can combine into words, symbols, spells, and rituals. This is a fictional system, not a claim of authentic historical "Slavic runes".
 
 Powerful magic has costs such as energy, health, ingredients, relationships with gods or Nawia, effects on nature, reputation, or physical transformation.
 
@@ -258,17 +224,7 @@ Game
 
 The first playable vertical slice is intentionally small:
 
-```text
-             FOREST
-               |
-       +-------+-------+
-       |               |
-    VILLAGE          SHRINE
-       |               |
-       +-------+-------+
-               |
-             SWAMP
-```
+Its working locations are Żarnowiec, Puszcza Żywia, Czarne Mokradła and Kamienny Krąg, matching the region names already used by the prototype. [The vertical-slice specification](docs/design/VerticalSlice.md) defines one complete hunter contract, three resolutions, day/night behavior and acceptance criteria. The settlements and quest systems described there are planned, not implemented.
 
 It should contain:
 - village;
@@ -318,6 +274,8 @@ It should contain:
 22. World expansion
 23. Full game
 
+The [production roadmap](docs/design/ProductionRoadmap.md) preserves this order, records the current state of every stage and defines the next research and design deliverables.
+
 ## Research Principles
 
 SlavicGame treats mythology as a research subject as well as a source of inspiration.
@@ -334,9 +292,7 @@ The pantheon is therefore a living research document. New figures, sources, inte
 
 ## Research References
 
-Initial research should prioritize academic and specialist sources on Slavic religion and medieval Slavic cultures, including Cambridge scholarship and source-critical work on Kievan Rus and Polabian traditions.
-
-Important reference areas include scholarship on the limited and indirect nature of evidence for pre-Christian Slavic religion, Vladimir's Kievan pantheon, and regional traditions from Polabia and Rügen.
+See [Sources](docs/pantheon/Sources.md) for the bibliography, links, consultation scope and critical-edition work still outstanding. Research includes Kievan and Polabian evidence, late Polish catalogues, southern folklore and the distinction between recorded rituals and reconstructed deities.
 
 ## Project Philosophy
 
@@ -352,7 +308,7 @@ The intended player feeling is:
 
 **Early development / architecture and world-design phase.**
 
-The README is the high-level project specification. More detailed documents such as the Pantheon Bible, World Bible, Bestiary Bible, Magic Bible, Quest Design Document, and technical architecture documentation will be added as development progresses.
+The README is the high-level project specification. [The documentation index](docs/README.md) links the World Bible, Cosmology, Pantheon Bible, source register, vertical-slice specification and production roadmap, all at v0.1. Bestiary, detailed magic, god histories, cultures and the main story remain future stages. The implemented runtime is listed below separately from planned features.
 
 ## Build and run
 
