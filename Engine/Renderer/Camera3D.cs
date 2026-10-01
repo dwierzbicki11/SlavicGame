@@ -11,17 +11,30 @@ public sealed class Camera3D
     public float FarPlane { get; set; } = 600f;
     public float Yaw { get; private set; } = MathF.PI;
     public float Pitch { get; private set; } = -0.25f;
+    public float MouseSensitivity { get; set; } = 0.0035f;
+    public float VerticalSensitivity { get; set; } = 0.0025f;
+    public float Distance { get; set; } = 9f;
+    public float TargetHeight { get; set; } = 1.5f;
+    public float HeightOffset { get; set; } = 0.5f;
+    public float PositionSmoothing { get; set; } = 14f;
 
-    public void Update(Vector3 playerPosition, float mouseDeltaX, float mouseDeltaY)
+    public void Update(Vector3 playerPosition, float mouseDeltaX, float mouseDeltaY, float deltaSeconds)
     {
-        Yaw -= mouseDeltaX * 0.0035f;
-        Pitch -= mouseDeltaY * 0.0025f;
-        Pitch = Math.Clamp(Pitch, -1.25f, 1.0f);
+        var maxMouseDelta = 150f;
+        mouseDeltaX = Math.Clamp(mouseDeltaX, -maxMouseDelta, maxMouseDelta);
+        mouseDeltaY = Math.Clamp(mouseDeltaY, -maxMouseDelta, maxMouseDelta);
 
-        var target = playerPosition + new Vector3(0f, 1.5f, 0f);
+        Yaw -= mouseDeltaX * MouseSensitivity;
+        Pitch -= mouseDeltaY * VerticalSensitivity;
+        Pitch = Math.Clamp(Pitch, -1.15f, 0.85f);
+
+        var target = playerPosition + new Vector3(0f, TargetHeight, 0f);
         var cameraForward = GetLookDirection();
-        Position = target - cameraForward * 9f + Vector3.UnitY * 5f;
-        Target = target;
+        var desiredPosition = target - cameraForward * Distance + Vector3.UnitY * HeightOffset;
+        var smoothing = 1f - MathF.Exp(-PositionSmoothing * MathF.Max(0f, deltaSeconds));
+
+        Position = Vector3.Lerp(Position, desiredPosition, smoothing);
+        Target = Vector3.Lerp(Target, target, smoothing);
     }
 
     public Vector3 GetLookDirection()
