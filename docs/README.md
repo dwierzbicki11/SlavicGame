@@ -41,6 +41,7 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Praktyki religijne](research/pantheon/ReligiousPracticePrinciples.md) | Reguły używania regionalnych źródeł |
 | [Instytucje kultowe F](pantheon/CultInstitutions.md) | Lokalne wspólnoty, opiekunowie i reputacja |
 | [Boskie umowy F](pantheon/DivineContracts.md) | Jawne warunki, wielu patronów i renegocjacja |
+| [Matryca relacji bogów F](pantheon/RelationshipMatrix.md) | Konflikty interesów bez osi dobro/zło |
 | [Źródła](pantheon/Sources.md) | Bibliografia i zakres konsultacji |
 | [Polityka researchu](research/ResearchPolicy.md) | Zasady źródeł, rekonstrukcji i fikcji F |
 | [Źródła kultury materialnej](research/material-culture/MaterialCultureSources.md) | Rejestr MC01–MC14 i zakres konsultacji |
