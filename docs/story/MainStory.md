@@ -117,3 +117,18 @@ Pokonanie przejawu boga nie przesądza śmierci samego boga.
 ## Status
 
 Struktura aktów jest F v0.1. Prawda Czwartej Sfery, ostateczny antagonista, szczegółowe frakcje i finalna historia rodziny pozostają otwarte.
+
+
+## Regiony kampanii — first pass
+
+Szczegółowy przepływ znajduje się w [CampaignRegionalFlow.md](CampaignRegionalFlow.md).
+
+Funkcje aktów:
+- Akt 0 — zawód na Pograniczu;
+- Akt I — wzór sieci w Nadborzu i Wielkim Borze;
+- Akt II — skutki gospodarcze/polityczne w Przymorzu, Wyżynach i u Arelów;
+- Akt III — prawda historyczna na Pustkowiu Pierwszego Progu;
+- Akt IV — Nawia i bezpośredni ślad Czwartej Sfery;
+- Akt V — finał przy Pierwszym Progu.
+
+Kolejność wybranych regionów może być częściowo nieliniowa.

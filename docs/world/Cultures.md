@@ -106,3 +106,20 @@ Przed finalizacją kultury startowej potrzebne są osobne research cards dla:
 - struktury osad.
 
 Dopiero po nich element może otrzymać etykietę historycznej inspiracji zamiast ogólnego F.
+
+
+## Makroświat — decyzje v0.1
+
+Pełny pierwszy pass kultur znajduje się w [MacroCultures.md](MacroCultures.md).
+
+Ustalono sześć głównych kontekstów kulturowych:
+- Pogranicze Żarnowca;
+- Nadborze;
+- Wielki Bór;
+- Przymorze;
+- Kamienne Wyżyny;
+- Arel.
+
+Kultura Arel wymaga osobnego research package spoza inspiracji słowiańskiej przed finalizacją assetów, języka i material culture.
+
+Zasady nazw prowadzi [NamingRules.md](NamingRules.md).

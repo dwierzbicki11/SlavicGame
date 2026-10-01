@@ -16,8 +16,15 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Boskie umowy | pantheon/DivineContracts.md | F v0.1 |
 | Relacje bogów | pantheon/RelationshipMatrix.md | F v0.1 |
 | Historia świata | world/Timeline.md | struktura v0.1; prawda głównej tajemnicy otwarta |
+| Timeline makro | world/EraTimelineExpanded.md | główne epoki i wydarzenia v0.1 |
 | Kultury | world/Cultures.md | framework + region startowy v0.1 |
+| Kultury makro | world/MacroCultures.md | 6 kontekstów kulturowych v0.1 |
+| Naming rules | world/NamingRules.md | v0.1 |
 | Regiony/królestwa | world/RegionsAndKingdoms.md | framework v0.1 |
+| Siły polityczne | world/PoliticalPowers.md | v0.1 |
+| Geografia makro | world/MacroGeography.md | R0–R6 v0.1 |
+| Gospodarka międzyregionowa | world/InterregionalEconomy.md | v0.1 |
+| Konflikty polityczne | world/PoliticalConflicts.md | v0.1 |
 | 4 lokacje vertical slice | locations/*.md | indywidualne karty v0.1 |
 | Usługi vertical slice | world/VerticalSliceServices.md | v0.1 |
 | Mapa | world/WorldMap.md | topologia v0.1 |
@@ -27,11 +34,13 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Magia vertical slice | magic/VerticalSliceMagic.md | pierwszy czar, rytuał i znaki F v0.1 |
 | Bestiariusz | bestiary/BestiaryBible.md | framework v0.1 |
 | Research bestiariusza 01 | research/bestiary/*.md | 5 kart + źródła + fit vertical slice |
+| Research bestiariusza 02 | research/bestiary/*Pass02*.md + karty | topielec, południca, boginka/mamuna, upiór, ogniki, regionalne figury leśne |
 | swamp-predator identity | research/bestiary/VerticalSliceFit.md | pozostaje F; brak uczciwego folklorystycznego dopasowania |
 | forest-guardian identity | research/bestiary/ForestSpirit.md | kierunek zaakceptowany, finalna nazwa nadal otwarta |
 | Bohater | character/PlayerCharacter.md | v0.1 |
 | Rodzina | character/FamilyMystery.md | struktura v0.1; rozwiązanie celowo otwarte |
 | Główna historia | story/MainStory.md | akty v0.1; finałowe lore otwarte |
+| Regional flow kampanii | story/CampaignRegionalFlow.md | pełny first pass v0.1 |
 | Questy | design/QuestDesign.md | v0.1 |
 | Światło nad mokradłem | quests/LightOverSwamp.md | pełna karta v0.1: fazy, dowody, wyniki, checkpointy, QA |
 | Evidence text | quests/LightOverSwampEvidenceText.md | robocze wpisy Journal v0.1 |
@@ -70,6 +79,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Vertical slice | design/VerticalSlice.md | v0.1 |
 | Asset list vertical slice | design/VerticalSliceAssetList.md | P0/P1/P2 v0.1 |
 | Konwencje ID | content/IdConventions.md | v0.1 |
+| Formaty content data | content/*Template.md + *Format.md | v0.1 |
 | Kolejka dokumentacji | design/DocumentationWorkQueue.md | kolejność od łatwych do centralnego lore |
 | Architektura | design/EngineArchitecture.md | v0.1 |
 | Rendering/platformy | technical/RenderingAndPlatform.md | v0.1 |

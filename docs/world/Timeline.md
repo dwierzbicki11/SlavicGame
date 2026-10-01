@@ -80,3 +80,19 @@ Konsekwencje:
 Powiązane questy:
 Status tajemnicy:
 ```
+
+
+## Timeline makro — first pass
+
+Rozszerzona chronologia robocza znajduje się w [EraTimelineExpanded.md](EraTimelineExpanded.md).
+
+Najważniejsze znaczniki:
+- >1000 BG — warstwa najstarszych struktur;
+- ~430 BG — Pierwsze Zamknięcie;
+- ~140 BG — powstanie Związku Grodów Nadborza;
+- 90–70 BG — Wojny Trzech Przepraw;
+- 45 BG — pierwsze współczesne anomalie;
+- 22 BG — Noc Zamkniętego Progu;
+- 0 BG — początek gry.
+
+Prawda o Pierwszym Zamknięciu i Nocy Zamkniętego Progu jest rozstrzygana dopiero w Poziomie 9.
