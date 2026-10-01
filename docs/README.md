@@ -30,7 +30,18 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | Dokument | Zakres |
 |---|---|
 | [Pantheon Bible](pantheon/PantheonBible.md) | 52 wpisy badawcze, warianty, klasy A–F |
-| [Historie bogów](pantheon/GodHistories.md) | Karty Peruna, Welesa, Mokoszy, Świętowita, Swarożyca i Trygława |
+| [Historie bogów](pantheon/GodHistories.md) | Karty projektowe 11+ postaci/tradycji z rozdzieleniem minimum źródłowego od F |
+| [Panteon research 02](research/pantheon/MethodAndSources02.md) | Metoda i nowe punkty odniesienia |
+| [Rod/Rodzanice](research/pantheon/RodRodzanice.md) | Ograniczenia tekstów polemicznych i model F |
+| [Jarowit](research/pantheon/Jarowit.md) | Pierwszy pass bez sztucznego utożsamienia z Jarilem |
+| [Radegast–Swarożyc](research/pantheon/RadegastSvarozic.md) | Spór nazwy bóstwa/miejsca/tradycji |
+| [Siwa–Żywie](research/pantheon/SiwaZywie.md) | Rozdzielenie lokalnej Siwy od późnego Żywie |
+| [Późny katalog polski](research/pantheon/LatePolishCatalogue.md) | Długosz i ryzyko anachronizmu |
+| [Kandydaci literaccy](research/pantheon/LiteraryCandidates.md) | Karna, Żela, Div, Trojan i Białobóg |
+| [Praktyki religijne](research/pantheon/ReligiousPracticePrinciples.md) | Reguły używania regionalnych źródeł |
+| [Instytucje kultowe F](pantheon/CultInstitutions.md) | Lokalne wspólnoty, opiekunowie i reputacja |
+| [Boskie umowy F](pantheon/DivineContracts.md) | Jawne warunki, wielu patronów i renegocjacja |
+| [Matryca relacji bogów F](pantheon/RelationshipMatrix.md) | Konflikty interesów bez osi dobro/zło |
 | [Źródła](pantheon/Sources.md) | Bibliografia i zakres konsultacji |
 | [Polityka researchu](research/ResearchPolicy.md) | Zasady źródeł, rekonstrukcji i fikcji F |
 | [Źródła kultury materialnej](research/material-culture/MaterialCultureSources.md) | Rejestr MC01–MC14 i zakres konsultacji |

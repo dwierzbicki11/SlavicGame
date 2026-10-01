@@ -9,7 +9,12 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Kosmologia | world/Cosmology.md | v0.1 |
 | Panteon | pantheon/PantheonBible.md | katalog v0.1; research otwarty |
 | Źródła | pantheon/Sources.md | v0.1; krytyczne wydania do uzupełnienia |
-| Historie bogów | pantheon/GodHistories.md | 6 kart v0.1 |
+| Historie bogów | pantheon/GodHistories.md | 11+ kart/tradycji v0.1; Radegast celowo bez samodzielnej osobowości |
+| Panteon research 02 | research/pantheon/*.md | first pass: Rod, Jarowit, Radegast/Swarożyc, Siwa/Żywie, Długosz, kandydaci literaccy |
+| Praktyki religijne | research/pantheon/ReligiousPracticePrinciples.md | zasady v0.1 |
+| Instytucje kultowe | pantheon/CultInstitutions.md | F v0.1 |
+| Boskie umowy | pantheon/DivineContracts.md | F v0.1 |
+| Relacje bogów | pantheon/RelationshipMatrix.md | F v0.1 |
 | Historia świata | world/Timeline.md | struktura v0.1; prawda głównej tajemnicy otwarta |
 | Kultury | world/Cultures.md | framework + region startowy v0.1 |
 | Regiony/królestwa | world/RegionsAndKingdoms.md | framework v0.1 |

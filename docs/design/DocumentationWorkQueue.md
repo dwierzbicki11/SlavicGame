@@ -30,7 +30,7 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 - [x] input action map;
 - [x] save slot UX;
 - [x] debug/developer overlay spec;
-- [ ] logging/error-reporting policy.
+- [x] logging/error-reporting policy.
 
 ## Poziom 3 — średnie, gameplay i content
 
@@ -45,7 +45,7 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 - [x] tracking system;
 - [x] encounter tables startowego regionu;
 - [x] day/night event table;
-- [ ] weather gameplay effects.
+- [x] weather gameplay effects.
 
 ## Poziom 4 — średnie/trudne, konkretna zawartość
 
@@ -58,7 +58,7 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 - [x] karta Czarnych Mokradeł;
 - [x] karta Kamiennego Kręgu;
 - [x] pierwsze side questy regionu;
-- [ ] pierwsze usługi/warsztaty.
+- [x] pierwsze usługi/warsztaty.
 
 ## Poziom 5 — trudne, wymagają researchu
 
@@ -71,7 +71,7 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 - [x] research pochówków;
 - [x] research handlu;
 - [x] research struktur osad;
-- [ ] research praktyk religijnych używanych jako inspiracja — przeniesiony do Poziomu 7, bo wymaga tej samej krytyki źródeł co panteon.
+- [x] research praktyk religijnych używanych jako inspiracja — first-pass zasad źródłowych wykonany w Poziomie 7.
 
 Każdy temat powstaje jako osobna karta źródłowa, zanim przeniesiemy szczegóły do finalnej kultury.
 
@@ -97,15 +97,15 @@ Wynik: `swamp-predator` pozostaje autorskim F, ponieważ żaden sprawdzony kandy
 
 ## Poziom 7 — bardzo trudne, panteon i religia
 
-- [ ] kontrola Rod/Rodzanice;
-- [ ] Jarowit;
-- [ ] Radegast–Swarożyc;
-- [ ] Siwa–Żywie;
-- [ ] późny katalog polski;
-- [ ] kandydaci literaccy;
-- [ ] kolejne karty bogów;
-- [ ] finalniejsze relacje F;
-- [ ] instytucje kultowe świata gry;
+- [x] kontrola Rod/Rodzanice;
+- [x] Jarowit;
+- [x] Radegast–Swarożyc;
+- [x] Siwa–Żywie;
+- [x] późny katalog polski;
+- [x] kandydaci literaccy;
+- [x] kolejne karty bogów;
+- [x] finalniejsze relacje F;
+- [x] instytucje kultowe świata gry;
 - [ ] ograniczenia boskich umów.
 
 Wymaga bezpośredniejszej kontroli źródeł i ostrożności interpretacyjnej.
