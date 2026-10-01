@@ -34,17 +34,17 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 
 ## Poziom 3 — średnie, gameplay i content
 
-- [ ] pełny melee moveset;
-- [ ] podstawowy bow design;
-- [ ] status effects;
-- [ ] equipment slots;
-- [ ] progression/skill tree;
-- [ ] economy first pass;
-- [ ] vendor design;
-- [ ] alchemy recipes v0.1;
-- [ ] tracking system;
-- [ ] encounter tables startowego regionu;
-- [ ] day/night event table;
+- [x] pełny melee moveset;
+- [x] podstawowy bow design;
+- [x] status effects;
+- [x] equipment slots;
+- [x] progression/skill tree;
+- [x] economy first pass;
+- [x] vendor design;
+- [x] alchemy recipes v0.1;
+- [x] tracking system;
+- [x] encounter tables startowego regionu;
+- [x] day/night event table;
 - [ ] weather gameplay effects.
 
 ## Poziom 4 — średnie/trudne, konkretna zawartość
