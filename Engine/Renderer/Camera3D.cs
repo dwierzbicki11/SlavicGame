@@ -1,9 +1,13 @@
 using System.Numerics;
+using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Renderer;
 
 public sealed class Camera3D
 {
+    private bool _hasFollowed;
+    private float _terrainClearance = 0.5f;
+
     public Vector3 Position { get; private set; } = new(0f, 8f, 12f);
     public Vector3 Target { get; private set; } = Vector3.Zero;
     public float FieldOfView { get; set; } = MathF.PI / 3f;
@@ -17,11 +21,22 @@ public sealed class Camera3D
     public float TargetHeight { get; set; } = 1.5f;
     public float HeightOffset { get; set; } = 0.5f;
     public float PositionSmoothing { get; set; } = 14f;
+    public float TerrainClearance
+    {
+        get => _terrainClearance;
+        set
+        {
+            if (!float.IsFinite(value) || value < 0f)
+                throw new ArgumentOutOfRangeException(nameof(value));
+            _terrainClearance = value;
+        }
+    }
 
-    public void Update(Vector3 playerPosition, float mouseDeltaX, float mouseDeltaY, float deltaSeconds)
+    public void Update(Vector3 playerPosition, float mouseDeltaX, float mouseDeltaY, float deltaSeconds,
+        Terrain? terrain = null)
     {
         Rotate(mouseDeltaX, mouseDeltaY);
-        Follow(playerPosition, deltaSeconds);
+        Follow(playerPosition, deltaSeconds, terrain);
     }
 
     public void Rotate(float mouseDeltaX, float mouseDeltaY)
@@ -36,15 +51,45 @@ public sealed class Camera3D
 
     }
 
-    public void Follow(Vector3 playerPosition, float deltaSeconds)
+    public void Follow(Vector3 playerPosition, float deltaSeconds, Terrain? terrain = null)
     {
         var target = playerPosition + new Vector3(0f, TargetHeight, 0f);
         var cameraForward = GetLookDirection();
         var desiredPosition = target - cameraForward * Distance + Vector3.UnitY * HeightOffset;
         var smoothing = 1f - MathF.Exp(-PositionSmoothing * MathF.Max(0f, deltaSeconds));
 
-        Position = Vector3.Lerp(Position, desiredPosition, smoothing);
-        Target = Vector3.Lerp(Target, target, smoothing);
+        if (terrain is not null)
+            desiredPosition = KeepAboveGround(terrain, desiredPosition, TerrainClearance + 0.01f);
+
+        // Start at the player instead of interpolating from the default world-space pose.
+        Position = _hasFollowed ? Vector3.Lerp(Position, desiredPosition, smoothing) : desiredPosition;
+        Target = _hasFollowed ? Vector3.Lerp(Target, target, smoothing) : target;
+        _hasFollowed = true;
+
+        if (terrain is null) return;
+
+        // The smoothed focus can lag behind on a slope. Keep the boom's origin clear too.
+        Target = KeepAboveGround(terrain, Target, MathF.Max(TargetHeight, TerrainClearance + 0.1f));
+        Position = KeepAboveGround(terrain, Position, TerrainClearance + 0.01f);
+
+        // A ridge can block the view even when both endpoints are above the ground.
+        // Resolve after smoothing: interpolating two safe poses can still cross terrain.
+        var hit = terrain.IntersectGroundSegment(Target, Position, TerrainClearance);
+        if (hit is not null)
+        {
+            var length = Vector3.Distance(Target, Position);
+            // Do not collapse the view direction on a very close, steep face.
+            var backoff = MathF.Min(hit.Value * 0.1f, 0.02f / MathF.Max(0.02f, length));
+            var safeFraction = hit.Value - backoff;
+            Position = Vector3.Lerp(Target, Position, safeFraction);
+            Position = KeepAboveGround(terrain, Position, TerrainClearance + 0.01f);
+        }
+    }
+
+    private static Vector3 KeepAboveGround(Terrain terrain, Vector3 position, float clearance)
+    {
+        position.Y = MathF.Max(position.Y, terrain.SampleHeight(position) + clearance);
+        return position;
     }
 
     public Vector3 GetLookDirection()

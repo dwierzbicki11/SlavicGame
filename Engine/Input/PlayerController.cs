@@ -24,6 +24,6 @@ public static class PlayerController
             world.SetPlayerPosition(world.PlayerPosition + move * speed * (float)deltaSeconds);
         }
 
-        camera.Follow(world.PlayerPosition, (float)deltaSeconds);
+        camera.Follow(world.PlayerPosition, (float)deltaSeconds, world.Terrain);
     }
 }
