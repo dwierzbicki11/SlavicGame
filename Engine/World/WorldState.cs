@@ -6,13 +6,16 @@ namespace SlavicGame.Engine.World;
 public sealed class WorldState
 {
     private readonly List<WorldRegion> _regions = [];
+    private readonly List<WorldObstacle> _obstacles = [];
 
     public IReadOnlyList<WorldRegion> Regions => _regions;
+    public IReadOnlyList<WorldObstacle> Obstacles => _obstacles;
     public Vector3 PlayerPosition { get; private set; } = Vector3.Zero;
     public WorldTime Time { get; } = new();
     public WeatherSystem Weather { get; } = new();
     public PlayerVitals Player { get; } = new();
     public Terrain Terrain { get; } = new();
+    public float PlayerRadius { get; } = 0.55f;
     public string CurrentRegion { get; private set; } = "starting-forest";
 
     public void Initialize()
@@ -22,6 +25,21 @@ public sealed class WorldState
         _regions.Add(new WorldRegion("old-village", "Żarnowiec", WorldRegionType.Village, 0f, -85f, 32f));
         _regions.Add(new WorldRegion("black-swamp", "Czarne Mokradła", WorldRegionType.Swamp, 95f, 35f, 48f));
         _regions.Add(new WorldRegion("old-shrine", "Kamienny Krąg", WorldRegionType.Shrine, -85f, 55f, 22f));
+
+        _obstacles.Clear();
+        AddObstacle("village-hut-a", -10f, -88f, 8f, 7f, 5f, new Vector3(0.32f, 0.20f, 0.10f));
+        AddObstacle("village-hut-b", 5f, -96f, 9f, 6f, 5.5f, new Vector3(0.29f, 0.18f, 0.09f));
+        AddObstacle("village-hut-c", 13f, -78f, 7f, 8f, 4.8f, new Vector3(0.35f, 0.22f, 0.11f));
+
+        var stone = new Vector3(0.30f, 0.31f, 0.28f);
+        AddObstacle("shrine-stone-west", -91f, 55f, 2.2f, 2.2f, 4.2f, stone);
+        AddObstacle("shrine-stone-east", -79f, 55f, 2.2f, 2.2f, 4.2f, stone);
+        AddObstacle("shrine-stone-north", -85f, 49f, 2.2f, 2.2f, 4.2f, stone);
+        AddObstacle("shrine-stone-south", -85f, 61f, 2.2f, 2.2f, 4.2f, stone);
+
+        AddObstacle("forest-fallen-trunk", 18f, 15f, 8f, 2.2f, 1.2f, new Vector3(0.24f, 0.15f, 0.07f));
+        AddObstacle("swamp-standing-stone", 105f, 44f, 3f, 3f, 2.2f, new Vector3(0.20f, 0.23f, 0.20f));
+
         SetPlayerPosition(Vector3.Zero);
     }
 
@@ -40,8 +58,39 @@ public sealed class WorldState
         var halfDepth = (Terrain.Depth - 1) * Terrain.CellSize * 0.5f;
         position.X = Math.Clamp(position.X, -halfWidth, halfWidth);
         position.Z = Math.Clamp(position.Z, -halfDepth, halfDepth);
+
+        var horizontal = new Vector2(position.X, position.Z);
+        for (var pass = 0; pass < 2; pass++)
+        {
+            foreach (var obstacle in _obstacles)
+            {
+                horizontal = obstacle.ResolvePoint(horizontal, PlayerRadius);
+            }
+        }
+
+        position.X = Math.Clamp(horizontal.X, -halfWidth, halfWidth);
+        position.Z = Math.Clamp(horizontal.Y, -halfDepth, halfDepth);
         PlayerPosition = new Vector3(position.X, Terrain.SampleHeight(position), position.Z);
         UpdateRegion();
+    }
+
+    private void AddObstacle(
+        string id,
+        float x,
+        float z,
+        float width,
+        float depth,
+        float height,
+        Vector3 color)
+    {
+        var center = new Vector3(x, 0f, z);
+        center.Y = Terrain.SampleHeight(center) - 0.15f;
+        _obstacles.Add(new WorldObstacle(
+            id,
+            center,
+            new Vector2(width * 0.5f, depth * 0.5f),
+            height,
+            color));
     }
 
     private void UpdateRegion()
