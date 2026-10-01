@@ -13,6 +13,8 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Historia świata | world/Timeline.md | struktura v0.1; prawda głównej tajemnicy otwarta |
 | Kultury | world/Cultures.md | framework + region startowy v0.1 |
 | Regiony/królestwa | world/RegionsAndKingdoms.md | framework v0.1 |
+| 4 lokacje vertical slice | locations/*.md | indywidualne karty v0.1 |
+| Usługi vertical slice | world/VerticalSliceServices.md | v0.1 |
 | Mapa | world/WorldMap.md | topologia v0.1 |
 | Day/night events | world/DayNightEvents.md | v0.1 |
 | Weather gameplay | world/WeatherGameplay.md | v0.1 |
@@ -24,6 +26,9 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Główna historia | story/MainStory.md | akty v0.1; finałowe lore otwarte |
 | Questy | design/QuestDesign.md | v0.1 |
 | Światło nad mokradłem | quests/LightOverSwamp.md | pełna karta v0.1: fazy, dowody, wyniki, checkpointy, QA |
+| Evidence text | quests/LightOverSwampEvidenceText.md | robocze wpisy Journal v0.1 |
+| Reaction matrix | quests/LightOverSwampReactionMatrix.md | trzy rozwiązania + modyfikatory v0.1 |
+| Side questy | quests/VerticalSliceSideQuests.md | pierwsza pula v0.1 |
 | Decyzje | design/DecisionModel.md | v0.1 |
 | Zakończenia | story/Endings.md | architektura v0.1 |
 | Game design | design/GameDesignBible.md | v0.1 |
@@ -39,6 +44,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Alchemy recipes | alchemy/RecipesV01.md | pierwszy katalog v0.1 |
 | NPC/dialog | design/NpcDialogueDesign.md | v0.1 |
 | NPC vertical slice | character/VerticalSliceNPCs.md | 5 kart roboczych v0.1 |
+| Dialogi 5 NPC | dialogue/*.md | kompletne grafy robocze vertical slice v0.1 |
 | Inventory/economy | design/InventoryEconomy.md | v0.1 |
 | Przedmioty vertical slice | content/VerticalSliceItems.md | minimalny katalog + receptura v0.1 |
 | Save | design/SavePersistence.md | v0.1 |
