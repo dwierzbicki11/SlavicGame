@@ -69,6 +69,13 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Zmora](research/bestiary/Zmora.md) | Późny polski folklor nocny |
 | [Strzygoń/strzyga](research/bestiary/Strzygon.md) | Materiał etnolingwistyczny o revenancie |
 | [Fit vertical slice](research/bestiary/VerticalSliceFit.md) | Decyzja, które nazwy nie pasują do prototypów |
+| [Bestiary pass 02](research/bestiary/BestiaryPass02Summary.md) | Polski materiał: wodnik/topielec, południca, boginki, upiór i ogniki |
+| [Źródła bestiariusza 02](research/bestiary/BestiarySources02.md) | Rejestr B07–B14 |
+| [Topielec/wodnik PL](research/bestiary/TopielecWaterSpiritPL.md) | Regionalne nazwy i późny folklor |
+| [Południca](research/bestiary/Poludnica.md) | Pole, południe i ograniczenia źródłowe |
+| [Boginka/mamuna](research/bestiary/BoginkaMamuna.md) | Nakładanie się regionalnych demonów |
+| [Upiór](research/bestiary/Upior.md) | Revenant bez popkulturowego skrótu |
+| [Błędne ogniki](research/bestiary/WillOWisps.md) | Typ zjawiska zamiast jednego gatunku |
 | [Bohater](character/PlayerCharacter.md) | Kreator, zawód, style gry i progresja |
 | [Tajemnica rodziny](character/FamilyMystery.md) | Struktura odkrywania bez zamrażania finałowej prawdy |
 
@@ -142,6 +149,11 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Pokrycie dokumentacji](design/DocumentationCoverage.md) | Co istnieje i co nadal jest otwarte |
 | [Kolejka dokumentacji](design/DocumentationWorkQueue.md) | Kolejność dalszej pracy od najprostszej do najtrudniejszej |
 | [Konwencje ID](content/IdConventions.md) | Stabilne identyfikatory treści, save i assetów |
+| [Szablon przedmiotu](content/ItemCardTemplate.md) | Format finalnych kart itemów |
+| [Format equipment](content/EquipmentDefinitionFormat.md) | Broń i armor |
+| [Szablon encounteru](content/EncounterCardTemplate.md) | Trigger, telegraph, outcomes i persistence |
+| [Lokacja/interactable](content/LocationInteractableFormat.md) | Format miejsc i interakcji |
+| [Timed event](content/TimedEventFormat.md) | Zdarzenia zależne od czasu |
 
 ## Jak czytać statusy
 
