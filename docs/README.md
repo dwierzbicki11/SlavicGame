@@ -18,6 +18,8 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Kultury](world/Cultures.md) | Zasady projektowania kultur i kultura pogranicza |
 | [Królestwa i regiony](world/RegionsAndKingdoms.md) | Geografia, polityka, zasoby i konflikty |
 | [Mapa świata](world/WorldMap.md) | Skala, topologia, regiony, fast travel i sfery |
+| [Day/Night Events](world/DayNightEvents.md) | Tabela zdarzeń i priorytety czasowe |
+| [Weather Gameplay](world/WeatherGameplay.md) | Wpływ pogody na widoczność, tropy i eventy |
 
 ## Mitologia i research
 
@@ -52,6 +54,15 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Quest Design](design/QuestDesign.md) | Stany, dowody, rozwiązania i nagrody |
 | [Decision Model](design/DecisionModel.md) | Decyzje i konsekwencje bez good/evil |
 | [Combat Design](design/CombatDesign.md) | Melee, stamina, blok, unik, łuk |
+| [Melee Combat](design/MeleeCombat.md) | Stany, hit window, blok, unik i QA |
+| [Bow Combat](design/BowCombat.md) | Aim, draw, projectile, ammo i retrieval |
+| [Status Effects](design/StatusEffects.md) | Statusy, stack policy i pierwsze efekty |
+| [Equipment System](design/EquipmentSystem.md) | Sloty, broń, armor i persistence |
+| [Progression](design/Progression.md) | Kierunki rozwoju bez pustych +1% |
+| [Ekonomia first pass](design/EconomyPass01.md) | Pieniądze, vendorzy, ceny i anti-exploit |
+| [Tracking System](design/TrackingSystem.md) | Typy śladów, świeżość i dowody |
+| [Encounter Design](design/EncounterDesign.md) | Karta encounteru, telegraph i repeat policy |
+| [Receptury v0.1](alchemy/RecipesV01.md) | Pierwsze receptury przygotowawcze |
 | [NPC i dialog](design/NpcDialogueDesign.md) | Harmonogramy, graf dialogowy, pamięć NPC |
 | [Inventory i ekonomia](design/InventoryEconomy.md) | Przedmioty, pieniądze, crafting i ceny |
 | [Save i persistence](design/SavePersistence.md) | Checkpointy, wersje save i stabilne ID |
