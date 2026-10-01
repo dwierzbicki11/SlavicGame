@@ -20,16 +20,16 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 
 ## Poziom 2 — proste/średnie, głównie system design
 
-- [ ] szczegółowy tutorial/onboarding;
-- [ ] HUD spec;
-- [ ] inventory UI flow;
-- [ ] quest journal UI flow;
-- [ ] dialogue UX flow;
-- [ ] map UI;
-- [ ] settings matrix;
-- [ ] input action map;
-- [ ] save slot UX;
-- [ ] debug/developer overlay spec;
+- [x] szczegółowy tutorial/onboarding;
+- [x] HUD spec;
+- [x] inventory UI flow;
+- [x] quest journal UI flow;
+- [x] dialogue UX flow;
+- [x] map UI;
+- [x] settings matrix;
+- [x] input action map;
+- [x] save slot UX;
+- [x] debug/developer overlay spec;
 - [ ] logging/error-reporting policy.
 
 ## Poziom 3 — średnie, gameplay i content
