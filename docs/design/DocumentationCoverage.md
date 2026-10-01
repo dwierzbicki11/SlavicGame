@@ -14,6 +14,8 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Kultury | world/Cultures.md | framework + region startowy v0.1 |
 | Regiony/królestwa | world/RegionsAndKingdoms.md | framework v0.1 |
 | Mapa | world/WorldMap.md | topologia v0.1 |
+| Day/night events | world/DayNightEvents.md | v0.1 |
+| Weather gameplay | world/WeatherGameplay.md | v0.1 |
 | Magia | magic/MagicBible.md | v0.1; vertical-slice czar i rytuał mają osobną kartę |
 | Magia vertical slice | magic/VerticalSliceMagic.md | pierwszy czar, rytuał i znaki F v0.1 |
 | Bestiariusz | bestiary/BestiaryBible.md | framework v0.1; karty źródłowe do badań |
@@ -26,6 +28,15 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Zakończenia | story/Endings.md | architektura v0.1 |
 | Game design | design/GameDesignBible.md | v0.1 |
 | Combat | design/CombatDesign.md | v0.1 |
+| Melee | design/MeleeCombat.md | szczegóły v0.1 |
+| Bow | design/BowCombat.md | szczegóły v0.1 |
+| Status effects | design/StatusEffects.md | v0.1 |
+| Equipment | design/EquipmentSystem.md | v0.1 |
+| Progression | design/Progression.md | v0.1 |
+| Economy/vendors | design/EconomyPass01.md | first pass v0.1 |
+| Tracking | design/TrackingSystem.md | v0.1 |
+| Encounter design | design/EncounterDesign.md | v0.1 |
+| Alchemy recipes | alchemy/RecipesV01.md | pierwszy katalog v0.1 |
 | NPC/dialog | design/NpcDialogueDesign.md | v0.1 |
 | NPC vertical slice | character/VerticalSliceNPCs.md | 5 kart roboczych v0.1 |
 | Inventory/economy | design/InventoryEconomy.md | v0.1 |
