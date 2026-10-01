@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Core;
+using SlavicGame.Engine.Input;
 using SlavicGame.Engine.World;
 using SlavicGame.Engine.Renderer;
 
@@ -65,4 +66,33 @@ camera.Update(new Vector3(10, 0, 10), 0, 0, 1);
 var expected = Matrix4x4.CreateLookAt(camera.Position, camera.Target, Vector3.UnitY)
     * Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, 1.6f, camera.NearPlane, camera.FarPlane);
 Check(camera.GetViewProjection(1.6f) == expected, "System.Numerics row-vector matrix order");
+// Exercise the actual controller across held W/W+D/A/S and running input.
+foreach (var running in new[] { false, true })
+foreach (var movement in new[] { (true, false, false, false), (true, false, true, false), (false, true, false, false), (false, false, false, true) })
+{
+    var movingWorld = WorldGenerator.Generate();
+    var movingCamera = new Camera3D();
+    for (var frame = 0; frame < 30; frame++)
+    {
+        var previousPosition = movingWorld.PlayerPosition;
+        var previousYaw = movingCamera.Yaw;
+        var previousPitch = movingCamera.Pitch;
+        PlayerController.Update(movingWorld, movingCamera,
+            new PlayerInput(movement.Item1, movement.Item2, movement.Item3, movement.Item4,
+                running, new Vector2(3, 1)), 1.0 / 60.0);
+        var horizontalStep = new Vector2(movingWorld.PlayerPosition.X - previousPosition.X,
+            movingWorld.PlayerPosition.Z - previousPosition.Z).Length();
+        Near(horizontalStep, (running ? 9f : 5f) / 60f, "Move on every frame while looking");
+        Check(movingCamera.Yaw != previousYaw && movingCamera.Pitch != previousPitch,
+            "Yaw and pitch change on every frame while movement is held");
+    }
+}
+var stationaryWorld = WorldGenerator.Generate();
+var stationaryCamera = new Camera3D();
+PlayerController.Update(stationaryWorld, stationaryCamera,
+    new PlayerInput(true, true, true, true, false, new Vector2(10, 10)), 0.1);
+Check(stationaryWorld.PlayerPosition.X == 0 && stationaryWorld.PlayerPosition.Z == 0,
+    "Opposite movement keys cancel");
+Check(stationaryCamera.Yaw != MathF.PI && stationaryCamera.Pitch != -0.25f,
+    "Looking still works when movement cancels");
 Console.WriteLine($"PASS: {checks} regression checks.");
