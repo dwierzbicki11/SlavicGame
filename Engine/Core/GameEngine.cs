@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Numerics;
+using Veldrid;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Renderer;
 using SlavicGame.Engine.Windowing;
@@ -11,6 +13,7 @@ public sealed class GameEngine : IDisposable
     private readonly GameTime _time = new();
     private readonly GameWindow _window;
     private readonly VeldridRenderer _renderer = new();
+    private readonly Camera3D _camera = new();
     private readonly WorldState _world = WorldGenerator.Generate();
 
     private bool _initialized;
@@ -60,6 +63,7 @@ public sealed class GameEngine : IDisposable
             previousSeconds = currentSeconds;
 
             _time.Advance(deltaSeconds);
+            HandleInput(deltaSeconds);
             _world.Update(deltaSeconds);
 
             if (!loggedFirstFrame)
@@ -68,7 +72,26 @@ public sealed class GameEngine : IDisposable
                 EngineLog.Info("Main loop is running.");
             }
 
-            _renderer.Render(_world.Time);
+            _renderer.Render(_world.Time, _camera);
+        }
+    }
+
+    private void HandleInput(double deltaSeconds)
+    {
+        var mouse = _window.MouseDelta;
+        _camera.Update(_world.PlayerPosition, mouse.X, mouse.Y);
+
+        var move = Vector3.Zero;
+        if (_window.IsKeyDown(Key.W)) move += _camera.GetMoveForward();
+        if (_window.IsKeyDown(Key.S)) move -= _camera.GetMoveForward();
+        if (_window.IsKeyDown(Key.D)) move += _camera.GetMoveRight();
+        if (_window.IsKeyDown(Key.A)) move -= _camera.GetMoveRight();
+
+        if (move.LengthSquared() > 0.001f)
+        {
+            move = Vector3.Normalize(move);
+            var speed = _window.IsKeyDown(Key.ShiftLeft) ? 9f : 5f;
+            _world.SetPlayerPosition(_world.PlayerPosition + move * speed * (float)deltaSeconds);
         }
     }
 
