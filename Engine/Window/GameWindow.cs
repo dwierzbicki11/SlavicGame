@@ -13,13 +13,12 @@ public sealed class GameWindow : IDisposable
     private readonly Sdl2Window _window;
     private readonly HashSet<Key> _keysDown = [];
     private readonly HashSet<Key> _keysPressed = [];
-    private Vector2 _relativeMouseDelta;
 
     public Sdl2Window NativeWindow => _window;
     public bool Exists => _window.Exists;
     public int Width => _window.Bounds.Width;
     public int Height => _window.Bounds.Height;
-    public Vector2 MouseDelta => _relativeMouseDelta;
+    public Vector2 MouseDelta => _window.MouseDelta;
     public bool IsFullscreen =>
         _window.WindowState == WindowState.FullScreen ||
         _window.WindowState == WindowState.BorderlessFullScreen;
@@ -56,13 +55,6 @@ public sealed class GameWindow : IDisposable
     public void PumpEvents()
     {
         _window.PumpEvents();
-
-        if (!Exists)
-        {
-            return;
-        }
-
-        _relativeMouseDelta = GetRelativeMouseState();
     }
 
     public bool IsKeyDown(Key key) => _keysDown.Contains(key);
@@ -86,7 +78,6 @@ public sealed class GameWindow : IDisposable
 
     private void OnFocusLost()
     {
-        _relativeMouseDelta = Vector2.Zero;
         SetRelativeMouseMode(false);
     }
 
@@ -116,26 +107,6 @@ public sealed class GameWindow : IDisposable
         {
             _window.CursorVisible = true;
             EngineLog.Warn($"SDL2 relative mouse API was not found: {exception.Message}");
-        }
-    }
-
-    private static Vector2 GetRelativeMouseState()
-    {
-        try
-        {
-            return OperatingSystem.IsLinux()
-                ? Sdl2NativeCompat.GetRelativeMouseStateLinux()
-                : Sdl2NativeCompat.GetRelativeMouseState();
-        }
-        catch (DllNotFoundException exception)
-        {
-            EngineLog.Warn($"SDL2 native mouse library was not found: {exception.Message}");
-            return Vector2.Zero;
-        }
-        catch (EntryPointNotFoundException exception)
-        {
-            EngineLog.Warn($"SDL2 relative mouse API was not found: {exception.Message}");
-            return Vector2.Zero;
         }
     }
 
