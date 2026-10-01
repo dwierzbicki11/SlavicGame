@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Core;
+using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.Input;
 using SlavicGame.Engine.World;
 using SlavicGame.Engine.Renderer;
@@ -83,6 +84,36 @@ Check(clock.TimeOfDayHours == 6 && clock.IsDay, "Multi-day wrapping");
 clock.Update(double.NaN);
 clock.Update(-10);
 Check(clock.TimeOfDayHours == 6, "Invalid time does not corrupt clock");
+
+var vitals = new PlayerVitals();
+vitals.UpdateStamina(true, 5);
+Check(vitals.Stamina == 0f && !vitals.CanSprint, "Sprinting can exhaust stamina");
+vitals.UpdateStamina(false, 0.5);
+Check(vitals.Stamina == 0f, "Stamina waits for recovery delay");
+vitals.UpdateStamina(false, 0.5);
+Check(vitals.Stamina > 0f && vitals.CanSprint, "Stamina recovers after delay");
+vitals.TakeDamage(35f);
+Check(vitals.Health == 65f, "Damage reduces health");
+vitals.Heal(10f);
+Check(vitals.Health == 75f, "Healing restores health");
+vitals.TakeDamage(1000f);
+Check(vitals.Health == 0f && !vitals.IsAlive, "Health clamps at zero");
+Reject(() => vitals.TakeDamage(float.NaN), "NaN damage rejected");
+
+var weather = new WeatherSystem(7);
+weather.SetCondition(WeatherKind.Fog, true);
+Check(weather.Condition == WeatherKind.Fog && weather.FogDensity >= 0.03f,
+    "Fog preset raises fog density");
+weather.SetCondition(WeatherKind.Rain, true);
+Check(weather.RainIntensity > 0.5f && weather.Cloudiness > 0.7f,
+    "Rain preset affects rain and cloudiness");
+var scheduledWeather = new WeatherSystem(7);
+scheduledWeather.Update(46, WorldRegionType.Swamp);
+Check(scheduledWeather.SecondsUntilChange > 0 && scheduledWeather.SecondsUntilChange != 45,
+    "Weather schedules a regional transition");
+var fogBeforeInvalidUpdate = weather.FogDensity;
+weather.Update(double.NaN, WorldRegionType.Forest);
+Check(weather.FogDensity == fogBeforeInvalidUpdate, "Invalid weather delta is ignored");
 var time = new GameTime();
 time.Advance(5);
 Check(time.DeltaSeconds == 0.25 && time.TotalSeconds == 0.25, "Frame delta clamp");
@@ -140,6 +171,25 @@ PlayerController.Update(eventOnlyWorld, eventOnlyCamera,
     new PlayerInput(true, false, false, false, true, MouseMotion.Select(mouseEvent, Vector2.Zero)), 0.1);
 Check(eventOnlyWorld.PlayerPosition != eventOnlyPosition && eventOnlyCamera.Yaw != eventOnlyYaw,
     "Running and turning work when only SDL events contain motion");
+
+var tiredWorld = WorldGenerator.Generate();
+tiredWorld.Player.UpdateStamina(true, 10);
+var tiredCamera = new Camera3D();
+var tiredStart = tiredWorld.PlayerPosition;
+PlayerController.Update(tiredWorld, tiredCamera,
+    new PlayerInput(true, false, false, false, true, Vector2.Zero), 1.0 / 60.0);
+var tiredStep = new Vector2(
+    tiredWorld.PlayerPosition.X - tiredStart.X,
+    tiredWorld.PlayerPosition.Z - tiredStart.Z).Length();
+Near(tiredStep, 5f / 60f, "Exhausted sprint falls back to walking speed");
+
+var deadWorld = WorldGenerator.Generate();
+deadWorld.Player.TakeDamage(1000f);
+var deadCamera = new Camera3D();
+var deadStart = deadWorld.PlayerPosition;
+PlayerController.Update(deadWorld, deadCamera,
+    new PlayerInput(true, false, false, false, true, Vector2.Zero), 0.1);
+Check(deadWorld.PlayerPosition == deadStart, "Dead player cannot move");
 
 Reject(() => camera.TerrainClearance = -0.1f, "Negative camera clearance");
 Reject(() => camera.TerrainClearance = float.NaN, "NaN camera clearance");

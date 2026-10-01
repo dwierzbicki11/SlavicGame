@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Engine/Gameplay/*.cs" Link="Gameplay/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Input/*.cs" Link="Input/%(Filename)%(Extension)" />
     <Compile Include="../Engine/World/*.cs" Link="World/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Core/GameTime.cs" Link="GameTime.cs" />

@@ -1,4 +1,5 @@
 using System.Numerics;
+using SlavicGame.Engine.Gameplay;
 
 namespace SlavicGame.Engine.World;
 
@@ -9,6 +10,8 @@ public sealed class WorldState
     public IReadOnlyList<WorldRegion> Regions => _regions;
     public Vector3 PlayerPosition { get; private set; } = Vector3.Zero;
     public WorldTime Time { get; } = new();
+    public WeatherSystem Weather { get; } = new();
+    public PlayerVitals Player { get; } = new();
     public Terrain Terrain { get; } = new();
     public string CurrentRegion { get; private set; } = "starting-forest";
 
@@ -26,6 +29,7 @@ public sealed class WorldState
     {
         Time.Update(deltaSeconds);
         SetPlayerPosition(PlayerPosition);
+        Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
     }
 
     public void SetPlayerPosition(Vector3 position)

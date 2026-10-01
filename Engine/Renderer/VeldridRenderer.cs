@@ -19,6 +19,7 @@ public sealed class VeldridRenderer : IDisposable
     private DeviceBuffer? _indexBuffer;
     private DeviceBuffer? _projectionBuffer;
     private DeviceBuffer? _viewBuffer;
+    private DeviceBuffer? _atmosphereBuffer;
     private DeviceBuffer? _hudVertexBuffer;
     private DeviceBuffer? _hudScreenBuffer;
     private ResourceLayout? _cameraLayout;
@@ -88,6 +89,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        _atmosphereBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
         _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, vertices);
         _graphicsDevice.UpdateBuffer(_indexBuffer, 0, indices);
@@ -97,12 +99,15 @@ public sealed class VeldridRenderer : IDisposable
             new ResourceLayoutElementDescription(
                 "Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
             new ResourceLayoutElementDescription(
-                "View", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+                "View", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+            new ResourceLayoutElementDescription(
+                "Atmosphere", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
 
         _cameraSet = factory.CreateResourceSet(new ResourceSetDescription(
             _cameraLayout,
             _projectionBuffer,
-            _viewBuffer));
+            _viewBuffer,
+            _atmosphereBuffer));
 
         _shaders = factory.CreateFromSpirv(
             new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VertexShader), "main"),
@@ -168,7 +173,7 @@ public sealed class VeldridRenderer : IDisposable
         EngineLog.Info("HUD renderer initialized.");
     }
 
-    public void Render(WorldTime worldTime, Camera3D camera, double fps)
+    public void Render(WorldState world, Camera3D camera, double fps)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!_initialized || _graphicsDevice is null ||
@@ -177,6 +182,7 @@ public sealed class VeldridRenderer : IDisposable
             _indexBuffer is null ||
             _projectionBuffer is null ||
             _viewBuffer is null ||
+            _atmosphereBuffer is null ||
             _cameraSet is null ||
             _terrainPipeline is null ||
             _hudVertexBuffer is null ||
@@ -200,7 +206,10 @@ public sealed class VeldridRenderer : IDisposable
             camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
         var view = Matrix4x4.CreateLookAt(camera.Position, camera.Target, Vector3.UnitY);
 
-        BuildFpsHud((float)Math.Max(0, fps));
+        BuildHud(
+            (float)Math.Max(0, fps),
+            world.Player.Health / world.Player.MaxHealth,
+            world.Player.Stamina / world.Player.MaxStamina);
         if (_hudVertices.Count > _hudVertexCapacity)
         {
             _hudVertexCapacity = (uint)Math.Max(_hudVertices.Count, _hudVertexCapacity * 2);
@@ -212,10 +221,19 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         var screenSize = new Vector4(width, height, 0, 0);
+        var atmosphereColor = GetAtmosphereColor(world.Time, world.Weather);
+        var fogParameters = new Vector4(
+            atmosphereColor.R,
+            atmosphereColor.G,
+            atmosphereColor.B,
+            world.Weather.FogDensity);
+        var lightingParameters = new Vector4(GetTerrainBrightness(world.Time, world.Weather), 0, 0, 0);
 
         _commandList.Begin();
         _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
         _commandList.UpdateBuffer(_viewBuffer, 0, view);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 0, fogParameters);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 16, lightingParameters);
         _commandList.UpdateBuffer(_hudScreenBuffer, 0, screenSize);
         if (_hudVertices.Count > 0)
         {
@@ -223,7 +241,7 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         _commandList.SetFramebuffer(framebuffer);
-        _commandList.ClearColorTarget(0, GetAtmosphereColor(worldTime));
+        _commandList.ClearColorTarget(0, atmosphereColor);
         _commandList.ClearDepthStencil(1f);
         _commandList.SetPipeline(_terrainPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
@@ -245,7 +263,7 @@ public sealed class VeldridRenderer : IDisposable
         _graphicsDevice.SwapBuffers();
     }
 
-    private void BuildFpsHud(float fps)
+    private void BuildHud(float fps, float healthRatio, float staminaRatio)
     {
         _hudVertices.Clear();
 
@@ -277,16 +295,35 @@ public sealed class VeldridRenderer : IDisposable
 
             cursor += 5f * (pixel + gap) + 6f;
         }
+
+        healthRatio = Math.Clamp(healthRatio, 0f, 1f);
+        staminaRatio = Math.Clamp(staminaRatio, 0f, 1f);
+        const float barX = 18f;
+        const float barWidth = 160f;
+        const float barHeight = 9f;
+        AddHudQuad(barX, 78f, barWidth, barHeight, new Vector4(0.08f, 0.07f, 0.06f, 0.82f));
+        AddHudQuad(barX, 78f, barWidth * healthRatio, barHeight, new Vector4(0.62f, 0.16f, 0.12f, 0.95f));
+        AddHudQuad(barX, 96f, barWidth, barHeight, new Vector4(0.08f, 0.07f, 0.06f, 0.82f));
+        AddHudQuad(barX, 96f, barWidth * staminaRatio, barHeight, new Vector4(0.72f, 0.58f, 0.18f, 0.95f));
     }
 
     private void AddHudQuad(float x, float y, float width, float height)
     {
+        AddHudQuad(x, y, width, height, new Vector4(0.92f, 0.88f, 0.68f, 0.95f));
+    }
+
+    private void AddHudQuad(float x, float y, float width, float height, Vector4 color)
+    {
+        if (width <= 0f || height <= 0f)
+        {
+            return;
+        }
+
         const float padding = 1f;
         var x0 = x - padding;
         var y0 = y - padding;
         var x1 = x + width + padding;
         var y1 = y + height + padding;
-        var color = new Vector4(0.92f, 0.88f, 0.68f, 0.95f);
 
         _hudVertices.Add(new HudVertex(new Vector2(x0, y0), color));
         _hudVertices.Add(new HudVertex(new Vector2(x1, y0), color));
@@ -296,23 +333,44 @@ public sealed class VeldridRenderer : IDisposable
         _hudVertices.Add(new HudVertex(new Vector2(x0, y1), color));
     }
 
-    private static RgbaFloat GetAtmosphereColor(WorldTime time)
+    private static RgbaFloat GetAtmosphereColor(WorldTime time, WeatherSystem weather)
     {
-        if (time.IsNight)
-        {
-            return new RgbaFloat(0.012f, 0.018f, 0.035f, 1f);
-        }
+        var daylight = time.IsNight
+            ? 0f
+            : (float)Math.Clamp(
+                Math.Sin((time.TimeOfDayHours - 6.0) / 14.0 * Math.PI),
+                0.0,
+                1.0);
 
-        var daylight = (float)Math.Clamp(
-            Math.Sin((time.TimeOfDayHours - 6.0) / 14.0 * Math.PI),
-            0.0,
-            1.0);
+        var baseColor = time.IsNight
+            ? new Vector3(0.012f, 0.018f, 0.035f)
+            : new Vector3(
+                0.025f + daylight * 0.055f,
+                0.045f + daylight * 0.075f,
+                0.065f + daylight * 0.095f);
 
-        return new RgbaFloat(
-            0.025f + daylight * 0.055f,
-            0.045f + daylight * 0.075f,
-            0.065f + daylight * 0.095f,
-            1f);
+        var cloudColor = time.IsNight
+            ? new Vector3(0.025f, 0.028f, 0.038f)
+            : new Vector3(0.09f, 0.095f, 0.10f);
+        var fogColor = time.IsNight
+            ? new Vector3(0.035f, 0.040f, 0.047f)
+            : new Vector3(0.17f, 0.18f, 0.17f);
+
+        var cloudy = Vector3.Lerp(baseColor, cloudColor, weather.Cloudiness * 0.72f);
+        var fogBlend = Math.Clamp(weather.FogDensity / 0.032f, 0f, 1f) * 0.58f;
+        var final = Vector3.Lerp(cloudy, fogColor, fogBlend);
+        return new RgbaFloat(final.X, final.Y, final.Z, 1f);
+    }
+
+    private static float GetTerrainBrightness(WorldTime time, WeatherSystem weather)
+    {
+        var daylight = time.IsNight
+            ? 0.32f
+            : 0.56f + (float)Math.Clamp(
+                Math.Sin((time.TimeOfDayHours - 6.0) / 14.0 * Math.PI),
+                0.0,
+                1.0) * 0.44f;
+        return Math.Clamp(daylight * (1f - weather.Cloudiness * 0.28f), 0.24f, 1f);
     }
 
     public void Resize(uint width, uint height)
@@ -348,6 +406,7 @@ public sealed class VeldridRenderer : IDisposable
         _cameraLayout?.Dispose();
         _projectionBuffer?.Dispose();
         _viewBuffer?.Dispose();
+        _atmosphereBuffer?.Dispose();
         _vertexBuffer?.Dispose();
         _indexBuffer?.Dispose();
 
@@ -373,6 +432,7 @@ public sealed class VeldridRenderer : IDisposable
         _cameraLayout = null;
         _projectionBuffer = null;
         _viewBuffer = null;
+        _atmosphereBuffer = null;
         _vertexBuffer = null;
         _indexBuffer = null;
         _commandList?.Dispose();
@@ -420,17 +480,33 @@ layout(set = 0, binding = 1) uniform ViewBuffer { mat4 View; };
 layout(location = 0) in vec3 Position;
 layout(location = 1) in vec3 Color;
 layout(location = 0) out vec3 fsin_Color;
+layout(location = 1) out float fsin_Distance;
 void main()
 {
-    gl_Position = Projection * View * vec4(Position, 1.0);
+    vec4 viewPosition = View * vec4(Position, 1.0);
+    gl_Position = Projection * viewPosition;
     fsin_Color = Color;
+    fsin_Distance = length(viewPosition.xyz);
 }";
 
     private const string FragmentShader = @"
 #version 450
+layout(set = 0, binding = 2) uniform AtmosphereBuffer
+{
+    vec4 FogColorDensity;
+    vec4 Lighting;
+};
 layout(location = 0) in vec3 fsin_Color;
+layout(location = 1) in float fsin_Distance;
 layout(location = 0) out vec4 fsout_Color;
-void main() { fsout_Color = vec4(fsin_Color, 1.0); }";
+void main()
+{
+    vec3 litColor = fsin_Color * Lighting.x;
+    float fogFactor = 1.0 - exp(-FogColorDensity.w * fsin_Distance);
+    fogFactor = clamp(fogFactor, 0.0, 0.94);
+    vec3 color = mix(litColor, FogColorDensity.rgb, fogFactor);
+    fsout_Color = vec4(color, 1.0);
+}";
 
     private const string HudVertexShader = @"
 #version 450
