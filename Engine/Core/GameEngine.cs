@@ -68,7 +68,7 @@ public sealed class GameEngine : IDisposable
                 EngineLog.Info("Main loop is running.");
             }
 
-            _renderer.Render();
+            _renderer.Render(_world.Time);
         }
     }
 
