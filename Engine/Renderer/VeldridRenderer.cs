@@ -22,7 +22,6 @@ public sealed class VeldridRenderer : IDisposable
     private Pipeline? _terrainPipeline;
     private Shader[]? _shaders;
 
-    private readonly Camera3D _camera = new();
     private uint _indexCount;
 
     public GraphicsDevice GraphicsDevice =>
@@ -121,7 +120,7 @@ public sealed class VeldridRenderer : IDisposable
         EngineLog.Info("Terrain mesh uploaded to GPU.");
     }
 
-    public void Render(WorldTime worldTime)
+    public void Render(WorldTime worldTime, Camera3D camera)
     {
         if (_graphicsDevice is null ||
             _commandList is null ||
@@ -142,8 +141,8 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         var aspect = MathF.Max(0.1f, (float)framebuffer.Width / framebuffer.Height);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView(_camera.FieldOfView, aspect, _camera.NearPlane, _camera.FarPlane);
-        var view = Matrix4x4.CreateLookAt(_camera.Position, _camera.Target, Vector3.UnitY);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
+        var view = Matrix4x4.CreateLookAt(camera.Position, camera.Target, Vector3.UnitY);
 
         _commandList.Begin();
         _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
