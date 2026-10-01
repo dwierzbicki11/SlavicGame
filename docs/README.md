@@ -1,33 +1,93 @@
 # Dokumentacja SlavicGame
 
-Wersja projektu świata: **0.1**, 2026-10-01. Dokumentacja jest po polsku; nazwy typów i identyfikatory w kodzie pozostają po angielsku.
+Wersja projektu świata i designu: **0.1**, 2026-10-01.
 
-SlavicGame to trzecioosobowy Adventure / Action RPG w autorskim świecie inspirowanym Słowiańszczyzną. Poniższe dokumenty rozwijają [wizję w README](../README.md), zachowując C#, .NET 11 i Vulkan jako podstawę techniczną.
+Dokumentacja jest po polsku; nazwy typów i identyfikatory w kodzie pozostają po angielsku. SlavicGame jest trzecioosobowym Adventure / Action RPG w autorskim świecie inspirowanym kulturami słowiańskimi, folklorem i realiami życia materialnego mniej więcej IX–X wieku.
 
-| Dokument | Co rozstrzyga |
+> **Ważne:** dokument v0.1 oznacza istniejącą specyfikację roboczą, nie zamknięty temat ani ukończoną implementację.
+
+Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/DocumentationCoverage.md).
+
+## Fundament świata i lore
+
+| Dokument | Zakres |
 |---|---|
-| [World Bible](world/WorldBible.md) | Tożsamość świata, codzienność, region startowy, zakres projektu |
-| [Kosmologia](world/Cosmology.md) | Jawia, Nawia, sfera boska, Czwarta Sfera, przejścia i ograniczenia |
-| [Pantheon Bible](pantheon/PantheonBible.md) | Katalog 52 pozycji, warianty nazw, status materiału i proponowane role fantasy |
-| [Źródła](pantheon/Sources.md) | Bibliografia, zakres faktycznie sprawdzonych materiałów, kolejka badań |
-| [Pierwszy grywalny wycinek](design/VerticalSlice.md) | Pętla łowcy, zadanie, decyzje, systemy i kryteria odbioru |
-| [Kolejność produkcji](design/ProductionRoadmap.md) | Ustalona kolejność 23 etapów, obecny stan i następne konkretne rezultaty |
-| [Architektura silnika](design/EngineArchitecture.md) | Granice systemów, stan trwały, przygotowane moduły i zasady integracji |
+| [World Bible](world/WorldBible.md) | Filary świata, codzienność, Pogranicze Żarnowca |
+| [Kosmologia](world/Cosmology.md) | Jawia, Nawia, sfera boska, Czwarta Sfera |
+| [Timeline](world/Timeline.md) | Struktura historii świata i wydarzenia startowego regionu |
+| [Kultury](world/Cultures.md) | Zasady projektowania kultur i kultura pogranicza |
+| [Królestwa i regiony](world/RegionsAndKingdoms.md) | Geografia, polityka, zasoby i konflikty |
+| [Mapa świata](world/WorldMap.md) | Skala, topologia, regiony, fast travel i sfery |
+
+## Mitologia i research
+
+| Dokument | Zakres |
+|---|---|
+| [Pantheon Bible](pantheon/PantheonBible.md) | 52 wpisy badawcze, warianty, klasy A–F |
+| [Historie bogów](pantheon/GodHistories.md) | Karty Peruna, Welesa, Mokoszy, Świętowita, Swarożyca i Trygława |
+| [Źródła](pantheon/Sources.md) | Bibliografia i zakres konsultacji |
+| [Polityka researchu](research/ResearchPolicy.md) | Zasady źródeł, rekonstrukcji i fikcji F |
+
+## Magia, istoty i bohater
+
+| Dokument | Zakres |
+|---|---|
+| [Magic Bible](magic/MagicBible.md) | Źródła magii, czary, rytuały, alchemia, alfabet |
+| [Bestiary Bible](bestiary/BestiaryBible.md) | Metoda kart istot, ekologia i alternatywy wobec walki |
+| [Bohater](character/PlayerCharacter.md) | Kreator, zawód, style gry i progresja |
+| [Tajemnica rodziny](character/FamilyMystery.md) | Struktura odkrywania bez zamrażania finałowej prawdy |
+
+## Fabuła
+
+| Dokument | Zakres |
+|---|---|
+| [Główna historia](story/MainStory.md) | Struktura aktów i wymagania kampanii |
+| [Zakończenia](story/Endings.md) | Osie finału, epilogi i ścieżka bez patrona |
+
+## Game design
+
+| Dokument | Zakres |
+|---|---|
+| [Game Design Bible](design/GameDesignBible.md) | Core loop i pełny model systemów |
+| [Quest Design](design/QuestDesign.md) | Stany, dowody, rozwiązania i nagrody |
+| [Decision Model](design/DecisionModel.md) | Decyzje i konsekwencje bez good/evil |
+| [Combat Design](design/CombatDesign.md) | Melee, stamina, blok, unik, łuk |
+| [NPC i dialog](design/NpcDialogueDesign.md) | Harmonogramy, graf dialogowy, pamięć NPC |
+| [Inventory i ekonomia](design/InventoryEconomy.md) | Przedmioty, pieniądze, crafting i ceny |
+| [Save i persistence](design/SavePersistence.md) | Checkpointy, wersje save i stabilne ID |
+| [Sterowanie](design/ControlsAndInput.md) | KBM, remapping, kontroler i Android |
+| [UX i dostępność](design/UXAccessibility.md) | Napisy, kamera, input, UI, trudność |
+| [Kierunek audio-wizualny](design/AudioVisualDirection.md) | Światło, noc, supernaturalność, audio |
+| [Pierwszy grywalny wycinek](design/VerticalSlice.md) | „Światło nad mokradłem” i kryteria odbioru |
+
+## Technologia i produkcja
+
+| Dokument | Zakres |
+|---|---|
+| [Architektura silnika](design/EngineArchitecture.md) | Granice systemów, GameProgress, checkpoint |
+| [Rendering i platformy](technical/RenderingAndPlatform.md) | Veldrid/Vulkan, PC, późniejszy Android |
+| [Testy i wydajność](technical/TestingAndPerformance.md) | CI, regresje, profile i metryki |
+| [Produkcja treści](design/ContentProduction.md) | Pipeline regionu, NPC, potwora i questa |
+| [Kryteria wydania](design/ReleaseCriteria.md) | Prototype → vertical slice → alpha → beta → 1.0 |
+| [Roadmap](design/ProductionRoadmap.md) | 23 etapy projektu i bieżący stan |
+| [Pokrycie dokumentacji](design/DocumentationCoverage.md) | Co istnieje i co nadal jest otwarte |
 
 ## Jak czytać statusy
 
-- **Ustalone założenie** — wymaganie z wizji gry, które obowiązuje dalsze projektowanie.
-- **Projekt v0.1 / F** — nowy, autorski materiał do rozwijania w repo; może zmienić się podczas pracy nad grą.
-- **Otwarte** — decyzja jeszcze nie zapadła; dokument nie sugeruje, że jest już kanonem.
-- **Zaimplementowane** — zachowanie istnieje w kodzie. Opis fabuły lub mechaniki sam w sobie nie oznacza implementacji.
+- **Ustalone założenie** — obowiązuje dalszy projekt.
+- **Projekt v0.1 / F** — autorski materiał roboczy.
+- **Otwarte** — decyzja celowo nie została jeszcze podjęta.
+- **Zaimplementowane** — zachowanie faktycznie istnieje w kodzie.
+- **Research otwarty** — dokument istnieje, ale źródła lub szczegóły wymagają dalszej pracy.
 
-Klasy A–F opisują pochodzenie materiału, a powyższe statusy opisują stan pracy. Są to dwie różne rzeczy. Informacja od kapłana w grze może być błędna; dokument źródłowy musi osobno podawać, co wiemy poza fikcją.
+Klasy A–F opisują **pochodzenie materiału**, a statusy powyżej opisują **stan projektu**. To różne rzeczy.
 
 ## Zasady rozbudowy
 
-1. Nowe historyczne twierdzenie otrzymuje źródło, region, datę świadectwa i zakres niepewności.
-2. Nowy pomysł fantasy jest oznaczany F. Nie staje się dowodem na dawny kult.
-3. Katalog obejmuje również postacie sporne i obrzędowe, ale nie sumuje ich jako pewnych historycznych bogów.
-4. Zadania używają lokalnych interesów ludzi i istot, a konsekwencje zapisują oddzielnie dla poszczególnych stron.
-5. Etap produkcji kończy konkretny dokument lub działający system z kryteriami odbioru.
-6. Tajemnice głównej fabuły pozostają otwarte do odpowiednich etapów; pierwszy wycinek nie rozwiązuje ich za gracza.
+1. Historyczne twierdzenie ma źródło, region, datę i niepewność.
+2. Fikcja F nie staje się dowodem historycznym.
+3. Nie sumujemy wszystkich wpisów panteonu jako „pewnych bogów”.
+4. Quest zapisuje osobno interesy stron i konsekwencje.
+5. Dokumentacja nie może udawać implementacji.
+6. Tajemnice głównej historii pozostają jawnie oznaczone jako Otwarte do chwili ich świadomego rozstrzygnięcia.
+7. Każdy duży system powinien mieć dokument projektu, testowalne kryteria oraz plan persistence.

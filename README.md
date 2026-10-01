@@ -319,7 +319,7 @@ The intended player feeling is:
 
 **Early development / architecture and world-design phase.**
 
-The README is the high-level project specification. [The documentation index](docs/README.md) links the World Bible, Cosmology, Pantheon Bible, source register, vertical-slice specification and production roadmap, all at v0.1. Bestiary, detailed magic, god histories, cultures and the main story remain future stages. The implemented runtime is listed below separately from planned features.
+The README is the high-level project specification. [The documentation index](docs/README.md) now links a full v0.1 documentation skeleton covering world, cosmology, pantheon research, god histories, timeline, cultures, regions, magic, bestiary, player character, family mystery, main story, quests, decisions, endings, world map, game design, system design, engine architecture, rendering, testing, content production and release criteria. This does **not** mean the game or research is finished: source audits, creature cards, material-culture research, final lore, final endings, balance and performance targets remain open. The implemented runtime is listed separately from planned features.
 
 ## Build and run
 
