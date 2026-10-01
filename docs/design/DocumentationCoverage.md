@@ -69,6 +69,16 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Developer overlay | technical/DeveloperOverlay.md | v0.1 |
 | Logging | technical/LoggingPolicy.md | v0.1 |
 | Research policy | research/ResearchPolicy.md | v0.1 |
+| Kultura materialna | research/material-culture/*.md | pakiet 01: 9 kart + rejestr źródeł + wnioski produkcyjne |
+| Budownictwo | research/material-culture/Architecture.md | first research pass |
+| Ubiór/tekstylia | research/material-culture/ClothingTextiles.md | first research pass |
+| Żywność | research/material-culture/FoodSubsistence.md | bibliografia potwierdzona; pełne dane nadal ograniczone |
+| Rolnictwo/narzędzia | research/material-culture/AgricultureTools.md | first research pass |
+| Transport | research/material-culture/Transport.md | first research pass |
+| Uzbrojenie | research/material-culture/Weapons.md | first research pass; broń startowa nadal otwarta |
+| Pochówki | research/material-culture/Burials.md | first research pass |
+| Handel | research/material-culture/TradeEconomy.md | first research pass |
+| Osada/rzemiosło | research/material-culture/SettlementCrafts.md | first research pass |
 | Produkcja treści | design/ContentProduction.md | v0.1 |
 | Release | design/ReleaseCriteria.md | v0.1 |
 
