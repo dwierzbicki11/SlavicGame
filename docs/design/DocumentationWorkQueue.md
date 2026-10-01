@@ -125,14 +125,14 @@ Wymaga bezpośredniejszej kontroli źródeł i ostrożności interpretacyjnej.
 
 Na końcu, po zebraniu wystarczającej liczby danych i przetestowaniu świata:
 
-- [ ] prawdziwa natura Czwartej Sfery;
-- [ ] prawdziwa przyczyna kryzysu;
-- [ ] pełna historia rodziny bohatera;
-- [ ] finalny antagonista / przeciwnicy;
-- [ ] czy i jak można zabić boga;
-- [ ] główny finał;
-- [ ] warianty zakończeń;
-- [ ] epilogi;
+- [x] prawdziwa natura Czwartej Sfery;
+- [x] prawdziwa przyczyna kryzysu;
+- [x] pełna historia rodziny bohatera;
+- [x] finalny antagonista / przeciwnicy;
+- [x] czy i jak można zabić boga;
+- [x] główny finał;
+- [x] warianty zakończeń;
+- [x] epilogi;
 - [ ] ostateczna chronologia tajemnicy.
 
 Te decyzje mają największy koszt retconu, więc robimy je dopiero wtedy, gdy wcześniejsze warstwy są stabilne.
@@ -145,3 +145,18 @@ Nie trzeba ukończyć 100% jednego poziomu, by rozpocząć następny, ale:
 - pomijamy element, jeśli wymaga informacji z trudniejszego poziomu;
 - wracamy po zdobyciu brakującego researchu;
 - nie zamrażamy finalnego lore tylko po to, by „odhaczyć dokument”.
+
+
+## Stan po Poziomie 9
+
+**Poziomy 1–9 mają kompletny first pass.**
+
+Od tej chwili kolejka nie odpowiada już na pytanie „czym ma być gra?”, tylko „jak szczegółowo produkcyjnie rozpisać znany już projekt?”.
+
+Następna faza dokumentacji:
+- main quest cards;
+- region bibles;
+- companion/NPC roster;
+- final content lists;
+- production budgets;
+- implementation specs wynikające z playtestów.
