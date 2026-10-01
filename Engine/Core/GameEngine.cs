@@ -106,7 +106,7 @@ public sealed class GameEngine : IDisposable
     private void HandleInput(double deltaSeconds)
     {
         var mouse = _window.MouseDelta;
-        _camera.Update(_world.PlayerPosition, mouse.X, mouse.Y);
+        _camera.Update(_world.PlayerPosition, mouse.X, mouse.Y, (float)deltaSeconds);
 
         var move = Vector3.Zero;
         if (_window.IsKeyDown(Key.W)) move += _camera.GetMoveForward();
