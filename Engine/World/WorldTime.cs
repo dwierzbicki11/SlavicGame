@@ -8,6 +8,16 @@ public sealed class WorldTime
     public bool IsNight => TimeOfDayHours < 6.0 || TimeOfDayHours >= 20.0;
     public bool IsDay => !IsNight;
 
+    public void SetTimeOfDay(double hours)
+    {
+        if (!double.IsFinite(hours))
+        {
+            throw new ArgumentOutOfRangeException(nameof(hours));
+        }
+
+        TimeOfDayHours = ((hours % 24.0) + 24.0) % 24.0;
+    }
+
     public void Update(double deltaSeconds)
     {
         if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0 ||
