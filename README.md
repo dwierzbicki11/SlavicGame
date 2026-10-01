@@ -367,3 +367,16 @@ dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Rel
 Controls: WASD move, left Shift run, mouse rotate camera, F11 toggle fullscreen, Escape exit.
 
 Current runtime: procedural terrain, third-person orbit camera, terrain following, region detection, day/night clock and FPS HUD. The other systems above are planned.
+
+
+### Mouse troubleshooting
+
+On Linux, test SDL's warp capture if mouse look stops while holding movement keys:
+
+```sh
+dotnet run --project SlavicGame.csproj -- --mouse-warp
+```
+
+Add `--input-debug` to print half-second input totals and camera angles, or `--windowed` to compare capture outside fullscreen. `Input pipeline v3` at startup identifies this input implementation.
+
+Event and polled mouse deltas are alternative representations of the same movement. The runtime preserves delivered mouse events when the polled accumulator is empty, without adding the two sources.

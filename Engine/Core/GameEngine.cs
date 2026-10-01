@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Numerics;
 using Veldrid;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Input;
@@ -19,6 +20,13 @@ public sealed class GameEngine : IDisposable
     private bool _initialized;
     private bool _disposed;
     private readonly bool _vsync;
+    private readonly bool _inputDiagnostics;
+    private double _inputLogSeconds;
+    private int _movingFrames;
+    private int _movingLookFrames;
+    private Vector2 _eventPixels;
+    private Vector2 _polledPixels;
+    private Vector2 _appliedPixels;
     private double _fpsAccumulator;
     private int _fpsFrames;
     private double _displayFps;
@@ -32,6 +40,7 @@ public sealed class GameEngine : IDisposable
     {
         ArgumentNullException.ThrowIfNull(config);
         _vsync = config.VSync;
+        _inputDiagnostics = config.InputDiagnostics;
         _window = new GameWindow(config);
         _window.Resized += OnWindowResized;
         _window.Closing += () => EngineLog.Info("Closing SlavicGame.");
@@ -121,6 +130,27 @@ public sealed class GameEngine : IDisposable
             _window.IsKeyDown(Key.ShiftLeft),
             _window.MouseDelta);
         PlayerController.Update(_world, _camera, input, deltaSeconds);
+        if (_inputDiagnostics) LogInput(input, deltaSeconds);
+    }
+
+    private void LogInput(PlayerInput input, double deltaSeconds)
+    {
+        var moving = input.Forward || input.Backward || input.Right || input.Left;
+        if (moving) _movingFrames++;
+        if (moving && input.LookDelta != Vector2.Zero) _movingLookFrames++;
+        _eventPixels += Vector2.Abs(_window.EventMouseDelta);
+        _polledPixels += Vector2.Abs(_window.PolledMouseDelta);
+        _appliedPixels += Vector2.Abs(input.LookDelta);
+        _inputLogSeconds += deltaSeconds;
+        if (_inputLogSeconds < 0.5) return;
+
+        EngineLog.Info($"INPUT v3 focus={_window.NativeWindow.Focused} relative={_window.RelativeMouseEnabled} " +
+            $"movingFrames={_movingFrames} movingLookFrames={_movingLookFrames} " +
+            $"eventPixels={_eventPixels} polledPixels={_polledPixels} appliedPixels={_appliedPixels} " +
+            $"yaw={_camera.Yaw:F3} pitch={_camera.Pitch:F3}");
+        _inputLogSeconds = 0;
+        _movingFrames = _movingLookFrames = 0;
+        _eventPixels = _polledPixels = _appliedPixels = Vector2.Zero;
     }
 
     private void OnWindowResized()

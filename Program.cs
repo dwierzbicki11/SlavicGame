@@ -9,7 +9,9 @@ try
         Width = 1280,
         Height = 720,
         VSync = true,
-        Fullscreen = true
+        Fullscreen = !args.Contains("--windowed", StringComparer.Ordinal),
+        UseMouseWarp = args.Contains("--mouse-warp", StringComparer.Ordinal),
+        InputDiagnostics = args.Contains("--input-debug", StringComparer.Ordinal)
     });
 
     game.Initialize();

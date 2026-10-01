@@ -5,6 +5,7 @@ using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 using SlavicGame.Engine.Core;
 using SlavicGame.Engine.Diagnostics;
+using SlavicGame.Engine.Input;
 
 namespace SlavicGame.Engine.Windowing;
 
@@ -22,6 +23,9 @@ public sealed class GameWindow : IDisposable
     public int Width => _window.Bounds.Width;
     public int Height => _window.Bounds.Height;
     public Vector2 MouseDelta { get; private set; }
+    public Vector2 EventMouseDelta { get; private set; }
+    public Vector2 PolledMouseDelta { get; private set; }
+    public bool RelativeMouseEnabled => _relativeMouseEnabled;
     public bool IsFullscreen =>
         _window.WindowState == WindowState.FullScreen ||
         _window.WindowState == WindowState.BorderlessFullScreen;
@@ -54,7 +58,10 @@ public sealed class GameWindow : IDisposable
         _window.FocusGained += OnFocusGained;
         _window.FocusLost += OnFocusLost;
 
+        if (config.UseMouseWarp)
+            Sdl2Native.SDL_SetHint("SDL_MOUSE_RELATIVE_MODE_WARP", "1");
         SetRelativeMouseMode(true);
+        EngineLog.Info($"Input pipeline v3; mouse capture: {(config.UseMouseWarp ? "warp" : "SDL default")}.");
         EngineLog.Info($"Created SDL2 window {Width}x{Height} ({_window.WindowState}).");
     }
 
@@ -64,10 +71,10 @@ public sealed class GameWindow : IDisposable
         _window.PumpEvents();
         if (!_window.Exists) return;
 
-        // Read relative motion once per frame; keyboard repeat events do not consume it.
-        var delta = _relativeMouseEnabled
-            ? Sdl2NativeCompat.GetRelativeMouseDelta()
-            : _window.MouseDelta;
+        // Sample both sources once per frame without double-counting their motion.
+        EventMouseDelta = _window.MouseDelta;
+        PolledMouseDelta = _relativeMouseEnabled ? Sdl2NativeCompat.GetRelativeMouseDelta() : Vector2.Zero;
+        var delta = MouseMotion.Select(EventMouseDelta, PolledMouseDelta);
         MouseDelta = _window.Focused && !_discardMouseDelta ? delta : Vector2.Zero;
         _discardMouseDelta = false;
     }
@@ -100,6 +107,10 @@ public sealed class GameWindow : IDisposable
 
     private void SetRelativeMouseMode(bool enabled)
     {
+        // Reacquiring existing capture must not discard this frame's mouse movement.
+        if (Sdl2NativeCompat.IsRelativeMouseModeEnabled() == enabled &&
+            _relativeMouseEnabled == enabled)
+            return;
         MouseDelta = Vector2.Zero;
         _discardMouseDelta = true;
         try
@@ -153,14 +164,21 @@ public sealed class GameWindow : IDisposable
         private delegate int SetRelativeMouseModeDelegate(int enabled);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int GetRelativeMouseModeDelegate();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate uint GetRelativeMouseStateDelegate(out int x, out int y);
 
         // Resolve both functions through Veldrid's loader so the window, capture mode
         // and relative-motion accumulator always use the same SDL library instance.
         private static readonly SetRelativeMouseModeDelegate? SetMode =
             Sdl2Native.LoadFunction<SetRelativeMouseModeDelegate>("SDL_SetRelativeMouseMode");
+        private static readonly GetRelativeMouseModeDelegate? GetMode =
+            Sdl2Native.LoadFunction<GetRelativeMouseModeDelegate>("SDL_GetRelativeMouseMode");
         private static readonly GetRelativeMouseStateDelegate? GetState =
             Sdl2Native.LoadFunction<GetRelativeMouseStateDelegate>("SDL_GetRelativeMouseState");
+
+        public static bool IsRelativeMouseModeEnabled() => GetMode is not null && GetMode() != 0;
 
         public static int SetRelativeMouseMode(bool enabled)
         {
