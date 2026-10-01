@@ -320,11 +320,11 @@ dotnet run --project SlavicGame.csproj
 dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
 ```
 
-Controls: WASD move, left Shift run, mouse rotate camera, F11 toggle fullscreen, Escape exit.
+Controls: WASD move, left Shift sprint (consumes stamina), mouse rotate camera, F11 toggle fullscreen, Escape exit.
 
 The third-person camera adapts its height to the rendered terrain, keeping a 0.5-unit ground clearance. A ridge between the player and camera shortens the camera boom; the constraint is also applied after smoothing so movement and rotation cannot interpolate the camera into the ground.
 
-Current runtime: procedural terrain, third-person orbit camera, terrain following, region detection, day/night clock and FPS HUD. The other systems above are planned.
+Current runtime: procedural terrain, third-person orbit camera, terrain following, region detection, day/night clock, dynamic regional weather with atmospheric fog/lighting, player health/stamina, stamina-based sprinting, and a compact HUD. The other systems above are planned.
 
 
 ### Mouse troubleshooting
