@@ -69,6 +69,13 @@ Reject(() => terrain.SampleHeight(new Vector3(float.NaN, 0, 0)), "Invalid sample
 var world = WorldGenerator.Generate();
 world.Initialize();
 Check(world.Regions.Count == 4, "Idempotent world initialization");
+Check(world.Obstacles.Count == 9, "Idempotent obstacle initialization");
+StaticWorldMesh.Build(world, out var worldVertices, out var worldIndices);
+Check(worldVertices.Length == world.Terrain.Width * world.Terrain.Depth + world.Obstacles.Count * 8,
+    "Static world mesh includes obstacle vertices");
+Check(worldIndices.Length == (world.Terrain.Width - 1) * (world.Terrain.Depth - 1) * 6 + world.Obstacles.Count * 36,
+    "Static world mesh includes obstacle indices");
+Check(worldIndices.Max() == worldVertices.Length - 1, "Static world indices address the final obstacle vertex");
 world.SetPlayerPosition(new Vector3(0, 999, -85));
 Check(world.CurrentRegion == "old-village", "Village detection");
 world.SetPlayerPosition(new Vector3(10000, 0, -10000));
@@ -76,6 +83,26 @@ Near(world.PlayerPosition.X, 127, "East boundary");
 Near(world.PlayerPosition.Z, -127, "South boundary");
 Near(world.PlayerPosition.Y, world.Terrain.SampleHeight(world.PlayerPosition), "Ground following");
 Reject(() => world.SetPlayerPosition(new Vector3(float.PositiveInfinity, 0, 0)), "Invalid player position");
+Reject(() => new WorldObstacle("invalid", Vector3.Zero, Vector2.Zero, 1f, Vector3.One),
+    "Zero obstacle size rejected");
+var villageHut = world.Obstacles.First(obstacle => obstacle.Id == "village-hut-a");
+world.SetPlayerPosition(villageHut.Position);
+var resolvedPlayer = new Vector2(world.PlayerPosition.X, world.PlayerPosition.Z);
+Check(!villageHut.IntersectsCircle(resolvedPlayer, world.PlayerRadius),
+    "Player is resolved out of static obstacle collision");
+
+var collisionWorld = WorldGenerator.Generate();
+var collisionCamera = new Camera3D();
+collisionWorld.SetPlayerPosition(new Vector3(-10f, 0f, -80f));
+for (var frame = 0; frame < 120; frame++)
+{
+    PlayerController.Update(collisionWorld, collisionCamera,
+        new PlayerInput(true, false, false, false, true, Vector2.Zero), 1.0 / 60.0);
+    var horizontalPlayer = new Vector2(collisionWorld.PlayerPosition.X, collisionWorld.PlayerPosition.Z);
+    Check(collisionWorld.Obstacles.All(obstacle =>
+        !obstacle.IntersectsCircle(horizontalPlayer, collisionWorld.PlayerRadius)),
+        "Controller movement never leaves player inside an obstacle");
+}
 var clock = new WorldTime();
 clock.Update(450);
 Check(clock.TimeOfDayHours == 20 && clock.IsNight, "Night boundary");
