@@ -77,21 +77,23 @@ Każdy temat powstaje jako osobna karta źródłowa, zanim przeniesiemy szczegó
 
 ## Poziom 6 — trudne, bestiariusz
 
-Kolejność:
-1. wybrać 3–5 najpotrzebniejszych istot;
-2. zrobić research cards;
-3. rozdzielić regionalne warianty;
-4. dopiero potem stworzyć wersję F;
-5. zaprojektować ekologię, AI, alternatywy i nagrody.
+**Pierwszy pakiet ukończony:**
+- [x] rusałka;
+- [x] duch leśny / kandydat leszy-type;
+- [x] wodnik / vodník;
+- [x] zmora;
+- [x] strzygoń / strzyga;
+- [x] macierz dopasowania do vertical slice.
 
-Pierwsze kandydaty:
-- leszy / leśna postać strażnicza;
-- rusałka;
-- wodnik / utopiec;
-- zmora/mora;
-- strzyga.
+Wynik: `swamp-predator` pozostaje autorskim F, ponieważ żaden sprawdzony kandydat nie pasuje wystarczająco dobrze. `forest-guardian` może być dalej rozwijany jako lokalna istota leśna, ale finalna nazwa wymaga regionalnego researchu.
 
-Nie zakładamy z góry, że wszystkie wejdą do gry.
+**Drugi pakiet do wykonania później:**
+- [ ] polskie/regionalne postacie leśne;
+- [ ] topielec/topielica i polski wodnik;
+- [ ] południca;
+- [ ] boginka/mamuna;
+- [ ] upiór;
+- [ ] ogniki/błędne światła jako zjawisko.
 
 ## Poziom 7 — bardzo trudne, panteon i religia
 
