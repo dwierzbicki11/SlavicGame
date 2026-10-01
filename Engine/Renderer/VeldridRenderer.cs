@@ -2,6 +2,7 @@ using Veldrid;
 using Veldrid.StartupUtilities;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Windowing;
+using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Renderer;
 
@@ -39,7 +40,7 @@ public sealed class VeldridRenderer : IDisposable
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
     }
 
-    public void Render()
+    public void Render(WorldTime worldTime)
     {
         if (_graphicsDevice is null || _commandList is null)
         {
@@ -54,11 +55,27 @@ public sealed class VeldridRenderer : IDisposable
 
         _commandList.Begin();
         _commandList.SetFramebuffer(framebuffer);
-        _commandList.ClearColorTarget(0, new RgbaFloat(0.035f, 0.055f, 0.075f, 1f));
+        var atmosphere = GetAtmosphereColor(worldTime);
+        _commandList.ClearColorTarget(0, atmosphere);
         _commandList.End();
 
         _graphicsDevice.SubmitCommands(_commandList);
         _graphicsDevice.SwapBuffers();
+    }
+
+    private static RgbaFloat GetAtmosphereColor(WorldTime time)
+    {
+        if (time.IsNight)
+        {
+            return new RgbaFloat(0.012f, 0.018f, 0.035f, 1f);
+        }
+
+        var daylight = (float)Math.Clamp(Math.Sin((time.TimeOfDayHours - 6.0) / 14.0 * Math.PI), 0.0, 1.0);
+        return new RgbaFloat(
+            0.025f + daylight * 0.055f,
+            0.045f + daylight * 0.075f,
+            0.065f + daylight * 0.095f,
+            1f);
     }
 
     public void Resize(uint width, uint height)
