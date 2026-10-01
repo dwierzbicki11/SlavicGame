@@ -20,6 +20,8 @@ public sealed class VeldridRenderer : IDisposable
     private DeviceBuffer? _projectionBuffer;
     private DeviceBuffer? _viewBuffer;
     private DeviceBuffer? _atmosphereBuffer;
+    private DeviceBuffer? _actorVertexBuffer;
+    private DeviceBuffer? _actorIndexBuffer;
     private DeviceBuffer? _hudVertexBuffer;
     private DeviceBuffer? _hudScreenBuffer;
     private ResourceLayout? _cameraLayout;
@@ -34,6 +36,9 @@ public sealed class VeldridRenderer : IDisposable
     private bool _initialized;
     private bool _disposed;
     private uint _indexCount;
+    private uint _actorIndexCount;
+    private uint _actorVertexCapacity;
+    private uint _actorIndexCapacity;
     private uint _hudVertexCapacity;
 
     public GraphicsDevice GraphicsDevice =>
@@ -94,6 +99,15 @@ public sealed class VeldridRenderer : IDisposable
         _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, vertices);
         _graphicsDevice.UpdateBuffer(_indexBuffer, 0, indices);
         _indexCount = (uint)indices.Length;
+
+        _actorVertexCapacity = 64;
+        _actorIndexCapacity = 128;
+        _actorVertexBuffer = factory.CreateBuffer(new BufferDescription(
+            TerrainVertex.SizeInBytes * _actorVertexCapacity,
+            BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+        _actorIndexBuffer = factory.CreateBuffer(new BufferDescription(
+            sizeof(uint) * _actorIndexCapacity,
+            BufferUsage.IndexBuffer | BufferUsage.Dynamic));
 
         _cameraLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             new ResourceLayoutElementDescription(
@@ -183,6 +197,8 @@ public sealed class VeldridRenderer : IDisposable
             _projectionBuffer is null ||
             _viewBuffer is null ||
             _atmosphereBuffer is null ||
+            _actorVertexBuffer is null ||
+            _actorIndexBuffer is null ||
             _cameraSet is null ||
             _terrainPipeline is null ||
             _hudVertexBuffer is null ||
@@ -205,6 +221,10 @@ public sealed class VeldridRenderer : IDisposable
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(
             camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
         var view = Matrix4x4.CreateLookAt(camera.Position, camera.Target, Vector3.UnitY);
+
+        ActorMesh.Build(world.Enemies, out var actorVertices, out var actorIndices);
+        EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
+        _actorIndexCount = (uint)actorIndices.Length;
 
         BuildHud(
             (float)Math.Max(0, fps),
@@ -235,6 +255,11 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.UpdateBuffer(_atmosphereBuffer, 0, fogParameters);
         _commandList.UpdateBuffer(_atmosphereBuffer, 16, lightingParameters);
         _commandList.UpdateBuffer(_hudScreenBuffer, 0, screenSize);
+        if (actorVertices.Length > 0)
+        {
+            _commandList.UpdateBuffer(_actorVertexBuffer, 0, actorVertices);
+            _commandList.UpdateBuffer(_actorIndexBuffer, 0, actorIndices);
+        }
         if (_hudVertices.Count > 0)
         {
             _commandList.UpdateBuffer(_hudVertexBuffer, 0, _hudVertices.ToArray());
@@ -249,6 +274,13 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
         _commandList.DrawIndexed(_indexCount);
 
+        if (_actorIndexCount > 0)
+        {
+            _commandList.SetVertexBuffer(0, _actorVertexBuffer);
+            _commandList.SetIndexBuffer(_actorIndexBuffer, IndexFormat.UInt32);
+            _commandList.DrawIndexed(_actorIndexCount);
+        }
+
         if (_hudVertices.Count > 0)
         {
             _commandList.SetPipeline(_hudPipeline);
@@ -261,6 +293,34 @@ public sealed class VeldridRenderer : IDisposable
 
         _graphicsDevice.SubmitCommands(_commandList);
         _graphicsDevice.SwapBuffers();
+    }
+
+    private void EnsureActorCapacity(int vertexCount, int indexCount)
+    {
+        if (_graphicsDevice is null)
+        {
+            return;
+        }
+
+        if ((uint)vertexCount > _actorVertexCapacity)
+        {
+            _actorVertexCapacity = Math.Max((uint)vertexCount, _actorVertexCapacity * 2);
+            _graphicsDevice.WaitForIdle();
+            _actorVertexBuffer?.Dispose();
+            _actorVertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(
+                TerrainVertex.SizeInBytes * _actorVertexCapacity,
+                BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+        }
+
+        if ((uint)indexCount > _actorIndexCapacity)
+        {
+            _actorIndexCapacity = Math.Max((uint)indexCount, _actorIndexCapacity * 2);
+            _graphicsDevice.WaitForIdle();
+            _actorIndexBuffer?.Dispose();
+            _actorIndexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(
+                sizeof(uint) * _actorIndexCapacity,
+                BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+        }
     }
 
     private void BuildHud(float fps, float healthRatio, float staminaRatio)
@@ -407,6 +467,8 @@ public sealed class VeldridRenderer : IDisposable
         _projectionBuffer?.Dispose();
         _viewBuffer?.Dispose();
         _atmosphereBuffer?.Dispose();
+        _actorVertexBuffer?.Dispose();
+        _actorIndexBuffer?.Dispose();
         _vertexBuffer?.Dispose();
         _indexBuffer?.Dispose();
 
@@ -433,6 +495,8 @@ public sealed class VeldridRenderer : IDisposable
         _projectionBuffer = null;
         _viewBuffer = null;
         _atmosphereBuffer = null;
+        _actorVertexBuffer = null;
+        _actorIndexBuffer = null;
         _vertexBuffer = null;
         _indexBuffer = null;
         _commandList?.Dispose();
