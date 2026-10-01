@@ -4,6 +4,7 @@ using SlavicGame.Engine.Gods;
 using SlavicGame.Engine.Inventory;
 using SlavicGame.Engine.Quest;
 using SlavicGame.Engine.Reputation;
+using SlavicGame.Engine.Relationships;
 using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Save;
@@ -30,6 +31,7 @@ public sealed record GameSaveSnapshot(
     QuestSnapshot[] Quests,
     ReputationEntry[] Reputation,
     DivineRelationshipSnapshot[] DivineRelationships,
+    RelationshipSnapshot[] Relationships,
     string[] WorldFlags,
     BoundaryPhenomenonSnapshot[] BoundaryPhenomena,
     EnemySaveEntry[] Enemies);
@@ -57,6 +59,7 @@ public static class SaveGameService
             world.Progress.Quests.Capture(),
             world.Progress.Reputation.Capture(),
             world.Progress.DivineRelationships.Capture(),
+            world.Progress.Relationships.Capture(),
             world.Progress.CaptureFlags(),
             world.Cosmology.Capture(),
             world.Enemies.Select(enemy =>
@@ -116,6 +119,7 @@ public static class SaveGameService
         world.Progress.Quests.Restore(snapshot.Quests ?? []);
         world.Progress.Reputation.Restore(snapshot.Reputation ?? []);
         world.Progress.DivineRelationships.Restore(snapshot.DivineRelationships ?? []);
+        world.Progress.Relationships.Restore(snapshot.Relationships ?? []);
         world.Progress.RestoreFlags(snapshot.WorldFlags ?? []);
         world.Cosmology.Restore(snapshot.BoundaryPhenomena ?? []);
 
