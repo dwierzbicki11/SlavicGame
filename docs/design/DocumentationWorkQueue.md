@@ -16,7 +16,7 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 - [x] format definicji broni i armor;
 - [x] format encounterów;
 - [x] format lokacji/interactable;
-- [ ] format eventów zależnych od czasu.
+- [x] format eventów zależnych od czasu — `content/TimeEventFormat.md`.
 
 ## Poziom 2 — proste/średnie, głównie system design
 
