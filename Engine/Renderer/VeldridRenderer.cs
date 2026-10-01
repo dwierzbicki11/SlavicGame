@@ -101,7 +101,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _terrainPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
-            DepthStencilStateDescription.DepthOnlyLessEqual,
+            DepthStencilStateDescription.Disabled,
             new RasterizerStateDescription(
                 FaceCullMode.None,
                 PolygonFillMode.Solid,
@@ -146,8 +146,6 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.UpdateBuffer(_cameraBuffer, 0, viewProjection);
         _commandList.SetFramebuffer(framebuffer);
         _commandList.ClearColorTarget(0, GetAtmosphereColor(worldTime));
-        _commandList.ClearDepthStencil(1f);
-
         _commandList.SetPipeline(_terrainPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
         _commandList.SetVertexBuffer(0, _vertexBuffer);
