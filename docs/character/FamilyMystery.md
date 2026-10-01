@@ -1,6 +1,6 @@
 # Tajemnica rodziny bohatera — v0.1
 
-Etap 11 roadmapy. Dokument definiuje **strukturę tajemnicy**, ale celowo nie rozstrzyga jej końcowej odpowiedzi.
+Etap 11 roadmapy. Dokument definiuje **strukturę tajemnicy dla gracza**. Końcowa odpowiedź autorów została ustalona w [FamilyTruth.md](FamilyTruth.md).
 
 ## Cel
 
@@ -32,7 +32,7 @@ Gracz otrzymuje materiał, którego nie można łatwo sprowadzić do plotki.
 
 ### Warstwa 5 — prawda końcowa
 
-Pozostaje **Otwarte**. Musi zostać zapisana dopiero po utrwaleniu zasad Czwartej Sfery i głównej historii.
+Bohater odkrywa udział rodziców w badaniu Sieci Progów i Nocy Zamkniętego Progu. Szczegóły spoilerowe: [FamilyTruth.md](FamilyTruth.md).
 
 ## Zasady dowodów
 
@@ -54,18 +54,13 @@ Każdy trop ma:
 
 ## Relacja z Czwartą Sferą
 
-Istnieje założenie, że historia rodziny jest związana z głębszą tajemnicą świata. **Rodzaj związku pozostaje otwarty.**
+Rodzice bohatera byli **badaczami/praktykami Sieci Progów**, nie nosicielami wyjątkowej krwi.
 
-Możliwe kategorie do późniejszej oceny:
+- Parent A ginie podczas Nocy Zamkniętego Progu.
+- Parent B przekracza próg do Nawii z częścią procedury przebudowy.
+- bohater zostaje ukryty z powodów bezpieczeństwa.
 
-- badacze;
-- strażnicy;
-- ofiary;
-- ludzie, którzy zamknęli lub otworzyli przejście;
-- ród błędnie oskarżony o kryzys;
-- osoby posiadające niepełną wiedzę.
-
-Żadna z kategorii nie jest jeszcze kanonem.
+Znaczenie rodziny wynika z dostępu do rozproszonej wiedzy, nie z biologicznego klucza.
 
 ## Wpływ na wybory
 
@@ -81,10 +76,13 @@ Nie może automatycznie ustalać finału.
 
 ## Kryterium zakończenia etapu
 
-Etap 11 można uznać za gotowy dopiero, gdy istnieją:
+**Spełnione dla pełnego obrazu v0.2.**
 
-- prawdziwa wersja historii dla autorów;
-- minimum trzy wiarygodne błędne interpretacje w świecie;
-- rozmieszczenie dowodów w aktach;
-- warunek, że gracz może zakończyć grę bez zebrania 100% tropów;
-- konsekwencje odkrycia i nieodkrycia.
+Istnieją:
+- prawda autorów;
+- błędne interpretacje;
+- rozmieszczenie dowodów;
+- ścieżka bez 100% tropów;
+- konsekwencje poznania i niepoznania.
+
+Plan ujawniania: [RevelationPlan.md](../story/RevelationPlan.md).
