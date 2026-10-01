@@ -19,6 +19,6 @@ public sealed class Camera3D
             NearPlane,
             FarPlane);
 
-        return view * projection;
+        return projection * view;
     }
 }
