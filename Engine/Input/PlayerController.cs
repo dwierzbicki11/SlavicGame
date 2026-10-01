@@ -11,6 +11,13 @@ public static class PlayerController
         // Look and movement belong to the same frame, even while a movement key is held.
         camera.Rotate(input.LookDelta.X, input.LookDelta.Y);
 
+        if (!world.Player.IsAlive)
+        {
+            world.Player.UpdateStamina(false, deltaSeconds);
+            camera.Follow(world.PlayerPosition, (float)deltaSeconds, world.Terrain);
+            return;
+        }
+
         var move = Vector3.Zero;
         if (input.Forward) move += camera.GetMoveForward();
         if (input.Backward) move -= camera.GetMoveForward();
