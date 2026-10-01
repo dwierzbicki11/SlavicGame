@@ -59,6 +59,11 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [UX i dostępność](design/UXAccessibility.md) | Napisy, kamera, input, UI, trudność |
 | [Kierunek audio-wizualny](design/AudioVisualDirection.md) | Światło, noc, supernaturalność, audio |
 | [Pierwszy grywalny wycinek](design/VerticalSlice.md) | „Światło nad mokradłem” i kryteria odbioru |
+| [Pełna karta questa](quests/LightOverSwamp.md) | Fazy, dowody, rozwiązania, checkpointy i QA |
+| [NPC vertical slice](character/VerticalSliceNPCs.md) | Pięć ról, wiedza, biasy i reakcje |
+| [Przedmioty vertical slice](content/VerticalSliceItems.md) | Quest items, składniki, broń i receptura |
+| [Magia vertical slice](magic/VerticalSliceMagic.md) | Pierwszy czar, rytuał i dwa znaki F |
+| [Lista assetów vertical slice](design/VerticalSliceAssetList.md) | P0/P1/P2 dla środowiska, postaci, VFX, UI i audio |
 
 ## Technologia i produkcja
 
@@ -71,6 +76,8 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Kryteria wydania](design/ReleaseCriteria.md) | Prototype → vertical slice → alpha → beta → 1.0 |
 | [Roadmap](design/ProductionRoadmap.md) | 23 etapy projektu i bieżący stan |
 | [Pokrycie dokumentacji](design/DocumentationCoverage.md) | Co istnieje i co nadal jest otwarte |
+| [Kolejka dokumentacji](design/DocumentationWorkQueue.md) | Kolejność dalszej pracy od najprostszej do najtrudniejszej |
+| [Konwencje ID](content/IdConventions.md) | Stabilne identyfikatory treści, save i assetów |
 
 ## Jak czytać statusy
 
