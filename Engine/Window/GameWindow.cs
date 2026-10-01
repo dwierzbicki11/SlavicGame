@@ -83,31 +83,11 @@ public sealed class GameWindow : IDisposable
 
     private void SetRelativeMouseMode(bool enabled)
     {
-        try
-        {
-            var result = OperatingSystem.IsLinux()
-                ? Sdl2NativeCompat.SetRelativeMouseModeLinux(enabled)
-                : Sdl2NativeCompat.SetRelativeMouseMode(enabled);
-
-            if (result != 0)
-            {
-                EngineLog.Warn($"SDL2 relative mouse mode failed with code {result}.");
-                _window.CursorVisible = !enabled;
-                return;
-            }
-
-            _window.CursorVisible = !enabled;
-        }
-        catch (DllNotFoundException exception)
-        {
-            _window.CursorVisible = true;
-            EngineLog.Warn($"SDL2 native mouse library was not found: {exception.Message}");
-        }
-        catch (EntryPointNotFoundException exception)
-        {
-            _window.CursorVisible = true;
-            EngineLog.Warn($"SDL2 relative mouse API was not found: {exception.Message}");
-        }
+        // Veldrid's Sdl2Window already reports relative mouse motion through
+        // MouseDelta (SDL mouse motion xrel/yrel). Do not call SDL directly
+        // here: mixing another SDL P/Invoke path can interfere with Veldrid's
+        // event processing and make camera input appear blocked while moving.
+        _window.CursorVisible = !enabled;
     }
 
     private void OnKeyDown(KeyEvent keyEvent)
