@@ -154,3 +154,32 @@ W pierwszym wycinku dopuszczamy jeden opcjonalny kontakt przez przejaw lub posł
 ## Rozszerzenia do późniejszego przeglądu
 
 Owseń, Kostrubon, Maslenica, Ďunďa, Lepa Vida, Zlatorog oraz personifikacje Doli/Niedoli wymagają osobnej oceny rodzaju materiału. Hennil wymaga sprawdzenia przynależności kulturowej. Krodo, Flins, Prone, późne „idole” i rzekome imiona ze sfałszowanych zabytków wymagają kontroli autentyczności przekazu. Nie są dodane do liczby 52 i nie otrzymują teraz statusu historycznych słowiańskich bogów.
+
+
+## Pakiet research 02 — 2026-10-01
+
+Rozwinięcie sporów źródłowych znajduje się w `docs/research/pantheon/`.
+
+First pass obejmuje:
+- Rod / Rodzanice;
+- Jarowita;
+- relację Radegast–Swarożyc;
+- rozdzielenie Siwy/Živy i późnego Żywie;
+- późny katalog polski;
+- kandydatów literackich;
+- zasady używania praktyk religijnych jako inspiracji.
+
+### Decyzje po pakiecie
+
+- **Rod** nie zostaje podniesiony do roli pewnego naczelnego stwórcy.
+- **Rodzanice** pozostają grupą bez arbitralnej liczby i genealogii.
+- **Jarowit** pozostaje osobnym rekordem od Jarila i Zeleniego Jurija.
+- **Radegast** nie dostaje jeszcze osobnej osobowości F; spór z nazwą Swarożyca/miejsca pozostaje otwarty.
+- **Siwa/Živa** pozostaje regionalnym materiałem połabskim; `zywie` nie jest jej automatycznym aliasem.
+- późny katalog polski jest źródłem istotnym, ale nie bezpośrednim spisem panteonu IX–X w.
+- kandydaci literaccy nie stają się automatycznie obiektami typu `Deity`.
+
+Warstwa F instytucji, umów i relacji jest opisana osobno w:
+- [CultInstitutions.md](CultInstitutions.md);
+- [DivineContracts.md](DivineContracts.md);
+- [RelationshipMatrix.md](RelationshipMatrix.md).
