@@ -99,6 +99,8 @@ public sealed class CosmologyState
 
     public BoundaryPhenomenon? Find(string id) => _phenomena.GetValueOrDefault(id);
 
+    public void Clear() => _phenomena.Clear();
+
     public BoundaryPhenomenonSnapshot[] Capture() =>
         _phenomena.Values.Select(p => p.Capture()).OrderBy(p => p.Id).ToArray();
 
