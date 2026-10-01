@@ -13,6 +13,12 @@ public enum EnemyState
     Dead
 }
 
+public sealed record EnemySnapshot(
+    string Id,
+    Vector3 Position,
+    float Health,
+    EnemyState State);
+
 public sealed class EnemyAgent
 {
     private const float PatrolDistance = 4f;
@@ -151,6 +157,25 @@ public sealed class EnemyAgent
             case EnemyState.Dead:
                 break;
         }
+    }
+
+    public EnemySnapshot Capture() => new(Id, Position, Health, State);
+
+    public void Restore(EnemySnapshot snapshot)
+    {
+        if (!string.Equals(snapshot.Id, Id, StringComparison.Ordinal) ||
+            !IsFinite(snapshot.Position) ||
+            !float.IsFinite(snapshot.Health) ||
+            snapshot.Health < 0f || snapshot.Health > MaxHealth)
+        {
+            throw new ArgumentException("Enemy snapshot is invalid.", nameof(snapshot));
+        }
+
+        Position = snapshot.Position;
+        Health = snapshot.Health;
+        State = Health <= 0f ? EnemyState.Dead : snapshot.State;
+        _alertRemaining = 0;
+        _attackCooldown = State == EnemyState.Attack ? AttackIntervalSeconds : 0;
     }
 
     public void TakeDamage(float amount)
