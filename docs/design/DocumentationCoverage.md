@@ -33,6 +33,14 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Save | design/SavePersistence.md | v0.1 |
 | Input | design/ControlsAndInput.md | v0.1 |
 | UX/accessibility | design/UXAccessibility.md | v0.1 |
+| HUD | ui/HudSpec.md | v0.1 |
+| Inventory UI | ui/InventoryFlow.md | v0.1 |
+| Journal UI | ui/JournalFlow.md | v0.1 |
+| Dialogue UI | ui/DialogueFlow.md | v0.1 |
+| Map UI | ui/MapFlow.md | v0.1 |
+| Input action map | design/InputActionMap.md | v0.1 |
+| Settings | design/SettingsMatrix.md | v0.1 |
+| Save-slot UX | design/SaveSlotUX.md | v0.1 |
 | Audio/wizual | design/AudioVisualDirection.md | v0.1 |
 | Vertical slice | design/VerticalSlice.md | v0.1 |
 | Asset list vertical slice | design/VerticalSliceAssetList.md | P0/P1/P2 v0.1 |
@@ -41,6 +49,8 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Architektura | design/EngineArchitecture.md | v0.1 |
 | Rendering/platformy | technical/RenderingAndPlatform.md | v0.1 |
 | Testy/performance | technical/TestingAndPerformance.md | v0.1 |
+| Developer overlay | technical/DeveloperOverlay.md | v0.1 |
+| Logging | technical/LoggingPolicy.md | v0.1 |
 | Research policy | research/ResearchPolicy.md | v0.1 |
 | Produkcja treści | design/ContentProduction.md | v0.1 |
 | Release | design/ReleaseCriteria.md | v0.1 |
