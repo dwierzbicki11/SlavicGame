@@ -12,10 +12,10 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 - [x] pięć kart NPC vertical slice;
 - [x] pełna karta „Światła nad mokradłem”;
 - [x] asset list vertical slice;
-- [ ] format kart przedmiotów poza vertical slice;
-- [ ] format definicji broni i armor;
-- [ ] format encounterów;
-- [ ] format lokacji/interactable;
+- [x] format kart przedmiotów poza vertical slice;
+- [x] format definicji broni i armor;
+- [x] format encounterów;
+- [x] format lokacji/interactable;
 - [ ] format eventów zależnych od czasu.
 
 ## Poziom 2 — proste/średnie, głównie system design
@@ -88,11 +88,11 @@ Każdy temat powstaje jako osobna karta źródłowa, zanim przeniesiemy szczegó
 Wynik: `swamp-predator` pozostaje autorskim F, ponieważ żaden sprawdzony kandydat nie pasuje wystarczająco dobrze. `forest-guardian` może być dalej rozwijany jako lokalna istota leśna, ale finalna nazwa wymaga regionalnego researchu.
 
 **Drugi pakiet do wykonania później:**
-- [ ] polskie/regionalne postacie leśne;
-- [ ] topielec/topielica i polski wodnik;
-- [ ] południca;
-- [ ] boginka/mamuna;
-- [ ] upiór;
+- [x] polskie/regionalne postacie leśne;
+- [x] topielec/topielica i polski wodnik;
+- [x] południca;
+- [x] boginka/mamuna;
+- [x] upiór;
 - [ ] ogniki/błędne światła jako zjawisko.
 
 ## Poziom 7 — bardzo trudne, panteon i religia
@@ -106,7 +106,7 @@ Wynik: `swamp-predator` pozostaje autorskim F, ponieważ żaden sprawdzony kandy
 - [x] kolejne karty bogów;
 - [x] finalniejsze relacje F;
 - [x] instytucje kultowe świata gry;
-- [ ] ograniczenia boskich umów.
+- [x] ograniczenia boskich umów.
 
 Wymaga bezpośredniejszej kontroli źródeł i ostrożności interpretacyjnej.
 
