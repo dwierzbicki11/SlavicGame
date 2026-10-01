@@ -2,6 +2,7 @@ using System.Diagnostics;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Renderer;
 using SlavicGame.Engine.Windowing;
+using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Core;
 
@@ -10,12 +11,14 @@ public sealed class GameEngine : IDisposable
     private readonly GameTime _time = new();
     private readonly GameWindow _window;
     private readonly VeldridRenderer _renderer = new();
+    private readonly WorldState _world = WorldGenerator.Generate();
 
     private bool _initialized;
 
     public GameTime Time => _time;
     public GameWindow Window => _window;
     public VeldridRenderer Renderer => _renderer;
+    public WorldState World => _world;
 
     public GameEngine(EngineConfig config)
     {
@@ -57,6 +60,7 @@ public sealed class GameEngine : IDisposable
             previousSeconds = currentSeconds;
 
             _time.Advance(deltaSeconds);
+            _world.Update(deltaSeconds);
 
             if (!loggedFirstFrame)
             {
