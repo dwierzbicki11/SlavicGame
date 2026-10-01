@@ -39,7 +39,6 @@ public sealed class VeldridRenderer : IDisposable
             Debug = false,
             PreferStandardClipSpaceYDirection = true,
             PreferDepthRangeZeroToOne = true,
-            SwapchainDepthFormat = PixelFormat.D32Float
         };
 
         _graphicsDevice = VeldridStartup.CreateGraphicsDevice(
