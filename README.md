@@ -36,7 +36,7 @@ Historical inspiration includes architecture, weapons, clothing, crafts, agricul
 
 The boundary between Jawia and Nawia is beginning to break. Spirits, monsters, anomalies, returning dead, changing locations, and other supernatural phenomena appear. This is initially understood as the main crisis, but later becomes a symptom of something deeper.
 
-This four-sphere model is original game fiction, not a claim that all historical Slavs shared one documented cosmology. Rules for boundaries, divine manifestations, death and magic are developed in [Cosmology](docs/world/Cosmology.md). The Fourth Sphere, the protagonist's family and the possibility of true divine death remain unresolved.
+This four-sphere model is original game fiction, not a claim that all historical Slavs shared one documented cosmology. Rules for boundaries, divine manifestations, death and magic are developed in [Cosmology](docs/world/Cosmology.md). For the player, the Fourth Sphere remains a central mystery until the later acts. The author-level truth is now defined in the spoiler documentation: the Fourth Sphere is the **Splot**, a non-conscious layer of unbound possibilities and relations; the protagonist's family were Threshold Network researchers rather than a divine bloodline; and true divine death is possible only by dismantling enough anchors and dissolving the stable divine pattern. See [Full Game Overview v0.2](docs/FullGameOverview.md).
 
 ## Historical & Cultural Foundation
 
@@ -80,7 +80,7 @@ The [source register](docs/pantheon/Sources.md) records what was actually consul
 
 Gods have individual goals, values, followers, interests, and conflicts. The player may gain divine favor, become a follower, choose a patron, potentially maintain relationships with multiple divine powers, reject the gods, complete divine quests, receive blessings, and use divine magic.
 
-Divine relationships can also be damaged or betrayed and may have serious consequences. Gods may speak, appear, influence the world, send servants, make deals, help, deceive, or fight. Some may become bosses. Whether gods can truly die is a major unresolved mystery.
+Divine relationships can also be damaged or betrayed and may have serious consequences. Gods may speak, appear, influence the world, send servants, make deals, help, deceive, or fight. Some may become bosses. True divine death is defined at author level in [God Mortality](docs/world/GodMortality.md), while remaining a late-game discovery for the player.
 
 ## Player Character
 
@@ -131,23 +131,23 @@ Not every supernatural being is hostile. Some can be neutral or friendly, persua
 
 ## Companions & Relationships
 
-The game will contain multiple potential companions. Companions may join, leave, die, betray the player, or remain loyal depending on the player's actions.
+SlavicGame is **not** designed around a mandatory permanent party. Recurring characters and quest companions may travel, fight, guide, leave, oppose, or die depending on their individual rules and the player's actions.
 
-Optional romance can be tied to decisions, trust, and relationships.
+Romance is not a core 1.0 pillar. It may be added for specific characters only if it supports the story without forcing a party-RPG structure.
 
 ## Living World
 
-The world is not designed as one enormous empty map. It is divided into large, detailed regions such as:
+The world is not designed as one enormous empty map. The first full macro pass defines dense regional production spaces:
 
-1. starting region
-2. great forest
-3. marshes
-4. mountains
-5. ruins
-6. major settlements
-7. Nawia
-8. divine realms
-9. additional regions added during development.
+1. **R0 Pogranicze Żarnowca**
+2. **R1 Nadborze**
+3. **R2 Wielki Bór**
+4. **R3 Przymorze**
+5. **R4 Kamienne Wyżyny**
+6. **R5 Równiny Arel**
+7. **R6 Pustkowie Pierwszego Progu**
+
+Nawia and divine spaces are conditional supernatural spaces rather than ordinary regions on the same world map.
 
 ### Day and Night
 
@@ -185,9 +185,9 @@ There will be multiple endings rather than a simple good/evil split. The final o
 
 ## Death
 
-Player death is not permanently final. The player returns to a checkpoint.
+Player death returns to the last coherent checkpoint. This is a gameplay/save rule, **not** canonical time reversal or repeated literal resurrection by the Fourth Sphere.
 
-Future development may introduce consequences connected to repeatedly crossing the boundary between life and death.
+NPC and creature deaths can remain persistent when the relevant quest/world state says so.
 
 ## Engine & Technical Architecture
 
@@ -285,7 +285,7 @@ It should contain:
 22. World expansion
 23. Full game
 
-The [production roadmap](docs/design/ProductionRoadmap.md) preserves this order, records the current state of every stage and defines the next research and design deliverables.
+The [production roadmap](docs/design/ProductionRoadmap.md) preserves this order. Documentation Levels 1–9 now have a complete first pass; further documentation is production detailing inside the established game picture.
 
 ## Research Principles
 
@@ -317,9 +317,13 @@ The intended player feeling is:
 
 ## Project Status
 
-**Early development / architecture and world-design phase.**
+**Early development / architecture, vertical-slice implementation and production-design phase.**
 
-The README is the high-level project specification. [The documentation index](docs/README.md) now links a full v0.1 documentation skeleton covering world, cosmology, pantheon research, god histories, timeline, cultures, regions, magic, bestiary, player character, family mystery, main story, quests, decisions, endings, world map, game design, system design, engine architecture, rendering, testing, content production and release criteria. This does **not** mean the game or research is finished: source audits, creature cards, material-culture research, final lore, final endings, balance and performance targets remain open. The implemented runtime is listed separately from planned features.
+The project now has a **full design-picture / author-truth pass v0.2**: macro geography and politics, campaign Acts 0–V, the Threshold Network, the true nature of the Fourth Sphere/Splot, the protagonist's family history, Wszebor and the competing factions, true divine-death rules, five ending architectures, the main-quest skeleton and 1.0 scope boundaries.
+
+Start with [Full Game Overview v0.2](docs/FullGameOverview.md), then use the [documentation index](docs/README.md) and [coverage matrix](docs/design/DocumentationCoverage.md).
+
+This does **not** mean the game is production-complete. Detailed region bibles, every main/side quest card, the final NPC and creature roster, additional cultural research, asset budgets, balance, measured hardware targets, implementation, testing and optimization remain future work.
 
 ## Build and run
 
