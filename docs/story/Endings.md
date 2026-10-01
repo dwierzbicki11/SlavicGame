@@ -1,6 +1,6 @@
-# Zakończenia — architektura v0.1
+# Zakończenia — architektura v0.2
 
-Etap 15 roadmapy. Dokument nie ustala jeszcze ostatecznej prawdy Czwartej Sfery ani nazw finalnych zakończeń.
+Etap 15 roadmapy. Ostateczna architektura pięciu głównych rozwiązań jest już ustalona; szczegóły w [EndingVariants.md](EndingVariants.md).
 
 ## Zasada
 
@@ -83,10 +83,17 @@ Docelowy system zakończeń czyta:
 - region states;
 - confirmed knowledge.
 
-## Otwarte
+## Główne warianty ustalone
 
-- liczba głównych zakończeń;
-- natura finalnego wyboru;
-- możliwość prawdziwej śmierci boga;
-- finalne znaczenie Czwartej Sfery;
-- los rodziny bohatera.
+1. Odnowione Zamknięcie;
+2. Rozproszona Straż;
+3. Przymierze Progów;
+4. Mandat Boski;
+5. Wielkie Rozwarcie.
+
+Każdy wariant łączy się z epilogami regionów, NPC, bogów i rodziny.
+
+Szczegóły:
+- [EndingVariants.md](EndingVariants.md);
+- [EpilogueMatrix.md](EpilogueMatrix.md);
+- [GodMortality.md](../world/GodMortality.md).
