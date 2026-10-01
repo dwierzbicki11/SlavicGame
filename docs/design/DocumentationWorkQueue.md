@@ -112,13 +112,13 @@ Wymaga bezpośredniejszej kontroli źródeł i ostrożności interpretacyjnej.
 
 ## Poziom 8 — bardzo trudne, świat makro
 
-- [ ] finalne kultury;
-- [ ] języki/naming rules;
-- [ ] państwa;
-- [ ] geografia świata;
-- [ ] gospodarka międzyregionowa;
-- [ ] konflikty polityczne;
-- [ ] timeline głównych epok;
+- [x] finalne kultury;
+- [x] języki/naming rules;
+- [x] państwa;
+- [x] geografia świata;
+- [x] gospodarka międzyregionowa;
+- [x] konflikty polityczne;
+- [x] timeline głównych epok;
 - [ ] przepływ głównej historii między regionami.
 
 ## Poziom 9 — najtrudniejsze, centralne lore
