@@ -1,0 +1,87 @@
+# Mapa świata — założenia v0.1
+
+Etap 16 roadmapy.
+
+## Filozofia
+
+Mapa ma być **gęsta**, a nie maksymalnie duża. Każdy region musi uzasadniać podróż, powrót i zmianę między dniem a nocą.
+
+## Hierarchia
+
+```text
+Świat
+└── obszar geograficzny
+    └── region gry
+        ├── osady
+        ├── dzicz
+        ├── miejsca specjalne
+        ├── drogi / przeprawy
+        └── wejścia do przestrzeni warunkowych
+```
+
+## Region startowy
+
+Pogranicze Żarnowca jest testem docelowej filozofii mapy.
+
+Topologia:
+- Żarnowiec jako bezpieczniejszy hub;
+- droga do Puszczy Żywia;
+- ryzykowniejsza droga przez Czarne Mokradła;
+- boczna trasa do Kamiennego Kręgu;
+- skróty odblokowywane przez stan świata.
+
+## Zasady projektowania drogi
+
+Droga powinna mieć:
+- punkt orientacyjny;
+- decyzję nawigacyjną;
+- możliwe zdarzenie;
+- zmienność dnia/nocy;
+- sens ekonomiczny lub społeczny.
+
+Nie zapełniamy mapy losowymi skrzyniami co kilkadziesiąt metrów.
+
+## Fast travel
+
+Docelowo może istnieć między:
+- odkrytymi bezpiecznymi punktami;
+- osadami;
+- specjalnymi węzłami.
+
+Nie może omijać ważnego stanu zagrożenia bez wyjaśnienia.
+
+## Sfery
+
+Nawia i sfery boskie nie są zwykłymi regionami na tej samej mapie.
+
+Dostęp wymaga:
+- miejsca;
+- warunku;
+- ceny / przygotowania.
+
+## Przyszłe regiony
+
+Kolejność rozbudowy powinna wynikać z potrzeb historii i jakości vertical slice, nie z chęci szybkiego wypełnienia mapy.
+
+## Narzędzia mapy
+
+Mapa gracza może pokazywać:
+- odkryte drogi;
+- osady;
+- miejsca zleceń;
+- własne znaczniki;
+- potwierdzone miejsca śladów.
+
+Nie pokazuje automatycznie:
+- wszystkich potworów;
+- wszystkich sekretów;
+- dokładnego rozwiązania zagadki.
+
+## Ostateczna geografia
+
+Pozostaje otwarta do czasu:
+- zatwierdzenia kultur;
+- głównych państw;
+- osi fabularnej;
+- kosztu produkcji regionu;
+- pomiarów wydajności streamingu.
