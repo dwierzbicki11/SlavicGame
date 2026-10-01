@@ -35,7 +35,7 @@ public sealed class GameEngine : IDisposable
         }
 
         EngineLog.Info("Starting SlavicGame engine.");
-        _renderer.Initialize(_window, true);
+        _renderer.Initialize(_window, _world, true);
         _initialized = true;
         EngineLog.Info("Engine initialization complete.");
     }
