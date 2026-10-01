@@ -15,7 +15,8 @@ public sealed class VeldridRenderer : IDisposable
     private CommandList? _commandList;
     private DeviceBuffer? _vertexBuffer;
     private DeviceBuffer? _indexBuffer;
-    private DeviceBuffer? _cameraBuffer;
+    private DeviceBuffer? _projectionBuffer;
+    private DeviceBuffer? _viewBuffer;
     private ResourceLayout? _cameraLayout;
     private ResourceSet? _cameraSet;
     private Pipeline? _terrainPipeline;
@@ -61,9 +62,8 @@ public sealed class VeldridRenderer : IDisposable
             sizeof(ushort) * (uint)indices.Length,
             BufferUsage.IndexBuffer));
 
-        _cameraBuffer = factory.CreateBuffer(new BufferDescription(
-            64,
-            BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
         _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, vertices);
         _graphicsDevice.UpdateBuffer(_indexBuffer, 0, indices);
@@ -71,13 +71,14 @@ public sealed class VeldridRenderer : IDisposable
 
         _cameraLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             new ResourceLayoutElementDescription(
-                "ViewProjection",
-                ResourceKind.UniformBuffer,
-                ShaderStages.Vertex)));
+                "Projection", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+            new ResourceLayoutElementDescription(
+                "View", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
 
         _cameraSet = factory.CreateResourceSet(new ResourceSetDescription(
             _cameraLayout,
-            _cameraBuffer));
+            _projectionBuffer,
+            _viewBuffer));
 
         _shaders = factory.CreateFromSpirv(
             new ShaderDescription(
@@ -218,7 +219,8 @@ public sealed class VeldridRenderer : IDisposable
         _terrainPipeline = null;
         _cameraSet = null;
         _cameraLayout = null;
-        _cameraBuffer = null;
+        _projectionBuffer = null;
+        _viewBuffer = null;
         _vertexBuffer = null;
         _indexBuffer = null;
         _commandList = null;
@@ -228,9 +230,14 @@ public sealed class VeldridRenderer : IDisposable
     private const string VertexShader = @"
 #version 450
 
-layout(set = 0, binding = 0) uniform CameraBuffer
+layout(set = 0, binding = 0) uniform ProjectionBuffer
 {
-    mat4 ViewProjection;
+    mat4 Projection;
+};
+
+layout(set = 0, binding = 1) uniform ViewBuffer
+{
+    mat4 View;
 };
 
 layout(location = 0) in vec3 Position;
@@ -240,7 +247,7 @@ layout(location = 0) out vec3 fsin_Color;
 
 void main()
 {
-    gl_Position = ViewProjection * vec4(Position, 1.0);
+    gl_Position = Projection * View * vec4(Position, 1.0);
     fsin_Color = Color;
 }";
 
