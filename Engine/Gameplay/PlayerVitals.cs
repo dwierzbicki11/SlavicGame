@@ -30,13 +30,20 @@ public sealed class PlayerVitals
             return;
         }
 
-        _recoveryDelayRemaining = Math.Max(0.0, _recoveryDelayRemaining - deltaSeconds);
+        var recoverySeconds = deltaSeconds;
         if (_recoveryDelayRemaining > 0.0)
         {
-            return;
+            var waitingSeconds = Math.Min(_recoveryDelayRemaining, recoverySeconds);
+            _recoveryDelayRemaining -= waitingSeconds;
+            recoverySeconds -= waitingSeconds;
         }
 
-        Stamina = MathF.Min(MaxStamina, Stamina + StaminaRecoveryPerSecond * (float)deltaSeconds);
+        if (recoverySeconds > 0.0)
+        {
+            Stamina = MathF.Min(
+                MaxStamina,
+                Stamina + StaminaRecoveryPerSecond * (float)recoverySeconds);
+        }
     }
 
     public void TakeDamage(float amount)
