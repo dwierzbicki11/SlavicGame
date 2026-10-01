@@ -6,6 +6,7 @@ public static class WorldGenerator
     {
         var world = new WorldState();
         world.Initialize();
+        VerticalSliceBootstrap.Apply(world);
         return world;
     }
 }
