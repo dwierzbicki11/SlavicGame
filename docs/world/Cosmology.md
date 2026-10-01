@@ -9,7 +9,7 @@
 | Jawia | Świat żywych, codzienna przestrzeń gry | Ciało, materia i skutki działania utrzymują ciągłość | Pełna mapa i historia świata |
 | Nawia | Sfera zmarłych | Ślady pamięci nie są zawsze samymi duszami; przywołanie wymaga rozpoznania rozmówcy | Geografia, porządek i wszystkie drogi zmarłych |
 | Sfera boska | Miejsce istnienia lub manifestacji bogów | Wpływ w Jawii wymaga ograniczonego przejawu, miejsca, więzi albo pośrednika | Jej struktura i hierarchia |
-| Czwarta Sfera | Coś starszego od bogów, centralna tajemnica | Jej ślady mogą zaburzać reguły znane ludziom i bogom | Natura, początki, zamiary i związki z rodziną bohatera |
+| Czwarta Sfera | Coś starszego od bogów, centralna tajemnica dla gracza | W author truth: Splot nieustalonych możliwości i relacji; nie jest świadomym bytem | Sposób, w jaki poszczególne kultury ją interpretują |
 
 To sfery istnienia, a nie cztery poziomy na zwykłej mapie. Drzewo, woda, sen i próg mogą być motywami przejścia w grze. Każde takie użycie ma własne oznaczenie F i nie dowodzi jednej historycznej religii.
 
@@ -58,12 +58,19 @@ Zgon gracza przywraca ostatni checkpoint. Przywracamy razem postać, ekwipunek, 
 | Przyroda | Wpływ na roślinę lub środowisko | Składniki, czas, lokalny skutek ekologiczny |
 | Dusze / Nawia | Odczyt echa i kontakt | Przedmiot, przygotowanie, ryzyko błędnego rozpoznania |
 | Dawna moc | Aktywacja pozostałości nieznanego warsztatu | Niepełna wiedza, wyczerpanie lub uszkodzenie narzędzia |
-| Czwarta Sfera | Anomalia obserwowana w fabule | Nieustalone; brak swobodnego dostępu w pierwszym wycinku |
+| Czwarta Sfera | Praca na niestabilnym wzorze / granicy | Ryzyko utraty tożsamości, błędnego związania i przeciążenia węzła |
 
 Alchemia, rytuał i czar to różne działania. Alchemia wymaga receptury i substancji; rytuał miejsca, kolejności i warunków; czar wyuczonej umiejętności i kosztu użycia. Magiczny alfabet oraz język powstaną jako autorski system. Nie nazywamy ich autentycznymi historycznymi „runami słowiańskimi”.
 
 ## Ochrona tajemnic głównej historii
 
-Wersja 0.1 nie odpowiada na pytania: czy bogów można naprawdę zabić, czym jest Czwarta Sfera, co spowodowało kryzys i kim jest rodzina bohatera. Kult, książka lub postać mogą mieć własną teorię. Przy jej pisaniu zaznaczamy, kto ją głosi i co ją podważa.
+**Prawda autorów jest już ustalona**, ale pozostaje ukryta przed graczem do odpowiednich aktów.
 
-Pierwszy wycinek potwierdza lokalne przenikanie Jawii i Nawii oraz skuteczność jednego obrzędu. Nie dowodzi istnienia jednej naczelnej istoty, nie ustala wspólnej genealogii panteonu i nie wyjaśnia źródła wszystkich anomalii.
+Dokument spoilerowy:
+- [FourthSphereTruth.md](FourthSphereTruth.md);
+- [GodMortality.md](GodMortality.md);
+- [CrisisTruth.md](../story/CrisisTruth.md).
+
+Pierwszy wycinek nadal potwierdza tylko lokalne przenikanie Jawii i Nawii oraz skuteczność jednego obrzędu. Nie ujawnia Splotu, Sieci Progów ani przyczyny wszystkich anomalii.
+
+Checkpoint po śmierci pozostaje mechaniką niediegetyczną; Czwarta Sfera nie służy do wyjaśniania save/load.
