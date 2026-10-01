@@ -17,13 +17,17 @@ public static class PlayerController
         if (input.Right) move += camera.GetMoveRight();
         if (input.Left) move -= camera.GetMoveRight();
 
-        if (move.LengthSquared() > 0.001f)
+        var isMoving = move.LengthSquared() > 0.001f;
+        var sprinting = isMoving && input.Running && world.Player.CanSprint;
+
+        if (isMoving)
         {
             move = Vector3.Normalize(move);
-            var speed = input.Running ? 9f : 5f;
+            var speed = sprinting ? 9f : 5f;
             world.SetPlayerPosition(world.PlayerPosition + move * speed * (float)deltaSeconds);
         }
 
+        world.Player.UpdateStamina(sprinting, deltaSeconds);
         camera.Follow(world.PlayerPosition, (float)deltaSeconds, world.Terrain);
     }
 }
