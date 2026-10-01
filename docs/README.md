@@ -51,6 +51,13 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 |---|---|
 | [Magic Bible](magic/MagicBible.md) | Źródła magii, czary, rytuały, alchemia, alfabet |
 | [Bestiary Bible](bestiary/BestiaryBible.md) | Metoda kart istot, ekologia i alternatywy wobec walki |
+| [Źródła bestiariusza](research/bestiary/BestiarySources.md) | Pakiet B01–B06, zakres i ograniczenia |
+| [Rusałka](research/bestiary/Rusalka.md) | Wschodniosłowiański folklor i ograniczenia użycia |
+| [Duch leśny](research/bestiary/ForestSpirit.md) | Zmienność tradycji i fit do forest-guardian |
+| [Wodnik](research/bestiary/WaterSpirit.md) | Czeska tradycja kulturowa i późne transformacje |
+| [Zmora](research/bestiary/Zmora.md) | Późny polski folklor nocny |
+| [Strzygoń/strzyga](research/bestiary/Strzygon.md) | Materiał etnolingwistyczny o revenancie |
+| [Fit vertical slice](research/bestiary/VerticalSliceFit.md) | Decyzja, które nazwy nie pasują do prototypów |
 | [Bohater](character/PlayerCharacter.md) | Kreator, zawód, style gry i progresja |
 | [Tajemnica rodziny](character/FamilyMystery.md) | Struktura odkrywania bez zamrażania finałowej prawdy |
 
