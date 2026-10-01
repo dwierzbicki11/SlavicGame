@@ -20,7 +20,6 @@ public sealed class GameEngine : IDisposable
     private double _fpsAccumulator;
     private int _fpsFrames;
     private double _displayFps;
-    private bool _mouseLookActive;
 
     public GameTime Time => _time;
     public GameWindow Window => _window;
@@ -106,7 +105,8 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
-        UpdateMouseLook();
+        var mouse = _window.MouseDelta;
+        _camera.Update(_world.PlayerPosition, mouse.X, mouse.Y);
 
         var move = Vector3.Zero;
         if (_window.IsKeyDown(Key.W)) move += _camera.GetMoveForward();
@@ -120,31 +120,6 @@ public sealed class GameEngine : IDisposable
             var speed = _window.IsKeyDown(Key.ShiftLeft) ? 9f : 5f;
             _world.SetPlayerPosition(_world.PlayerPosition + move * speed * (float)deltaSeconds);
         }
-    }
-
-    private void UpdateMouseLook()
-    {
-        var wantsMouseLook = _window.IsMouseButtonDown(MouseButton.Right);
-
-        if (wantsMouseLook && !_mouseLookActive)
-        {
-            _mouseLookActive = true;
-            _window.SetMouseLookActive(true);
-        }
-        else if (!wantsMouseLook && _mouseLookActive)
-        {
-            _mouseLookActive = false;
-            _window.SetMouseLookActive(false);
-        }
-
-        if (!_mouseLookActive)
-        {
-            return;
-        }
-
-        var mouse = _window.MouseDelta;
-        _camera.Update(_world.PlayerPosition, mouse.X, mouse.Y);
-        _window.CenterMouse();
     }
 
     private void OnWindowResized()
