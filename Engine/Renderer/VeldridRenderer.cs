@@ -11,18 +11,27 @@ namespace SlavicGame.Engine.Renderer;
 
 public sealed class VeldridRenderer : IDisposable
 {
+    private readonly List<HudVertex> _hudVertices = [];
+
     private GraphicsDevice? _graphicsDevice;
     private CommandList? _commandList;
     private DeviceBuffer? _vertexBuffer;
     private DeviceBuffer? _indexBuffer;
     private DeviceBuffer? _projectionBuffer;
     private DeviceBuffer? _viewBuffer;
+    private DeviceBuffer? _hudVertexBuffer;
+    private DeviceBuffer? _hudScreenBuffer;
     private ResourceLayout? _cameraLayout;
     private ResourceSet? _cameraSet;
+    private ResourceLayout? _hudLayout;
+    private ResourceSet? _hudSet;
     private Pipeline? _terrainPipeline;
+    private Pipeline? _hudPipeline;
     private Shader[]? _shaders;
+    private Shader[]? _hudShaders;
 
     private uint _indexCount;
+    private uint _hudVertexCapacity;
 
     public GraphicsDevice GraphicsDevice =>
         _graphicsDevice ?? throw new InvalidOperationException("Renderer has not been initialized.");
@@ -80,24 +89,12 @@ public sealed class VeldridRenderer : IDisposable
             _viewBuffer));
 
         _shaders = factory.CreateFromSpirv(
-            new ShaderDescription(
-                ShaderStages.Vertex,
-                Encoding.UTF8.GetBytes(VertexShader),
-                "main"),
-            new ShaderDescription(
-                ShaderStages.Fragment,
-                Encoding.UTF8.GetBytes(FragmentShader),
-                "main"));
+            new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VertexShader), "main"),
+            new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(FragmentShader), "main"));
 
         var vertexLayout = new VertexLayoutDescription(
-            new VertexElementDescription(
-                "Position",
-                VertexElementSemantic.Position,
-                VertexElementFormat.Float3),
-            new VertexElementDescription(
-                "Color",
-                VertexElementSemantic.Color,
-                VertexElementFormat.Float3));
+            new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
+            new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float3));
 
         _terrainPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
@@ -109,18 +106,53 @@ public sealed class VeldridRenderer : IDisposable
                 true,
                 false),
             PrimitiveTopology.TriangleList,
-            new ShaderSetDescription(
-                new[] { vertexLayout },
-                _shaders),
+            new ShaderSetDescription(new[] { vertexLayout }, _shaders),
             new[] { _cameraLayout },
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription));
+
+        _hudScreenBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        _hudVertexCapacity = 4096;
+        _hudVertexBuffer = factory.CreateBuffer(new BufferDescription(
+            HudVertex.SizeInBytes * _hudVertexCapacity,
+            BufferUsage.VertexBuffer));
+
+        _hudLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
+            new ResourceLayoutElementDescription(
+                "ScreenSize", ResourceKind.UniformBuffer, ShaderStages.Vertex)));
+
+        _hudSet = factory.CreateResourceSet(new ResourceSetDescription(
+            _hudLayout,
+            _hudScreenBuffer));
+
+        _hudShaders = factory.CreateFromSpirv(
+            new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(HudVertexShader), "main"),
+            new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(HudFragmentShader), "main"));
+
+        var hudVertexLayout = new VertexLayoutDescription(
+            new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
+            new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float4));
+
+        _hudPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+            BlendStateDescription.SingleAlphaBlend,
+            DepthStencilStateDescription.Disabled,
+            new RasterizerStateDescription(
+                FaceCullMode.None,
+                PolygonFillMode.Solid,
+                FrontFace.Clockwise,
+                true,
+                false),
+            PrimitiveTopology.TriangleList,
+            new ShaderSetDescription(new[] { hudVertexLayout }, _hudShaders),
+            new[] { _hudLayout },
             _graphicsDevice.SwapchainFramebuffer.OutputDescription));
 
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
         EngineLog.Info("Terrain mesh uploaded to GPU.");
+        EngineLog.Info("HUD renderer initialized.");
     }
 
-    public void Render(WorldTime worldTime, Camera3D camera)
+    public void Render(WorldTime worldTime, Camera3D camera, double fps)
     {
         if (_graphicsDevice is null ||
             _commandList is null ||
@@ -129,7 +161,11 @@ public sealed class VeldridRenderer : IDisposable
             _projectionBuffer is null ||
             _viewBuffer is null ||
             _cameraSet is null ||
-            _terrainPipeline is null)
+            _terrainPipeline is null ||
+            _hudVertexBuffer is null ||
+            _hudScreenBuffer is null ||
+            _hudSet is null ||
+            _hudPipeline is null)
         {
             throw new InvalidOperationException("Renderer has not been initialized.");
         }
@@ -140,13 +176,34 @@ public sealed class VeldridRenderer : IDisposable
             return;
         }
 
-        var aspect = MathF.Max(0.1f, (float)framebuffer.Width / framebuffer.Height);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
+        var width = Math.Max(1u, framebuffer.Width);
+        var height = Math.Max(1u, framebuffer.Height);
+        var aspect = MathF.Max(0.1f, (float)width / height);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(
+            camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
         var view = Matrix4x4.CreateLookAt(camera.Position, camera.Target, Vector3.UnitY);
+
+        BuildFpsHud((float)Math.Max(0, fps));
+        if (_hudVertices.Count > _hudVertexCapacity)
+        {
+            _hudVertexCapacity = (uint)Math.Max(_hudVertices.Count, _hudVertexCapacity * 2);
+            _hudVertexBuffer.Dispose();
+            _hudVertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(
+                HudVertex.SizeInBytes * _hudVertexCapacity,
+                BufferUsage.VertexBuffer));
+        }
+
+        var screenSize = new Vector4(width, height, 0, 0);
 
         _commandList.Begin();
         _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
         _commandList.UpdateBuffer(_viewBuffer, 0, view);
+        _commandList.UpdateBuffer(_hudScreenBuffer, 0, screenSize);
+        if (_hudVertices.Count > 0)
+        {
+            _commandList.UpdateBuffer(_hudVertexBuffer, 0, _hudVertices.ToArray());
+        }
+
         _commandList.SetFramebuffer(framebuffer);
         _commandList.ClearColorTarget(0, GetAtmosphereColor(worldTime));
         _commandList.SetPipeline(_terrainPipeline);
@@ -155,10 +212,69 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
         _commandList.DrawIndexed(_indexCount);
 
+        if (_hudVertices.Count > 0)
+        {
+            _commandList.SetPipeline(_hudPipeline);
+            _commandList.SetGraphicsResourceSet(0, _hudSet);
+            _commandList.SetVertexBuffer(0, _hudVertexBuffer);
+            _commandList.Draw((uint)_hudVertices.Count);
+        }
+
         _commandList.End();
 
         _graphicsDevice.SubmitCommands(_commandList);
         _graphicsDevice.SwapBuffers();
+    }
+
+    private void BuildFpsHud(float fps)
+    {
+        _hudVertices.Clear();
+
+        var text = $"FPS {Math.Clamp((int)MathF.Round(fps), 0, 9999)}";
+        const float x = 18f;
+        const float y = 18f;
+        const float pixel = 5f;
+        const float gap = 2f;
+
+        var cursor = x;
+        foreach (var character in text)
+        {
+            if (!Glyphs.TryGetValue(character, out var glyph))
+            {
+                cursor += 7f * pixel;
+                continue;
+            }
+
+            for (var row = 0; row < 7; row++)
+            for (var col = 0; col < 5; col++)
+            {
+                if ((glyph[row] & (1 << (4 - col))) == 0)
+                {
+                    continue;
+                }
+
+                AddHudQuad(cursor + col * (pixel + gap), y + row * (pixel + gap), pixel, pixel);
+            }
+
+            cursor += 5f * (pixel + gap) + 6f;
+        }
+    }
+
+    private void AddHudQuad(float x, float y, float width, float height)
+    {
+        const float padding = 1f;
+        var x0 = x - padding;
+        var y0 = y - padding;
+        var x1 = x + width + padding;
+        var y1 = y + height + padding;
+        var color = new Vector4(0.92f, 0.88f, 0.68f, 0.95f);
+
+        _hudVertices.Add(new HudVertex(new Vector2(x0, y0), color));
+        _hudVertices.Add(new HudVertex(new Vector2(x1, y0), color));
+        _hudVertices.Add(new HudVertex(new Vector2(x1, y1), color));
+        _hudVertices.Add(new HudVertex(new Vector2(x0, y0), color));
+        _hudVertices.Add(new HudVertex(new Vector2(x1, y1), color));
+        _hudVertices.Add(new HudVertex(new Vector2(x0, y1), color));
     }
 
     private static RgbaFloat GetAtmosphereColor(WorldTime time)
@@ -199,6 +315,12 @@ public sealed class VeldridRenderer : IDisposable
 
         _graphicsDevice.WaitForIdle();
 
+        _hudPipeline?.Dispose();
+        _hudSet?.Dispose();
+        _hudLayout?.Dispose();
+        _hudVertexBuffer?.Dispose();
+        _hudScreenBuffer?.Dispose();
+
         _terrainPipeline?.Dispose();
         _cameraSet?.Dispose();
         _cameraLayout?.Dispose();
@@ -207,18 +329,23 @@ public sealed class VeldridRenderer : IDisposable
         _vertexBuffer?.Dispose();
         _indexBuffer?.Dispose();
 
-        if (_shaders is not null)
+        if (_hudShaders is not null)
         {
-            foreach (var shader in _shaders)
-            {
-                shader.Dispose();
-            }
+            foreach (var shader in _hudShaders) shader.Dispose();
         }
 
-        _commandList?.Dispose();
-        _graphicsDevice.Dispose();
+        if (_shaders is not null)
+        {
+            foreach (var shader in _shaders) shader.Dispose();
+        }
 
+        _hudShaders = null;
         _shaders = null;
+        _hudPipeline = null;
+        _hudSet = null;
+        _hudLayout = null;
+        _hudVertexBuffer = null;
+        _hudScreenBuffer = null;
         _terrainPipeline = null;
         _cameraSet = null;
         _cameraLayout = null;
@@ -226,28 +353,51 @@ public sealed class VeldridRenderer : IDisposable
         _viewBuffer = null;
         _vertexBuffer = null;
         _indexBuffer = null;
+        _commandList?.Dispose();
+        _graphicsDevice.Dispose();
+
         _commandList = null;
         _graphicsDevice = null;
     }
 
+    private readonly struct HudVertex
+    {
+        public const uint SizeInBytes = 24;
+        public readonly Vector2 Position;
+        public readonly Vector4 Color;
+
+        public HudVertex(Vector2 position, Vector4 color)
+        {
+            Position = position;
+            Color = color;
+        }
+    }
+
+    private static readonly Dictionary<char, int[]> Glyphs = new()
+    {
+        ['F'] = [0b11111, 0b10000, 0b10000, 0b11110, 0b10000, 0b10000, 0b10000],
+        ['P'] = [0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000],
+        ['S'] = [0b01111, 0b10000, 0b10000, 0b01110, 0b00001, 0b00001, 0b11110],
+        ['0'] = [0b01110, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b01110],
+        ['1'] = [0b00100, 0b01100, 0b00100, 0b00100, 0b00100, 0b00100, 0b01110],
+        ['2'] = [0b01110, 0b10001, 0b00001, 0b00010, 0b00100, 0b01000, 0b11111],
+        ['3'] = [0b11110, 0b00001, 0b00001, 0b01110, 0b00001, 0b00001, 0b11110],
+        ['4'] = [0b00010, 0b00110, 0b01010, 0b10010, 0b11111, 0b00010, 0b00010],
+        ['5'] = [0b11111, 0b10000, 0b10000, 0b11110, 0b00001, 0b00001, 0b11110],
+        ['6'] = [0b01110, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b01110],
+        ['7'] = [0b11111, 0b00001, 0b00010, 0b00100, 0b01000, 0b01000, 0b01000],
+        ['8'] = [0b01110, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b01110],
+        ['9'] = [0b01110, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b01110],
+        [' '] = [0, 0, 0, 0, 0, 0, 0]
+    };
+
     private const string VertexShader = @"
 #version 450
-
-layout(set = 0, binding = 0) uniform ProjectionBuffer
-{
-    mat4 Projection;
-};
-
-layout(set = 0, binding = 1) uniform ViewBuffer
-{
-    mat4 View;
-};
-
+layout(set = 0, binding = 0) uniform ProjectionBuffer { mat4 Projection; };
+layout(set = 0, binding = 1) uniform ViewBuffer { mat4 View; };
 layout(location = 0) in vec3 Position;
 layout(location = 1) in vec3 Color;
-
 layout(location = 0) out vec3 fsin_Color;
-
 void main()
 {
     gl_Position = Projection * View * vec4(Position, 1.0);
@@ -256,12 +406,27 @@ void main()
 
     private const string FragmentShader = @"
 #version 450
-
 layout(location = 0) in vec3 fsin_Color;
 layout(location = 0) out vec4 fsout_Color;
+void main() { fsout_Color = vec4(fsin_Color, 1.0); }";
 
+    private const string HudVertexShader = @"
+#version 450
+layout(set = 0, binding = 0) uniform ScreenBuffer { vec4 ScreenSize; };
+layout(location = 0) in vec2 Position;
+layout(location = 1) in vec4 Color;
+layout(location = 0) out vec4 fsin_Color;
 void main()
 {
-    fsout_Color = vec4(fsin_Color, 1.0);
+    vec2 ndc = vec2(
+        Position.x / ScreenSize.x * 2.0 - 1.0,
+        1.0 - Position.y / ScreenSize.y * 2.0);
+    gl_Position = vec4(ndc, 0.0, 1.0);
+    fsin_Color = Color;
 }";
-}
+
+    private const string HudFragmentShader = @"
+#version 450
+layout(location = 0) in vec4 fsin_Color;
+layout(location = 0) out vec4 fsout_Color;
+void main() { fsout_Color = fsin_Color; }";
