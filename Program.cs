@@ -8,7 +8,8 @@ try
         WindowTitle = "SlavicGame",
         Width = 1280,
         Height = 720,
-        VSync = true
+        VSync = true,
+        Fullscreen = true
     });
 
     game.Initialize();
