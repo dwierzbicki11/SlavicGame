@@ -17,6 +17,9 @@ public sealed class GameEngine : IDisposable
     private readonly WorldState _world = WorldGenerator.Generate();
 
     private bool _initialized;
+    private double _fpsAccumulator;
+    private int _fpsFrames;
+    private double _displayFps;
 
     public GameTime Time => _time;
     public GameWindow Window => _window;
@@ -63,6 +66,7 @@ public sealed class GameEngine : IDisposable
             previousSeconds = currentSeconds;
 
             _time.Advance(deltaSeconds);
+            UpdateFps(deltaSeconds);
             HandleInput(deltaSeconds);
             _world.Update(deltaSeconds);
 
@@ -72,7 +76,25 @@ public sealed class GameEngine : IDisposable
                 EngineLog.Info("Main loop is running.");
             }
 
-            _renderer.Render(_world.Time, _camera);
+            _renderer.Render(_world.Time, _camera, _displayFps);
+        }
+    }
+
+    private void UpdateFps(double deltaSeconds)
+    {
+        if (deltaSeconds <= 0)
+        {
+            return;
+        }
+
+        _fpsAccumulator += deltaSeconds;
+        _fpsFrames++;
+
+        if (_fpsAccumulator >= 0.5)
+        {
+            _displayFps = _fpsFrames / _fpsAccumulator;
+            _fpsAccumulator = 0;
+            _fpsFrames = 0;
         }
     }
 
