@@ -6,7 +6,8 @@ Dokumentacja jest po polsku; nazwy typów i identyfikatory w kodzie pozostają p
 
 > **Ważne:** dokument v0.1 oznacza istniejącą specyfikację roboczą, nie zamknięty temat ani ukończoną implementację.
 
-Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/DocumentationCoverage.md).
+Najlepszy punkt wejścia do całej gry: [Pełny obraz gry v0.2](FullGameOverview.md).  
+Kontrola kompletności: [Pokrycie dokumentacji](design/DocumentationCoverage.md).
 
 ## Fundament świata i lore
 
@@ -14,6 +15,8 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 |---|---|
 | [World Bible](world/WorldBible.md) | Filary świata, codzienność, Pogranicze Żarnowca |
 | [Kosmologia](world/Cosmology.md) | Jawia, Nawia, sfera boska, Czwarta Sfera |
+| [Czwarta Sfera — author truth](world/FourthSphereTruth.md) | Rzeczywista natura Splotu i zasady anomalii |
+| [Śmierć boga — author rule](world/GodMortality.md) | Manifestacja, kotwice i prawdziwa śmierć |
 | [Timeline](world/Timeline.md) | Struktura historii świata i wydarzenia startowego regionu |
 | [Kultury](world/Cultures.md) | Zasady projektowania kultur i kultura pogranicza |
 | [Królestwa i regiony](world/RegionsAndKingdoms.md) | Geografia, polityka, zasoby i konflikty |
@@ -84,7 +87,8 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Upiór](research/bestiary/Upior.md) | Revenant bez popkulturowego skrótu |
 | [Błędne ogniki](research/bestiary/WillOWisps.md) | Typ zjawiska zamiast jednego gatunku |
 | [Bohater](character/PlayerCharacter.md) | Kreator, zawód, style gry i progresja |
-| [Tajemnica rodziny](character/FamilyMystery.md) | Struktura odkrywania bez zamrażania finałowej prawdy |
+| [Tajemnica rodziny](character/FamilyMystery.md) | Player-facing struktura odkrywania |
+| [Rodzina — author truth](character/FamilyTruth.md) | Prawdziwy udział rodziców i Noc Zamkniętego Progu |
 
 ## Fabuła
 
@@ -92,13 +96,23 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 |---|---|
 | [Główna historia](story/MainStory.md) | Struktura aktów i wymagania kampanii |
 | [Przepływ kampanii](story/CampaignRegionalFlow.md) | Funkcja każdego dużego regionu w historii |
-| [Zakończenia](story/Endings.md) | Osie finału, epilogi i ścieżka bez patrona |
+| [Main Quest Skeleton](story/MainQuestSkeleton.md) | MQ00–MQ56, 29 roboczych jednostek |
+| [Powracająca obsada](story/RecurringCast.md) | Kluczowe role ludzkie, rodzina i sojusznicy |
+| [Prawda kryzysu](story/CrisisTruth.md) | Sieć Progów, przeciążenie i Noc Zamkniętego Progu |
+| [Antagoniści](story/Antagonists.md) | Wszebor, Krąg Rozwarcia i Straż Zamknięcia |
+| [Plan ujawniania](story/RevelationPlan.md) | Jak gracz składa prawdę w Aktach 0–V |
+| [Chronologia tajemnicy](story/MysteryChronology.md) | Autor truth >1000 BG → finał |
+| [Finał](story/Finale.md) | Etapy Pierwszego Progu |
+| [Zakończenia](story/Endings.md) | Osie finału i techniczny model |
+| [5 wariantów endingów](story/EndingVariants.md) | E1–E5 |
+| [Epilogue Matrix](story/EpilogueMatrix.md) | Regiony, NPC, bogowie i bohater |
 
 ## Game design
 
 | Dokument | Zakres |
 |---|---|
 | [Game Design Bible](design/GameDesignBible.md) | Core loop i pełny model systemów |
+| [Scope 1.0](design/ScopeBoundaries.md) | Co jest core, a czego celowo nie budujemy |
 | [Quest Design](design/QuestDesign.md) | Stany, dowody, rozwiązania i nagrody |
 | [Decision Model](design/DecisionModel.md) | Decyzje i konsekwencje bez good/evil |
 | [Combat Design](design/CombatDesign.md) | Melee, stamina, blok, unik, łuk |

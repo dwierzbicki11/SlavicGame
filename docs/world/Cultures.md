@@ -1,4 +1,4 @@
-# Kultury — Bible v0.1
+# Kultury — Bible v0.2
 
 Etap 6 roadmapy. Kultury SlavicGame są **fikcyjne (F)**. Inspiracja Słowiańszczyzną IX–X wieku jest kierunkiem badań życia materialnego, nie podstawą do kopiowania jednej współczesnej narodowości w przeszłość.
 
@@ -90,22 +90,22 @@ Docelowo świat ma:
 
 Pełne conlangi są opcjonalne. Najpierw spójność nazw i zasad fonetycznych.
 
-## Badania do wykonania
+## Stan researchu kultury startowej
 
-Przed finalizacją kultury startowej potrzebne są osobne research cards dla:
+Pierwszy pakiet researchu kultury materialnej został wykonany w `docs/research/material-culture/` i obejmuje:
+- budownictwo;
+- narzędzia/rolnictwo;
+- ubiór i tekstylia;
+- żywność — z celowo zachowanymi ograniczeniami danych;
+- transport;
+- uzbrojenie;
+- rzemiosło/strukturę osad;
+- pochówki;
+- handel.
 
-- budownictwa;
-- narzędzi rolniczych;
-- ubioru i materiałów;
-- żywności i przechowywania;
-- transportu;
-- uzbrojenia;
-- rzemiosła;
-- pochówków;
-- handlu;
-- struktury osad.
+To pozwala rozpocząć świadomy art/content pass Pogranicza, ale **nie jest finalnym reconstruction lockiem**. Konkretne assety nadal muszą wskazywać, które elementy są źródłowe, rekonstruowane albo F.
 
-Dopiero po nich element może otrzymać etykietę historycznej inspiracji zamiast ogólnego F.
+Dla kultur makro kolejne osobne research packages pozostają potrzebne — szczególnie dla Arelów, którzy nie mogą być projektowani jako kolejny wariant kultury słowiańsko-inspirowanej.
 
 
 ## Makroświat — decyzje v0.1

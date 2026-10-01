@@ -1,6 +1,6 @@
-# Główna historia — struktura v0.1
+# Główna historia — struktura v0.2
 
-Etap 12 roadmapy. Dokument ustala strukturę kampanii, nie ostateczne rozwiązanie tajemnicy Czwartej Sfery.
+Etap 12 roadmapy. Dokument opisuje strukturę kampanii; prawda autorów i finał są już ustalone w dokumentach spoilerowych.
 
 ## Założenie
 
@@ -57,11 +57,12 @@ Gracz rozpoznaje:
 
 Gracz uzyskuje możliwość bezpośredniego zbadania zjawiska związanego z Czwartą Sferą.
 
-Otwarte:
-- natura sfery;
-- czy posiada intencję;
-- czy jest miejscem, stanem, bytem czy kategorią niezrozumiałą dla ludzi;
-- co dokładnie wywołało kryzys.
+Odkrywa, że:
+- „Czwarta Sfera” nie jest zwykłym miejscem;
+- Splot nie jest świadomym antagonistą;
+- Sieć Progów jest dawnym systemem stabilizacji;
+- stary model jest przeciążony;
+- Krąg Rozwarcia przyspiesza problem, ale go nie stworzył.
 
 ## Akt V — Decyzja końcowa
 
@@ -116,7 +117,17 @@ Pokonanie przejawu boga nie przesądza śmierci samego boga.
 
 ## Status
 
-Struktura aktów jest F v0.1. Prawda Czwartej Sfery, ostateczny antagonista, szczegółowe frakcje i finalna historia rodziny pozostają otwarte.
+**Pełny obraz głównej historii v0.2 jest ustalony.**
+
+Spoilerowe dokumenty:
+- [CrisisTruth.md](CrisisTruth.md);
+- [Antagonists.md](Antagonists.md);
+- [Finale.md](Finale.md);
+- [EndingVariants.md](EndingVariants.md);
+- [MysteryChronology.md](MysteryChronology.md);
+- [RevelationPlan.md](RevelationPlan.md).
+
+Do dalszej produkcji pozostają szczegółowe karty wszystkich main questów i scen.
 
 
 ## Regiony kampanii — first pass

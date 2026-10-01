@@ -1,4 +1,4 @@
-# Mapa świata — założenia v0.1
+# Mapa świata — założenia v0.2
 
 Etap 16 roadmapy.
 
@@ -77,14 +77,18 @@ Nie pokazuje automatycznie:
 - wszystkich sekretów;
 - dokładnego rozwiązania zagadki.
 
-## Ostateczna geografia
+## Stan geografii po makro-passie
 
-Pozostaje otwarta do czasu:
-- zatwierdzenia kultur;
-- głównych państw;
-- osi fabularnej;
-- kosztu produkcji regionu;
-- pomiarów wydajności streamingu.
+**Makrogeografia kampanii jest ustalona jako first pass R0–R6.**
+
+Nadal otwarte produkcyjnie są:
+- dokładne granice map gry;
+- rozmiary i streaming;
+- lokalne drogi i osady poza R0;
+- kolejność części opcjonalnych;
+- cięcia/łączenia regionów wynikające z budżetu.
+
+Zmiana rozmiaru regionu nie powinna usuwać jego funkcji fabularnej.
 
 
 ## Geografia makro v0.1

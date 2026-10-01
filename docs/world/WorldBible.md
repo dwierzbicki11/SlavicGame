@@ -1,6 +1,6 @@
 # World Bible
 
-**Wersja 0.1 — fundament świata.** Zasady wynikające z wizji oznaczono jako ustalone; nowe szczegóły jako projekt F. Całość opisuje fikcyjny świat. Bibliografię inspiracji zawiera [rejestr źródeł](../pantheon/Sources.md).
+**Wersja 0.2 — fundament świata i połączenie z pełnym obrazem gry.** Zasady wynikające z wizji oznaczono jako ustalone; nowe szczegóły jako projekt F. Całość opisuje fikcyjny świat. Bibliografię inspiracji zawiera [rejestr źródeł](../pantheon/Sources.md).
 
 ## Ustalone założenia
 
@@ -76,4 +76,12 @@ Zapłata może być pieniężna, rzeczowa lub przyjąć postać dostępu do usł
 
 Pierwszy region demonstruje tropienie, walkę, rozmowę, nocne zdarzenie, jeden obrzęd i zapis konsekwencji. Pełna gospodarka, rozrost osad, romanse, wszystkie kultury, liczne boskie krainy i rozległa Nawia należą do dalszych etapów. Są częścią docelowej wizji, nie stanem obecnego prototypu.
 
-Nie rozstrzygamy jeszcze genealogii bogów, końcowej geografii, pochodzenia bohatera ani przyczyny kryzysu granic. Następne dokumenty rozwijamy zgodnie z [kolejnością produkcji](../design/ProductionRoadmap.md).
+Pełny first pass geografii, pochodzenia bohatera i przyczyny kryzysu jest już ustalony w dokumentacji v0.2. Historyczna genealogia bogów nadal **nie jest sztucznie zamykana**, ponieważ materiał źródłowy tego nie uzasadnia.
+
+Najważniejsze dokumenty:
+- [pełny obraz gry](../FullGameOverview.md);
+- [geografia makro](MacroGeography.md);
+- [prawda o Czwartej Sferze](FourthSphereTruth.md);
+- [prawda kryzysu](../story/CrisisTruth.md);
+- [prawda rodziny](../character/FamilyTruth.md);
+- [finał](../story/Finale.md).

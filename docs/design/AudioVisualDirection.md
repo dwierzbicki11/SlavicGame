@@ -1,4 +1,4 @@
-# Kierunek audio-wizualny — v0.1
+# Kierunek audio-wizualny — v0.2
 
 ## Cel wizualny
 
@@ -72,3 +72,25 @@ Jeśli dźwięk jest potrzebny do mechaniki, istnieje też wizualna/tekstowa alt
 ## Placeholder policy
 
 Placeholdery są dozwolone w prototype/vertical slice, ale dokumentacja oznacza, kiedy asset nie reprezentuje kierunku finalnego.
+
+
+## Gramatyka Czwartej Sfery / Splotu — author direction
+
+Splot nie ma wyglądać jak:
+- zwykły fioletowy portal;
+- kosmos z gwiazdami;
+- piekło;
+- cyfrowy glitch bez reguły.
+
+Jego język wizualny opiera się na **sprzecznych, prawie poprawnych stanach**:
+- ten sam obiekt zajmuje dwie logiczne pozycje;
+- cień odpowiada innej wersji przedmiotu;
+- fragment architektury wygląda poprawnie z jednego kierunku, ale nie może istnieć jako całość;
+- ślad pokazuje skutek zdarzenia, które nie zaszło w aktualnej Jawii.
+
+Audio:
+- dwie zgodne rytmicznie, ale semantycznie sprzeczne wersje sygnału;
+- echo poprzedza źródło albo kończy frazę, której źródło nie wypowiedziało;
+- brak prostego „horroru noise” jako jedynego znaku.
+
+Czytelność gameplayowa ma pierwszeństwo: gracz musi móc rozpoznać, że to **inny typ zjawiska niż Nawia lub boski przejaw**.

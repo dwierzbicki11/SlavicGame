@@ -1,4 +1,4 @@
-# Królestwa i regiony — v0.1
+# Królestwa i regiony — v0.2
 
 Etap 7 roadmapy. Dokument ustala sposób budowania geografii politycznej bez zamrażania całej mapy przed sprawdzeniem pierwszego regionu.
 
@@ -63,11 +63,18 @@ To pozwala tworzyć konflikty bez konieczności każdorazowej wojny państw.
 7. **Nawia** — osobna sfera, nie zwykły biom.
 8. **Sfery boskie** — dostępne przez warunki, nie przez swobodne fast travel.
 
-## Królestwa
+## Państwa i organizacje po makro-passie
 
-Nazwy i liczba państw pozostają otwarte. Pierwsza wersja świata nie potrzebuje kompletnej listy monarchów.
+Główne polityczne formy kampanii mają już first pass:
+- Związek Grodów Nadborza;
+- Liga Ujścia;
+- Księstwa Przełęczy;
+- Wspólnoty Wielkiego Boru;
+- Konfederacja Arel.
 
-Każda przyszła karta państwa musi mieć:
+Nie oznacza to kompletnej listy wszystkich lokalnych władców i wspólnot.
+
+Każda rozwijana karta państwa/organizacji musi mieć:
 
 - źródło władzy;
 - sposób poboru zasobów;
@@ -89,14 +96,16 @@ Granica na mapie nie zawsze jest linią. Może być:
 - strefą danin;
 - obszarem przechodzącym sezonowo pod inną kontrolę.
 
-## Nie ustalamy jeszcze
+## Nadal otwarte produkcyjnie
 
-- nazwy całego kontynentu;
-- liczby królestw;
-- globalnej stolicy;
-- ostatecznego kształtu mapy;
-- jednego imperium jako centrum całej historii;
-- politycznej przynależności wszystkich przyszłych regionów.
+- nazwa całego kontynentu;
+- niższy szczebel lokalnych władców i rodów;
+- dokładne granice wpływów;
+- polityczna przynależność małych miejsc;
+- szczegółowa chronologia sukcesji;
+- zmiany wynikające z questów.
+
+Celowo **nie** powstaje jedno imperium będące centrum całej historii.
 
 
 ## Makroświat — first pass

@@ -54,17 +54,19 @@ Okres gry. Lokalne granice Jawii i Nawii zaczynają zachowywać się inaczej ni�
 | T-ZA-06 | podczas wycinka | odkrycie osobnych śladów zjawy i drapieżnika | potwierdzenie zależne od działań gracza |
 | T-ZA-07 | po zadaniu | lokalny skutek rozwiązania | zależy od wybranej ścieżki |
 
-## Co pozostaje otwarte
+## Author truth po Poziomie 9
 
-Nie wpisujemy jeszcze do kanonu:
+Ustalono:
+- Czwarta Sfera/Splot nie jest świadomą istotą ani zwykłym miejscem;
+- Pierwsze Zamknięcie (~430 BG) stworzyło Sieć Progów;
+- Sieć była rozwiązaniem awaryjnym i z czasem się przeciążyła;
+- obecny kryzys jest skutkiem degradacji + działań Kręgu Rozwarcia;
+- rodzice bohatera byli badaczami/praktykami Sieci;
+- Noc Zamkniętego Progu 22 BG jest centralnym wydarzeniem rodzinnym.
 
-- początku Czwartej Sfery;
-- pierwszego pojawienia się bogów;
-- jednej genealogii bogów;
-- prawdziwej przyczyny obecnego kryzysu;
-- roli rodziny bohatera w najstarszych wydarzeniach;
-- daty absolutnej rozpoczęcia gry;
-- jednej „pierwszej cywilizacji”.
+Nadal celowo nie ustalamy jednej historycznej genealogii bogów ani jednej „pierwszej cywilizacji”.
+
+Pełna chronologia spoilerowa: [MysteryChronology.md](../story/MysteryChronology.md).
 
 ## Format przyszłego wpisu
 
@@ -95,4 +97,4 @@ Najważniejsze znaczniki:
 - 22 BG — Noc Zamkniętego Progu;
 - 0 BG — początek gry.
 
-Prawda o Pierwszym Zamknięciu i Nocy Zamkniętego Progu jest rozstrzygana dopiero w Poziomie 9.
+Prawda o Pierwszym Zamknięciu i Nocy Zamkniętego Progu została rozstrzygnięta w Poziomie 9; player-facing kampania ujawnia ją dopiero w Aktach III–IV.

@@ -6,22 +6,22 @@
 
 | Etap | Zakres | Warunek zakończenia | Stan |
 |---|---|---|---|
-| 1 | Fundament świata | Spójne filary, zakres, codzienność i rola gracza | World Bible v0.1 zapisany; do dalszego rozwinięcia |
-| 2 | Kosmologia | Reguły sfer, przejść, ograniczeń i świadomie otwarte tajemnice | Kosmologia v0.1 zapisana |
+| 1 | Fundament świata | Spójne filary, zakres, codzienność i rola gracza | World Bible + pełny obraz świata v0.2 istnieją; research/content nadal rozwijane |
+| 2 | Kosmologia | Reguły sfer, przejść, ograniczeń i świadomie otwarte tajemnice | Kosmologia v0.2 + author truth Czwartej Sfery zapisane |
 | 3 | Pełny katalog panteonu | Rejestr źródeł, wariantów, niepewności i uzasadnionych pominięć | Katalog v0.1: 52 pozycje; badania pozostają otwarte |
-| 4 | Historie bogów | Karty wybranych bóstw, cele, sprzeczności kultów i relacje F | GodHistories v0.1: 6 kart + matryca relacji; pełna genealogia nadal celowo nieustalona |
-| 5 | Historia świata | Osobno zdarzenia, świadectwa i konkurencyjne interpretacje | Timeline v0.1 istnieje; główne tajemnice pozostają otwarte |
-| 6 | Kultury | Życie materialne, języki, wierzenia i wewnętrzne różnice | Cultures v0.1: framework + Pogranicze; research życia materialnego nadal wymagany |
-| 7 | Królestwa i regiony | Geografia, zasoby, zależności, granice oraz konflikty | RegionsAndKingdoms v0.1; globalne państwa i finalna mapa pozostają otwarte |
+| 4 | Historie bogów | Karty wybranych bóstw, cele, sprzeczności kultów i relacje F | GodHistories + research pass 02 + matryca relacji; genealogia historyczna nadal celowo nieustalona |
+| 5 | Historia świata | Osobno zdarzenia, świadectwa i konkurencyjne interpretacje | Timeline makro + pełna chronologia centralnej tajemnicy istnieją |
+| 6 | Kultury | Życie materialne, języki, wierzenia i wewnętrzne różnice | Kultury makro v0.1 + research startowego regionu; kolejne pakiety źródłowe nadal potrzebne |
+| 7 | Królestwa i regiony | Geografia, zasoby, zależności, granice oraz konflikty | Siły polityczne, R0–R6, gospodarka i konflikty mają pełny first pass |
 | 8 | Magia | Źródła mocy, koszty, nauka, alfabet i ograniczenia | Magic Bible v0.1 zapisany; czary/rytuały wymagają implementacji i balansu |
-| 9 | Potwory | Źródła, ekologia, zachowania i alternatywy wobec zabijania | Bestiary Bible v0.1; indywidualne folklorystyczne karty wymagają researchu |
+| 9 | Potwory | Źródła, ekologia, zachowania i alternatywy wobec zabijania | Bestiary Bible + dwa pakiety researchowe; pełny finalny roster nadal do produkcji |
 | 10 | Bohater | Kreator, zawód, rozwój i dopuszczalne style gry | PlayerCharacter v0.1 zapisany |
-| 11 | Rodzina bohatera | Tajemnica, dowody, tempo odkrywania i wpływ na wybory | FamilyMystery v0.1 definiuje strukturę; prawda końcowa celowo Otwarte |
-| 12 | Główna historia | Konflikt, akty i ścieżka bez boskiego patrona | MainStory v0.1: struktura aktów; finałowe lore i antagonista otwarte |
+| 11 | Rodzina bohatera | Tajemnica, dowody, tempo odkrywania i wpływ na wybory | FamilyMystery + FamilyTruth: prawda autorów i plan ujawniania ustalone |
+| 12 | Główna historia | Konflikt, akty i ścieżka bez boskiego patrona | MainStory v0.2: akty, Wszebor/Krąg Rozwarcia, kryzys i finał ustalone |
 | 13 | Zadania | Pełna pętla, stany, rozwiązania i sposób nagradzania | QuestDesign v0.1 + referencyjne „Światło nad mokradłem” |
 | 14 | Decyzje | Wskazane strony, skutki i momenty odczuwalnej zmiany | DecisionModel v0.1 zapisany |
-| 15 | Zakończenia | Wyniki zależne od historii działań i relacji | Endings v0.1 definiuje architekturę; finalne warianty nadal Otwarte |
-| 16 | Mapa świata | Gęste regiony, połączenia, rytm odkrywania | WorldMap v0.1; finalna geografia nadal Otwarte |
+| 15 | Zakończenia | Wyniki zależne od historii działań i relacji | Pięć głównych ending architectures + epilogue matrix ustalone |
+| 16 | Mapa świata | Gęste regiony, połączenia, rytm odkrywania | MacroGeography R0–R6 + regional campaign flow ustalone |
 | 17 | Projekt rozgrywki | Spójne systemy, ograniczenia i kryteria wycinka | GameDesignBible + systemowe specyfikacje v0.1 istnieją |
 | 18 | Architektura silnika | Granice systemów, dane, zasoby, stan i zapis | Fundament v0.1 przygotowany: moduły systemów, wspólny postęp i wersjonowany checkpoint; backendy assetów/audio/animacji oraz pełne integracje pozostają do rozwoju |
 | 19 | Vulkan | Działający rendering oraz określone ograniczenia sprzętowe | Podstawowy rendering działa; RenderingAndPlatform v0.1 określa dalsze warstwy |
@@ -34,18 +34,18 @@
 
 ## Najbliższy pakiet pracy
 
-Szczegółową kolejność prowadzi [DocumentationWorkQueue.md](DocumentationWorkQueue.md).
+**Pełny obraz designu v0.2 został zbudowany od najprostszych warstw do author truth.**
 
-**Poziom 1 został rozpoczęty i główne elementy są gotowe:** konwencje ID, przedmioty, czar/rytuał, pięć kart NPC, pełna karta „Światła nad mokradłem” oraz asset list.
+Następne prace są już produkcyjnym pogłębianiem znanego projektu:
+1. karty main questów aktów I–V;
+2. region bibles R1–R6;
+3. roster NPC/companionów;
+4. finalniejsze bestiary i research kultury Arel;
+5. asset budgets i pipeline;
+6. implementacja vertical slice;
+7. później pełna produkcja regionów.
 
-Następny pakiet to pozostałe proste specyfikacje i UX, zanim przejdziemy do researchu:
-
-1. format definicji broni/armor, encounterów, interakcji i eventów czasu;
-2. HUD spec, inventory/journal/dialog/map flows;
-3. action map wejścia i settings matrix;
-4. save-slot UX i debug overlay;
-5. dopiero potem systemy średniej trudności: melee moveset, bow, status effects, progression, tracking i economy;
-6. research historyczny/bestiariusz/panteon pozostają później, zgodnie z kolejką trudności.
+Punkt wejścia: [FullGameOverview.md](../FullGameOverview.md).
 
 ## Warunki jakości dokumentacji
 

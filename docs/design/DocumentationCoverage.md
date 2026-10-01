@@ -6,7 +6,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 |---|---|---|
 | Wizja | README.md | v0.1 |
 | Świat | world/WorldBible.md | v0.1 |
-| Kosmologia | world/Cosmology.md | v0.1 |
+| Kosmologia | world/Cosmology.md + world/FourthSphereTruth.md | player-facing + author truth v0.2 |
 | Panteon | pantheon/PantheonBible.md | katalog v0.1; research otwarty |
 | Źródła | pantheon/Sources.md | v0.1; krytyczne wydania do uzupełnienia |
 | Historie bogów | pantheon/GodHistories.md | 11+ kart/tradycji v0.1; Radegast celowo bez samodzielnej osobowości |
@@ -15,7 +15,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Instytucje kultowe | pantheon/CultInstitutions.md | F v0.1 |
 | Boskie umowy | pantheon/DivineContracts.md | F v0.1 |
 | Relacje bogów | pantheon/RelationshipMatrix.md | F v0.1 |
-| Historia świata | world/Timeline.md | struktura v0.1; prawda głównej tajemnicy otwarta |
+| Historia świata | world/Timeline.md + story/MysteryChronology.md | macro + author chronology v0.2 |
 | Timeline makro | world/EraTimelineExpanded.md | główne epoki i wydarzenia v0.1 |
 | Kultury | world/Cultures.md | framework + region startowy v0.1 |
 | Kultury makro | world/MacroCultures.md | 6 kontekstów kulturowych v0.1 |
@@ -38,8 +38,8 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | swamp-predator identity | research/bestiary/VerticalSliceFit.md | pozostaje F; brak uczciwego folklorystycznego dopasowania |
 | forest-guardian identity | research/bestiary/ForestSpirit.md | kierunek zaakceptowany, finalna nazwa nadal otwarta |
 | Bohater | character/PlayerCharacter.md | v0.1 |
-| Rodzina | character/FamilyMystery.md | struktura v0.1; rozwiązanie celowo otwarte |
-| Główna historia | story/MainStory.md | akty v0.1; finałowe lore otwarte |
+| Rodzina | character/FamilyMystery.md + character/FamilyTruth.md | struktura player-facing + author truth v0.2 |
+| Główna historia | story/MainStory.md | pełny obraz v0.2; detailed quest cards nadal do wykonania |
 | Regional flow kampanii | story/CampaignRegionalFlow.md | pełny first pass v0.1 |
 | Questy | design/QuestDesign.md | v0.1 |
 | Światło nad mokradłem | quests/LightOverSwamp.md | pełna karta v0.1: fazy, dowody, wyniki, checkpointy, QA |
@@ -47,7 +47,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Reaction matrix | quests/LightOverSwampReactionMatrix.md | trzy rozwiązania + modyfikatory v0.1 |
 | Side questy | quests/VerticalSliceSideQuests.md | pierwsza pula v0.1 |
 | Decyzje | design/DecisionModel.md | v0.1 |
-| Zakończenia | story/Endings.md | architektura v0.1 |
+| Zakończenia | story/Endings.md + story/EndingVariants.md | 5 architektur + epilogue matrix v0.2 |
 | Game design | design/GameDesignBible.md | v0.1 |
 | Combat | design/CombatDesign.md | v0.1 |
 | Melee | design/MeleeCombat.md | szczegóły v0.1 |
@@ -131,3 +131,35 @@ Dokumentacja jest kompletna produkcyjnie, gdy:
 - release criteria są spełnione.
 
 Obecny zestaw jest **pełnym szkieletem dokumentacji v0.1**, ale nie finalną dokumentacją gotowej gry.
+
+
+## Central lore / author truth v0.2
+
+| Obszar | Dokument | Stan |
+|---|---|---|
+| Czwarta Sfera | world/FourthSphereTruth.md | ustalona |
+| Przyczyna kryzysu | story/CrisisTruth.md | ustalona |
+| Rodzina | character/FamilyTruth.md | ustalona |
+| Antagoniści | story/Antagonists.md | Wszebor + frakcje v0.1 |
+| Śmierć boga | world/GodMortality.md | reguła ustalona |
+| Finał | story/Finale.md | pełny przebieg v0.1 |
+| Główne endingi | story/EndingVariants.md | E1–E5 |
+| Epilogi | story/EpilogueMatrix.md | matryca v0.1 |
+| Chronologia tajemnicy | story/MysteryChronology.md | ustalona |
+| Plan reveal | story/RevelationPlan.md | akty 0–V |
+| Pełny obraz gry | FullGameOverview.md | v0.2 |
+
+### Interpretacja statusu
+
+Projekt posiada teraz **pełny obraz designu i prawdę autorów**, ale nie finalny production/content lock.
+
+Wymagania „pełnej dokumentacji projektu” z wcześniejszej sekcji nadal oznaczają stan znacznie późniejszy: wszystkie questy, wszystkie finalne istoty, kompletne regiony, asset lists, zmierzony performance i release readiness.
+
+
+## Scope i kampania produkcyjna
+
+| Obszar | Dokument | Stan |
+|---|---|---|
+| Scope 1.0 | design/ScopeBoundaries.md | ustalony first pass |
+| Main quest skeleton | story/MainQuestSkeleton.md | MQ00–MQ56 |
+| Recurring cast | story/RecurringCast.md | główne role v0.1 |
