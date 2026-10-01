@@ -12,7 +12,6 @@ public sealed class GameWindow : IDisposable
     private readonly Sdl2Window _window;
     private readonly HashSet<Key> _keysDown = [];
     private readonly HashSet<Key> _keysPressed = [];
-    private readonly HashSet<MouseButton> _mouseButtonsDown = [];
 
     public Sdl2Window NativeWindow => _window;
     public bool Exists => _window.Exists;
@@ -43,8 +42,6 @@ public sealed class GameWindow : IDisposable
         _window = VeldridStartup.CreateWindow(ref windowCreateInfo);
         _window.KeyDown += OnKeyDown;
         _window.KeyUp += OnKeyUp;
-        _window.MouseDown += OnMouseDown;
-        _window.MouseUp += OnMouseUp;
         _window.Resized += () => Resized?.Invoke();
         _window.Closing += () => Closing?.Invoke();
         _window.CursorVisible = true;
@@ -57,8 +54,6 @@ public sealed class GameWindow : IDisposable
     public bool IsKeyDown(Key key) => _keysDown.Contains(key);
 
     public bool ConsumeKeyPress(Key key) => _keysPressed.Remove(key);
-
-    public bool IsMouseButtonDown(MouseButton button) => _mouseButtonsDown.Contains(button);
 
     public void ToggleFullscreen()
     {
@@ -80,16 +75,6 @@ public sealed class GameWindow : IDisposable
         _window.SetMousePosition(new Vector2(Width * 0.5f, Height * 0.5f));
     }
 
-    public void SetMouseLookActive(bool active)
-    {
-        _window.CursorVisible = !active;
-
-        if (active)
-        {
-            CenterMouse();
-        }
-    }
-
     private void OnKeyDown(KeyEvent keyEvent)
     {
         if (_keysDown.Add(keyEvent.Key))
@@ -99,10 +84,6 @@ public sealed class GameWindow : IDisposable
     }
 
     private void OnKeyUp(KeyEvent keyEvent) => _keysDown.Remove(keyEvent.Key);
-
-    private void OnMouseDown(MouseEvent mouseEvent) => _mouseButtonsDown.Add(mouseEvent.MouseButton);
-
-    private void OnMouseUp(MouseEvent mouseEvent) => _mouseButtonsDown.Remove(mouseEvent.MouseButton);
 
     public void Dispose() => _window.Close();
 }
