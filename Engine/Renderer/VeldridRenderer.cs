@@ -77,7 +77,7 @@ public sealed class VeldridRenderer : IDisposable
         var factory = _graphicsDevice.ResourceFactory;
         _commandList = factory.CreateCommandList();
 
-        TerrainMesh.Build(world.Terrain, out var vertices, out var indices);
+        StaticWorldMesh.Build(world, out var vertices, out var indices);
 
         _vertexBuffer = factory.CreateBuffer(new BufferDescription(
             TerrainVertex.SizeInBytes * (uint)vertices.Length,
@@ -169,7 +169,7 @@ public sealed class VeldridRenderer : IDisposable
 
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
-        EngineLog.Info("Terrain mesh uploaded to GPU.");
+        EngineLog.Info($"Static world mesh uploaded to GPU ({world.Obstacles.Count} obstacles).");
         EngineLog.Info("HUD renderer initialized.");
     }
 
