@@ -1,6 +1,6 @@
 # Pierwszy grywalny wycinek
 
-**Projekt F, wersja 0.1.** To specyfikacja przyszłego działania. Prototyp ma teren, kamerę, ruch, zegar, rozpoznawanie regionów, pierwszą pogodę oraz fundament zdrowia/staminy; nie ma jeszcze opisanych tutaj NPC, walki ani zadania.
+**Projekt F, wersja 0.1.** To specyfikacja przyszłego działania. Prototyp ma teren, kamerę, ruch, zegar, rozpoznawanie regionów, pierwszą pogodę, fundament zdrowia/staminy oraz pierwsze statyczne obiekty z kolizją; nie ma jeszcze opisanych tutaj NPC, walki ani zadania.
 
 ## Cel
 
@@ -48,7 +48,7 @@ Wszystkie trzy drogi pozwalają ukończyć zlecenie. Żadna nie wymaga przynale�
 | System | Minimum | Stan teraz |
 |---|---|---|
 | Ruch i kamera | Jednoczesne poruszanie, obrót, bieg, stabilna prędkość | Zaimplementowane; potrzebna dalsza weryfikacja na komputerze użytkownika |
-| Teren i regiony | Przejście między czterema miejscami z kolizją | Teren i wykrywanie regionów istnieją; zabudowa oraz przeszkody planowane |
+| Teren i regiony | Przejście między czterema miejscami z kolizją | Teren i regiony działają; pierwsze bryły Żarnowca, Kamiennego Kręgu, lasu i mokradeł są renderowane oraz blokują gracza; właściwa zabudowa nadal planowana |
 | Pora dnia | Czytelna zmiana oświetlenia i okna zdarzeń | Zegar istnieje; oświetlenie i zdarzenia planowane |
 | Pogoda | Pogoda spokojna i mgła z czytelną widocznością | Pierwsza wersja działa: regionalne przejścia, mgła atmosferyczna, zachmurzenie i deszcz/storm jako stan; brak jeszcze cząsteczek opadu |
 | Walka | Broń biała, blok, unik, stamina, zdrowie; osobno prosty łuk | Fundament zdrowia i staminy działa; sprint zużywa staminę, walka nadal planowana |
