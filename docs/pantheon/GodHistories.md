@@ -162,3 +162,128 @@ Każda następna karta musi podać:
 - sposób odmowy;
 - rolę w zadaniach;
 - czego karta celowo jeszcze nie rozstrzyga.
+
+
+---
+
+# Drugi pakiet kart projektowych — v0.1
+
+Poniższe karty są bardziej ostrożne niż pierwsza szóstka, ponieważ materiał źródłowy albo relacje między nazwami pozostają mniej pewne.
+
+## Dadźbóg
+
+**ID:** `dadzbog`  
+**Stan badań:** A+B; S01, S02, P01/P02.
+
+### Minimum źródłowe
+
+Imię jest poświadczone. Interpretacje funkcji świetlnej/solarnej oraz relacji ze Swarogiem wymagają odróżnienia tekstu źródłowego od rekonstrukcji.
+
+### SlavicGame F
+
+Dadźbóg interesuje się **rozdziałem dostępu do światła, bezpieczeństwa i dobrobytu**.
+
+Nie jest automatycznie „bogiem słońca” w prostym sensie gameplay.
+
+**Oferta F:** czasowa ochrona albo poprawa warunków życia miejsca.  
+**Cena F:** ktoś musi ponieść realny koszt zasobu albo zobowiązania.  
+**Konflikt F:** kto dostaje ochronę, gdy nie wystarcza jej dla wszystkich?
+
+---
+
+## Stribog
+
+**ID:** `stribog`  
+**Stan badań:** A+B; S01, P01/P02.
+
+### Minimum źródłowe
+
+Nazwa znajduje się w materiale ruskim. Związek z wiatrami jest rozwijany przez interpretację materiału poetyckiego; nie traktujemy całego popularnego profilu „boga wiatru” jako prostego faktu.
+
+### SlavicGame F
+
+Stribog interesuje się **ruchem, wiadomością i drogą**.
+
+**Oferta F:** ułatwienie podróży, ostrzeżenie lub przeniesienie informacji.  
+**Cena F:** przyspieszenie jednej rzeczy może zmienić warunki dla innej wspólnoty.  
+**Odmowa:** brak wpływu na główną ścieżkę.
+
+---
+
+## Jarowit
+
+**ID:** `jarowit`  
+**Stan badań:** A+C; P06 nadal do bezpośredniej kontroli.
+
+### Minimum źródłowe
+
+Nazwa Jarowit/Gerovit należy do materiału zachodniosłowiańskiego. Dokładne funkcje i relację do późniejszych postaci „Jarych” pozostawiamy otwarte do pełnej kontroli P06.
+
+### SlavicGame F
+
+Jarowit interesuje się **gotowością wspólnoty do obrony i rozpoczęcia nowego cyklu działania**.
+
+To nie jest prosty odpowiednik „Marsa”.
+
+**Oferta F:** wsparcie mobilizacji albo przełamania bezczynności.  
+**Cena F:** zobowiązanie do obrony konkretnej wspólnoty lub celu.  
+**Konflikt F:** przygotowanie do obrony może zostać wykorzystane do agresji.
+
+---
+
+## Siwa / Živa
+
+**ID:** `siwa`  
+**Stan badań:** A+C; materiał połabski, S17/P03; nowa kontrola metodologiczna w pakiecie research 02.
+
+### Minimum źródłowe
+
+Siwa jest regionalną nazwą poświadczoną w tradycji połabskiej. Nie wynika z tego jedna ogólnosłowiańska „bogini życia”.
+
+### SlavicGame F
+
+Siwa interesuje się **odbudową żywego miejsca po zniszczeniu i długim trwaniem ekosystemu/wspólnoty**.
+
+**Oferta F:** regeneracja miejsca, gleby, roślinności lub lokalnej równowagi.  
+**Cena F:** zasoby i czas; brak darmowego wskrzeszania ludzi.  
+**Konflikt F:** szybka odbudowa osady może wymagać eksploatacji innego miejsca.
+
+### Granica
+
+`zywie` pozostaje oddzielnym późnym rekordem badawczym, nie aliasem.
+
+---
+
+## Rod i Rodzanice — wspólna karta F z ograniczeniami
+
+**ID:** `rod` / `rodzanice`  
+**Stan badań:** niejednoznaczny; P12 nadal wymaga bezpośredniej kontroli.
+
+### Minimum
+
+Istnieje materiał polemiczny odnoszony do tych nazw/praktyk. Nie ustalamy z niego najwyższego boga-stwórcy ani jednej kompletnej teologii losu.
+
+### SlavicGame F
+
+Rod może być **nazwą używaną przez jedną tradycję** dla ciągłości rodu i pamięci pokoleń.
+
+Rodzanice pozostają grupą i inspirują idee:
+- możliwych dróg;
+- narodzin;
+- dziedziczenia zobowiązań.
+
+Nie mówią graczowi jednego nieuniknionego przeznaczenia.
+
+**Oferta F:** ujawnienie możliwego następstwa działania.  
+**Cena F:** wiedza może tworzyć odpowiedzialność, ale nie odbiera wyboru.
+
+---
+
+## Celowo bez karty: Radegast
+
+`radegast` nie otrzymuje jeszcze niezależnej osobowości F.
+
+Powód:
+- relacja Radegast–Swarożyc–nazwa miejsca pozostaje wystarczająco niejasna, by osobna karta sugerowała większą pewność niż mamy.
+
+W świecie gry sama rozbieżność nazw może funkcjonować jako spór tradycji.
