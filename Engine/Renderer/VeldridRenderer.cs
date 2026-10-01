@@ -127,7 +127,8 @@ public sealed class VeldridRenderer : IDisposable
             _commandList is null ||
             _vertexBuffer is null ||
             _indexBuffer is null ||
-            _cameraBuffer is null ||
+            _projectionBuffer is null ||
+            _viewBuffer is null ||
             _cameraSet is null ||
             _terrainPipeline is null)
         {
@@ -141,10 +142,12 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         var aspect = MathF.Max(0.1f, (float)framebuffer.Width / framebuffer.Height);
-        var viewProjection = _camera.GetViewProjection(aspect);
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(_camera.FieldOfView, aspect, _camera.NearPlane, _camera.FarPlane);
+        var view = Matrix4x4.CreateLookAt(_camera.Position, _camera.Target, Vector3.UnitY);
 
         _commandList.Begin();
-        _commandList.UpdateBuffer(_cameraBuffer, 0, viewProjection);
+        _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
+        _commandList.UpdateBuffer(_viewBuffer, 0, view);
         _commandList.SetFramebuffer(framebuffer);
         _commandList.ClearColorTarget(0, GetAtmosphereColor(worldTime));
         _commandList.SetPipeline(_terrainPipeline);
@@ -200,7 +203,8 @@ public sealed class VeldridRenderer : IDisposable
         _terrainPipeline?.Dispose();
         _cameraSet?.Dispose();
         _cameraLayout?.Dispose();
-        _cameraBuffer?.Dispose();
+        _projectionBuffer?.Dispose();
+        _viewBuffer?.Dispose();
         _vertexBuffer?.Dispose();
         _indexBuffer?.Dispose();
 
