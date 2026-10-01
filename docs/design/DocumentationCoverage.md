@@ -14,23 +14,30 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Kultury | world/Cultures.md | framework + region startowy v0.1 |
 | Regiony/królestwa | world/RegionsAndKingdoms.md | framework v0.1 |
 | Mapa | world/WorldMap.md | topologia v0.1 |
-| Magia | magic/MagicBible.md | v0.1 |
+| Magia | magic/MagicBible.md | v0.1; vertical-slice czar i rytuał mają osobną kartę |
+| Magia vertical slice | magic/VerticalSliceMagic.md | pierwszy czar, rytuał i znaki F v0.1 |
 | Bestiariusz | bestiary/BestiaryBible.md | framework v0.1; karty źródłowe do badań |
 | Bohater | character/PlayerCharacter.md | v0.1 |
 | Rodzina | character/FamilyMystery.md | struktura v0.1; rozwiązanie celowo otwarte |
 | Główna historia | story/MainStory.md | akty v0.1; finałowe lore otwarte |
 | Questy | design/QuestDesign.md | v0.1 |
+| Światło nad mokradłem | quests/LightOverSwamp.md | pełna karta v0.1: fazy, dowody, wyniki, checkpointy, QA |
 | Decyzje | design/DecisionModel.md | v0.1 |
 | Zakończenia | story/Endings.md | architektura v0.1 |
 | Game design | design/GameDesignBible.md | v0.1 |
 | Combat | design/CombatDesign.md | v0.1 |
 | NPC/dialog | design/NpcDialogueDesign.md | v0.1 |
+| NPC vertical slice | character/VerticalSliceNPCs.md | 5 kart roboczych v0.1 |
 | Inventory/economy | design/InventoryEconomy.md | v0.1 |
+| Przedmioty vertical slice | content/VerticalSliceItems.md | minimalny katalog + receptura v0.1 |
 | Save | design/SavePersistence.md | v0.1 |
 | Input | design/ControlsAndInput.md | v0.1 |
 | UX/accessibility | design/UXAccessibility.md | v0.1 |
 | Audio/wizual | design/AudioVisualDirection.md | v0.1 |
 | Vertical slice | design/VerticalSlice.md | v0.1 |
+| Asset list vertical slice | design/VerticalSliceAssetList.md | P0/P1/P2 v0.1 |
+| Konwencje ID | content/IdConventions.md | v0.1 |
+| Kolejka dokumentacji | design/DocumentationWorkQueue.md | kolejność od łatwych do centralnego lore |
 | Architektura | design/EngineArchitecture.md | v0.1 |
 | Rendering/platformy | technical/RenderingAndPlatform.md | v0.1 |
 | Testy/performance | technical/TestingAndPerformance.md | v0.1 |
