@@ -137,31 +137,13 @@ public sealed class GameWindow : IDisposable
         [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
         private static extern int SDL_SetRelativeMouseMode(byte enabled);
 
-        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
-        private static extern uint SDL_GetRelativeMouseState(out int x, out int y);
-
-        [DllImport("libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int SDL_SetRelativeMouseModeLinux(byte enabled);
-
-        [DllImport("libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl)]
-        private static extern uint SDL_GetRelativeMouseStateLinux(out int x, out int y);
-
         public static int SetRelativeMouseMode(bool enabled)
             => SDL_SetRelativeMouseMode(enabled ? (byte)1 : (byte)0);
 
-        public static Vector2 GetRelativeMouseState()
-        {
-            SDL_GetRelativeMouseState(out var x, out var y);
-            return new Vector2(x, y);
-        }
+        [DllImport("libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl, EntryPoint = "SDL_SetRelativeMouseMode")]
+        private static extern int SDL_SetRelativeMouseModeLinux(byte enabled);
 
         public static int SetRelativeMouseModeLinux(bool enabled)
             => SDL_SetRelativeMouseModeLinux(enabled ? (byte)1 : (byte)0);
-
-        public static Vector2 GetRelativeMouseStateLinux()
-        {
-            SDL_GetRelativeMouseStateLinux(out var x, out var y);
-            return new Vector2(x, y);
-        }
     }
 }
