@@ -58,6 +58,14 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Sterowanie](design/ControlsAndInput.md) | KBM, remapping, kontroler i Android |
 | [UX i dostępność](design/UXAccessibility.md) | Napisy, kamera, input, UI, trudność |
 | [Kierunek audio-wizualny](design/AudioVisualDirection.md) | Światło, noc, supernaturalność, audio |
+| [HUD](ui/HudSpec.md) | Informacje stałe, kontekstowe i combat feedback |
+| [Inventory UI](ui/InventoryFlow.md) | Widoki, akcje, sorting i crafting entry |
+| [Journal UI](ui/JournalFlow.md) | Questy, dowody, bestiary i źródła wiedzy |
+| [Dialogue UI](ui/DialogueFlow.md) | Choices, requirements, skutki i historia rozmowy |
+| [Map UI](ui/MapFlow.md) | Discovery, markery i fast travel |
+| [Input Action Map](design/InputActionMap.md) | Nazwane akcje i domyślne bindingi |
+| [Settings Matrix](design/SettingsMatrix.md) | Grafika, kamera, audio, gameplay i accessibility |
+| [Save Slot UX](design/SaveSlotUX.md) | Autosave/checkpoint/manual slot i corruption flow |
 | [Pierwszy grywalny wycinek](design/VerticalSlice.md) | „Światło nad mokradłem” i kryteria odbioru |
 | [Pełna karta questa](quests/LightOverSwamp.md) | Fazy, dowody, rozwiązania, checkpointy i QA |
 | [NPC vertical slice](character/VerticalSliceNPCs.md) | Pięć ról, wiedza, biasy i reakcje |
@@ -72,6 +80,8 @@ Najlepszy punkt kontroli kompletności: [Pokrycie dokumentacji](design/Documenta
 | [Architektura silnika](design/EngineArchitecture.md) | Granice systemów, GameProgress, checkpoint |
 | [Rendering i platformy](technical/RenderingAndPlatform.md) | Veldrid/Vulkan, PC, późniejszy Android |
 | [Testy i wydajność](technical/TestingAndPerformance.md) | CI, regresje, profile i metryki |
+| [Developer Overlay](technical/DeveloperOverlay.md) | Runtime diagnostyka i debug sekcje |
+| [Logging Policy](technical/LoggingPolicy.md) | Severity, kategorie, crash package i retention |
 | [Produkcja treści](design/ContentProduction.md) | Pipeline regionu, NPC, potwora i questa |
 | [Kryteria wydania](design/ReleaseCriteria.md) | Prototype → vertical slice → alpha → beta → 1.0 |
 | [Roadmap](design/ProductionRoadmap.md) | 23 etapy projektu i bieżący stan |
