@@ -20,7 +20,10 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Weather gameplay | world/WeatherGameplay.md | v0.1 |
 | Magia | magic/MagicBible.md | v0.1; vertical-slice czar i rytuał mają osobną kartę |
 | Magia vertical slice | magic/VerticalSliceMagic.md | pierwszy czar, rytuał i znaki F v0.1 |
-| Bestiariusz | bestiary/BestiaryBible.md | framework v0.1; karty źródłowe do badań |
+| Bestiariusz | bestiary/BestiaryBible.md | framework v0.1 |
+| Research bestiariusza 01 | research/bestiary/*.md | 5 kart + źródła + fit vertical slice |
+| swamp-predator identity | research/bestiary/VerticalSliceFit.md | pozostaje F; brak uczciwego folklorystycznego dopasowania |
+| forest-guardian identity | research/bestiary/ForestSpirit.md | kierunek zaakceptowany, finalna nazwa nadal otwarta |
 | Bohater | character/PlayerCharacter.md | v0.1 |
 | Rodzina | character/FamilyMystery.md | struktura v0.1; rozwiązanie celowo otwarte |
 | Główna historia | story/MainStory.md | akty v0.1; finałowe lore otwarte |

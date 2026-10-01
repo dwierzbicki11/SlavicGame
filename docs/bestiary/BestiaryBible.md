@@ -152,3 +152,21 @@ Pokonanie nie musi oznaczać „loot explosion”. Nagroda może być:
 ## Status
 
 Pierwszy AI `swamp-predator` działa jako prototyp mechaniczny. Jego ostateczna identyfikacja, model, animacje, słabości i karta folklorystyczna pozostają otwarte.
+
+
+## Research package 01 — wynik
+
+Pierwszy pakiet indywidualnych kart znajduje się w `docs/research/bestiary/`.
+
+Sprawdzono:
+- rusałkę;
+- szerokie tradycje duchów leśnych;
+- vodníka/wodnika;
+- zmorę;
+- strzygonia/strzygę.
+
+Najważniejszy wynik projektowy:
+- `swamp-predator` **nie otrzymuje** obecnie nazwy folklorystycznej;
+- `forest-guardian` może wykorzystywać funkcje lokalnego ducha lasu, ale bez deklarowania jednego „historycznie poprawnego leszego”.
+
+Szczegóły: [VerticalSliceFit](../research/bestiary/VerticalSliceFit.md).
