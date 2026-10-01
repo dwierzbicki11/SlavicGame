@@ -42,7 +42,6 @@ public sealed class GameEngine : IDisposable
 
         EngineLog.Info("Starting SlavicGame engine.");
         _renderer.Initialize(_window, _world, true);
-        _window.CenterMouse();
         _initialized = true;
         EngineLog.Info("Engine initialization complete.");
     }
@@ -69,7 +68,6 @@ public sealed class GameEngine : IDisposable
             if (_window.ConsumeKeyPress(Key.F11))
             {
                 _window.ToggleFullscreen();
-                _window.CenterMouse();
             }
 
             _time.Advance(deltaSeconds);
@@ -109,7 +107,6 @@ public sealed class GameEngine : IDisposable
     {
         var mouse = _window.MouseDelta;
         _camera.Update(_world.PlayerPosition, mouse.X, mouse.Y);
-        _window.CenterMouse();
 
         var move = Vector3.Zero;
         if (_window.IsKeyDown(Key.W)) move += _camera.GetMoveForward();
