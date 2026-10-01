@@ -1,4 +1,5 @@
 using SlavicGame.Engine.Core;
+using SlavicGame.Engine.Diagnostics;
 
 try
 {
