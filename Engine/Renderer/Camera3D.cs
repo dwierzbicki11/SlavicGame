@@ -20,6 +20,12 @@ public sealed class Camera3D
 
     public void Update(Vector3 playerPosition, float mouseDeltaX, float mouseDeltaY, float deltaSeconds)
     {
+        Rotate(mouseDeltaX, mouseDeltaY);
+        Follow(playerPosition, deltaSeconds);
+    }
+
+    public void Rotate(float mouseDeltaX, float mouseDeltaY)
+    {
         var maxMouseDelta = 150f;
         mouseDeltaX = Math.Clamp(mouseDeltaX, -maxMouseDelta, maxMouseDelta);
         mouseDeltaY = Math.Clamp(mouseDeltaY, -maxMouseDelta, maxMouseDelta);
@@ -28,6 +34,10 @@ public sealed class Camera3D
         Pitch -= mouseDeltaY * VerticalSensitivity;
         Pitch = Math.Clamp(Pitch, -1.15f, 0.85f);
 
+    }
+
+    public void Follow(Vector3 playerPosition, float deltaSeconds)
+    {
         var target = playerPosition + new Vector3(0f, TargetHeight, 0f);
         var cameraForward = GetLookDirection();
         var desiredPosition = target - cameraForward * Distance + Vector3.UnitY * HeightOffset;
@@ -61,6 +71,6 @@ public sealed class Camera3D
         var view = Matrix4x4.CreateLookAt(Position, Target, Vector3.UnitY);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(
             FieldOfView, MathF.Max(0.1f, aspectRatio), NearPlane, FarPlane);
-        return projection * view;
+        return view * projection;
     }
 }

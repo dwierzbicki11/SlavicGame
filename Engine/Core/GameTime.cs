@@ -8,7 +8,7 @@ public sealed class GameTime
 
     internal void Advance(double deltaSeconds)
     {
-        DeltaSeconds = Math.Clamp(deltaSeconds, 0.0, 0.25);
+        DeltaSeconds = double.IsFinite(deltaSeconds) ? Math.Clamp(deltaSeconds, 0.0, 0.25) : 0.0;
         TotalSeconds += DeltaSeconds;
         FrameCount++;
     }

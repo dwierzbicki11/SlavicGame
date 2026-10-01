@@ -11,6 +11,7 @@ namespace SlavicGame.Engine.Windowing;
 public sealed class GameWindow : IDisposable
 {
     private readonly Sdl2Window _window;
+    private bool _disposed;
     private readonly HashSet<Key> _keysDown = [];
     private readonly HashSet<Key> _keysPressed = [];
 
@@ -28,6 +29,9 @@ public sealed class GameWindow : IDisposable
 
     public GameWindow(EngineConfig config)
     {
+        ArgumentNullException.ThrowIfNull(config);
+        if (config.Width <= 0 || config.Height <= 0)
+            throw new ArgumentOutOfRangeException(nameof(config), "Window dimensions must be positive.");
         var windowCreateInfo = new WindowCreateInfo
         {
             X = 100,
@@ -54,6 +58,7 @@ public sealed class GameWindow : IDisposable
 
     public void PumpEvents()
     {
+        _keysPressed.Clear();
         _window.PumpEvents();
     }
 
@@ -78,6 +83,8 @@ public sealed class GameWindow : IDisposable
 
     private void OnFocusLost()
     {
+        _keysDown.Clear();
+        _keysPressed.Clear();
         SetRelativeMouseMode(false);
     }
 
@@ -122,6 +129,9 @@ public sealed class GameWindow : IDisposable
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+        if (!_window.Exists) return;
         try
         {
             SetRelativeMouseMode(false);
@@ -135,14 +145,14 @@ public sealed class GameWindow : IDisposable
     private static class Sdl2NativeCompat
     {
         [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl, EntryPoint = "SDL_SetRelativeMouseMode")]
-        private static extern int SetRelativeMouseModeWindows(byte enabled);
+        private static extern int SetRelativeMouseModeWindows(int enabled);
 
         [DllImport("libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl, EntryPoint = "SDL_SetRelativeMouseMode")]
-        private static extern int SetRelativeMouseModeLinux(byte enabled);
+        private static extern int SetRelativeMouseModeLinux(int enabled);
 
         public static int SetRelativeMouseMode(bool enabled)
             => OperatingSystem.IsLinux()
-                ? SetRelativeMouseModeLinux(enabled ? (byte)1 : (byte)0)
-                : SetRelativeMouseModeWindows(enabled ? (byte)1 : (byte)0);
+                ? SetRelativeMouseModeLinux(enabled ? 1 : 0)
+                : SetRelativeMouseModeWindows(enabled ? 1 : 0);
     }
 }

@@ -10,11 +10,12 @@ public sealed class WorldTime
 
     public void Update(double deltaSeconds)
     {
-        if (DayLengthSeconds <= 0)
+        if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0 ||
+            !double.IsFinite(DayLengthSeconds) || DayLengthSeconds <= 0)
         {
             return;
         }
 
-        TimeOfDayHours = (TimeOfDayHours + deltaSeconds / DayLengthSeconds * 24.0) % 24.0;
+        TimeOfDayHours = (TimeOfDayHours + (deltaSeconds % DayLengthSeconds) / DayLengthSeconds * 24.0) % 24.0;
     }
 }

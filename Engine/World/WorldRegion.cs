@@ -19,6 +19,11 @@ public sealed class WorldRegion
 
     public WorldRegion(string id, string name, WorldRegionType type, float centerX, float centerZ, float radius)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (!float.IsFinite(centerX) || !float.IsFinite(centerZ) ||
+            !float.IsFinite(radius) || radius <= 0)
+            throw new ArgumentOutOfRangeException(nameof(radius), "Region bounds must be finite with a positive radius.");
         Id = id;
         Name = name;
         Type = type;

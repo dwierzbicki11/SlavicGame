@@ -30,6 +30,12 @@ public sealed class WorldState
 
     public void SetPlayerPosition(Vector3 position)
     {
+        if (!float.IsFinite(position.X) || !float.IsFinite(position.Z))
+            throw new ArgumentOutOfRangeException(nameof(position));
+        var halfWidth = (Terrain.Width - 1) * Terrain.CellSize * 0.5f;
+        var halfDepth = (Terrain.Depth - 1) * Terrain.CellSize * 0.5f;
+        position.X = Math.Clamp(position.X, -halfWidth, halfWidth);
+        position.Z = Math.Clamp(position.Z, -halfDepth, halfDepth);
         PlayerPosition = new Vector3(position.X, Terrain.SampleHeight(position), position.Z);
         UpdateRegion();
     }

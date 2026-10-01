@@ -30,6 +30,8 @@ public sealed class VeldridRenderer : IDisposable
     private Shader[]? _shaders;
     private Shader[]? _hudShaders;
 
+    private bool _initialized;
+    private bool _disposed;
     private uint _indexCount;
     private uint _hudVertexCapacity;
 
@@ -38,14 +40,28 @@ public sealed class VeldridRenderer : IDisposable
 
     public void Initialize(GameWindow window, WorldState world, bool vsync)
     {
-        if (_graphicsDevice is not null)
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_initialized) return;
+        ArgumentNullException.ThrowIfNull(window);
+        ArgumentNullException.ThrowIfNull(world);
+        try
         {
-            return;
+            InitializeResources(window, world, vsync);
+            _initialized = true;
         }
+        catch
+        {
+            Dispose();
+            throw;
+        }
+    }
 
+    private void InitializeResources(GameWindow window, WorldState world, bool vsync)
+    {
         var options = new GraphicsDeviceOptions
         {
             Debug = false,
+            SwapchainDepthFormat = PixelFormat.R32_Float,
             PreferStandardClipSpaceYDirection = true,
             PreferDepthRangeZeroToOne = true,
         };
@@ -67,7 +83,7 @@ public sealed class VeldridRenderer : IDisposable
             BufferUsage.VertexBuffer));
 
         _indexBuffer = factory.CreateBuffer(new BufferDescription(
-            sizeof(ushort) * (uint)indices.Length,
+            sizeof(uint) * (uint)indices.Length,
             BufferUsage.IndexBuffer));
 
         _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
@@ -98,7 +114,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _terrainPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
-            DepthStencilStateDescription.Disabled,
+            DepthStencilStateDescription.DepthOnlyLessEqual,
             new RasterizerStateDescription(
                 FaceCullMode.None,
                 PolygonFillMode.Solid,
@@ -154,7 +170,8 @@ public sealed class VeldridRenderer : IDisposable
 
     public void Render(WorldTime worldTime, Camera3D camera, double fps)
     {
-        if (_graphicsDevice is null ||
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_initialized || _graphicsDevice is null ||
             _commandList is null ||
             _vertexBuffer is null ||
             _indexBuffer is null ||
@@ -187,6 +204,7 @@ public sealed class VeldridRenderer : IDisposable
         if (_hudVertices.Count > _hudVertexCapacity)
         {
             _hudVertexCapacity = (uint)Math.Max(_hudVertices.Count, _hudVertexCapacity * 2);
+            _graphicsDevice.WaitForIdle();
             _hudVertexBuffer.Dispose();
             _hudVertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(
                 HudVertex.SizeInBytes * _hudVertexCapacity,
@@ -206,10 +224,11 @@ public sealed class VeldridRenderer : IDisposable
 
         _commandList.SetFramebuffer(framebuffer);
         _commandList.ClearColorTarget(0, GetAtmosphereColor(worldTime));
+        _commandList.ClearDepthStencil(1f);
         _commandList.SetPipeline(_terrainPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
         _commandList.SetVertexBuffer(0, _vertexBuffer);
-        _commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
+        _commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
         _commandList.DrawIndexed(_indexCount);
 
         if (_hudVertices.Count > 0)
@@ -308,6 +327,9 @@ public sealed class VeldridRenderer : IDisposable
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+        _initialized = false;
         if (_graphicsDevice is null)
         {
             return;
