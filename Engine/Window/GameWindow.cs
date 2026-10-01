@@ -80,6 +80,16 @@ public sealed class GameWindow : IDisposable
         _window.SetMousePosition(new Vector2(Width * 0.5f, Height * 0.5f));
     }
 
+    public void SetMouseLookActive(bool active)
+    {
+        _window.CursorVisible = !active;
+
+        if (active)
+        {
+            CenterMouse();
+        }
+    }
+
     private void OnKeyDown(KeyEvent keyEvent)
     {
         if (_keysDown.Add(keyEvent.Key))
