@@ -225,7 +225,7 @@ Future development may introduce consequences connected to repeatedly crossing t
 
 ## Engine & Technical Architecture
 
-The project is written in **C#** and targets a custom engine/framework architecture around **Vulkan**. Veldrid and Silk.NET may be used as supporting technologies where appropriate.
+The project is written in **C#** and uses a custom engine/framework architecture with **Veldrid** as the primary graphics abstraction. The initial runtime uses Veldrid's SDL2 windowing layer and is intentionally designed so that Vulkan is not a requirement for local development and testing.
 
 ```text
 Game
