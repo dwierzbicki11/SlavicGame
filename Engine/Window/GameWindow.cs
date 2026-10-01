@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -12,12 +13,13 @@ public sealed class GameWindow : IDisposable
     private readonly Sdl2Window _window;
     private readonly HashSet<Key> _keysDown = [];
     private readonly HashSet<Key> _keysPressed = [];
+    private Vector2 _relativeMouseDelta;
 
     public Sdl2Window NativeWindow => _window;
     public bool Exists => _window.Exists;
     public int Width => _window.Bounds.Width;
     public int Height => _window.Bounds.Height;
-    public Vector2 MouseDelta => _window.MouseDelta;
+    public Vector2 MouseDelta => _relativeMouseDelta;
     public bool IsFullscreen =>
         _window.WindowState == WindowState.FullScreen ||
         _window.WindowState == WindowState.BorderlessFullScreen;
@@ -44,12 +46,24 @@ public sealed class GameWindow : IDisposable
         _window.KeyUp += OnKeyUp;
         _window.Resized += () => Resized?.Invoke();
         _window.Closing += () => Closing?.Invoke();
-        _window.CursorVisible = true;
+        _window.FocusGained += OnFocusGained;
+        _window.FocusLost += OnFocusLost;
 
+        SetRelativeMouseMode(true);
         EngineLog.Info($"Created SDL2 window {Width}x{Height} ({_window.WindowState}).");
     }
 
-    public void PumpEvents() => _window.PumpEvents();
+    public void PumpEvents()
+    {
+        _window.PumpEvents();
+
+        if (!Exists)
+        {
+            return;
+        }
+
+        _relativeMouseDelta = GetRelativeMouseState();
+    }
 
     public bool IsKeyDown(Key key) => _keysDown.Contains(key);
 
@@ -61,18 +75,68 @@ public sealed class GameWindow : IDisposable
             ? WindowState.Normal
             : WindowState.BorderlessFullScreen;
 
-        _window.CursorVisible = true;
+        SetRelativeMouseMode(true);
         EngineLog.Info($"Fullscreen: {IsFullscreen}.");
     }
 
-    public void CenterMouse()
+    private void OnFocusGained()
     {
-        if (Width <= 0 || Height <= 0)
-        {
-            return;
-        }
+        SetRelativeMouseMode(true);
+    }
 
-        _window.SetMousePosition(new Vector2(Width * 0.5f, Height * 0.5f));
+    private void OnFocusLost()
+    {
+        _relativeMouseDelta = Vector2.Zero;
+        SetRelativeMouseMode(false);
+    }
+
+    private void SetRelativeMouseMode(bool enabled)
+    {
+        try
+        {
+            var result = OperatingSystem.IsLinux()
+                ? Sdl2NativeCompat.SetRelativeMouseModeLinux(enabled)
+                : Sdl2NativeCompat.SetRelativeMouseMode(enabled);
+
+            if (result != 0)
+            {
+                EngineLog.Warn($"SDL2 relative mouse mode failed with code {result}.");
+                _window.CursorVisible = !enabled;
+                return;
+            }
+
+            _window.CursorVisible = !enabled;
+        }
+        catch (DllNotFoundException exception)
+        {
+            _window.CursorVisible = true;
+            EngineLog.Warn($"SDL2 native mouse library was not found: {exception.Message}");
+        }
+        catch (EntryPointNotFoundException exception)
+        {
+            _window.CursorVisible = true;
+            EngineLog.Warn($"SDL2 relative mouse API was not found: {exception.Message}");
+        }
+    }
+
+    private static Vector2 GetRelativeMouseState()
+    {
+        try
+        {
+            return OperatingSystem.IsLinux()
+                ? Sdl2NativeCompat.GetRelativeMouseStateLinux()
+                : Sdl2NativeCompat.GetRelativeMouseState();
+        }
+        catch (DllNotFoundException exception)
+        {
+            EngineLog.Warn($"SDL2 native mouse library was not found: {exception.Message}");
+            return Vector2.Zero;
+        }
+        catch (EntryPointNotFoundException exception)
+        {
+            EngineLog.Warn($"SDL2 relative mouse API was not found: {exception.Message}");
+            return Vector2.Zero;
+        }
     }
 
     private void OnKeyDown(KeyEvent keyEvent)
@@ -85,5 +149,48 @@ public sealed class GameWindow : IDisposable
 
     private void OnKeyUp(KeyEvent keyEvent) => _keysDown.Remove(keyEvent.Key);
 
-    public void Dispose() => _window.Close();
+    public void Dispose()
+    {
+        try
+        {
+            SetRelativeMouseMode(false);
+        }
+        finally
+        {
+            _window.Close();
+        }
+    }
+
+    private static class Sdl2NativeCompat
+    {
+        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int SDL_SetRelativeMouseMode(byte enabled);
+
+        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
+        private static extern uint SDL_GetRelativeMouseState(out int x, out int y);
+
+        [DllImport("libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int SDL_SetRelativeMouseModeLinux(byte enabled);
+
+        [DllImport("libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl)]
+        private static extern uint SDL_GetRelativeMouseStateLinux(out int x, out int y);
+
+        public static int SetRelativeMouseMode(bool enabled)
+            => SDL_SetRelativeMouseMode(enabled ? (byte)1 : (byte)0);
+
+        public static Vector2 GetRelativeMouseState()
+        {
+            SDL_GetRelativeMouseState(out var x, out var y);
+            return new Vector2(x, y);
+        }
+
+        public static int SetRelativeMouseModeLinux(bool enabled)
+            => SDL_SetRelativeMouseModeLinux(enabled ? (byte)1 : (byte)0);
+
+        public static Vector2 GetRelativeMouseStateLinux()
+        {
+            SDL_GetRelativeMouseStateLinux(out var x, out var y);
+            return new Vector2(x, y);
+        }
+    }
 }
