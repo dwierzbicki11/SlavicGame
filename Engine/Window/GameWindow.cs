@@ -11,12 +11,16 @@ public sealed class GameWindow : IDisposable
 {
     private readonly Sdl2Window _window;
     private readonly HashSet<Key> _keysDown = [];
+    private readonly HashSet<Key> _keysPressed = [];
 
     public Sdl2Window NativeWindow => _window;
     public bool Exists => _window.Exists;
     public int Width => _window.Bounds.Width;
     public int Height => _window.Bounds.Height;
     public Vector2 MouseDelta => _window.MouseDelta;
+    public bool IsFullscreen =>
+        _window.WindowState == WindowState.FullScreen ||
+        _window.WindowState == WindowState.BorderlessFullScreen;
 
     public event Action? Resized;
     public event Action? Closing;
@@ -49,7 +53,36 @@ public sealed class GameWindow : IDisposable
 
     public bool IsKeyDown(Key key) => _keysDown.Contains(key);
 
-    private void OnKeyDown(KeyEvent keyEvent) => _keysDown.Add(keyEvent.Key);
+    public bool ConsumeKeyPress(Key key) => _keysPressed.Remove(key);
+
+    public void ToggleFullscreen()
+    {
+        _window.WindowState = IsFullscreen
+            ? WindowState.Normal
+            : WindowState.BorderlessFullScreen;
+
+        _window.CursorVisible = false;
+        EngineLog.Info($"Fullscreen: {IsFullscreen}.");
+    }
+
+    public void CenterMouse()
+    {
+        if (Width <= 0 || Height <= 0)
+        {
+            return;
+        }
+
+        _window.SetMousePosition(new Vector2(Width * 0.5f, Height * 0.5f));
+    }
+
+    private void OnKeyDown(KeyEvent keyEvent)
+    {
+        if (_keysDown.Add(keyEvent.Key))
+        {
+            _keysPressed.Add(keyEvent.Key);
+        }
+    }
+
     private void OnKeyUp(KeyEvent keyEvent) => _keysDown.Remove(keyEvent.Key);
 
     public void Dispose() => _window.Close();
