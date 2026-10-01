@@ -17,6 +17,34 @@ void Reject(Action action, string name)
     throw new Exception(name);
 }
 
+// Independent intersection oracle using the triangles submitted to the renderer.
+float? MeshGroundHit(Terrain testTerrain, Vector3 start, Vector3 end, float clearance)
+{
+    TerrainMesh.Build(testTerrain, out var meshVertices, out var meshIndices);
+    var direction = end - start;
+    float? firstHit = null;
+    for (var i = 0; i < meshIndices.Length; i += 3)
+    {
+        var a = meshVertices[meshIndices[i]].Position + Vector3.UnitY * clearance;
+        var b = meshVertices[meshIndices[i + 1]].Position + Vector3.UnitY * clearance;
+        var c = meshVertices[meshIndices[i + 2]].Position + Vector3.UnitY * clearance;
+        var edge1 = b - a;
+        var edge2 = c - a;
+        var p = Vector3.Cross(direction, edge2);
+        var determinant = Vector3.Dot(edge1, p);
+        if (MathF.Abs(determinant) < 0.000001f) continue;
+        var inverse = 1f / determinant;
+        var offset = start - a;
+        var u = Vector3.Dot(offset, p) * inverse;
+        var q = Vector3.Cross(offset, edge1);
+        var v = Vector3.Dot(direction, q) * inverse;
+        var t = Vector3.Dot(edge2, q) * inverse;
+        if (u < 0f || v < 0f || u + v > 1f || t < 0f || t > 1f) continue;
+        if (firstHit is null || t < firstHit) firstHit = t;
+    }
+    return firstHit;
+}
+
 Reject(() => new Terrain(1, 2), "Degenerate width");
 Reject(() => new Terrain(2, 1), "Degenerate depth");
 Reject(() => new Terrain(2, 2, 0), "Zero cell size");
@@ -112,4 +140,121 @@ PlayerController.Update(eventOnlyWorld, eventOnlyCamera,
     new PlayerInput(true, false, false, false, true, MouseMotion.Select(mouseEvent, Vector2.Zero)), 0.1);
 Check(eventOnlyWorld.PlayerPosition != eventOnlyPosition && eventOnlyCamera.Yaw != eventOnlyYaw,
     "Running and turning work when only SDL events contain motion");
+
+Reject(() => camera.TerrainClearance = -0.1f, "Negative camera clearance");
+Reject(() => camera.TerrainClearance = float.NaN, "NaN camera clearance");
+Reject(() => terrain.IntersectGroundSegment(new Vector3(0, float.NaN, 0), Vector3.One),
+    "Invalid ground segment origin");
+Reject(() => terrain.IntersectGroundSegment(Vector3.One, new Vector3(0, float.PositiveInfinity, 0)),
+    "Invalid ground segment endpoint");
+Reject(() => terrain.IntersectGroundSegment(Vector3.One, Vector3.Zero, -1f), "Negative segment clearance");
+
+var steepTerrain = new Terrain(7, 9, 0.25f);
+var random = new Random(20261001);
+var ridgeHits = 0;
+for (var ray = 0; ray < 100; ray++)
+{
+    var start = new Vector3((float)random.NextDouble() * 1.4f - 0.7f, 0f,
+        (float)random.NextDouble() * 1.9f - 0.95f);
+    var end = new Vector3((float)random.NextDouble() * 1.4f - 0.7f, 0f,
+        (float)random.NextDouble() * 1.9f - 0.95f);
+    const float clearance = 0.5f;
+    start.Y = steepTerrain.SampleHeight(start) + clearance + 0.2f;
+    end.Y = steepTerrain.SampleHeight(end) + clearance + (ray % 2 == 0 ? 0.2f : -1f);
+    var expectedHit = MeshGroundHit(steepTerrain, start, end, clearance);
+    var actualHit = steepTerrain.IntersectGroundSegment(start, end, clearance);
+    Check(actualHit.HasValue == expectedHit.HasValue, "Ground segment agrees with rendered mesh");
+    if (expectedHit is not null)
+    {
+        Near(actualHit!.Value, expectedHit.Value, "First ground contact matches triangle intersection");
+        if (ray % 2 == 0) ridgeHits++;
+    }
+}
+Check(ridgeHits > 0, "Test includes ridges between two clear endpoints");
+var verticalStart = new Vector3(0.13f, 0f, -0.21f);
+verticalStart.Y = steepTerrain.SampleHeight(verticalStart) + 2f;
+var verticalEnd = verticalStart - Vector3.UnitY * 4f;
+Near(steepTerrain.IntersectGroundSegment(verticalStart, verticalEnd, 0.5f)!.Value, 0.375f,
+    "Vertical ray crosses the correct offset surface");
+Check(steepTerrain.IntersectGroundSegment(verticalEnd, verticalStart, 0.5f) == 0f,
+    "Segment starting inside ground contacts immediately");
+Check(steepTerrain.IntersectGroundSegment(verticalStart, verticalStart, 0.5f) is null,
+    "Stationary safe segment has no contact");
+
+// Previously an upward look put the third-person camera below the player's feet.
+var groundWorld = WorldGenerator.Generate();
+var groundCamera = new Camera3D();
+for (var frame = 0; frame < 6; frame++)
+{
+    PlayerController.Update(groundWorld, groundCamera,
+        new PlayerInput(false, false, false, false, false, new Vector2(0, -150)), 1.0 / 60.0);
+    Check(groundCamera.Position.Y >= groundWorld.Terrain.SampleHeight(groundCamera.Position) + groundCamera.TerrainClearance,
+        "Looking up keeps the camera above terrain");
+}
+Near(groundCamera.Pitch, 0.85f, "Terrain correction preserves requested pitch");
+var unsafeOrbit = groundWorld.PlayerPosition + Vector3.UnitY * groundCamera.TargetHeight
+    - groundCamera.GetLookDirection() * groundCamera.Distance + Vector3.UnitY * groundCamera.HeightOffset;
+Check(unsafeOrbit.Y < groundWorld.Terrain.SampleHeight(unsafeOrbit),
+    "Regression exercises an orbit that would enter the ground");
+
+foreach (var smoothing in new[] { 0.2f, 14f })
+{
+    var movingGroundWorld = WorldGenerator.Generate();
+    var movingGroundCamera = new Camera3D { PositionSmoothing = smoothing };
+    movingGroundWorld.SetPlayerPosition(new Vector3(-110f, 0f, -110f));
+    for (var frame = 0; frame < 360; frame++)
+    {
+        var phase = frame % 120;
+        PlayerController.Update(movingGroundWorld, movingGroundCamera,
+            new PlayerInput(true, false, phase < 60, phase >= 60, true,
+                new Vector2(8f, phase < 60 ? -8f : 8f)), frame % 90 == 0 ? 0.25 : 1.0 / 60.0);
+        Check(movingGroundCamera.Position.Y >= movingGroundWorld.Terrain.SampleHeight(movingGroundCamera.Position)
+            + movingGroundCamera.TerrainClearance, "Camera follows terrain while running and turning");
+        Check(movingGroundWorld.Terrain.IntersectGroundSegment(movingGroundCamera.Target,
+            movingGroundCamera.Position, movingGroundCamera.TerrainClearance) is null,
+            "Smoothed camera boom remains clear of the ground");
+    }
+}
+
+// Compressed terrain creates steep faces and small ridges; test the camera against
+// the renderer's triangles rather than only against its own collision query.
+var steepCamera = new Camera3D { Distance = 1.5f, PositionSmoothing = 0.2f };
+for (var frame = 0; frame < 120; frame++)
+{
+    var player = new Vector3(MathF.Sin(frame * 0.11f) * 0.65f, 0f, MathF.Cos(frame * 0.11f) * 0.85f);
+    player.Y = steepTerrain.SampleHeight(player);
+    steepCamera.Update(player, 30f, frame < 60 ? -15f : 15f, frame % 30 == 0 ? 0f : 1f / 30f, steepTerrain);
+    Check(steepCamera.Position.Y >= steepTerrain.SampleHeight(steepCamera.Position) + steepCamera.TerrainClearance,
+        "Steep slopes do not swallow the smoothed camera");
+    Check(MeshGroundHit(steepTerrain, steepCamera.Target, steepCamera.Position, steepCamera.TerrainClearance) is null,
+        "Camera line of sight does not cross rendered terrain");
+    var matrix = steepCamera.GetViewProjection(16f / 9f);
+    Check(float.IsFinite(matrix.M11) && float.IsFinite(matrix.M22) && float.IsFinite(matrix.M33)
+        && float.IsFinite(matrix.M41) && float.IsFinite(matrix.M42) && float.IsFinite(matrix.M43),
+        "Collision resolution leaves a usable view matrix");
+}
+
+// Find an independently confirmed obstructed orbit, then require the camera to
+// shorten it. A fixed distance threshold would not establish an obstruction.
+TerrainMesh.Build(steepTerrain, out var ridgeVertices, out _);
+var shortenedBooms = 0;
+foreach (var vertex in ridgeVertices)
+for (var direction = 0; direction < 24; direction++)
+{
+    var ridgeCamera = new Camera3D { Distance = 1.5f, HeightOffset = 0f };
+    ridgeCamera.Rotate(0f, -100f); // Horizontal orbit.
+    for (var turn = 0; turn < direction; turn++) ridgeCamera.Rotate(150f, 0f);
+    var focus = vertex.Position + Vector3.UnitY * ridgeCamera.TargetHeight;
+    var requested = focus - ridgeCamera.GetLookDirection() * ridgeCamera.Distance;
+    requested.Y = MathF.Max(requested.Y, steepTerrain.SampleHeight(requested) + ridgeCamera.TerrainClearance + 0.01f);
+    if (MeshGroundHit(steepTerrain, focus, requested, ridgeCamera.TerrainClearance) is null) continue;
+    ridgeCamera.Follow(vertex.Position, 0f, steepTerrain);
+    Check(Vector3.Distance(ridgeCamera.Target, ridgeCamera.Position) < Vector3.Distance(focus, requested),
+        "Confirmed ridge shortens the requested camera boom");
+    Check(MeshGroundHit(steepTerrain, ridgeCamera.Target, ridgeCamera.Position, ridgeCamera.TerrainClearance) is null,
+        "Shortened boom stays in front of the confirmed ridge");
+    shortenedBooms++;
+}
+Check(shortenedBooms > 0, "Test includes an obstructed third-person orbit");
+
 Console.WriteLine($"PASS: {checks} regression checks.");
