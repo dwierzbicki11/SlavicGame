@@ -60,8 +60,20 @@ public sealed class PlayerVitals
 
     public void Restore()
     {
-        Health = MaxHealth;
-        Stamina = MaxStamina;
+        SetState(MaxHealth, MaxStamina);
+    }
+
+    public void SetState(float health, float stamina)
+    {
+        if (!float.IsFinite(health) || !float.IsFinite(stamina) ||
+            health < 0f || health > MaxHealth ||
+            stamina < 0f || stamina > MaxStamina)
+        {
+            throw new ArgumentOutOfRangeException(nameof(health));
+        }
+
+        Health = health;
+        Stamina = stamina;
         _recoveryDelayRemaining = 0;
     }
 

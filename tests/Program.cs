@@ -5,6 +5,24 @@ using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.Input;
 using SlavicGame.Engine.World;
 using SlavicGame.Engine.Renderer;
+using SlavicGame.Engine.Animation;
+using SlavicGame.Engine.Assets;
+using SlavicGame.Engine.Audio;
+using SlavicGame.Engine.Combat;
+using SlavicGame.Engine.Dialogue;
+using SlavicGame.Engine.Entity;
+using SlavicGame.Engine.Gods;
+using SlavicGame.Engine.Interaction;
+using SlavicGame.Engine.Inventory;
+using SlavicGame.Engine.Magic;
+using SlavicGame.Engine.NPC;
+using SlavicGame.Engine.Physics;
+using SlavicGame.Engine.Quest;
+using SlavicGame.Engine.Reputation;
+using SlavicGame.Engine.Relationships;
+using SlavicGame.Engine.Save;
+using SlavicGame.Engine.Scene;
+using SlavicGame.Engine.UI;
 
 var checks = 0;
 void Check(bool condition, string name)
@@ -46,6 +64,131 @@ float? MeshGroundHit(Terrain testTerrain, Vector3 start, Vector3 end, float clea
     }
     return firstHit;
 }
+
+
+// Architecture foundations used by the documented RPG systems.
+var entity = new GameEntity("test-entity");
+var animationComponent = new TestComponent("component");
+entity.Add(animationComponent);
+Check(entity.GetRequired<TestComponent>().Value == "component", "Entity component storage");
+var scene = new GameScene("jawia-test");
+scene.Add(entity);
+var sceneManager = new SceneManager();
+sceneManager.Register(scene);
+Check(sceneManager.Load("jawia-test").Find("test-entity") == entity, "Scene registration and lookup");
+
+var catalog = new AssetCatalog();
+var assetId = AssetId.Parse("models/test");
+catalog.Register(new AssetDescriptor(assetId, "Assets/test.glb", "model"));
+Check(catalog.Get(assetId).Path == "Assets/test.glb", "Asset catalog lookup");
+
+var animation = new AnimationStateMachine();
+animation.Register("idle");
+animation.Play("idle");
+animation.Advance(0.5, 1.0);
+Near(animation.NormalizedTime, 0.5f, "Animation state advances deterministically");
+
+var audioSettings = new AudioSettings();
+audioSettings.SetVolume(AudioBus.Music, 0.4f);
+Near(audioSettings.GetVolume(AudioBus.Music), 0.4f, "Audio bus settings");
+
+var uiState = new GameUiState();
+uiState.Open(UiScreen.Inventory);
+Check(uiState.BlocksMovement, "Inventory screen blocks movement");
+uiState.Close();
+
+var nearestInteraction = InteractionSystem.FindNearest(
+    Vector3.Zero,
+    [
+        new InteractionTarget("far", new Vector3(5, 0, 0), InteractionKind.Inspect, "Inspect"),
+        new InteractionTarget("near", new Vector3(1, 0, 0), InteractionKind.Talk, "Talk")
+    ],
+    3f);
+Check(nearestInteraction?.Id == "near", "Nearest interaction target selected");
+
+var inventory = new InventoryState();
+inventory.Add("herb", 3);
+Check(inventory.Remove("herb", 2) && inventory.Count("herb") == 1, "Inventory add and remove");
+var inventorySnapshot = inventory.Capture();
+inventory.Add("herb", 4);
+inventory.Restore(inventorySnapshot);
+Check(inventory.Count("herb") == 1, "Inventory snapshot restore");
+
+var questJournal = new QuestJournal();
+var contract = questJournal.Get(VerticalSliceBootstrap.ContractQuestId);
+contract.SetPhase(QuestPhase.Investigation);
+Check(contract.AddEvidence(new EvidenceEntry(
+    "witness-light",
+    contract.Id,
+    KnowledgeKind.Rumor,
+    "A witness saw a light above the marsh.",
+    "missing-family")), "Quest accepts unique rumor evidence");
+Check(contract.AddEvidence(new EvidenceEntry(
+    "broken-crossing",
+    contract.Id,
+    KnowledgeKind.Observation,
+    "The crossing is physically damaged.")), "Quest accepts observation evidence");
+contract.Resolve(QuestResolution.RitualClosure);
+Check(contract.ClaimReward(), "Resolved quest can be turned in");
+Check(!contract.ClaimReward(), "Quest reward can only be claimed once");
+
+var reputation = new ReputationSystem();
+Check(reputation.Change(ReputationScope.Village, "old-village", 15) == 15,
+    "Village reputation changes independently");
+var divine = new DivineRelationshipSystem();
+divine.Get("perun").SetPatron(true);
+divine.Get("veles").SetPatron(true);
+Check(divine.Relationships.Count(r => r.IsPatron) == 2,
+    "Multiple divine patrons are structurally allowed");
+Check(reputation.Get(ReputationScope.ReligiousInstitution, "perun-shrine") == 0,
+    "Religious institution reputation remains separate from divine favor");
+
+var relationships = new RelationshipSystem();
+relationships.Change("herbalist", RelationshipKind.Trust, 12);
+Check(relationships.Get("herbalist", RelationshipKind.Trust) == 12,
+    "Character relationship state");
+
+var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
+Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
+    "NPC schedule supports overnight ranges");
+
+var ritual = new RitualDefinition(
+    "first-ritual",
+    "First ritual",
+    MagicSource.SoulsAndNawia,
+    "old-shrine",
+    20,
+    6,
+    [new ItemCost("anchor-item", 1)],
+    ["broken-crossing"],
+    new MagicCost(Stamina: 20));
+Check(RitualRules.IsActiveAt(ritual, 23) && RitualRules.IsActiveAt(ritual, 4),
+    "Ritual time window supports night crossing midnight");
+
+var attack = new AttackDefinition(
+    "basic-sword",
+    20,
+    12,
+    1.8f,
+    0.2,
+    0.4,
+    DamageType.Physical,
+    AttackDirection.Right).Validate();
+Near(attack.Range, 1.8f, "Combat attack definition validates");
+
+var sphereEvent = new BoundaryPhenomenon(
+    "test-leak",
+    "black-swamp",
+    BoundaryState.Leaking,
+    20,
+    6);
+Check(sphereEvent.IsActive(23) && !sphereEvent.IsActive(12),
+    "Boundary phenomenon respects active night window");
+sphereEvent.Resolve();
+Check(!sphereEvent.IsActive(23), "Resolved boundary phenomenon becomes inactive");
+
+var sphereCollider = new SphereCollider(Vector3.Zero, 0.5f, CollisionLayer.Player, CollisionLayer.World);
+Check(sphereCollider.IsValid, "Physics collider contracts validate geometry");
 
 Reject(() => new Terrain(1, 2), "Degenerate width");
 Reject(() => new Terrain(2, 1), "Degenerate depth");
@@ -374,4 +517,60 @@ for (var direction = 0; direction < 24; direction++)
 }
 Check(shortenedBooms > 0, "Test includes an obstructed third-person orbit");
 
+
+var saveWorld = WorldGenerator.Generate();
+Check(saveWorld.Npcs.Count == 5, "Vertical slice seeds five documented NPC roles");
+Check(saveWorld.Npcs.Single(n => n.Id == "community-guard").GetSchedule(23)?.Activity == "night-watch",
+    "Seeded NPC schedule changes at night");
+Check(saveWorld.Cosmology.Find(VerticalSliceBootstrap.SwampBoundaryId)?.IsActive(23) == true,
+    "Vertical slice seeds the night swamp boundary leak");
+Check(saveWorld.Progress.Quests.Get(VerticalSliceBootstrap.ContractQuestId).Phase == QuestPhase.Offered,
+    "Vertical slice contract starts as offered");
+
+saveWorld.SetPlayerPosition(new Vector3(-40f, 0f, 30f));
+saveWorld.Time.SetTimeOfDay(22.5);
+saveWorld.Weather.SetCondition(WeatherKind.Fog, true);
+saveWorld.Player.SetState(67f, 42f);
+saveWorld.Progress.Profile.SetName("Miroslav");
+saveWorld.Progress.Profile.ChangeMoney(35);
+saveWorld.Progress.Profile.AddTitle("Marsh-Watcher");
+saveWorld.Progress.Inventory.Add("anchor-item");
+var saveQuest = saveWorld.Progress.Quests.Get(VerticalSliceBootstrap.ContractQuestId);
+saveQuest.SetPhase(QuestPhase.Investigation);
+saveQuest.AddEvidence(new EvidenceEntry(
+    "save-evidence",
+    saveQuest.Id,
+    KnowledgeKind.ConfirmedFact,
+    "The predator and the apparition leave different traces."));
+saveWorld.Progress.Reputation.Change(ReputationScope.Village, "old-village", 9);
+saveWorld.Progress.DivineRelationships.Get("perun").ChangeFavor(7);
+saveWorld.Progress.Relationships.Change("herbalist", RelationshipKind.Trust, 11);
+saveWorld.Progress.SetFlag("crossing-inspected");
+saveWorld.Enemies[0].TakeDamage(17f);
+
+var saveJson = SaveGameService.Serialize(saveWorld);
+var loadedWorld = WorldGenerator.Generate();
+SaveGameService.Restore(loadedWorld, saveJson);
+Near(loadedWorld.PlayerPosition.X, saveWorld.PlayerPosition.X, "Save restores player X");
+Near((float)loadedWorld.Time.TimeOfDayHours, 22.5f, "Save restores time");
+Check(loadedWorld.Weather.Condition == WeatherKind.Fog, "Save restores weather");
+Near(loadedWorld.Player.Health, 67f, "Save restores health");
+Near(loadedWorld.Player.Stamina, 42f, "Save restores stamina");
+Check(loadedWorld.Progress.Profile.Name == "Miroslav" && loadedWorld.Progress.Profile.Money == 35,
+    "Save restores player profile");
+Check(loadedWorld.Progress.Inventory.Contains("anchor-item"), "Save restores inventory");
+Check(loadedWorld.Progress.Quests.Get(VerticalSliceBootstrap.ContractQuestId).Evidence.Any(e => e.Id == "save-evidence"),
+    "Save restores quest evidence");
+Check(loadedWorld.Progress.Reputation.Get(ReputationScope.Village, "old-village") == 9,
+    "Save restores reputation");
+Check(loadedWorld.Progress.DivineRelationships.Get("perun").Favor == 7,
+    "Save restores divine relationship independently");
+Check(loadedWorld.Progress.Relationships.Get("herbalist", RelationshipKind.Trust) == 11,
+    "Save restores character relationship");
+Check(loadedWorld.Progress.HasFlag("crossing-inspected"), "Save restores world flags");
+Near(loadedWorld.Enemies[0].Health, saveWorld.Enemies[0].Health, "Save restores enemy health");
+
 Console.WriteLine($"PASS: {checks} regression checks.");
+
+sealed record TestComponent(string Value) : IGameComponent;
+

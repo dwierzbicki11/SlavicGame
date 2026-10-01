@@ -209,15 +209,26 @@ Game
     +-- Audio
     +-- UI
     +-- AI
-    +-- World
-    +-- Weather
-    +-- Time
-    +-- Quest
+    +-- Animation
+    +-- Assets
+    +-- Audio
+    +-- Combat
     +-- Dialogue
+    +-- Entity
+    +-- Gameplay
+    +-- Gods
+    +-- Interaction
     +-- Inventory
     +-- Magic
-    +-- Gods
+    +-- NPC
+    +-- Physics
+    +-- Quest
+    +-- Relationships
+    +-- Reputation
     +-- Save
+    +-- Scene
+    +-- UI
+    +-- World
 ```
 
 ## Vertical Slice
@@ -324,7 +335,7 @@ Controls: WASD move, left Shift sprint (consumes stamina), mouse rotate camera, 
 
 The third-person camera adapts its height to the rendered terrain, keeping a 0.5-unit ground clearance. A ridge between the player and camera shortens the camera boom; the constraint is also applied after smoothing so movement and rotation cannot interpolate the camera into the ground.
 
-Current runtime: procedural terrain, third-person orbit camera, terrain following, region detection, day/night clock, dynamic regional weather with atmospheric fog/lighting, player health/stamina, stamina-based sprinting, a compact HUD, placeholder village/shrine structures, collision against static world obstacles, and one dynamic predator prototype with patrol, alert, chase, attack and return states. The other systems above are planned.
+Current runtime: procedural terrain, third-person orbit camera, terrain following, region detection, day/night clock, dynamic regional weather with atmospheric fog/lighting, player health/stamina, stamina-based sprinting, a compact HUD, placeholder village/shrine structures, collision against static world obstacles, and one dynamic predator prototype with patrol, alert, chase, attack and return states. Foundations now also exist for entities/scenes, interactions, inventory, quests/evidence, dialogue data, NPC schedules, reputation, relationships, divine relationships, magic/ritual data, combat definitions and versioned checkpoint serialization; these foundations are not the same as completed player-facing mechanics.
 
 
 ### Mouse troubleshooting

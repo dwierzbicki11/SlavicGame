@@ -1,3 +1,5 @@
+using SlavicGame.Engine.Gameplay;
+
 namespace SlavicGame.Engine.World;
 
 public static class WorldGenerator
@@ -6,6 +8,7 @@ public static class WorldGenerator
     {
         var world = new WorldState();
         world.Initialize();
+        VerticalSliceBootstrap.Apply(world);
         return world;
     }
 }

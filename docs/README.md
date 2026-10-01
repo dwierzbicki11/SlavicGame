@@ -12,6 +12,7 @@ SlavicGame to trzecioosobowy Adventure / Action RPG w autorskim świecie inspiro
 | [Źródła](pantheon/Sources.md) | Bibliografia, zakres faktycznie sprawdzonych materiałów, kolejka badań |
 | [Pierwszy grywalny wycinek](design/VerticalSlice.md) | Pętla łowcy, zadanie, decyzje, systemy i kryteria odbioru |
 | [Kolejność produkcji](design/ProductionRoadmap.md) | Ustalona kolejność 23 etapów, obecny stan i następne konkretne rezultaty |
+| [Architektura silnika](design/EngineArchitecture.md) | Granice systemów, stan trwały, przygotowane moduły i zasady integracji |
 
 ## Jak czytać statusy
 
