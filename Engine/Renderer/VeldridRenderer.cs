@@ -22,6 +22,7 @@ public sealed class VeldridRenderer : IDisposable
     private Shader[]? _shaders;
 
     private readonly Camera3D _camera = new();
+    private uint _indexCount;
 
     public GraphicsDevice GraphicsDevice =>
         _graphicsDevice ?? throw new InvalidOperationException("Renderer has not been initialized.");
@@ -67,6 +68,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, vertices);
         _graphicsDevice.UpdateBuffer(_indexBuffer, 0, indices);
+        _indexCount = (uint)indices.Length;
 
         _cameraLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             new ResourceLayoutElementDescription(
@@ -151,7 +153,7 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
         _commandList.SetVertexBuffer(0, _vertexBuffer);
         _commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
-        _commandList.DrawIndexed((uint)((128 - 1) * (128 - 1) * 6));
+        _commandList.DrawIndexed(_indexCount);
 
         _commandList.End();
 
