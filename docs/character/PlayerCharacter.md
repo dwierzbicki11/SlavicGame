@@ -1,4 +1,4 @@
-# Bohater gracza — v0.1
+# Bohater gracza — v0.2
 
 Etap 10 roadmapy.
 
@@ -97,9 +97,11 @@ Docelowo gracz posiada:
 
 ## Śmierć
 
-Śmierć przywraca checkpoint. Bohater nie jest z tego powodu oficjalnie nieśmiertelny w lore.
+Śmierć przywraca checkpoint.
 
-Ewentualne późniejsze znaczenie częstego „powrotu” pozostaje otwarte.
+**Author rule:** checkpoint/load jest mechaniką niediegetyczną. Bohater nie cofa kanonicznie czasu, nie jest nieśmiertelny i nie „wraca przez Splot” po każdej porażce.
+
+Fabularne przechodzenie do Nawii pojawia się wyłącznie w zaprojektowanych scenach i nie jest utożsamiane z normalnym respawnem.
 
 ## Moralność
 
@@ -125,3 +127,12 @@ Historia rodziny może zmienić wiedzę o bohaterze, ale nie może:
 ## Status techniczny
 
 Istnieją już zdrowie, stamina, profil, pieniądze, tytuły, inventory, reputacje, relacje i zapis stanu. Kreator, progresja umiejętności, wyposażenie wizualne i pełna walka pozostają do implementacji.
+
+
+## Pochodzenie — author truth
+
+Biologiczna rodzina bohatera jest ważna z powodu udziału w badaniu Sieci Progów, **nie z powodu wyjątkowej krwi**.
+
+Pełny spoiler: [FamilyTruth.md](FamilyTruth.md).
+
+Kreator i wybrane przez gracza cechy pozostają ważne po ujawnieniu pochodzenia.
