@@ -18,9 +18,10 @@ public readonly struct TerrainVertex
 
 public static class TerrainMesh
 {
-    public static void Build(Terrain terrain, out TerrainVertex[] vertices, out ushort[] indices)
+    public static void Build(Terrain terrain, out TerrainVertex[] vertices, out uint[] indices)
     {
-        vertices = new TerrainVertex[terrain.Width * terrain.Depth];
+        ArgumentNullException.ThrowIfNull(terrain);
+        vertices = new TerrainVertex[checked(terrain.Width * terrain.Depth)];
 
         for (var x = 0; x < terrain.Width; x++)
         for (var z = 0; z < terrain.Depth; z++)
@@ -39,16 +40,16 @@ public static class TerrainMesh
                 new TerrainVertex(new Vector3(px, height, pz), color);
         }
 
-        indices = new ushort[(terrain.Width - 1) * (terrain.Depth - 1) * 6];
+        indices = new uint[checked((terrain.Width - 1) * (terrain.Depth - 1) * 6)];
         var index = 0;
 
         for (var x = 0; x < terrain.Width - 1; x++)
         for (var z = 0; z < terrain.Depth - 1; z++)
         {
-            var a = (ushort)(x * terrain.Depth + z);
-            var b = (ushort)((x + 1) * terrain.Depth + z);
-            var c = (ushort)((x + 1) * terrain.Depth + z + 1);
-            var d = (ushort)(x * terrain.Depth + z + 1);
+            var a = (uint)(x * terrain.Depth + z);
+            var b = (uint)((x + 1) * terrain.Depth + z);
+            var c = (uint)((x + 1) * terrain.Depth + z + 1);
+            var d = (uint)(x * terrain.Depth + z + 1);
 
             indices[index++] = a;
             indices[index++] = b;

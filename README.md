@@ -225,7 +225,7 @@ Future development may introduce consequences connected to repeatedly crossing t
 
 ## Engine & Technical Architecture
 
-The project is written in **C#** and uses a custom engine/framework architecture with **Veldrid** as the primary graphics abstraction. The initial runtime uses Veldrid's SDL2 windowing layer and is intentionally designed so that Vulkan is not a requirement for local development and testing.
+The project is written in **C#** and uses a custom engine/framework architecture with **Veldrid** as the primary graphics abstraction. The initial runtime uses Veldrid's SDL2 windowing layer and requires a Vulkan-capable GPU/driver for the graphical runtime. CPU-only regression checks do not require a window or Vulkan.
 
 ```text
 Game
@@ -353,3 +353,17 @@ The intended player feeling is:
 **Early development / architecture and world-design phase.**
 
 The README is the high-level project specification. More detailed documents such as the Pantheon Bible, World Bible, Bestiary Bible, Magic Bible, Quest Design Document, and technical architecture documentation will be added as development progresses.
+
+## Build and run
+
+Install the .NET 10 SDK and a Vulkan-capable graphics driver. Linux also requires SDL2 (`libSDL2-2.0.so.0`).
+
+```sh
+dotnet build SlavicGame.csproj --configuration Release
+dotnet run --project SlavicGame.csproj
+dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
+```
+
+Controls: WASD move, left Shift run, mouse rotate camera, F11 toggle fullscreen, Escape exit.
+
+Current runtime: procedural terrain, third-person orbit camera, terrain following, region detection, day/night clock and FPS HUD. The other systems above are planned.

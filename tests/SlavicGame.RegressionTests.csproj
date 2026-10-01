@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Engine/World/*.cs" Link="World/%(Filename)%(Extension)" />
+    <Compile Include="../Engine/Core/GameTime.cs" Link="GameTime.cs" />
+    <Compile Include="../Engine/Renderer/Camera3D.cs" Link="Camera3D.cs" />
+  </ItemGroup>
+</Project>

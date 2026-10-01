@@ -12,6 +12,10 @@ public sealed class Terrain
 
     public Terrain(int width = 128, int depth = 128, float cellSize = 2f)
     {
+        if (width < 2) throw new ArgumentOutOfRangeException(nameof(width));
+        if (depth < 2) throw new ArgumentOutOfRangeException(nameof(depth));
+        if (!float.IsFinite(cellSize) || cellSize <= 0)
+            throw new ArgumentOutOfRangeException(nameof(cellSize));
         Width = width;
         Depth = depth;
         CellSize = cellSize;
@@ -23,6 +27,8 @@ public sealed class Terrain
 
     public float SampleHeight(Vector3 worldPosition)
     {
+        if (!float.IsFinite(worldPosition.X) || !float.IsFinite(worldPosition.Z))
+            throw new ArgumentOutOfRangeException(nameof(worldPosition));
         var gx = Math.Clamp(worldPosition.X / CellSize + (Width - 1) * 0.5f, 0f, Width - 1);
         var gz = Math.Clamp(worldPosition.Z / CellSize + (Depth - 1) * 0.5f, 0f, Depth - 1);
 
@@ -33,9 +39,14 @@ public sealed class Terrain
 
         var tx = gx - x0;
         var tz = gz - z0;
-        var a = _heights[x0, z0] + (_heights[x1, z0] - _heights[x0, z0]) * tx;
-        var b = _heights[x0, z1] + (_heights[x1, z1] - _heights[x0, z1]) * tx;
-        return a + (b - a) * tz;
+        // Match the two planar triangles emitted by TerrainMesh (diagonal a-c).
+        var a = _heights[x0, z0];
+        var b = _heights[x1, z0];
+        var c = _heights[x1, z1];
+        var d = _heights[x0, z1];
+        return tx >= tz
+            ? a + tx * (b - a) + tz * (c - b)
+            : a + tx * (c - d) + tz * (d - a);
     }
 
     private void Generate()

@@ -17,6 +17,8 @@ public sealed class GameEngine : IDisposable
     private readonly WorldState _world = WorldGenerator.Generate();
 
     private bool _initialized;
+    private bool _disposed;
+    private readonly bool _vsync;
     private double _fpsAccumulator;
     private int _fpsFrames;
     private double _displayFps;
@@ -28,6 +30,8 @@ public sealed class GameEngine : IDisposable
 
     public GameEngine(EngineConfig config)
     {
+        ArgumentNullException.ThrowIfNull(config);
+        _vsync = config.VSync;
         _window = new GameWindow(config);
         _window.Resized += OnWindowResized;
         _window.Closing += () => EngineLog.Info("Closing SlavicGame.");
@@ -35,19 +39,21 @@ public sealed class GameEngine : IDisposable
 
     public void Initialize()
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (_initialized)
         {
             return;
         }
 
         EngineLog.Info("Starting SlavicGame engine.");
-        _renderer.Initialize(_window, _world, true);
+        _renderer.Initialize(_window, _world, _vsync);
         _initialized = true;
         EngineLog.Info("Engine initialization complete.");
     }
 
     public void Run()
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (!_initialized)
         {
             throw new InvalidOperationException("Call Initialize() before Run().");
@@ -60,6 +66,8 @@ public sealed class GameEngine : IDisposable
         while (_window.Exists)
         {
             _window.PumpEvents();
+            if (!_window.Exists) break;
+            if (_window.ConsumeKeyPress(Key.Escape)) break;
 
             var currentSeconds = stopwatch.Elapsed.TotalSeconds;
             var deltaSeconds = currentSeconds - previousSeconds;
@@ -72,8 +80,8 @@ public sealed class GameEngine : IDisposable
 
             _time.Advance(deltaSeconds);
             UpdateFps(deltaSeconds);
-            HandleInput(deltaSeconds);
-            _world.Update(deltaSeconds);
+            HandleInput(_time.DeltaSeconds);
+            _world.Update(_time.DeltaSeconds);
 
             if (!loggedFirstFrame)
             {
@@ -106,7 +114,7 @@ public sealed class GameEngine : IDisposable
     private void HandleInput(double deltaSeconds)
     {
         var mouse = _window.MouseDelta;
-        _camera.Update(_world.PlayerPosition, mouse.X, mouse.Y, (float)deltaSeconds);
+        _camera.Rotate(mouse.X, mouse.Y);
 
         var move = Vector3.Zero;
         if (_window.IsKeyDown(Key.W)) move += _camera.GetMoveForward();
@@ -120,6 +128,8 @@ public sealed class GameEngine : IDisposable
             var speed = _window.IsKeyDown(Key.ShiftLeft) ? 9f : 5f;
             _world.SetPlayerPosition(_world.PlayerPosition + move * speed * (float)deltaSeconds);
         }
+
+        _camera.Follow(_world.PlayerPosition, (float)deltaSeconds);
     }
 
     private void OnWindowResized()
@@ -134,7 +144,9 @@ public sealed class GameEngine : IDisposable
 
     public void Dispose()
     {
-        _renderer.Dispose();
-        _window.Dispose();
+        if (_disposed) return;
+        _disposed = true;
+        try { _renderer.Dispose(); }
+        finally { _window.Dispose(); }
     }
 }
