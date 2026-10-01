@@ -27,12 +27,10 @@ public sealed class VeldridRenderer : IDisposable
             PreferDepthRangeZeroToOne = true
         };
 
-        // OpenGL is the default bootstrap backend for local development.
-        // This avoids making Vulkan initialization a requirement just to test the game.
         _graphicsDevice = VeldridStartup.CreateGraphicsDevice(
             window.NativeWindow,
             options,
-            GraphicsBackend.OpenGL);
+            GraphicsBackend.Vulkan);
 
         _graphicsDevice.SyncToVerticalBlank = vsync;
         _commandList = _graphicsDevice.ResourceFactory.CreateCommandList();
