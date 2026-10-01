@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Gameplay;
+using SlavicGame.Engine.AI;
 
 namespace SlavicGame.Engine.World;
 
@@ -7,9 +8,11 @@ public sealed class WorldState
 {
     private readonly List<WorldRegion> _regions = [];
     private readonly List<WorldObstacle> _obstacles = [];
+    private readonly List<EnemyAgent> _enemies = [];
 
     public IReadOnlyList<WorldRegion> Regions => _regions;
     public IReadOnlyList<WorldObstacle> Obstacles => _obstacles;
+    public IReadOnlyList<EnemyAgent> Enemies => _enemies;
     public Vector3 PlayerPosition { get; private set; } = Vector3.Zero;
     public WorldTime Time { get; } = new();
     public WeatherSystem Weather { get; } = new();
@@ -40,6 +43,9 @@ public sealed class WorldState
         AddObstacle("forest-fallen-trunk", 18f, 15f, 8f, 2.2f, 1.2f, new Vector3(0.24f, 0.15f, 0.07f));
         AddObstacle("swamp-standing-stone", 105f, 44f, 3f, 3f, 2.2f, new Vector3(0.20f, 0.23f, 0.20f));
 
+        _enemies.Clear();
+        AddEnemy("swamp-predator", 92f, 35f);
+
         SetPlayerPosition(Vector3.Zero);
     }
 
@@ -48,30 +54,54 @@ public sealed class WorldState
         Time.Update(deltaSeconds);
         SetPlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
+        foreach (var enemy in _enemies)
+        {
+            enemy.Update(this, deltaSeconds);
+        }
     }
 
     public void SetPlayerPosition(Vector3 position)
     {
         if (!float.IsFinite(position.X) || !float.IsFinite(position.Z))
             throw new ArgumentOutOfRangeException(nameof(position));
+        var horizontal = ResolveHorizontalPosition(new Vector2(position.X, position.Z), PlayerRadius);
+        position.X = horizontal.X;
+        position.Z = horizontal.Y;
+        PlayerPosition = new Vector3(position.X, Terrain.SampleHeight(position), position.Z);
+        UpdateRegion();
+    }
+
+    public Vector2 ResolveHorizontalPosition(Vector2 position, float radius)
+    {
+        if (!float.IsFinite(position.X) || !float.IsFinite(position.Y) ||
+            !float.IsFinite(radius) || radius < 0f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(position));
+        }
+
         var halfWidth = (Terrain.Width - 1) * Terrain.CellSize * 0.5f;
         var halfDepth = (Terrain.Depth - 1) * Terrain.CellSize * 0.5f;
         position.X = Math.Clamp(position.X, -halfWidth, halfWidth);
-        position.Z = Math.Clamp(position.Z, -halfDepth, halfDepth);
+        position.Y = Math.Clamp(position.Y, -halfDepth, halfDepth);
 
-        var horizontal = new Vector2(position.X, position.Z);
         for (var pass = 0; pass < 2; pass++)
         {
             foreach (var obstacle in _obstacles)
             {
-                horizontal = obstacle.ResolvePoint(horizontal, PlayerRadius);
+                position = obstacle.ResolvePoint(position, radius);
             }
         }
 
-        position.X = Math.Clamp(horizontal.X, -halfWidth, halfWidth);
-        position.Z = Math.Clamp(horizontal.Y, -halfDepth, halfDepth);
-        PlayerPosition = new Vector3(position.X, Terrain.SampleHeight(position), position.Z);
-        UpdateRegion();
+        position.X = Math.Clamp(position.X, -halfWidth, halfWidth);
+        position.Y = Math.Clamp(position.Y, -halfDepth, halfDepth);
+        return position;
+    }
+
+    private void AddEnemy(string id, float x, float z)
+    {
+        var home = new Vector3(x, 0f, z);
+        home.Y = Terrain.SampleHeight(home);
+        _enemies.Add(new EnemyAgent(id, home));
     }
 
     private void AddObstacle(

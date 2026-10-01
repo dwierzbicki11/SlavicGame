@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Core;
+using SlavicGame.Engine.AI;
 using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.Input;
 using SlavicGame.Engine.World;
@@ -70,6 +71,8 @@ var world = WorldGenerator.Generate();
 world.Initialize();
 Check(world.Regions.Count == 4, "Idempotent world initialization");
 Check(world.Obstacles.Count == 9, "Idempotent obstacle initialization");
+Check(world.Enemies.Count == 1 && world.Enemies[0].Id == "swamp-predator",
+    "World initializes one vertical-slice predator");
 StaticWorldMesh.Build(world, out var worldVertices, out var worldIndices);
 Check(worldVertices.Length == world.Terrain.Width * world.Terrain.Depth + world.Obstacles.Count * 8,
     "Static world mesh includes obstacle vertices");
@@ -90,6 +93,10 @@ world.SetPlayerPosition(villageHut.Position);
 var resolvedPlayer = new Vector2(world.PlayerPosition.X, world.PlayerPosition.Z);
 Check(!villageHut.IntersectsCircle(resolvedPlayer, world.PlayerRadius),
     "Player is resolved out of static obstacle collision");
+var invalidHorizontalRejected = false;
+try { world.ResolveHorizontalPosition(new Vector2(float.NaN, 0f), 0.5f); }
+catch (ArgumentOutOfRangeException) { invalidHorizontalRejected = true; checks++; }
+if (!invalidHorizontalRejected) throw new Exception("Invalid horizontal collision input rejected");
 
 var collisionWorld = WorldGenerator.Generate();
 var collisionCamera = new Camera3D();
@@ -103,6 +110,39 @@ for (var frame = 0; frame < 120; frame++)
         !obstacle.IntersectsCircle(horizontalPlayer, collisionWorld.PlayerRadius)),
         "Controller movement never leaves player inside an obstacle");
 }
+var aiWorld = WorldGenerator.Generate();
+var predator = aiWorld.Enemies.Single();
+ActorMesh.Build(aiWorld.Enemies, out var actorVertices, out var actorIndices);
+Check(actorVertices.Length == 8 && actorIndices.Length == 36,
+    "Living enemy produces one dynamic actor box");
+aiWorld.SetPlayerPosition(predator.HomePosition + new Vector3(3f, 0f, 0f));
+predator.Update(aiWorld, 0.01);
+Check(predator.State == EnemyState.Alert, "Enemy notices player inside detection range");
+predator.Update(aiWorld, 0.60);
+Check(predator.State == EnemyState.Chase, "Alert transitions into chase");
+for (var frame = 0; frame < 120 && predator.State != EnemyState.Attack; frame++)
+{
+    predator.Update(aiWorld, 1.0 / 60.0);
+}
+Check(predator.State == EnemyState.Attack, "Chasing enemy reaches attack state");
+var healthBeforeAttack = aiWorld.Player.Health;
+predator.Update(aiWorld, 0.01);
+Check(aiWorld.Player.Health < healthBeforeAttack, "Enemy attack damages player");
+aiWorld.SetPlayerPosition(Vector3.Zero);
+predator.Update(aiWorld, 0.01);
+Check(predator.State == EnemyState.Return, "Enemy disengages from distant player");
+for (var frame = 0; frame < 600 && predator.State != EnemyState.Patrol; frame++)
+{
+    predator.Update(aiWorld, 1.0 / 60.0);
+}
+Check(predator.State == EnemyState.Patrol, "Enemy returns to its home patrol");
+predator.TakeDamage(1000f);
+Check(!predator.IsAlive && predator.State == EnemyState.Dead, "Enemy health reaches dead state");
+ActorMesh.Build(aiWorld.Enemies, out actorVertices, out actorIndices);
+Check(actorVertices.Length == 0 && actorIndices.Length == 0,
+    "Dead enemy is removed from dynamic actor mesh");
+Reject(() => predator.TakeDamage(float.NaN), "NaN enemy damage rejected");
+
 var clock = new WorldTime();
 clock.Update(450);
 Check(clock.TimeOfDayHours == 20 && clock.IsNight, "Night boundary");

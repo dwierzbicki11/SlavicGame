@@ -1,6 +1,6 @@
 # Pierwszy grywalny wycinek
 
-**Projekt F, wersja 0.1.** To specyfikacja przyszłego działania. Prototyp ma teren, kamerę, ruch, zegar, rozpoznawanie regionów, pierwszą pogodę, fundament zdrowia/staminy oraz pierwsze statyczne obiekty z kolizją; nie ma jeszcze opisanych tutaj NPC, walki ani zadania.
+**Projekt F, wersja 0.1.** To specyfikacja przyszłego działania. Prototyp ma teren, kamerę, ruch, zegar, rozpoznawanie regionów, pierwszą pogodę, fundament zdrowia/staminy, statyczne obiekty z kolizją oraz pierwszy prototyp przeciwnika; nie ma jeszcze pełnej walki, NPC ani zadania.
 
 ## Cel
 
@@ -52,7 +52,7 @@ Wszystkie trzy drogi pozwalają ukończyć zlecenie. Żadna nie wymaga przynale�
 | Pora dnia | Czytelna zmiana oświetlenia i okna zdarzeń | Zegar istnieje; oświetlenie i zdarzenia planowane |
 | Pogoda | Pogoda spokojna i mgła z czytelną widocznością | Pierwsza wersja działa: regionalne przejścia, mgła atmosferyczna, zachmurzenie i deszcz/storm jako stan; brak jeszcze cząsteczek opadu |
 | Walka | Broń biała, blok, unik, stamina, zdrowie; osobno prosty łuk | Fundament zdrowia i staminy działa; sprint zużywa staminę, walka nadal planowana |
-| AI | Patrol / ostrzeżenie / atak / powrót przeciwnika | Planowane |
+| AI | Patrol / ostrzeżenie / atak / powrót przeciwnika | Pierwszy prototyp działa: jeden drapieżnik patroluje, wykrywa gracza, przechodzi przez alarm, goni, atakuje, zadaje obrażenia i wraca do obszaru startowego |
 | Tropienie | Trzy ślady i rozróżnienie obserwacji od plotki | Planowane |
 | Ekwipunek i alchemia | Przedmiot zadania, składniki i jedna receptura | Planowane |
 | Magia i rytuał | Jeden czar oraz jeden obrzęd z kosztem i warunkami | Planowane |
