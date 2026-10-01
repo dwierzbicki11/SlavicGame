@@ -83,11 +83,31 @@ public sealed class GameWindow : IDisposable
 
     private void SetRelativeMouseMode(bool enabled)
     {
-        // Veldrid's Sdl2Window already reports relative mouse motion through
-        // MouseDelta (SDL mouse motion xrel/yrel). Do not call SDL directly
-        // here: mixing another SDL P/Invoke path can interfere with Veldrid's
-        // event processing and make camera input appear blocked while moving.
-        _window.CursorVisible = !enabled;
+        // Veldrid exposes SDL's relative mouse delta through MouseDelta.
+        // We only enable/disable SDL relative mode here; the delta itself
+        // always comes from Veldrid so keyboard and mouse processing stay
+        // independent.
+        try
+        {
+            var result = Sdl2NativeCompat.SetRelativeMouseMode(enabled);
+
+            if (result != 0)
+            {
+                EngineLog.Warn($"SDL relative mouse mode returned {result}.");
+            }
+
+            _window.CursorVisible = !enabled;
+        }
+        catch (DllNotFoundException exception)
+        {
+            _window.CursorVisible = true;
+            EngineLog.Warn($"SDL2 library not found: {exception.Message}");
+        }
+        catch (EntryPointNotFoundException exception)
+        {
+            _window.CursorVisible = true;
+            EngineLog.Warn($"SDL_SetRelativeMouseMode not found: {exception.Message}");
+        }
     }
 
     private void OnKeyDown(KeyEvent keyEvent)
@@ -114,16 +134,15 @@ public sealed class GameWindow : IDisposable
 
     private static class Sdl2NativeCompat
     {
-        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int SDL_SetRelativeMouseMode(byte enabled);
-
-        public static int SetRelativeMouseMode(bool enabled)
-            => SDL_SetRelativeMouseMode(enabled ? (byte)1 : (byte)0);
+        [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl, EntryPoint = "SDL_SetRelativeMouseMode")]
+        private static extern int SetRelativeMouseModeWindows(byte enabled);
 
         [DllImport("libSDL2-2.0.so.0", CallingConvention = CallingConvention.Cdecl, EntryPoint = "SDL_SetRelativeMouseMode")]
-        private static extern int SDL_SetRelativeMouseModeLinux(byte enabled);
+        private static extern int SetRelativeMouseModeLinux(byte enabled);
 
-        public static int SetRelativeMouseModeLinux(bool enabled)
-            => SDL_SetRelativeMouseModeLinux(enabled ? (byte)1 : (byte)0);
+        public static int SetRelativeMouseMode(bool enabled)
+            => OperatingSystem.IsLinux()
+                ? SetRelativeMouseModeLinux(enabled ? (byte)1 : (byte)0)
+                : SetRelativeMouseModeWindows(enabled ? (byte)1 : (byte)0);
     }
 }
