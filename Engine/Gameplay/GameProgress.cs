@@ -2,6 +2,7 @@ using SlavicGame.Engine.Gods;
 using SlavicGame.Engine.Inventory;
 using SlavicGame.Engine.Quest;
 using SlavicGame.Engine.Reputation;
+using SlavicGame.Engine.Relationships;
 
 namespace SlavicGame.Engine.Gameplay;
 
@@ -14,6 +15,7 @@ public sealed class GameProgress
     public QuestJournal Quests { get; } = new();
     public ReputationSystem Reputation { get; } = new();
     public DivineRelationshipSystem DivineRelationships { get; } = new();
+    public RelationshipSystem Relationships { get; } = new();
     public IReadOnlyCollection<string> WorldFlags => _worldFlags;
 
     public bool HasFlag(string flag) => _worldFlags.Contains(flag);
