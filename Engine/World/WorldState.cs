@@ -1,6 +1,7 @@
 using System.Numerics;
 using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.AI;
+using SlavicGame.Engine.NPC;
 
 namespace SlavicGame.Engine.World;
 
@@ -9,14 +10,18 @@ public sealed class WorldState
     private readonly List<WorldRegion> _regions = [];
     private readonly List<WorldObstacle> _obstacles = [];
     private readonly List<EnemyAgent> _enemies = [];
+    private readonly List<NpcDefinition> _npcs = [];
 
     public IReadOnlyList<WorldRegion> Regions => _regions;
     public IReadOnlyList<WorldObstacle> Obstacles => _obstacles;
     public IReadOnlyList<EnemyAgent> Enemies => _enemies;
+    public IReadOnlyList<NpcDefinition> Npcs => _npcs;
     public Vector3 PlayerPosition { get; private set; } = Vector3.Zero;
     public WorldTime Time { get; } = new();
     public WeatherSystem Weather { get; } = new();
     public PlayerVitals Player { get; } = new();
+    public GameProgress Progress { get; } = new();
+    public CosmologyState Cosmology { get; } = new();
     public Terrain Terrain { get; } = new();
     public float PlayerRadius { get; } = 0.55f;
     public string CurrentRegion { get; private set; } = "starting-forest";
@@ -45,6 +50,23 @@ public sealed class WorldState
 
         _enemies.Clear();
         AddEnemy("swamp-predator", 92f, 35f);
+
+        _npcs.Clear();
+        AddNpc("missing-family", NpcRole.ContractGiver,
+            new NpcScheduleSlot(6, 20, "old-village", "home-and-search"),
+            new NpcScheduleSlot(20, 6, "old-village", "home"));
+        AddNpc("crossing-keeper", NpcRole.CrossingKeeper,
+            new NpcScheduleSlot(6, 19, "black-swamp", "maintain-crossing"),
+            new NpcScheduleSlot(19, 6, "old-village", "rest"));
+        AddNpc("herbalist", NpcRole.Herbalist,
+            new NpcScheduleSlot(7, 18, "old-village", "trade-and-prepare"),
+            new NpcScheduleSlot(18, 7, "old-village", "rest"));
+        AddNpc("community-guard", NpcRole.CommunityGuard,
+            new NpcScheduleSlot(6, 18, "old-village", "patrol"),
+            new NpcScheduleSlot(18, 6, "old-village", "night-watch"));
+        AddNpc("shrine-keeper", NpcRole.ShrineKeeper,
+            new NpcScheduleSlot(7, 19, "old-shrine", "tend-shrine"),
+            new NpcScheduleSlot(19, 7, "old-village", "rest"));
 
         SetPlayerPosition(Vector3.Zero);
     }
@@ -96,6 +118,9 @@ public sealed class WorldState
         position.Y = Math.Clamp(position.Y, -halfDepth, halfDepth);
         return position;
     }
+
+    private void AddNpc(string id, NpcRole role, params NpcScheduleSlot[] schedule) =>
+        _npcs.Add(new NpcDefinition(id, role, schedule));
 
     private void AddEnemy(string id, float x, float z)
     {
