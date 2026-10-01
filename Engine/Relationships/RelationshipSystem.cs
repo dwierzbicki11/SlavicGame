@@ -36,4 +36,23 @@ public sealed class RelationshipSystem
             pair.Key.CharacterId,
             pair.Key.Kind,
             pair.Value)).ToArray();
+
+    public void Restore(IEnumerable<RelationshipSnapshot> snapshots)
+    {
+        ArgumentNullException.ThrowIfNull(snapshots);
+        _values.Clear();
+        foreach (var snapshot in snapshots)
+        {
+            if (string.IsNullOrWhiteSpace(snapshot.CharacterId) ||
+                snapshot.Value is < -100 or > 100)
+            {
+                throw new ArgumentException("Relationship snapshot contains invalid data.", nameof(snapshots));
+            }
+
+            if (snapshot.Value != 0)
+            {
+                _values.Add((snapshot.CharacterId, snapshot.Kind), snapshot.Value);
+            }
+        }
+    }
 }
