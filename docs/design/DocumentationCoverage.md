@@ -14,6 +14,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 | Praktyki religijne | research/pantheon/ReligiousPracticePrinciples.md | zasady v0.1 |
 | Instytucje kultowe | pantheon/CultInstitutions.md | F v0.1 |
 | Boskie umowy | pantheon/DivineContracts.md | F v0.1 |
+| Relacje bogów | pantheon/RelationshipMatrix.md | F v0.1 |
 | Historia świata | world/Timeline.md | struktura v0.1; prawda głównej tajemnicy otwarta |
 | Kultury | world/Cultures.md | framework + region startowy v0.1 |
 | Regiony/królestwa | world/RegionsAndKingdoms.md | framework v0.1 |
