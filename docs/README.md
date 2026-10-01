@@ -96,6 +96,8 @@ Kontrola kompletności: [Pokrycie dokumentacji](design/DocumentationCoverage.md)
 |---|---|
 | [Główna historia](story/MainStory.md) | Struktura aktów i wymagania kampanii |
 | [Przepływ kampanii](story/CampaignRegionalFlow.md) | Funkcja każdego dużego regionu w historii |
+| [Main Quest Skeleton](story/MainQuestSkeleton.md) | MQ00–MQ56, 29 roboczych jednostek |
+| [Powracająca obsada](story/RecurringCast.md) | Kluczowe role ludzkie, rodzina i sojusznicy |
 | [Prawda kryzysu](story/CrisisTruth.md) | Sieć Progów, przeciążenie i Noc Zamkniętego Progu |
 | [Antagoniści](story/Antagonists.md) | Wszebor, Krąg Rozwarcia i Straż Zamknięcia |
 | [Plan ujawniania](story/RevelationPlan.md) | Jak gracz składa prawdę w Aktach 0–V |
@@ -110,6 +112,7 @@ Kontrola kompletności: [Pokrycie dokumentacji](design/DocumentationCoverage.md)
 | Dokument | Zakres |
 |---|---|
 | [Game Design Bible](design/GameDesignBible.md) | Core loop i pełny model systemów |
+| [Scope 1.0](design/ScopeBoundaries.md) | Co jest core, a czego celowo nie budujemy |
 | [Quest Design](design/QuestDesign.md) | Stany, dowody, rozwiązania i nagrody |
 | [Decision Model](design/DecisionModel.md) | Decyzje i konsekwencje bez good/evil |
 | [Combat Design](design/CombatDesign.md) | Melee, stamina, blok, unik, łuk |
