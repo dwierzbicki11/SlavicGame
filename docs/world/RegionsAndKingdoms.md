@@ -97,3 +97,21 @@ Granica na mapie nie zawsze jest linią. Może być:
 - ostatecznego kształtu mapy;
 - jednego imperium jako centrum całej historii;
 - politycznej przynależności wszystkich przyszłych regionów.
+
+
+## Makroświat — first pass
+
+Pierwsza pełna architektura polityczna jest opisana w:
+- [PoliticalPowers.md](PoliticalPowers.md);
+- [MacroGeography.md](MacroGeography.md);
+- [PoliticalConflicts.md](PoliticalConflicts.md);
+- [InterregionalEconomy.md](InterregionalEconomy.md).
+
+Ustalono roboczo:
+- Związek Grodów Nadborza;
+- Ligę Ujścia;
+- Księstwa Przełęczy;
+- Wspólnoty Wielkiego Boru;
+- Konfederację Arel.
+
+Nazwy są F i mogą podlegać późniejszemu polishingowi, ale ich **funkcje polityczne** są częścią pełnego obrazu gry v0.1.
