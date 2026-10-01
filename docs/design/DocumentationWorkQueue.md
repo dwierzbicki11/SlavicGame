@@ -62,16 +62,16 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 
 ## Poziom 5 — trudne, wymagają researchu
 
-- [ ] research budownictwa;
-- [ ] research ubioru i materiałów;
-- [ ] research żywności;
-- [ ] research rolnictwa i narzędzi;
-- [ ] research transportu;
-- [ ] research uzbrojenia;
-- [ ] research pochówków;
-- [ ] research handlu;
-- [ ] research struktur osad;
-- [ ] research praktyk religijnych używanych jako inspiracja.
+- [x] research budownictwa;
+- [x] research ubioru i materiałów;
+- [x] research żywności;
+- [x] research rolnictwa i narzędzi;
+- [x] research transportu;
+- [x] research uzbrojenia;
+- [x] research pochówków;
+- [x] research handlu;
+- [x] research struktur osad;
+- [ ] research praktyk religijnych używanych jako inspiracja — przeniesiony do Poziomu 7, bo wymaga tej samej krytyki źródeł co panteon.
 
 Każdy temat powstaje jako osobna karta źródłowa, zanim przeniesiemy szczegóły do finalnej kultury.
 
