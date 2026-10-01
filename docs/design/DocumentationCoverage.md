@@ -154,3 +154,12 @@ Obecny zestaw jest **pełnym szkieletem dokumentacji v0.1**, ale nie finalną do
 Projekt posiada teraz **pełny obraz designu i prawdę autorów**, ale nie finalny production/content lock.
 
 Wymagania „pełnej dokumentacji projektu” z wcześniejszej sekcji nadal oznaczają stan znacznie późniejszy: wszystkie questy, wszystkie finalne istoty, kompletne regiony, asset lists, zmierzony performance i release readiness.
+
+
+## Scope i kampania produkcyjna
+
+| Obszar | Dokument | Stan |
+|---|---|---|
+| Scope 1.0 | design/ScopeBoundaries.md | ustalony first pass |
+| Main quest skeleton | story/MainQuestSkeleton.md | MQ00–MQ56 |
+| Recurring cast | story/RecurringCast.md | główne role v0.1 |
