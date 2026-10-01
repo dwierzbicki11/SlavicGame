@@ -54,11 +54,11 @@ Wszystkie trzy drogi pozwalają ukończyć zlecenie. Żadna nie wymaga przynale�
 | Walka | Broń biała, blok, unik, stamina, zdrowie; osobno prosty łuk | Fundament zdrowia i staminy działa; sprint zużywa staminę, walka nadal planowana |
 | AI | Patrol / ostrzeżenie / atak / powrót przeciwnika | Pierwszy prototyp działa: jeden drapieżnik patroluje, wykrywa gracza, przechodzi przez alarm, goni, atakuje, zadaje obrażenia i wraca do obszaru startowego |
 | Tropienie | Trzy ślady i rozróżnienie obserwacji od plotki | Planowane |
-| Ekwipunek i alchemia | Przedmiot zadania, składniki i jedna receptura | Planowane |
-| Magia i rytuał | Jeden czar oraz jeden obrzęd z kosztem i warunkami | Planowane |
-| NPC i dialog | Pięć ról, dwie pory harmonogramu i dialog po decyzji | Planowane |
-| Zadania i reputacja | Trzy zakończenia z oddzielnym stanem stron | Planowane |
-| Zapis | Checkpoint i odczyt całego stanu zadania | Planowane |
+| Ekwipunek i alchemia | Przedmiot zadania, składniki i jedna receptura | Modele ekwipunku, kosztów i receptur są przygotowane; brak jeszcze interakcji zbierania/craftingu i zawartości receptury |
+| Magia i rytuał | Jeden czar oraz jeden obrzęd z kosztem i warunkami | Modele źródeł magii, kosztów, warunków miejsca/czasu oraz rytuałów są przygotowane; wykonanie rytuału i efekty runtime nadal planowane |
+| NPC i dialog | Pięć ról, dwie pory harmonogramu i dialog po decyzji | Pięć ról i harmonogram dzień/noc są przygotowane; graf dialogowy ma model danych, ale NPC nie są jeszcze renderowani ani interaktywni |
+| Zadania i reputacja | Trzy zakończenia z oddzielnym stanem stron | Dziennik, rozdzielenie typów dowodów, trzy rozwiązania, jednorazowe oddanie oraz osobne zakresy reputacji mają fundament danych; przebieg zadania runtime nadal planowany |
+| Zapis | Checkpoint i odczyt całego stanu zadania | Wersjonowany snapshot i restore całego istotnego stanu działają w pamięci/JSON; brak jeszcze slotów, UI i operacji plikowych |
 
 ## Kolejność implementacji po dokumentacji
 
