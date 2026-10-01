@@ -94,6 +94,18 @@ Juan Antonio Álvarez-Pedrosa (red.), **Sources of Slavic Pre-Christian Religion
 
 Stanisław Rosik, **The Slavic Religion in the Light of 11th and 12th-Century German Chronicles**, rozdział o Helmoldzie. [Rekord rozdziału](https://brill.com/display/book/9789004331488/BP000012.xml). **Konsultacja: opis wydawcy i fragmenty indeksowane; pełna analiza rozdziału do wykonania.** Punkt odniesienia do krytycznej oceny kronikarza i nazw regionalnych.
 
+### S22
+
+Jiří Dynda, **Slavic Paganism in Medieval Christian Writings: Ink, Cross, and Pagan Gods**, Brill, 2025/2026, East Central and Eastern Europe in the Middle Ages, t. 97. [Rekord Instytutu Slawistyki Akademii Nauk Republiki Czeskiej](https://www.slu.cas.cz/en/publication/slavic-paganism-in-medieval-christian-writings-ink-cross-and-pagan-gods), [Brill](https://brill.com/abstract/title/69511). **Konsultacja: metryka, opis książki, spis treści i dostępne strony rozdziałów.** Książka bada strategie, przez które średniowieczni autorzy chrześcijańscy opisywali i przekształcali obraz religii przedchrześcijańskich; używamy jej jako kontroli metodologicznej. Nie deklarujemy pełnej lektury.
+
+### S23
+
+Stanisław Rosik, **The Slavic Religion in the Light of 11th- and 12th-Century German Chronicles (Thietmar of Merseburg, Adam of Bremen, Helmold of Bosau)**, Brill 2020. [Rozdział metodologiczny](https://brill.com/display/book/9789004331488/BP000009.xml). **Konsultacja: metryka i opis rozdziału o interpretatio christiana.** Uzupełnia wcześniejszy S21 i przypomina, że kroniki niemieckie wymagają analizy sposobu opisu religii, nie tylko wyjęcia listy nazw.
+
+### S24
+
+Suzana Marjanić, **(Dyadic) Goddess and Duotheism in Nodilo's The Old Faith of Serbs and Croats**, *Narodna umjetnost* 39/2 (2002), s. 175–198. [Strona artykułu](https://hrcak.srce.hr/en/clanak/52796). **Konsultacja: abstrakt i metryka.** Przydatne jako przykład jawnej re/konstrukcji, która rozciąga materiał o połabskiej Siwie/Živie na projekt bogini południowosłowiańskiej; takiego rozszerzenia nie traktujemy jako nowego świadectwa.
+
 ## Świadectwa do sprawdzenia w wydaniach krytycznych
 
 Poniższe identyfikatory wskazują bibliograficzne kierunki badań. Poza P13 nie oznaczają pełnej, bezpośredniej konsultacji tekstu źródłowego. Katalog wskazuje osobno opracowanie, przez które dotarliśmy do świadectwa.
