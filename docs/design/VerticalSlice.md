@@ -1,6 +1,6 @@
 # Pierwszy grywalny wycinek
 
-**Projekt F, wersja 0.1.** To specyfikacja przyszłego działania. Prototyp ma teren, kamerę, ruch, zegar i rozpoznawanie regionów; nie ma jeszcze opisanych tutaj NPC, walki ani zadania.
+**Projekt F, wersja 0.1.** To specyfikacja przyszłego działania. Prototyp ma teren, kamerę, ruch, zegar, rozpoznawanie regionów, pierwszą pogodę oraz fundament zdrowia/staminy; nie ma jeszcze opisanych tutaj NPC, walki ani zadania.
 
 ## Cel
 
@@ -50,8 +50,8 @@ Wszystkie trzy drogi pozwalają ukończyć zlecenie. Żadna nie wymaga przynale�
 | Ruch i kamera | Jednoczesne poruszanie, obrót, bieg, stabilna prędkość | Zaimplementowane; potrzebna dalsza weryfikacja na komputerze użytkownika |
 | Teren i regiony | Przejście między czterema miejscami z kolizją | Teren i wykrywanie regionów istnieją; zabudowa oraz przeszkody planowane |
 | Pora dnia | Czytelna zmiana oświetlenia i okna zdarzeń | Zegar istnieje; oświetlenie i zdarzenia planowane |
-| Pogoda | Pogoda spokojna i mgła z czytelną widocznością | Planowane |
-| Walka | Broń biała, blok, unik, stamina, zdrowie; osobno prosty łuk | Planowane |
+| Pogoda | Pogoda spokojna i mgła z czytelną widocznością | Pierwsza wersja działa: regionalne przejścia, mgła atmosferyczna, zachmurzenie i deszcz/storm jako stan; brak jeszcze cząsteczek opadu |
+| Walka | Broń biała, blok, unik, stamina, zdrowie; osobno prosty łuk | Fundament zdrowia i staminy działa; sprint zużywa staminę, walka nadal planowana |
 | AI | Patrol / ostrzeżenie / atak / powrót przeciwnika | Planowane |
 | Tropienie | Trzy ślady i rozróżnienie obserwacji od plotki | Planowane |
 | Ekwipunek i alchemia | Przedmiot zadania, składniki i jedna receptura | Planowane |
