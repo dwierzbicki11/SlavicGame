@@ -49,15 +49,15 @@ Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
 
 ## Poziom 4 — średnie/trudne, konkretna zawartość
 
-- [ ] finalniejsze profile pięciu NPC;
-- [ ] pełne grafy dialogowe vertical slice;
-- [ ] wszystkie wpisy dziennika/evidence text;
-- [ ] wszystkie możliwe reakcje po trzech rozwiązaniach;
-- [ ] karta Żarnowca;
-- [ ] karta Puszczy Żywia;
-- [ ] karta Czarnych Mokradeł;
-- [ ] karta Kamiennego Kręgu;
-- [ ] pierwsze side questy regionu;
+- [x] finalniejsze profile pięciu NPC;
+- [x] pełne grafy dialogowe vertical slice;
+- [x] wszystkie wpisy dziennika/evidence text;
+- [x] wszystkie możliwe reakcje po trzech rozwiązaniach;
+- [x] karta Żarnowca;
+- [x] karta Puszczy Żywia;
+- [x] karta Czarnych Mokradeł;
+- [x] karta Kamiennego Kręgu;
+- [x] pierwsze side questy regionu;
 - [ ] pierwsze usługi/warsztaty.
 
 ## Poziom 5 — trudne, wymagają researchu
