@@ -6,4 +6,5 @@ public sealed class EngineConfig
     public int Width { get; init; } = 1280;
     public int Height { get; init; } = 720;
     public bool VSync { get; init; } = true;
+    public bool Fullscreen { get; init; } = true;
 }
