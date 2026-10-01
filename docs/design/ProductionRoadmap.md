@@ -23,7 +23,7 @@
 | 15 | Zakończenia | Wyniki zależne od historii działań i relacji | Otwarte |
 | 16 | Mapa świata | Gęste regiony, połączenia, rytm odkrywania | Planowane |
 | 17 | Projekt rozgrywki | Spójne systemy, ograniczenia i kryteria wycinka | Specyfikacja wycinka v0.1 istnieje; pełny projekt planowany |
-| 18 | Architektura silnika | Granice systemów, dane, zasoby, stan i zapis | Podstawowy podział kodu istnieje; wymaga rozwoju |
+| 18 | Architektura silnika | Granice systemów, dane, zasoby, stan i zapis | Fundament v0.1 przygotowany: moduły systemów, wspólny postęp i wersjonowany checkpoint; backendy assetów/audio/animacji oraz pełne integracje pozostają do rozwoju |
 | 19 | Vulkan | Działający rendering oraz określone ograniczenia sprzętowe | Podstawowy rendering działa |
 | 20 | Prototyp 3D | Teren, kamera, ruch i podstawowe pomiary | Działa; weryfikacja wejścia na sprzęcie użytkownika nadal otwarta |
 | 21 | Grywalny wycinek | Wszystkie kryteria z VerticalSlice spełnione | Specyfikacja istnieje; implementacja planowana |
