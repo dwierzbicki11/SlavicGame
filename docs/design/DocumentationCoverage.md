@@ -2,8 +2,11 @@
 
 Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfikację, a co nadal wymaga rozwinięcia?**
 
+> Synchronizacja 2026-10-01: format eventów zależnych od czasu ma teraz jawny kontrakt danych w `content/TimeEventFormat.md`, obejmujący okna czasowe, warunki, priorytety, persistence, save/load, fallback i minimalne QA.
+
 | Obszar | Główny dokument | Stan |
 |---|---|---|
+| Eventy zależne od czasu | content/TimeEventFormat.md + world/DayNightEvents.md | format danych + zachowanie świata v0.1 |
 | Wizja | README.md | v0.1 |
 | Świat | world/WorldBible.md | v0.1 |
 | Kosmologia | world/Cosmology.md + world/FourthSphereTruth.md | player-facing + author truth v0.2 |
