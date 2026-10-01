@@ -772,3 +772,55 @@ Nadal potrzebne są:
 - testy i optymalizacja.
 
 To są już prace **wewnątrz znanego obrazu gry**, a nie pytania „czym właściwie ma być gra?”.
+
+
+---
+
+# 35. Szkielet kampanii produkcyjnej
+
+Main story ma obecnie **29 roboczych jednostek MQ00–MQ56**.
+
+Nie oznacza to obowiązkowo 29 osobnych wpisów w UI. W produkcji można je:
+- scalać;
+- rozdzielać;
+- przenosić między regionami
+
+bez zmiany funkcji fabularnej.
+
+Pełny skeleton:
+[MainQuestSkeleton.md](story/MainQuestSkeleton.md).
+
+# 36. Obsada
+
+Gra nie jest party RPG z obowiązkową stałą drużyną.
+
+Powracają m.in. role:
+- opiekun/rodzina zastępcza;
+- łowca-archiwista;
+- przewodnik Wielkiego Boru;
+- nawigator Ligi Ujścia;
+- Arel pathfinder;
+- closure-warden;
+- Wszebor;
+- Parent B;
+- boscy posłańcy/przejawy.
+
+Szczegóły:
+[RecurringCast.md](story/RecurringCast.md).
+
+# 37. Zakres 1.0
+
+Bazowa wersja jest:
+- single-player;
+- region-based;
+- premium-oriented w designie;
+- bez wymuszonego multiplayer;
+- bez MMO;
+- bez proceduralnego main story;
+- bez stałego survivalowego głodu/pragnienia;
+- bez obowiązkowego base building;
+- bez loot-boxowego modelu sprzętu;
+- bez pełnego globalnego level scaling.
+
+Pełne granice:
+[ScopeBoundaries.md](design/ScopeBoundaries.md).
