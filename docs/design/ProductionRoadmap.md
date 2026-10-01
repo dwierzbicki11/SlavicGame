@@ -34,14 +34,18 @@
 
 ## Najbliższy pakiet pracy
 
-Dokumentacja ma obecnie pełny szkielet v0.1. Następna praca nie polega na tworzeniu kolejnych ogólnych „Bible”, tylko na **pogłębianiu konkretnych kart**:
+Szczegółową kolejność prowadzi [DocumentationWorkQueue.md](DocumentationWorkQueue.md).
 
-1. Dokończyć kontrolę źródeł panteonu: Rod, Rodzanice, późny katalog polski, Jarowit, Radegast/Swarożyc, Siwa/Żywie.
-2. Utworzyć indywidualne research cards pierwszych istot bestiariusza i dopiero potem nadać historyczną/folklorystyczną tożsamość prototypowi drapieżnika.
-3. Przygotować research package życia materialnego dla Pogranicza Żarnowca: zabudowa, ubiór, żywność, narzędzia, transport, broń, pochówki i handel.
-4. Rozpisać pięć NPC vertical slice jako indywidualne karty z dialogami, harmonogramami, stanami po trzech rozwiązaniach i asset needs.
-5. Rozwinąć „Światło nad mokradłem” z dokumentu scenariuszowego do kompletnego quest graph z dowodami, warunkami i efektami.
-6. Dopiero po testach vertical slice ustalać finalne wartości balansu, sprzęt referencyjny i wymagania sprzętowe.
+**Poziom 1 został rozpoczęty i główne elementy są gotowe:** konwencje ID, przedmioty, czar/rytuał, pięć kart NPC, pełna karta „Światła nad mokradłem” oraz asset list.
+
+Następny pakiet to pozostałe proste specyfikacje i UX, zanim przejdziemy do researchu:
+
+1. format definicji broni/armor, encounterów, interakcji i eventów czasu;
+2. HUD spec, inventory/journal/dialog/map flows;
+3. action map wejścia i settings matrix;
+4. save-slot UX i debug overlay;
+5. dopiero potem systemy średniej trudności: melee moveset, bow, status effects, progression, tracking i economy;
+6. research historyczny/bestiariusz/panteon pozostają później, zgodnie z kolejką trudności.
 
 ## Warunki jakości dokumentacji
 
