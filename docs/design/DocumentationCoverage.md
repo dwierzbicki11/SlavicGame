@@ -2,167 +2,81 @@
 
 Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfikację, a co nadal wymaga rozwinięcia?**
 
-> Synchronizacja 2026-10-01: format eventów zależnych od czasu ma teraz jawny kontrakt danych w `content/TimeEventFormat.md`, obejmujący okna czasowe, warunki, priorytety, persistence, save/load, fallback i minimalne QA.
+## Próg swobodnej implementacji — stan 2026-10-02
+
+Projekt ma pełny szkielet designu i author truth oraz production bibles R0–R6. Main quest ma teraz production cards dla całego zakresu MQ00–MQ56: Acts 0–II w `quests/MainQuestCardsActs0To2.md`, Act III w `quests/MainQuestCardsAct3.md`, Act IV w `quests/MainQuestCardsAct4.md`, Act V w `quests/MainQuestCardsAct5.md`. Oznacza to, że implementacja quest state machine, persistence, objective graph i regionalnego flow nie musi czekać na dalsze dopisywanie fabuły.
+
+Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne dialogi/VO, część rosterów i assetów, pełne culture/research packages, finalne karty istot oraz targety performance wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
-| Eventy zależne od czasu | content/TimeEventFormat.md + world/DayNightEvents.md | format danych + zachowanie świata v0.1 |
-| Wizja | README.md | v0.1 |
-| Świat | world/WorldBible.md | v0.1 |
-| Kosmologia | world/Cosmology.md + world/FourthSphereTruth.md | player-facing + author truth v0.2 |
-| Panteon | pantheon/PantheonBible.md | katalog v0.1; research otwarty |
-| Źródła | pantheon/Sources.md | v0.1; krytyczne wydania do uzupełnienia |
-| Historie bogów | pantheon/GodHistories.md | 11+ kart/tradycji v0.1; Radegast celowo bez samodzielnej osobowości |
-| Panteon research 02 | research/pantheon/*.md | first pass: Rod, Jarowit, Radegast/Swarożyc, Siwa/Żywie, Długosz, kandydaci literaccy |
-| Praktyki religijne | research/pantheon/ReligiousPracticePrinciples.md | zasady v0.1 |
-| Instytucje kultowe | pantheon/CultInstitutions.md | F v0.1 |
-| Boskie umowy | pantheon/DivineContracts.md | F v0.1 |
-| Relacje bogów | pantheon/RelationshipMatrix.md | F v0.1 |
-| Historia świata | world/Timeline.md + story/MysteryChronology.md | macro + author chronology v0.2 |
-| Timeline makro | world/EraTimelineExpanded.md | główne epoki i wydarzenia v0.1 |
-| Kultury | world/Cultures.md | framework + region startowy v0.1 |
-| Kultury makro | world/MacroCultures.md | 6 kontekstów kulturowych v0.1 |
-| Naming rules | world/NamingRules.md | v0.1 |
-| Regiony/królestwa | world/RegionsAndKingdoms.md | framework v0.1 |
-| Siły polityczne | world/PoliticalPowers.md | v0.1 |
-| Geografia makro | world/MacroGeography.md | R0–R6 v0.1 |
-| Gospodarka międzyregionowa | world/InterregionalEconomy.md | v0.1 |
-| Konflikty polityczne | world/PoliticalConflicts.md | v0.1 |
-| 4 lokacje vertical slice | locations/*.md | indywidualne karty v0.1 |
-| Usługi vertical slice | world/VerticalSliceServices.md | v0.1 |
-| Mapa | world/WorldMap.md | topologia v0.1 |
-| Day/night events | world/DayNightEvents.md | v0.1 |
-| Weather gameplay | world/WeatherGameplay.md | v0.1 |
-| Magia | magic/MagicBible.md | v0.1; vertical-slice czar i rytuał mają osobną kartę |
-| Magia vertical slice | magic/VerticalSliceMagic.md | pierwszy czar, rytuał i znaki F v0.1 |
-| Bestiariusz | bestiary/BestiaryBible.md | framework v0.1 |
-| Research bestiariusza 01 | research/bestiary/*.md | 5 kart + źródła + fit vertical slice |
-| Research bestiariusza 02 | research/bestiary/*Pass02*.md + karty | topielec, południca, boginka/mamuna, upiór, ogniki, regionalne figury leśne |
-| swamp-predator identity | research/bestiary/VerticalSliceFit.md | pozostaje F; brak uczciwego folklorystycznego dopasowania |
-| forest-guardian identity | research/bestiary/ForestSpirit.md | kierunek zaakceptowany, finalna nazwa nadal otwarta |
-| Bohater | character/PlayerCharacter.md | v0.1 |
-| Rodzina | character/FamilyMystery.md + character/FamilyTruth.md | struktura player-facing + author truth v0.2 |
-| Główna historia | story/MainStory.md | pełny obraz v0.2; detailed quest cards nadal do wykonania |
-| Regional flow kampanii | story/CampaignRegionalFlow.md | pełny first pass v0.1 |
-| Questy | design/QuestDesign.md | v0.1 |
-| Światło nad mokradłem | quests/LightOverSwamp.md | pełna karta v0.1: fazy, dowody, wyniki, checkpointy, QA |
-| Evidence text | quests/LightOverSwampEvidenceText.md | robocze wpisy Journal v0.1 |
-| Reaction matrix | quests/LightOverSwampReactionMatrix.md | trzy rozwiązania + modyfikatory v0.1 |
-| Side questy | quests/VerticalSliceSideQuests.md | pierwsza pula v0.1 |
-| Decyzje | design/DecisionModel.md | v0.1 |
-| Zakończenia | story/Endings.md + story/EndingVariants.md | 5 architektur + epilogue matrix v0.2 |
-| Game design | design/GameDesignBible.md | v0.1 |
-| Combat | design/CombatDesign.md | v0.1 |
-| Melee | design/MeleeCombat.md | szczegóły v0.1 |
-| Bow | design/BowCombat.md | szczegóły v0.1 |
-| Status effects | design/StatusEffects.md | v0.1 |
-| Equipment | design/EquipmentSystem.md | v0.1 |
-| Progression | design/Progression.md | v0.1 |
-| Economy/vendors | design/EconomyPass01.md | first pass v0.1 |
+| Wizja i pełny obraz | README.md + FullGameOverview.md | v0.2 |
+| Świat/kosmologia | world/WorldBible.md + world/Cosmology.md + world/FourthSphereTruth.md | implementacyjny first pass + author truth |
+| Historia/central lore | story/MainStory.md + story/CrisisTruth.md + story/MysteryChronology.md | v0.2 |
+| Main quest | story/MainQuestSkeleton.md + quests/MainQuestCardsActs0To2.md + quests/MainQuestCardsAct3.md + quests/MainQuestCardsAct4.md + quests/MainQuestCardsAct5.md | MQ00–MQ56 production cards v0.1 |
+| Regiony | world/RegionBibleIndex.md + R0–R6 bibles | 7/7 production bibles v0.1 |
+| Panteon/religia | pantheon/* + research/pantheon/* | first pass; krytyczne źródła nadal rozwijane |
+| Bestiariusz | bestiary/BestiaryBible.md + research/bestiary/* | framework + research pass; finalny roster/karty niepełne |
+| Kultury | world/Cultures.md + world/MacroCultures.md | framework/macro v0.1; pełne packages niegotowe |
+| Quest framework | design/QuestDesign.md | v0.1 |
+| Vertical slice quest | quests/LightOverSwamp*.md | pełny pakiet v0.1 |
+| Combat | design/CombatDesign.md + MeleeCombat.md + BowCombat.md | v0.1 |
+| Status/equipment/progression | design/StatusEffects.md + EquipmentSystem.md + Progression.md | v0.1 |
+| Economy/vendors | design/EconomyPass01.md | v0.1 |
 | Tracking | design/TrackingSystem.md | v0.1 |
-| Encounter design | design/EncounterDesign.md | v0.1 |
-| Alchemy recipes | alchemy/RecipesV01.md | pierwszy katalog v0.1 |
-| NPC/dialog | design/NpcDialogueDesign.md | v0.1 |
-| NPC vertical slice | character/VerticalSliceNPCs.md | 5 kart roboczych v0.1 |
-| Dialogi 5 NPC | dialogue/*.md | kompletne grafy robocze vertical slice v0.1 |
-| Inventory/economy | design/InventoryEconomy.md | v0.1 |
-| Przedmioty vertical slice | content/VerticalSliceItems.md | minimalny katalog + receptura v0.1 |
-| Save | design/SavePersistence.md | v0.1 |
-| Input | design/ControlsAndInput.md | v0.1 |
-| UX/accessibility | design/UXAccessibility.md | v0.1 |
-| HUD | ui/HudSpec.md | v0.1 |
-| Inventory UI | ui/InventoryFlow.md | v0.1 |
-| Journal UI | ui/JournalFlow.md | v0.1 |
-| Dialogue UI | ui/DialogueFlow.md | v0.1 |
-| Map UI | ui/MapFlow.md | v0.1 |
-| Input action map | design/InputActionMap.md | v0.1 |
-| Settings | design/SettingsMatrix.md | v0.1 |
-| Save-slot UX | design/SaveSlotUX.md | v0.1 |
-| Audio/wizual | design/AudioVisualDirection.md | v0.1 |
-| Vertical slice | design/VerticalSlice.md | v0.1 |
-| Asset list vertical slice | design/VerticalSliceAssetList.md | P0/P1/P2 v0.1 |
-| Konwencje ID | content/IdConventions.md | v0.1 |
-| Formaty content data | content/*Template.md + *Format.md | v0.1 |
-| Kolejka dokumentacji | design/DocumentationWorkQueue.md | kolejność od łatwych do centralnego lore |
-| Architektura | design/EngineArchitecture.md | v0.1 |
-| Rendering/platformy | technical/RenderingAndPlatform.md | v0.1 |
-| Testy/performance | technical/TestingAndPerformance.md | v0.1 |
-| Developer overlay | technical/DeveloperOverlay.md | v0.1 |
-| Logging | technical/LoggingPolicy.md | v0.1 |
-| Research policy | research/ResearchPolicy.md | v0.1 |
-| Kultura materialna | research/material-culture/*.md | pakiet 01: 9 kart + rejestr źródeł + wnioski produkcyjne |
-| Budownictwo | research/material-culture/Architecture.md | first research pass |
-| Ubiór/tekstylia | research/material-culture/ClothingTextiles.md | first research pass |
-| Żywność | research/material-culture/FoodSubsistence.md | bibliografia potwierdzona; pełne dane nadal ograniczone |
-| Rolnictwo/narzędzia | research/material-culture/AgricultureTools.md | first research pass |
-| Transport | research/material-culture/Transport.md | first research pass |
-| Uzbrojenie | research/material-culture/Weapons.md | first research pass; broń startowa nadal otwarta |
-| Pochówki | research/material-culture/Burials.md | first research pass |
-| Handel | research/material-culture/TradeEconomy.md | first research pass |
-| Osada/rzemiosło | research/material-culture/SettlementCrafts.md | first research pass |
-| Produkcja treści | design/ContentProduction.md | v0.1 |
-| Release | design/ReleaseCriteria.md | v0.1 |
+| Encounter | design/EncounterDesign.md + content format | v0.1 |
+| Alchemy/magia | alchemy/RecipesV01.md + magic/* | v0.1 |
+| NPC/dialog | design/NpcDialogueDesign.md + dialogue/* | system + vertical slice v0.1; full roster otwarty |
+| Inventory | design/InventoryEconomy.md | v0.1 |
+| Save/persistence | design/SavePersistence.md | v0.1 |
+| Input/settings | design/ControlsAndInput.md + InputActionMap.md + SettingsMatrix.md | v0.1 |
+| UI/UX | ui/* + design/UXAccessibility.md + SaveSlotUX.md | v0.1 |
+| Day/night/weather | world/DayNightEvents.md + WeatherGameplay.md + content/TimeEventFormat.md | behavior + data contract v0.1 |
+| Content IDs/formats | content/IdConventions.md + content/*Template.md + content/*Format.md | v0.1 |
+| Architektura/rendering | design/EngineArchitecture.md + technical/RenderingAndPlatform.md | v0.1 |
+| Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md | v0.1; pomiary performance otwarte |
+| Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md | first pass |
+| Material culture research | research/material-culture/* | first pass; production lock niepełny |
+| Asset list vertical slice | design/VerticalSliceAssetList.md | v0.1 |
+| Asset list full game | design/ProductionContentCatalog.md + region bibles | struktura istnieje; finalne ilości/listy otwarte |
 
-## Co nadal nie jest „pełne”
+## Jawne otwarte decyzje
 
-Posiadanie dokumentu v0.1 nie znaczy zamknięcia tematu.
+Te punkty są celowo otwarte i nie wolno ich „zamykać” przez zgadywanie:
 
-Najważniejsze dalsze prace:
-
-1. krytyczne źródła dla panteonu;
-2. indywidualne karty bestiariusza;
-3. szczegółowe research cards życia materialnego;
-4. finalne kultury i państwa;
-5. prawdziwa wersja tajemnicy rodziny;
-6. natura Czwartej Sfery;
-7. finalny konflikt i zakończenia;
-8. szczegółowe questy poza vertical slice;
-9. finalne parametry balansu;
-10. wymagania sprzętowe po pomiarach.
+1. finalne liczby balansu: damage, economy, drop rates, reputation, evidence thresholds;
+2. finalne dialogi, VO i lokalizacja;
+3. finalny roster NPC/companionów oraz dokładne rozmieszczenie contentu w regionach;
+4. finalny roster bestiariusza i research card każdej użytej istoty;
+5. pełne culture research packages oraz research-lock szczegółów materialnych/religijnych;
+6. finalne asset listy poza vertical slice i budżety produkcyjne;
+7. art/level locks: layouty, liczby encounterów, landmarków, osad i side questów;
+8. measured performance targets, streaming/VFX/shadow/AI budgets i wymagania sprzętowe;
+9. tuning pogody, traversal, ekonomii, AI i encounterów po playtestach;
+10. nazwy robocze oznaczone F oraz elementy jawnie opisane w dokumentach jako research/art/playtest/performance lock.
 
 ## Definicja „pełnej dokumentacji projektu”
 
-Dokumentacja jest kompletna produkcyjnie, gdy:
+Dokumentacja jest kompletna produkcyjnie dopiero, gdy:
 - każdy system ma owner/spec;
 - wszystkie główne questy mają karty;
 - każdy region ma bible;
 - każda finalna istota ma research card;
 - każda kultura ma research package;
 - zakończenia są rozpisane;
-- asset listy istnieją;
+- asset listy istnieją dla pełnego scope;
 - targety performance są zmierzone;
 - release criteria są spełnione.
 
-Obecny zestaw jest **pełnym szkieletem dokumentacji v0.1**, ale nie finalną dokumentacją gotowej gry.
+### Aktualna ocena
 
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty dla głównych systemów, regionów, central lore i main questu.** Dalsza dokumentacja ma charakter produkcyjnego uszczegóławiania, research locków, content locków, balansu i pomiarów. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
-## Central lore / author truth v0.2
+## Kolejny priorytet
 
-| Obszar | Dokument | Stan |
-|---|---|---|
-| Czwarta Sfera | world/FourthSphereTruth.md | ustalona |
-| Przyczyna kryzysu | story/CrisisTruth.md | ustalona |
-| Rodzina | character/FamilyTruth.md | ustalona |
-| Antagoniści | story/Antagonists.md | Wszebor + frakcje v0.1 |
-| Śmierć boga | world/GodMortality.md | reguła ustalona |
-| Finał | story/Finale.md | pełny przebieg v0.1 |
-| Główne endingi | story/EndingVariants.md | E1–E5 |
-| Epilogi | story/EpilogueMatrix.md | matryca v0.1 |
-| Chronologia tajemnicy | story/MysteryChronology.md | ustalona |
-| Plan reveal | story/RevelationPlan.md | akty 0–V |
-| Pełny obraz gry | FullGameOverview.md | v0.2 |
-
-### Interpretacja statusu
-
-Projekt posiada teraz **pełny obraz designu i prawdę autorów**, ale nie finalny production/content lock.
-
-Wymagania „pełnej dokumentacji projektu” z wcześniejszej sekcji nadal oznaczają stan znacznie późniejszy: wszystkie questy, wszystkie finalne istoty, kompletne regiony, asset lists, zmierzony performance i release readiness.
-
-
-## Scope i kampania produkcyjna
-
-| Obszar | Dokument | Stan |
-|---|---|---|
-| Scope 1.0 | design/ScopeBoundaries.md | ustalony first pass |
-| Main quest skeleton | story/MainQuestSkeleton.md | MQ00–MQ56 |
-| Recurring cast | story/RecurringCast.md | główne role v0.1 |
+1. finalne research cards/roster bestiariusza;
+2. culture research packages;
+3. production NPC/companion roster;
+4. full-game asset/content lists per region;
+5. side-quest packages poza vertical slice;
+6. później balance/playtest/performance locks.
