@@ -19,6 +19,7 @@ public sealed class GameProgress
     public RelationshipSystem Relationships { get; } = new();
     public TrackingState Tracking { get; } = new();
     public NavigationState Navigation { get; } = new();
+    public MapOverlayState MapOverlay { get; } = new();
     public IReadOnlyCollection<string> WorldFlags => _worldFlags;
 
     public bool HasFlag(string flag) => _worldFlags.Contains(flag);
