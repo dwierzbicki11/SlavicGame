@@ -52,6 +52,10 @@ public sealed class GlbModel
 
     public IReadOnlyCollection<string> AnimationNames => _animations.Keys;
     public IReadOnlyList<GlbMaterialData> Materials => _materials;
+    public bool HasAuthoredNormals =>
+        _meshes.SelectMany(mesh => mesh).All(primitive => primitive.Normals is { Length: > 0 });
+    public bool HasTextureCoordinates =>
+        _meshes.SelectMany(mesh => mesh).All(primitive => primitive.TexCoords is { Length: > 0 });
 
     private GlbModel(
         Primitive[][] meshes,
