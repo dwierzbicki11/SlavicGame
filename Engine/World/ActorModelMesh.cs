@@ -12,6 +12,7 @@ public static class ActorModelMesh
         GlbModel enemyModel,
         double animationSeconds,
         float playerYaw,
+        bool includePlayer,
         out TerrainVertex[] vertices,
         out uint[] indices)
     {
@@ -23,7 +24,7 @@ public static class ActorModelMesh
         var indexList = new List<uint>();
         var time = (float)Math.Max(0d, animationSeconds);
 
-        if (world.Player.IsAlive)
+        if (includePlayer && world.Player.IsAlive)
         {
             var playerTransform =
                 Matrix4x4.CreateRotationY(playerYaw) *
