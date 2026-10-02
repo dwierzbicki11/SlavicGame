@@ -82,6 +82,7 @@ var assetId = AssetId.Parse("models/test");
 catalog.Register(new AssetDescriptor(assetId, "Assets/test.glb", "model"));
 Check(catalog.Get(assetId).Path == "Assets/test.glb", "Asset catalog lookup");
 AssetIntegrationRegression.Run(Check);
+PresentationPolicyRegression.Run(Check);
 
 var animation = new AnimationStateMachine();
 animation.Register("idle");
