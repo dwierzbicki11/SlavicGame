@@ -334,6 +334,15 @@ time.Advance(5);
 Check(time.DeltaSeconds == 0.25 && time.TotalSeconds == 0.25, "Frame delta clamp");
 time.Advance(double.NaN);
 Check(time.TotalSeconds == 0.25, "Invalid frame delta");
+var firstPersonCamera = new Camera3D { Mode = CameraMode.FirstPerson };
+var firstPersonGround = new Terrain(16, 16, 4f);
+var firstPersonPlayer = new Vector3(0f, firstPersonGround.SampleHeight(Vector3.Zero), 0f);
+firstPersonCamera.Follow(firstPersonPlayer, 0f, firstPersonGround);
+Near(firstPersonCamera.Position.Y, firstPersonPlayer.Y + firstPersonCamera.EyeHeight,
+    "First-person camera sits at eye height");
+Check(Vector3.Distance(firstPersonCamera.Target, firstPersonCamera.Position) > 9f,
+    "First-person camera targets forward instead of using a third-person boom");
+
 var camera = new Camera3D();
 Check(Vector3.Dot(camera.GetMoveForward(), camera.GetMoveRight()) < 0.0001, "Camera movement axes");
 camera.Update(new Vector3(10, 0, 10), 0, 0, 1);
