@@ -52,14 +52,14 @@ internal static class AssetIntegrationRegression
             "Animation evaluation changes player bind-pose geometry over time");
 
         var world = WorldGenerator.Generate();
-        check(world.Models.Count == 723,
+        check(world.Models.Count == 986,
             "Expanded world registers curated R0 content plus forest biome decoration");
         check(world.Models.Select(model => model.AssetPath).Distinct(StringComparer.Ordinal).Count() < world.Models.Count,
             "R0 decoration intentionally reuses source assets for batching");
 
         var decorationsA = WorldDecorationGenerator.Generate(world.Terrain);
         var decorationsB = WorldDecorationGenerator.Generate(world.Terrain);
-        check(decorationsA.Count == 702 && decorationsB.Count == 702,
+        check(decorationsA.Count == 965 && decorationsB.Count == 965,
             "Expanded forest pass has a bounded deterministic instance budget");
         check(decorationsA.Zip(decorationsB).All(pair =>
                 pair.First.AssetPath == pair.Second.AssetPath &&
