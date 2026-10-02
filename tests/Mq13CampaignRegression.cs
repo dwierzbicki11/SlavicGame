@@ -47,7 +47,15 @@ internal static class Mq13CampaignRegression
         Check(restored.Progress.MapOverlay.HypothesisSynthesized, "overlay survives save/load before completion");
         Check(restoredMq13.CompleteQuest(), "restored MQ13 can complete");
         Check(restored.Progress.HasFlag(Mq13Campaign.Complete), "MQ13 completion flag written");
+        Check(restored.Progress.Quests.Get(Mq13Campaign.NextQuestId).Phase == QuestPhase.Offered, "MQ13 completion unlocks MQ20 and Act II");
         Check(!restoredMq13.CompleteQuest(), "MQ13 completion is idempotent");
+        Check(restored.Progress.Quests.Get(Mq13Campaign.NextQuestId).Phase == QuestPhase.Offered, "idempotent completion preserves MQ20 offer");
+
+        var completedJson = SaveGameService.Serialize(restored);
+        var completedRestored = new WorldState();
+        completedRestored.Initialize();
+        SaveGameService.Restore(completedRestored, completedJson);
+        Check(completedRestored.Progress.Quests.Get(Mq13Campaign.NextQuestId).Phase == QuestPhase.Offered, "Act II handoff survives save/load");
 
         var extended = new WorldState();
         extended.Initialize();
