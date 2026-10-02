@@ -1,0 +1,172 @@
+{
+  "pack": "SlavicGame Ground & Village Walls Asset Pack v1",
+  "terrain_materials": [
+    {
+      "id": "forest_grass",
+      "path": "assets/textures/terrain/forest_grass",
+      "maps": {
+        "basecolor": "forest_grass_basecolor.png",
+        "normal": "forest_grass_normal.png",
+        "roughness": "forest_grass_roughness.png",
+        "height": "forest_grass_height.png",
+        "ao": "forest_grass_ao.png"
+      },
+      "resolution": [
+        1024,
+        1024
+      ],
+      "tileable_method": "mirrored-quadrant prototype",
+      "recommended_tiling_meters": 2.0
+    },
+    {
+      "id": "dirt_path",
+      "path": "assets/textures/terrain/dirt_path",
+      "maps": {
+        "basecolor": "dirt_path_basecolor.png",
+        "normal": "dirt_path_normal.png",
+        "roughness": "dirt_path_roughness.png",
+        "height": "dirt_path_height.png",
+        "ao": "dirt_path_ao.png"
+      },
+      "resolution": [
+        1024,
+        1024
+      ],
+      "tileable_method": "mirrored-quadrant prototype",
+      "recommended_tiling_meters": 2.5
+    },
+    {
+      "id": "forest_litter",
+      "path": "assets/textures/terrain/forest_litter",
+      "maps": {
+        "basecolor": "forest_litter_basecolor.png",
+        "normal": "forest_litter_normal.png",
+        "roughness": "forest_litter_roughness.png",
+        "height": "forest_litter_height.png",
+        "ao": "forest_litter_ao.png"
+      },
+      "resolution": [
+        1024,
+        1024
+      ],
+      "tileable_method": "mirrored-quadrant prototype",
+      "recommended_tiling_meters": 2.0
+    },
+    {
+      "id": "wet_mud",
+      "path": "assets/textures/terrain/wet_mud",
+      "maps": {
+        "basecolor": "wet_mud_basecolor.png",
+        "normal": "wet_mud_normal.png",
+        "roughness": "wet_mud_roughness.png",
+        "height": "wet_mud_height.png",
+        "ao": "wet_mud_ao.png"
+      },
+      "resolution": [
+        1024,
+        1024
+      ],
+      "tileable_method": "mirrored-quadrant prototype",
+      "recommended_tiling_meters": 2.5
+    },
+    {
+      "id": "swamp_ground",
+      "path": "assets/textures/terrain/swamp_ground",
+      "maps": {
+        "basecolor": "swamp_ground_basecolor.png",
+        "normal": "swamp_ground_normal.png",
+        "roughness": "swamp_ground_roughness.png",
+        "height": "swamp_ground_height.png",
+        "ao": "swamp_ground_ao.png"
+      },
+      "resolution": [
+        1024,
+        1024
+      ],
+      "tileable_method": "mirrored-quadrant prototype",
+      "recommended_tiling_meters": 2.5
+    },
+    {
+      "id": "mossy_rock",
+      "path": "assets/textures/terrain/mossy_rock",
+      "maps": {
+        "basecolor": "mossy_rock_basecolor.png",
+        "normal": "mossy_rock_normal.png",
+        "roughness": "mossy_rock_roughness.png",
+        "height": "mossy_rock_height.png",
+        "ao": "mossy_rock_ao.png"
+      },
+      "resolution": [
+        1024,
+        1024
+      ],
+      "tileable_method": "mirrored-quadrant prototype",
+      "recommended_tiling_meters": 2.5
+    }
+  ],
+  "ground_clutter": [
+    {
+      "id": "grass_tuft",
+      "path": "assets/models/static/ground_clutter/grass_tuft.glb"
+    },
+    {
+      "id": "fern_clump",
+      "path": "assets/models/static/ground_clutter/fern_clump.glb"
+    },
+    {
+      "id": "mushroom_cluster",
+      "path": "assets/models/static/ground_clutter/mushroom_cluster.glb"
+    },
+    {
+      "id": "exposed_roots",
+      "path": "assets/models/static/ground_clutter/exposed_roots.glb"
+    },
+    {
+      "id": "small_stones",
+      "path": "assets/models/static/ground_clutter/small_stones.glb"
+    },
+    {
+      "id": "leaf_litter_patch",
+      "path": "assets/models/static/ground_clutter/leaf_litter_patch.glb"
+    },
+    {
+      "id": "reeds_cluster",
+      "path": "assets/models/static/ground_clutter/reeds_cluster.glb"
+    },
+    {
+      "id": "mud_puddle",
+      "path": "assets/models/static/ground_clutter/mud_puddle.glb"
+    }
+  ],
+  "village_walls": [
+    {
+      "id": "wall_wattle_straight",
+      "path": "assets/models/static/village_walls/wall_wattle_straight.glb"
+    },
+    {
+      "id": "wall_wattle_corner",
+      "path": "assets/models/static/village_walls/wall_wattle_corner.glb"
+    },
+    {
+      "id": "palisade_straight",
+      "path": "assets/models/static/village_walls/palisade_straight.glb"
+    },
+    {
+      "id": "palisade_gate",
+      "path": "assets/models/static/village_walls/palisade_gate.glb"
+    },
+    {
+      "id": "wall_wattle_broken",
+      "path": "assets/models/static/village_walls/wall_wattle_broken.glb"
+    },
+    {
+      "id": "stone_foundation_wall",
+      "path": "assets/models/static/village_walls/stone_foundation_wall.glb"
+    }
+  ],
+  "notes": {
+    "terrain_textures": "Prototype-ready PBR maps derived from generated reference boards; mirrored-quadrant tiling.",
+    "models": "Procedural prototype GLB assets authored Z-up to match current SlavicGame asset convention.",
+    "license": "Generated specifically for this project in this conversation; no third-party source asset dependency."
+  }
+}
