@@ -205,7 +205,8 @@ public sealed class VeldridRenderer : IDisposable
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
         EngineLog.Info($"Terrain uploaded to GPU; PBR world instances={_pbrModels.InstanceCount}, " +
-            $"unique assets={_pbrModels.RenderableCount}, collision obstacles={world.Obstacles.Count}.");
+            $"unique assets={_pbrModels.UniqueAssetCount}, spatial batches={_pbrModels.RenderableCount}, " +
+            $"collision obstacles={world.Obstacles.Count}.");
         EngineLog.Info($"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
@@ -315,7 +316,7 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
         _commandList.DrawIndexed(_indexCount);
 
-        _pbrModels.Render(_commandList, _cameraSet);
+        _pbrModels.Render(_commandList, _cameraSet, camera.Position);
 
         _commandList.SetPipeline(_terrainPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
