@@ -10,6 +10,7 @@ namespace SlavicGame.Engine.Quest;
 public sealed class Mq13Campaign
 {
     public const string QuestId = "MQ13";
+    public const string NextQuestId = "MQ20";
     public const string NetworkHypothesis = "NETWORK_HYPOTHESIS";
     public const string Complete = "MQ13_COMPLETE";
 
@@ -66,6 +67,7 @@ public sealed class Mq13Campaign
         if (!_progress.HasFlag(NetworkHypothesis) || !_progress.MapOverlay.HypothesisSynthesized || _progress.HasFlag(Complete)) return false;
         _progress.Quests.Get(QuestId).Resolve(QuestResolution.Other);
         _progress.SetFlag(Complete);
+        _progress.Quests.Get(NextQuestId).SetPhase(QuestPhase.Offered);
         return true;
     }
 
