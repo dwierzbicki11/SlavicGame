@@ -23,7 +23,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 - [x] production NPC/companion roster: role, region, lifecycle, fallback i persistence;
 - [x] production bestiary roster używany przez scope 1.0 z jawnymi research gates;
 - [x] indeks finalnych research cards istot i identyfikacja brakujących kart (`research/bestiary/ResearchCardIndex.md`);
-- [ ] full-game content/asset catalog per R0–R6;
+- [x] full-game content/asset family catalog per R0–R6 (`design/RegionalContentAssetCatalog.md`);
 - [ ] side-quest catalog poza vertical slice.
 
 ### P2 — research packages
@@ -42,7 +42,8 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 - [ ] dialogue packages po zamknięciu rosterów.
 
 ### P4 — asset i budget lock
-- [ ] asset lists per region z reuse/LOD/variant strategy;
+- [x] asset families per region z reuse/LOD/variant strategy na poziomie planowania;
+- [ ] konkretne asset manifests/model/material/animation/audio/VFX records po art/research lockach;
 - [ ] animation/VFX/audio budgets;
 - [ ] streaming i memory budgets;
 - [ ] AI/encounter density budgets;
@@ -67,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 
 ## Następny element
 
-Najbliższy niezablokowany pakiet: **full-game content/asset catalog per R0–R6**. Następnie: side-quest catalog poza vertical slice. Research locki z `ResearchCardIndex.md` mogą być domykane równolegle wtedy, gdy są potrzebne konkretnemu finalnemu contentowi.
+Najbliższy niezablokowany pakiet: **side-quest catalog poza vertical slice**. Po nim należy rozwijać production cards side questów per region i culture research packages. Konkretne regionalne asset manifests są późniejszym art/research lockiem; `RegionalContentAssetCatalog.md` zamyka obecnie zakres rodzin i strategię reuse.
