@@ -2,161 +2,92 @@
 
 Ten dokument ustala praktyczną kolejność pogłębiania dokumentacji po zbudowaniu pełnego szkieletu v0.1.
 
-## Poziom 1 — proste, niskie ryzyko decyzji
+## Poziomy 1–9 — first pass
 
-Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
+Poziomy 1–9 mają kompletny first pass. Historyczne szczegóły pozostają w Git; aktywna kolejka poniżej jest źródłem prawdy dla dalszej pracy produkcyjnej.
 
-- [x] konwencje trwałych ID;
-- [x] lista przedmiotów vertical slice;
-- [x] pierwszy czar i rytuał jako funkcje gameplay;
-- [x] pięć kart NPC vertical slice;
-- [x] pełna karta „Światła nad mokradłem”;
-- [x] asset list vertical slice;
-- [x] format kart przedmiotów poza vertical slice;
-- [x] format definicji broni i armor;
-- [x] format encounterów;
-- [x] format lokacji/interactable;
-- [x] format eventów zależnych od czasu — `content/TimeEventFormat.md`.
+Nadal jawnie otwarte z wcześniejszych poziomów:
+- [ ] ogniki/błędne światła jako zjawisko — finalna karta researchowa;
+- [ ] finalna nazwa/tożsamość `forest-guardian` — regionalny research lock;
+- [x] regional flow głównej historii — `story/CampaignRegionalFlow.md`;
+- [x] ostateczna chronologia tajemnicy — `story/MysteryChronology.md`.
 
-## Poziom 2 — proste/średnie, głównie system design
+## Faza 10 — production documentation
 
-- [x] szczegółowy tutorial/onboarding;
-- [x] HUD spec;
-- [x] inventory UI flow;
-- [x] quest journal UI flow;
-- [x] dialogue UX flow;
-- [x] map UI;
-- [x] settings matrix;
-- [x] input action map;
-- [x] save slot UX;
-- [x] debug/developer overlay spec;
-- [x] logging/error-reporting policy.
+Cel krótkoterminowy: najpóźniej 2026-10-08 21:16 Europe/Warsaw dokumentacja ma być wstępnie kompletna do swobodnej implementacji systemów i contentu. Nie oznacza to finalnego balansu ani measured performance.
 
-## Poziom 3 — średnie, gameplay i content
+### P10-A — main quest cards
+- [x] Akt 0–I — `quests/MainQuestCardsAct0I.md`;
+- [ ] Akt II;
+- [ ] Akt III;
+- [ ] Akt IV;
+- [ ] Akt V;
+- [ ] globalna macierz zależności MQ, fail-safe i checkpointów.
 
-- [x] pełny melee moveset;
-- [x] podstawowy bow design;
-- [x] status effects;
-- [x] equipment slots;
-- [x] progression/skill tree;
-- [x] economy first pass;
-- [x] vendor design;
-- [x] alchemy recipes v0.1;
-- [x] tracking system;
-- [x] encounter tables startowego regionu;
-- [x] day/night event table;
-- [x] weather gameplay effects.
+### P10-B — region bibles
+- [ ] R0 Pogranicze Żarnowca — rozszerzyć vertical-slice cards do bible regionu;
+- [ ] Nadborze;
+- [ ] Dębrzyn;
+- [ ] Wielki Bór;
+- [ ] Przymorze;
+- [ ] Kamienne Wyżyny;
+- [ ] Arel;
+- [ ] R6 / Pustkowie Pierwszego Progu;
+- [ ] macierz travel gates, services, factions, encounters, resources i quest hooks.
 
-## Poziom 4 — średnie/trudne, konkretna zawartość
+### P10-C — cast/content lock first pass
+- [ ] recurring NPC roster per region;
+- [ ] final creature roster per region z oznaczeniem F/H/S i research gaps;
+- [ ] broń startowa i equipment baseline;
+- [ ] finalniejsze listy itemów/receptur/usług;
+- [ ] asset lists per region.
 
-- [x] finalniejsze profile pięciu NPC;
-- [x] pełne grafy dialogowe vertical slice;
-- [x] wszystkie wpisy dziennika/evidence text;
-- [x] wszystkie możliwe reakcje po trzech rozwiązaniach;
-- [x] karta Żarnowca;
-- [x] karta Puszczy Żywia;
-- [x] karta Czarnych Mokradeł;
-- [x] karta Kamiennego Kręgu;
-- [x] pierwsze side questy regionu;
-- [x] pierwsze usługi/warsztaty.
+### P10-D — implementacyjne kontrakty systemów
+- [ ] quest runtime state machine + condition/effect vocabulary;
+- [ ] dialogue runtime data contract;
+- [ ] reputation/faction state contract;
+- [ ] world-state/event persistence contract;
+- [ ] encounter spawning/despawning contract;
+- [ ] AI archetype/behavior contract;
+- [ ] combat tuning schema;
+- [ ] animation state/event contract;
+- [ ] audio event contract;
+- [ ] localization/text-key contract;
+- [ ] content validation/build pipeline.
 
-## Poziom 5 — trudne, wymagają researchu
+### P10-E — research locks
+- [ ] ogniki/błędne światła;
+- [ ] forest-guardian final identity;
+- [ ] krytyczne źródła panteonu wymagane do content lock;
+- [ ] material-culture gaps używane przez region bibles.
 
-- [x] research budownictwa;
-- [x] research ubioru i materiałów;
-- [x] research żywności;
-- [x] research rolnictwa i narzędzi;
-- [x] research transportu;
-- [x] research uzbrojenia;
-- [x] research pochówków;
-- [x] research handlu;
-- [x] research struktur osad;
-- [x] research praktyk religijnych używanych jako inspiracja — first-pass zasad źródłowych wykonany w Poziomie 7.
+### P10-F — production readiness (po implementacji/profilowaniu)
+- [ ] production budgets;
+- [ ] zmierzone targety performance;
+- [ ] final balance pass;
+- [ ] wymagania sprzętowe z pomiarów;
+- [ ] release-criteria evidence.
 
-Każdy temat powstaje jako osobna karta źródłowa, zanim przeniesiemy szczegóły do finalnej kultury.
+## Reguła wykonywania
 
-## Poziom 6 — trudne, bestiariusz
+1. Zawsze zaczynaj od aktualnego `main`, tej kolejki i `DocumentationCoverage.md`.
+2. Preferuj najniższy niezamknięty element, chyba że jest blokowany przez research/decyzję wyższego poziomu.
+3. Nie duplikuj istniejących specyfikacji: karta produkcyjna linkuje do źródła prawdy i dodaje brakujący kontrakt implementacyjny.
+4. Każdy nowy dokument ma jawne: scope, zależności, trwały stan, fail-safe/edge cases, minimalne QA oraz otwarte decyzje, jeśli dotyczą implementacji.
+5. Research oddziela historyczne H/S od fikcyjnego F; brak źródła nie może być maskowany pewnym twierdzeniem.
+6. Finalne liczby balansu i performance pozostają otwarte do czasu pomiarów/playtestów.
+7. Merge do `main` dopiero po zielonym CI.
 
-**Pierwszy pakiet ukończony:**
-- [x] rusałka;
-- [x] duch leśny / kandydat leszy-type;
-- [x] wodnik / vodník;
-- [x] zmora;
-- [x] strzygoń / strzyga;
-- [x] macierz dopasowania do vertical slice.
+## Definicja progu „wstępnie kompletne do programowania”
 
-Wynik: `swamp-predator` pozostaje autorskim F, ponieważ żaden sprawdzony kandydat nie pasuje wystarczająco dobrze. `forest-guardian` może być dalej rozwijany jako lokalna istota leśna, ale finalna nazwa wymaga regionalnego researchu.
+Próg jest osiągnięty, gdy:
+- wszystkie główne systemy mają implementacyjny kontrakt danych/stanu;
+- MQ00–MQ56 mają produkcyjne karty lub jawnie współdzielony kontrakt bez luk krytycznych;
+- każdy region kampanii ma bible z travel/content/system dependencies;
+- główne lore potrzebne runtime jest zamknięte lub jawnie oznaczone jako decyzja otwarta bez blokowania kodu;
+- formaty contentu pozwalają walidować dane bez zgadywania przez programistę;
+- `DocumentationCoverage.md` nie ma nieoznaczonych luk blokujących implementację.
 
-**Drugi pakiet do wykonania później:**
-- [x] polskie/regionalne postacie leśne;
-- [x] topielec/topielica i polski wodnik;
-- [x] południca;
-- [x] boginka/mamuna;
-- [x] upiór;
-- [ ] ogniki/błędne światła jako zjawisko.
+## Definicja pełnej dokumentacji produkcyjnej
 
-## Poziom 7 — bardzo trudne, panteon i religia
-
-- [x] kontrola Rod/Rodzanice;
-- [x] Jarowit;
-- [x] Radegast–Swarożyc;
-- [x] Siwa–Żywie;
-- [x] późny katalog polski;
-- [x] kandydaci literaccy;
-- [x] kolejne karty bogów;
-- [x] finalniejsze relacje F;
-- [x] instytucje kultowe świata gry;
-- [x] ograniczenia boskich umów.
-
-Wymaga bezpośredniejszej kontroli źródeł i ostrożności interpretacyjnej.
-
-## Poziom 8 — bardzo trudne, świat makro
-
-- [x] finalne kultury;
-- [x] języki/naming rules;
-- [x] państwa;
-- [x] geografia świata;
-- [x] gospodarka międzyregionowa;
-- [x] konflikty polityczne;
-- [x] timeline głównych epok;
-- [ ] przepływ głównej historii między regionami.
-
-## Poziom 9 — najtrudniejsze, centralne lore
-
-Na końcu, po zebraniu wystarczającej liczby danych i przetestowaniu świata:
-
-- [x] prawdziwa natura Czwartej Sfery;
-- [x] prawdziwa przyczyna kryzysu;
-- [x] pełna historia rodziny bohatera;
-- [x] finalny antagonista / przeciwnicy;
-- [x] czy i jak można zabić boga;
-- [x] główny finał;
-- [x] warianty zakończeń;
-- [x] epilogi;
-- [ ] ostateczna chronologia tajemnicy.
-
-Te decyzje mają największy koszt retconu, więc robimy je dopiero wtedy, gdy wcześniejsze warstwy są stabilne.
-
-## Reguła przechodzenia dalej
-
-Nie trzeba ukończyć 100% jednego poziomu, by rozpocząć następny, ale:
-
-- preferujemy najniższy niezamknięty poziom;
-- pomijamy element, jeśli wymaga informacji z trudniejszego poziomu;
-- wracamy po zdobyciu brakującego researchu;
-- nie zamrażamy finalnego lore tylko po to, by „odhaczyć dokument”.
-
-
-## Stan po Poziomie 9
-
-**Poziomy 1–9 mają kompletny first pass.**
-
-Od tej chwili kolejka nie odpowiada już na pytanie „czym ma być gra?”, tylko „jak szczegółowo produkcyjnie rozpisać znany już projekt?”.
-
-Następna faza dokumentacji:
-- main quest cards;
-- region bibles;
-- companion/NPC roster;
-- final content lists;
-- production budgets;
-- implementation specs wynikające z playtestów.
+Po progu implementacyjnym praca trwa dalej, aż kryteria z `DocumentationCoverage.md` są faktycznie spełnione: komplet questów, regionów, finalnych istot/kultur, asset list, zmierzone performance, balance i release readiness.
