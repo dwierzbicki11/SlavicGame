@@ -9,29 +9,17 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
 
 layout(set = 1, binding = 0) uniform texture2D GrassBase;
 layout(set = 1, binding = 1) uniform texture2D GrassNormal;
-layout(set = 1, binding = 2) uniform texture2D GrassRoughness;
-
-layout(set = 1, binding = 3) uniform texture2D PathBase;
-layout(set = 1, binding = 4) uniform texture2D PathNormal;
-layout(set = 1, binding = 5) uniform texture2D PathRoughness;
-
-layout(set = 1, binding = 6) uniform texture2D LitterBase;
-layout(set = 1, binding = 7) uniform texture2D LitterNormal;
-layout(set = 1, binding = 8) uniform texture2D LitterRoughness;
-
-layout(set = 1, binding = 9) uniform texture2D MudBase;
-layout(set = 1, binding = 10) uniform texture2D MudNormal;
-layout(set = 1, binding = 11) uniform texture2D MudRoughness;
-
-layout(set = 1, binding = 12) uniform texture2D SwampBase;
-layout(set = 1, binding = 13) uniform texture2D SwampNormal;
-layout(set = 1, binding = 14) uniform texture2D SwampRoughness;
-
-layout(set = 1, binding = 15) uniform texture2D RockBase;
-layout(set = 1, binding = 16) uniform texture2D RockNormal;
-layout(set = 1, binding = 17) uniform texture2D RockRoughness;
-
-layout(set = 1, binding = 18) uniform sampler TerrainSampler;
+layout(set = 1, binding = 2) uniform texture2D PathBase;
+layout(set = 1, binding = 3) uniform texture2D PathNormal;
+layout(set = 1, binding = 4) uniform texture2D LitterBase;
+layout(set = 1, binding = 5) uniform texture2D LitterNormal;
+layout(set = 1, binding = 6) uniform texture2D MudBase;
+layout(set = 1, binding = 7) uniform texture2D MudNormal;
+layout(set = 1, binding = 8) uniform texture2D SwampBase;
+layout(set = 1, binding = 9) uniform texture2D SwampNormal;
+layout(set = 1, binding = 10) uniform texture2D RockBase;
+layout(set = 1, binding = 11) uniform texture2D RockNormal;
+layout(set = 1, binding = 12) uniform sampler TerrainSampler;
 
 layout(location = 0) in vec3 fsin_WorldPosition;
 layout(location = 1) in vec3 fsin_WorldNormal;
@@ -95,12 +83,12 @@ void main()
     tangentNormal = normalize(tangentNormal);
 
     float roughness =
-        texture(sampler2D(GrassRoughness, TerrainSampler), grassUv).r * weightsA.x +
-        texture(sampler2D(LitterRoughness, TerrainSampler), litterUv).r * weightsA.y +
-        texture(sampler2D(PathRoughness, TerrainSampler), pathUv).r * weightsA.z +
-        texture(sampler2D(MudRoughness, TerrainSampler), mudUv).r * weightsB.x +
-        texture(sampler2D(SwampRoughness, TerrainSampler), swampUv).r * weightsB.y +
-        texture(sampler2D(RockRoughness, TerrainSampler), rockUv).r * weightsB.z;
+        0.78 * weightsA.x +
+        0.82 * weightsA.y +
+        0.88 * weightsA.z +
+        0.48 * weightsB.x +
+        0.58 * weightsB.y +
+        0.74 * weightsB.z;
     roughness = clamp(roughness, 0.08, 1.0);
 
     vec3 baseNormal = normalize(fsin_WorldNormal);
