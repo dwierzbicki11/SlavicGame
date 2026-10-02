@@ -3,6 +3,7 @@ using System.Text;
 using Veldrid;
 using Veldrid.SPIRV;
 using Veldrid.StartupUtilities;
+using SlavicGame.Engine.Assets;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Windowing;
 using SlavicGame.Engine.World;
@@ -32,6 +33,8 @@ public sealed class VeldridRenderer : IDisposable
     private Pipeline? _hudPipeline;
     private Shader[]? _shaders;
     private Shader[]? _hudShaders;
+    private GlbModel? _playerModel;
+    private GlbModel? _enemyModel;
 
     private bool _initialized;
     private bool _disposed;
@@ -82,7 +85,10 @@ public sealed class VeldridRenderer : IDisposable
         var factory = _graphicsDevice.ResourceFactory;
         _commandList = factory.CreateCommandList();
 
-        StaticWorldMesh.Build(world, out var vertices, out var indices);
+        var assetsRoot = Path.Combine(AppContext.BaseDirectory, "assets");
+        StaticWorldMesh.BuildWithAssets(world, assetsRoot, out var vertices, out var indices);
+        _playerModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "player_hunter_animated.glb"));
+        _enemyModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "swamp_predator_animated.glb"));
 
         _vertexBuffer = factory.CreateBuffer(new BufferDescription(
             TerrainVertex.SizeInBytes * (uint)vertices.Length,
@@ -183,11 +189,12 @@ public sealed class VeldridRenderer : IDisposable
 
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
-        EngineLog.Info($"Static world mesh uploaded to GPU ({world.Obstacles.Count} obstacles).");
+        EngineLog.Info($"Static R0 world uploaded to GPU ({world.Models.Count} GLB instances, collision obstacles={world.Obstacles.Count}).");
+        EngineLog.Info($"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
 
-    public void Render(WorldState world, Camera3D camera, double fps)
+    public void Render(WorldState world, Camera3D camera, double fps, double animationSeconds)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!_initialized || _graphicsDevice is null ||
@@ -199,6 +206,8 @@ public sealed class VeldridRenderer : IDisposable
             _atmosphereBuffer is null ||
             _actorVertexBuffer is null ||
             _actorIndexBuffer is null ||
+            _playerModel is null ||
+            _enemyModel is null ||
             _cameraSet is null ||
             _terrainPipeline is null ||
             _hudVertexBuffer is null ||
@@ -222,7 +231,14 @@ public sealed class VeldridRenderer : IDisposable
             camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
         var view = Matrix4x4.CreateLookAt(camera.Position, camera.Target, Vector3.UnitY);
 
-        ActorMesh.Build(world.Enemies, out var actorVertices, out var actorIndices);
+        ActorModelMesh.Build(
+            world,
+            _playerModel,
+            _enemyModel,
+            animationSeconds,
+            camera.Yaw,
+            out var actorVertices,
+            out var actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
 
@@ -484,6 +500,8 @@ public sealed class VeldridRenderer : IDisposable
 
         _hudShaders = null;
         _shaders = null;
+        _playerModel = null;
+        _enemyModel = null;
         _hudPipeline = null;
         _hudSet = null;
         _hudLayout = null;
