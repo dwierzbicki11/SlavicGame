@@ -3,6 +3,12 @@ using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Renderer;
 
+public enum CameraMode
+{
+    FirstPerson,
+    ThirdPerson
+}
+
 public sealed class Camera3D
 {
     private bool _hasFollowed;
@@ -21,6 +27,8 @@ public sealed class Camera3D
     public float TargetHeight { get; set; } = 1.5f;
     public float HeightOffset { get; set; } = 0.5f;
     public float PositionSmoothing { get; set; } = 14f;
+    public CameraMode Mode { get; set; } = CameraMode.ThirdPerson;
+    public float EyeHeight { get; set; } = 1.72f;
     public float TerrainClearance
     {
         get => _terrainClearance;
@@ -53,6 +61,18 @@ public sealed class Camera3D
 
     public void Follow(Vector3 playerPosition, float deltaSeconds, Terrain? terrain = null)
     {
+        if (Mode == CameraMode.FirstPerson)
+        {
+            var eye = playerPosition + Vector3.UnitY * EyeHeight;
+            if (terrain is not null)
+                eye = KeepAboveGround(terrain, eye, MathF.Max(EyeHeight, TerrainClearance + 0.1f));
+
+            Position = eye;
+            Target = eye + GetLookDirection() * 10f;
+            _hasFollowed = true;
+            return;
+        }
+
         var target = playerPosition + new Vector3(0f, TargetHeight, 0f);
         var cameraForward = GetLookDirection();
         var desiredPosition = target - cameraForward * Distance + Vector3.UnitY * HeightOffset;
