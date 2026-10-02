@@ -273,13 +273,18 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         var screenSize = new Vector4(width, height, 0, 0);
-        var atmosphereColor = GetAtmosphereColor(world.Time, world.Weather);
+        var celestial = CelestialLighting.Evaluate(world.Time, world.Weather);
+        var atmosphereColor = GetAtmosphereColor(world.Time, world.Weather, celestial);
         var fogParameters = new Vector4(
             atmosphereColor.R,
             atmosphereColor.G,
             atmosphereColor.B,
             world.Weather.FogDensity);
-        var lightingParameters = new Vector4(GetTerrainBrightness(world.Time, world.Weather), 0, 0, 0);
+        var lightingParameters = new Vector4(
+            celestial.SunIntensity,
+            celestial.SunDirection.X,
+            celestial.SunDirection.Y,
+            celestial.SunDirection.Z);
 
         _commandList.Begin();
         _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
@@ -433,7 +438,10 @@ public sealed class VeldridRenderer : IDisposable
         _hudVertices.Add(new HudVertex(new Vector2(x0, y1), color));
     }
 
-    private static RgbaFloat GetAtmosphereColor(WorldTime time, WeatherSystem weather)
+    private static RgbaFloat GetAtmosphereColor(
+        WorldTime time,
+        WeatherSystem weather,
+        CelestialLightState celestial)
     {
         var daylight = time.IsNight
             ? 0f
@@ -457,20 +465,13 @@ public sealed class VeldridRenderer : IDisposable
             : new Vector3(0.17f, 0.18f, 0.17f);
 
         var cloudy = Vector3.Lerp(baseColor, cloudColor, weather.Cloudiness * 0.72f);
+        var twilightTint = Vector3.Lerp(
+            cloudy,
+            new Vector3(0.30f, 0.105f, 0.045f),
+            celestial.TwilightFactor * 0.34f * (1f - weather.Cloudiness * 0.5f));
         var fogBlend = Math.Clamp(weather.FogDensity / 0.032f, 0f, 1f) * 0.58f;
-        var final = Vector3.Lerp(cloudy, fogColor, fogBlend);
+        var final = Vector3.Lerp(twilightTint, fogColor, fogBlend);
         return new RgbaFloat(final.X, final.Y, final.Z, 1f);
-    }
-
-    private static float GetTerrainBrightness(WorldTime time, WeatherSystem weather)
-    {
-        var daylight = time.IsNight
-            ? 0.32f
-            : 0.56f + (float)Math.Clamp(
-                Math.Sin((time.TimeOfDayHours - 6.0) / 14.0 * Math.PI),
-                0.0,
-                1.0) * 0.44f;
-        return Math.Clamp(daylight * (1f - weather.Cloudiness * 0.28f), 0.24f, 1f);
     }
 
     public void Resize(uint width, uint height)

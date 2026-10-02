@@ -33,13 +33,19 @@ float ValueNoise(vec2 p)
     return mix(mix(a, b, fraction.x), mix(c, d, fraction.x), fraction.y);
 }
 
+vec3 SunColor(vec3 sunDirection)
+{
+    float horizon = 1.0 - smoothstep(0.08, 0.48, max(sunDirection.y, 0.0));
+    return mix(vec3(1.0, 0.95, 0.86), vec3(1.0, 0.47, 0.20), horizon * 0.82);
+}
+
 void main()
 {
     vec3 normal = normalize(fsin_Normal);
-    vec3 sunDirection = normalize(vec3(-0.35, 0.82, 0.28));
+    vec3 sunDirection = normalize(Lighting.yzw);
 
     float direct = max(dot(normal, sunDirection), 0.0);
-    float hemisphere = mix(0.30, 0.72, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
+    float hemisphere = mix(0.28, 0.74, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
     float slope = 1.0 - clamp(normal.y, 0.0, 1.0);
 
     float macro = ValueNoise(fsin_WorldPosition.xz * 0.045);
@@ -50,9 +56,10 @@ void main()
     vec3 baseColor = mix(fsin_Color, soilTint, slope * slope * 0.32);
     baseColor *= surfaceVariation;
 
-    float daylight = max(Lighting.x, 0.20);
-    vec3 ambient = baseColor * hemisphere * (0.40 + daylight * 0.24);
-    vec3 sun = baseColor * direct * daylight * 0.92;
+    float daylight = max(Lighting.x, 0.02);
+    vec3 sunColor = SunColor(sunDirection);
+    vec3 ambient = baseColor * hemisphere * (0.17 + 0.25 * max(sunDirection.y, 0.0));
+    vec3 sun = baseColor * sunColor * direct * daylight * 0.98;
     vec3 color = ambient + sun;
 
     float density = max(FogColorDensity.w, 0.00001);
