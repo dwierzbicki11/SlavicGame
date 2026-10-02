@@ -37,7 +37,7 @@ public static class WorldDecorationGenerator
         ArgumentNullException.ThrowIfNull(terrain);
 
         var random = new Random(Seed);
-        var result = new List<WorldModelInstance>(48);
+        var result = new List<WorldModelInstance>(168);
 
         ScatterDisc(
             result, terrain, random,
@@ -71,6 +71,28 @@ public static class WorldDecorationGenerator
             minScale: 0.78f,
             maxScale: 1.42f,
             exclusionRadius: 7f);
+
+        ScatterDisc(
+            result, terrain, random,
+            prefix: "wilderness-tree",
+            center: Vector2.Zero,
+            radius: 430f,
+            count: 80,
+            assets: ForestTrees,
+            minScale: 0.80f,
+            maxScale: 1.35f,
+            exclusionRadius: 130f);
+
+        ScatterDisc(
+            result, terrain, random,
+            prefix: "wilderness-understory",
+            center: Vector2.Zero,
+            radius: 420f,
+            count: 40,
+            assets: ForestUnderstory,
+            minScale: 0.70f,
+            maxScale: 1.55f,
+            exclusionRadius: 120f);
 
         return result;
     }

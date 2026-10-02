@@ -24,7 +24,9 @@ public sealed class WorldState
     public PlayerVitals Player { get; } = new();
     public GameProgress Progress { get; } = new();
     public CosmologyState Cosmology { get; } = new();
-    public Terrain Terrain { get; } = new();
+    // ~1 km x 1 km terrain: 16x the area of the original R0 prototype.
+    // The current R0 locations occupy only the central playable slice and can expand outward.
+    public Terrain Terrain { get; } = new(257, 257, 4f);
     public float PlayerRadius { get; } = 0.55f;
     public string CurrentRegion { get; private set; } = "starting-forest";
 

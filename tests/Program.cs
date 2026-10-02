@@ -228,8 +228,10 @@ Check(worldIndices.Max() == worldVertices.Length - 1, "Static world indices addr
 world.SetPlayerPosition(new Vector3(0, 999, -85));
 Check(world.CurrentRegion == "old-village", "Village detection");
 world.SetPlayerPosition(new Vector3(10000, 0, -10000));
-Near(world.PlayerPosition.X, 127, "East boundary");
-Near(world.PlayerPosition.Z, -127, "South boundary");
+var worldHalfWidth = (world.Terrain.Width - 1) * world.Terrain.CellSize * 0.5f;
+var worldHalfDepth = (world.Terrain.Depth - 1) * world.Terrain.CellSize * 0.5f;
+Near(world.PlayerPosition.X, worldHalfWidth, "East boundary");
+Near(world.PlayerPosition.Z, -worldHalfDepth, "South boundary");
 Near(world.PlayerPosition.Y, world.Terrain.SampleHeight(world.PlayerPosition), "Ground following");
 Reject(() => world.SetPlayerPosition(new Vector3(float.PositiveInfinity, 0, 0)), "Invalid player position");
 Reject(() => new WorldObstacle("invalid", Vector3.Zero, Vector2.Zero, 1f, Vector3.One),
@@ -332,6 +334,15 @@ time.Advance(5);
 Check(time.DeltaSeconds == 0.25 && time.TotalSeconds == 0.25, "Frame delta clamp");
 time.Advance(double.NaN);
 Check(time.TotalSeconds == 0.25, "Invalid frame delta");
+var firstPersonCamera = new Camera3D { Mode = CameraMode.FirstPerson };
+var firstPersonGround = new Terrain(16, 16, 4f);
+var firstPersonPlayer = new Vector3(0f, firstPersonGround.SampleHeight(Vector3.Zero), 0f);
+firstPersonCamera.Follow(firstPersonPlayer, 0f, firstPersonGround);
+Near(firstPersonCamera.Position.Y, firstPersonPlayer.Y + firstPersonCamera.EyeHeight,
+    "First-person camera sits at eye height");
+Check(Vector3.Distance(firstPersonCamera.Target, firstPersonCamera.Position) > 9f,
+    "First-person camera targets forward instead of using a third-person boom");
+
 var camera = new Camera3D();
 Check(Vector3.Dot(camera.GetMoveForward(), camera.GetMoveRight()) < 0.0001, "Camera movement axes");
 camera.Update(new Vector3(10, 0, 10), 0, 0, 1);

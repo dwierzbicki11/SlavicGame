@@ -14,7 +14,7 @@ public sealed class GameEngine : IDisposable
     private readonly GameTime _time = new();
     private readonly GameWindow _window;
     private readonly VeldridRenderer _renderer = new();
-    private readonly Camera3D _camera = new();
+    private readonly Camera3D _camera = new() { Mode = CameraMode.FirstPerson };
     private readonly WorldState _world = WorldGenerator.Generate();
 
     private bool _initialized;

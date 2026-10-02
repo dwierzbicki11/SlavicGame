@@ -52,14 +52,14 @@ internal static class AssetIntegrationRegression
             "Animation evaluation changes player bind-pose geometry over time");
 
         var world = WorldGenerator.Generate();
-        check(world.Models.Count == 69,
+        check(world.Models.Count == 189,
             "R0 world registers curated models plus deterministic environment decoration");
         check(world.Models.Select(model => model.AssetPath).Distinct(StringComparer.Ordinal).Count() < world.Models.Count,
             "R0 decoration intentionally reuses source assets for batching");
 
         var decorationsA = WorldDecorationGenerator.Generate(world.Terrain);
         var decorationsB = WorldDecorationGenerator.Generate(world.Terrain);
-        check(decorationsA.Count == 48 && decorationsB.Count == 48,
+        check(decorationsA.Count == 168 && decorationsB.Count == 168,
             "R0 decoration pass has a bounded deterministic instance budget");
         check(decorationsA.Zip(decorationsB).All(pair =>
                 pair.First.AssetPath == pair.Second.AssetPath &&
@@ -89,7 +89,7 @@ internal static class AssetIntegrationRegression
             "Static R0 mesh contains GLB world indices beyond terrain");
 
         var enemy = GlbModel.Load(enemyPath);
-        ActorModelMesh.Build(world, player, enemy, 0.35, 0f, out var actorVertices, out var actorIndices);
+        ActorModelMesh.Build(world, player, enemy, 0.35, 0f, true, out var actorVertices, out var actorIndices);
         check(actorVertices.Length > 0 && actorIndices.Length > 0,
             "Animated player and enemy models produce dynamic actor geometry");
     }

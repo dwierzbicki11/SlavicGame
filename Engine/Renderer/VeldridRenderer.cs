@@ -253,6 +253,7 @@ public sealed class VeldridRenderer : IDisposable
             _enemyModel,
             animationSeconds,
             camera.Yaw,
+            camera.Mode != CameraMode.FirstPerson,
             out var actorVertices,
             out var actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
