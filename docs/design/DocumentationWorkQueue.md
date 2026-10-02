@@ -24,7 +24,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] production bestiary roster;
 - [x] indeks finalnych research cards istot;
 - [x] full-game content/asset family catalog R0–R6 (`design/RegionalContentAssetCatalog.md`);
-- [ ] side-quest catalog poza vertical slice.
+- [x] side-quest catalog poza vertical slice (`quests/SideQuestCatalog.md`).
 
 ### P2 — research packages
 - [ ] culture research package dla każdego finalnego kontekstu kulturowego;
@@ -35,7 +35,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
 
 ### P3 — content production
-- [ ] side-quest production cards per region;
+- [ ] side-quest production cards per region; katalog slotów R0–R6 jest gotowy, następne karty zaczynają się od R0;
 - [ ] regional encounter rosters/tables poza R0;
 - [ ] regional vendors/services final pass;
 - [ ] item/equipment/recipe catalogs dla pełnego scope;
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-Najbliższy niezablokowany pakiet: **side-quest catalog poza vertical slice**. Po nim: production cards side questów per region i culture research packages. Konkretne regionalne asset manifests są późniejszym art/research lockiem.
+Najbliższy niezablokowany pakiet: **side-quest production cards R0** dla `SQ_R0_01`–`SQ_R0_03`. Następnie kolejne regiony według kolejności zapisanej w `SideQuestCatalog.md`, z zatrzymaniem na research lockach zamiast zgadywania. Culture research packages pozostają kolejnym dużym P2.
