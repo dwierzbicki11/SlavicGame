@@ -22,7 +22,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 ### P1 — roster i katalogi
 - [x] production NPC/companion roster: role, region, lifecycle, fallback i persistence;
 - [x] production bestiary roster używany przez scope 1.0 z jawnymi research gates;
-- [ ] indeks finalnych research cards istot i brakujące karty;
+- [x] indeks finalnych research cards istot i identyfikacja brakujących kart (`research/bestiary/ResearchCardIndex.md`);
 - [ ] full-game content/asset catalog per R0–R6;
 - [ ] side-quest catalog poza vertical slice.
 
@@ -30,9 +30,9 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 - [ ] culture research package dla każdego finalnego kontekstu kulturowego;
 - [ ] domknięcie krytycznych źródeł panteonu;
 - [ ] research lock material culture dla assetów, które rzeczywiście trafiają do produkcji;
-- [ ] nazwa/identity lock `forest-guardian` albo jawne pozostawienie F;
-- [ ] ogniki/błędne światła jako osobna karta zjawiska;
-- [ ] południca jako karta wymagana przed finalnym lockiem `ENTITY_NOON_PHENOMENON`.
+- [ ] source-strength/region-fit pass południcy;
+- [ ] identity lock `forest-guardian` albo jawne pozostawienie F;
+- [ ] ogniki/błędne światła tylko jeśli zostaną awansowane do finalnego scope.
 
 ### P3 — content production
 - [ ] side-quest production cards per region;
@@ -67,4 +67,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 
 ## Następny element
 
-Najbliższy niezablokowany pakiet: **indeks finalnych research cards bestiariusza i identyfikacja brakujących kart**. Następnie: pełny regionalny content/asset catalog oraz side-quest catalog.
+Najbliższy niezablokowany pakiet: **full-game content/asset catalog per R0–R6**. Następnie: side-quest catalog poza vertical slice. Research locki z `ResearchCardIndex.md` mogą być domykane równolegle wtedy, gdy są potrzebne konkretnemu finalnemu contentowi.
