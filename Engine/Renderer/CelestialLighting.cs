@@ -31,10 +31,9 @@ public static class CelestialLighting
             ? MathF.Sin(daylightPhase * MathF.PI) * MaxSolarElevationRadians
             : -0.22f;
 
-        var azimuth = MathF.Lerp(
-            MathF.PI * 0.15f,
-            MathF.PI * 1.15f,
-            daylightPhase);
+        var azimuthStart = MathF.PI * 0.15f;
+        var azimuthEnd = MathF.PI * 1.15f;
+        var azimuth = azimuthStart + (azimuthEnd - azimuthStart) * daylightPhase;
 
         var cosElevation = MathF.Cos(elevation);
         var direction = Vector3.Normalize(new Vector3(
