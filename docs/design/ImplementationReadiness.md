@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ10. Ten dokument nie zastępuje specyfikacji systemów ani questów; wskazuje wyłącznie, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ11. Ten dokument nie zastępuje specyfikacji systemów ani questów; wskazuje wyłącznie, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -10,25 +10,35 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 
 - [x] Act 0: MQ00 → MQ01 → MQ10 handoff — scalone.
 - [x] MQ10 „Znak pod drogą” — trwały state contract, evidence gating, persistence, idempotencja i odblokowanie MQ11 — scalone.
+- [x] MQ11 „Prawo łowcy” — trzy warianty `MQ11-D01`, trwała konsekwencja reputacji, persistence, regresje i bezwarunkowy handoff do MQ12 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ11 „Prawo łowcy” — IMPLEMENTING
+### MQ12 „Las, który myli drogę” — BLOCKED (runtime dependencies)
 
-Ponowna analiza aktualnego `main` wykazała, że wcześniejszy blocker był błędny: runtime reputacji już istnieje jako `Engine/Reputation/ReputationSystem.cs`, jest właścicielem scope `Faction`, ma zakres -100..100 oraz `Capture`/`Restore`, a `GameProgress` posiada instancję `ReputationSystem`. Nie tworzymy więc drugiego systemu reputacji.
+Karta MQ12 jest narracyjnie `implementation-ready v0.1`, a wymagany timed-event runtime już istnieje jako `Engine/World/TimedEventSystem.cs`. Ponowna analiza aktualnego `main` nie wykazała jednak runtime ownera dla tracking ani kontraktu navigation/map potrzebnego do kontrolowanego zaburzenia trasy i trzech punktów odniesienia. Sama dokumentacja tracking istnieje (`design/TrackingSystem.md`), lecz nie ma odpowiadającej implementacji runtime; obecny map UI state nie jest kontraktem nawigacji świata.
 
-Bieżący PR implementuje wyłącznie MQ11: `MQ11_POLICY_SEEN`, dwie wymagane perspektywy, przypadek testowy kosztu procedury, trwałe trzy warianty `MQ11-D01`, jednorazową konsekwencję faction reputation, `MQ11_COMPLETE` oraz bezwarunkowy handoff do MQ12. Numericzne wartości reputacji i finalne faction IDs pozostają danymi content/tuningu przekazywanymi do kontraktu kampanii; kod nie zgaduje ich wartości.
+Nie wolno implementować MQ12 przez same quest flagi, ponieważ zgadywałoby to semantykę `MQ12_ROUTE_ANOMALY`, punktów odniesienia, recovery po reloadzie i integracji z tracking/navigation.
 
-MQ11 zostaje ukończone dopiero po regresjach, zielonym CI i merge tego PR do `main`.
+### Minimalna praca konieczna do usunięcia blockera
 
-## Kolejka po MQ11
+W ramach tego samego aktywnego zadania MQ12 należy kolejno:
+
+1. ustalić minimalny runtime contract tracking zgodny z `design/TrackingSystem.md` i persistence projektu;
+2. ustalić minimalny navigation/route-anomaly contract: aktywacja/dezaktywacja kontrolowanego zaburzenia, trwałe odkrycie punktów odniesienia oraz bezpieczny restore/recovery po save/load;
+3. zaimplementować te kontrakty z regresjami, bez budowania pełnego systemu mapy lub GPS;
+4. dopiero po usunięciu blockera wrócić bezpośrednio do MQ12 i zaimplementować `MQ12_ROUTE_ANOMALY`, próg 2 z 3 punktów, fallback encounteru, `MQ12_NODE_CONFIRMED`, `MQ12_COMPLETE` i handoff do MQ13.
+
+Timed events nie wymagają nowego systemu — należy użyć istniejącego `TimedEventSystem`.
+
+## Kolejka po MQ12
 
 Kolejność jest warunkowa i podlega ponownej analizie po każdym merge:
 
-1. MQ12 „Las, który myli drogę” — spec istnieje, ale wymaga MQ11 oraz navigation/map + timed events.
-2. MQ13 „Dwie mapy” — wymaga MQ10–MQ12 oraz map overlay/evidence synthesis.
-3. Następne elementy wyłącznie po ponownej analizie aktualnego `main`, DocumentationWorkQueue i DocumentationCoverage.
+1. MQ13 „Dwie mapy” — wymaga MQ10–MQ12 oraz map overlay/evidence synthesis.
+2. Następne elementy wyłącznie po ponownej analizie aktualnego `main`, DocumentationWorkQueue i DocumentationCoverage.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ11: finalne faction IDs i wartości delta reputacji są content/tuning data; nie blokują kontraktu kampanii, ponieważ runtime przyjmuje je jawnie i utrwala wynik.
+- MQ12: konkretne content IDs trzech punktów odniesienia i opcjonalnego encounteru są danymi contentowymi; runtime ma przyjmować je jawnie zamiast kodować nazwy w silniku.
+- MQ12: wizualna prezentacja zaburzenia trasy pozostaje content/UX; blocker dotyczy wyłącznie deterministycznego state/recovery contract.
