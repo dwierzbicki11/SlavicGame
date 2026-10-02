@@ -67,10 +67,13 @@ public sealed class VeldridRenderer : IDisposable
 
     private void InitializeResources(GameWindow window, WorldState world, bool vsync)
     {
+        PresentationPolicy.Apply(vsync);
+
         var options = new GraphicsDeviceOptions
         {
             Debug = false,
             SwapchainDepthFormat = PixelFormat.R32_Float,
+            SyncToVerticalBlank = vsync,
             PreferStandardClipSpaceYDirection = true,
             PreferDepthRangeZeroToOne = true,
         };
@@ -80,7 +83,10 @@ public sealed class VeldridRenderer : IDisposable
             options,
             GraphicsBackend.Vulkan);
 
-        _graphicsDevice.SyncToVerticalBlank = vsync;
+        EngineLog.Info(
+            $"Vulkan presentation: requested VSync={vsync}, " +
+            $"Veldrid SyncToVerticalBlank={_graphicsDevice.SyncToVerticalBlank}, " +
+            $"Mesa override={Environment.GetEnvironmentVariable(PresentationPolicy.MesaPresentModeVariable) ?? "<none>"}.");
 
         var factory = _graphicsDevice.ResourceFactory;
         _commandList = factory.CreateCommandList();
