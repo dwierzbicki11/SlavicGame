@@ -13,6 +13,7 @@ namespace SlavicGame.Engine.Renderer;
 public sealed class VeldridRenderer : IDisposable
 {
     private readonly List<HudVertex> _hudVertices = [];
+    private readonly PbrModelRenderer _pbrModels = new();
 
     private GraphicsDevice? _graphicsDevice;
     private CommandList? _commandList;
@@ -86,7 +87,7 @@ public sealed class VeldridRenderer : IDisposable
         _commandList = factory.CreateCommandList();
 
         var assetsRoot = Path.Combine(AppContext.BaseDirectory, "assets");
-        StaticWorldMesh.BuildWithAssets(world, assetsRoot, out var vertices, out var indices);
+        TerrainMesh.Build(world.Terrain, out var vertices, out var indices);
         _playerModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "player_hunter_animated.glb"));
         _enemyModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "swamp_predator_animated.glb"));
 
@@ -128,6 +129,13 @@ public sealed class VeldridRenderer : IDisposable
             _projectionBuffer,
             _viewBuffer,
             _atmosphereBuffer));
+
+        _pbrModels.Initialize(
+            _graphicsDevice,
+            _cameraLayout,
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
+            world,
+            assetsRoot);
 
         _shaders = factory.CreateFromSpirv(
             new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VertexShader), "main"),
@@ -189,7 +197,7 @@ public sealed class VeldridRenderer : IDisposable
 
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
-        EngineLog.Info($"Static R0 world uploaded to GPU ({world.Models.Count} GLB instances, collision obstacles={world.Obstacles.Count}).");
+        EngineLog.Info($"Terrain uploaded to GPU; PBR world models={_pbrModels.RenderableCount}, collision obstacles={world.Obstacles.Count}.");
         EngineLog.Info($"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
@@ -289,6 +297,11 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.SetVertexBuffer(0, _vertexBuffer);
         _commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
         _commandList.DrawIndexed(_indexCount);
+
+        _pbrModels.Render(_commandList, _cameraSet);
+
+        _commandList.SetPipeline(_terrainPipeline);
+        _commandList.SetGraphicsResourceSet(0, _cameraSet);
 
         if (_actorIndexCount > 0)
         {
@@ -470,6 +483,8 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         _graphicsDevice.WaitForIdle();
+
+        _pbrModels.Dispose();
 
         _hudPipeline?.Dispose();
         _hudSet?.Dispose();
