@@ -89,7 +89,7 @@ internal static class AssetIntegrationRegression
             "Static R0 mesh contains GLB world indices beyond terrain");
 
         var enemy = GlbModel.Load(enemyPath);
-        ActorModelMesh.Build(world, player, enemy, 0.35, 0f, out var actorVertices, out var actorIndices);
+        ActorModelMesh.Build(world, player, enemy, 0.35, 0f, true, out var actorVertices, out var actorIndices);
         check(actorVertices.Length > 0 && actorIndices.Length > 0,
             "Animated player and enemy models produce dynamic actor geometry");
     }
