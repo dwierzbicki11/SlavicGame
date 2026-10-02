@@ -18,10 +18,11 @@ layout(set = 1, binding = 2) uniform texture2D NormalTexture;
 layout(set = 1, binding = 3) uniform texture2D MetallicRoughnessTexture;
 layout(set = 1, binding = 4) uniform sampler MaterialSampler;
 
-layout(location = 0) in vec3 fsin_ViewPosition;
-layout(location = 1) in vec3 fsin_ViewNormal;
+layout(location = 0) in vec3 fsin_WorldPosition;
+layout(location = 1) in vec3 fsin_WorldNormal;
 layout(location = 2) in vec2 fsin_TexCoord;
 layout(location = 3) in float fsin_Distance;
+layout(location = 4) in vec3 fsin_CameraPosition;
 
 layout(location = 0) out vec4 fsout_Color;
 
@@ -69,23 +70,29 @@ vec3 FresnelSchlick(float cosTheta, vec3 f0)
     return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+vec3 SunColor(vec3 sunDirection)
+{
+    float horizon = 1.0 - smoothstep(0.08, 0.48, max(sunDirection.y, 0.0));
+    return mix(vec3(1.0, 0.95, 0.86), vec3(1.0, 0.47, 0.20), horizon * 0.82);
+}
+
 void main()
 {
     vec4 baseSample = texture(sampler2D(BaseColorTexture, MaterialSampler), fsin_TexCoord);
     vec3 albedo = max(baseSample.rgb * BaseColorFactor.rgb, vec3(0.0));
     float alpha = baseSample.a * BaseColorFactor.a;
 
-    vec3 normal = normalize(fsin_ViewNormal);
+    vec3 normal = normalize(fsin_WorldNormal);
     vec3 sampledNormal = texture(sampler2D(NormalTexture, MaterialSampler), fsin_TexCoord).xyz * 2.0 - 1.0;
     if (length(sampledNormal.xy) > 0.001)
-        normal = normalize(CotangentFrame(normal, fsin_ViewPosition, fsin_TexCoord) * sampledNormal);
+        normal = normalize(CotangentFrame(normal, fsin_WorldPosition, fsin_TexCoord) * sampledNormal);
 
     vec3 mr = texture(sampler2D(MetallicRoughnessTexture, MaterialSampler), fsin_TexCoord).rgb;
     float metallic = clamp(MaterialFactors.x * mr.b, 0.0, 1.0);
     float roughness = clamp(MaterialFactors.y * mr.g, 0.06, 1.0);
 
-    vec3 viewDirection = normalize(-fsin_ViewPosition);
-    vec3 lightDirection = normalize(vec3(-0.35, 0.82, 0.28));
+    vec3 viewDirection = normalize(fsin_CameraPosition - fsin_WorldPosition);
+    vec3 lightDirection = normalize(Lighting.yzw);
     vec3 halfway = normalize(viewDirection + lightDirection);
 
     float ndotl = max(dot(normal, lightDirection), 0.0);
@@ -100,9 +107,10 @@ void main()
     vec3 kd = (vec3(1.0) - f) * (1.0 - metallic);
     vec3 diffuse = kd * albedo / PI;
 
-    float lightStrength = max(Lighting.x, 0.18);
-    vec3 ambient = albedo * (0.045 + 0.035 * (1.0 - metallic));
-    vec3 color = ambient + (diffuse + specular) * ndotl * (1.7 * lightStrength);
+    float lightStrength = max(Lighting.x, 0.02);
+    vec3 sunColor = SunColor(lightDirection);
+    vec3 ambient = albedo * (0.028 + 0.050 * max(lightDirection.y, 0.0)) * (1.0 - metallic * 0.35);
+    vec3 color = ambient + (diffuse + specular) * sunColor * ndotl * (1.75 * lightStrength);
 
     float fogFactor = 1.0 - exp(-FogColorDensity.w * fsin_Distance);
     fogFactor = clamp(fogFactor, 0.0, 0.94);
