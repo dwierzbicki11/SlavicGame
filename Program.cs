@@ -8,7 +8,7 @@ try
         WindowTitle = "SlavicGame",
         Width = 1280,
         Height = 720,
-        VSync = true,
+        VSync = args.Contains("--vsync", StringComparer.Ordinal),
         Fullscreen = !args.Contains("--windowed", StringComparer.Ordinal),
         UseMouseWarp = args.Contains("--mouse-warp", StringComparer.Ordinal),
         InputDiagnostics = args.Contains("--input-debug", StringComparer.Ordinal)
