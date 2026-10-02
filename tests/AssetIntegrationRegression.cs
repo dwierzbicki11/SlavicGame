@@ -52,20 +52,36 @@ internal static class AssetIntegrationRegression
             "Animation evaluation changes player bind-pose geometry over time");
 
         var world = WorldGenerator.Generate();
-        check(world.Models.Count == 189,
-            "R0 world registers curated models plus deterministic environment decoration");
+        check(world.Terrain.Width == 513 && world.Terrain.Depth == 513 && MathF.Abs(world.Terrain.CellSize - 4f) < 0.001f,
+            "Expanded map spans roughly two kilometres per side");
+        check(ForestLayout.Zones.Count == 4,
+            "Expanded map defines four named forest biomes");
+        check(ForestLayout.Zones.All(zone => world.Regions.Any(region =>
+                region.Id == zone.Id &&
+                region.Type == WorldRegionType.Forest)),
+            "Every forest biome is registered as an explorable world region");
+        check(world.Models.Count == 986,
+            "Expanded world registers curated R0 content plus forest biome decoration");
         check(world.Models.Select(model => model.AssetPath).Distinct(StringComparer.Ordinal).Count() < world.Models.Count,
             "R0 decoration intentionally reuses source assets for batching");
 
         var decorationsA = WorldDecorationGenerator.Generate(world.Terrain);
         var decorationsB = WorldDecorationGenerator.Generate(world.Terrain);
-        check(decorationsA.Count == 168 && decorationsB.Count == 168,
-            "R0 decoration pass has a bounded deterministic instance budget");
+        check(decorationsA.Count == 965 && decorationsB.Count == 965,
+            "Expanded forest pass has a bounded deterministic instance budget");
         check(decorationsA.Zip(decorationsB).All(pair =>
                 pair.First.AssetPath == pair.Second.AssetPath &&
                 Vector3.DistanceSquared(pair.First.Position, pair.Second.Position) < 0.000001f &&
                 Vector3.DistanceSquared(pair.First.Scale, pair.Second.Scale) < 0.000001f),
-            "R0 decoration layout is deterministic across runs");
+            "Expanded forest layout is deterministic across runs");
+        check(ForestLayout.Zones.All(zone =>
+                decorationsA.Count(model => model.Id.StartsWith(zone.Id + "-", StringComparison.Ordinal))
+                == zone.TreeCount + zone.UnderstoryCount),
+            "Every named forest receives its configured canopy and understory population");
+        check(decorationsA.Where(model =>
+                ForestLayout.Zones.Any(zone => model.Id.StartsWith(zone.Id + "-", StringComparison.Ordinal)))
+            .All(model => !ForestLayout.IsTrailCorridor(new Vector2(model.Position.X, model.Position.Z))),
+            "Named forest generation keeps travel corridors open");
         check(world.Models.All(model => File.Exists(Path.Combine(
                 assetsRoot,
                 model.AssetPath.Replace('/', Path.DirectorySeparatorChar)))),
