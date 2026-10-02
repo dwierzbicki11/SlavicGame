@@ -20,10 +20,38 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
-    <Content Include="shaders/bin/**/*.spv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
+
+  <Target Name="CompileAndCopyVulkanShaders"
+          BeforeTargets="CopyFilesToOutputDirectory"
+          Condition="'$(OS)' != 'Windows_NT'">
+    <Exec Command="&quot;$(MSBuildProjectDirectory)/tools/compile-shaders.sh&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+    <ItemGroup>
+      <CompiledVulkanShader Include="$(MSBuildProjectDirectory)/shaders/bin/*.spv" />
+    </ItemGroup>
+
+    <Error Condition="'@(CompiledVulkanShader)' == ''"
+           Text="Shader compilation completed but no SPIR-V files were produced in shaders/bin." />
+
+    <MakeDir Directories="$(OutDir)shaders/bin" />
+    <Copy SourceFiles="@(CompiledVulkanShader)"
+          DestinationFolder="$(OutDir)shaders/bin"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyVulkanShadersToPublish"
+          AfterTargets="Publish"
+          Condition="'$(OS)' != 'Windows_NT'">
+    <ItemGroup>
+      <PublishedVulkanShader Include="$(MSBuildProjectDirectory)/shaders/bin/*.spv" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(PublishDir)shaders/bin" />
+    <Copy SourceFiles="@(PublishedVulkanShader)"
+          DestinationFolder="$(PublishDir)shaders/bin"
+          SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>
