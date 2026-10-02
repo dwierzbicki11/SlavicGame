@@ -6,3 +6,8 @@
 *.suo
 *.log
 TestResults/
+
+# Game assets are intentionally versioned in Git.
+# Keep runtime assets, source art, licenses and metadata visible to Git.
+!assets/
+!assets/**
