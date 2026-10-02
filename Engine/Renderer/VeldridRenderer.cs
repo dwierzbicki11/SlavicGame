@@ -139,7 +139,8 @@ public sealed class VeldridRenderer : IDisposable
 
         var vertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
-            new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float3));
+            new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float3),
+            new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3));
 
         _terrainPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
@@ -191,7 +192,8 @@ public sealed class VeldridRenderer : IDisposable
 
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
-        EngineLog.Info($"Terrain uploaded to GPU; PBR world models={_pbrModels.RenderableCount}, collision obstacles={world.Obstacles.Count}.");
+        EngineLog.Info($"Terrain uploaded to GPU; PBR world instances={_pbrModels.InstanceCount}, " +
+            $"unique assets={_pbrModels.RenderableCount}, collision obstacles={world.Obstacles.Count}.");
         EngineLog.Info($"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
