@@ -45,23 +45,40 @@ public static class TerrainSurfaceClassifier
                 trailDistance,
                 DistanceToSegment(point, Vector2.Zero, zone.Center));
 
-        var pathMask = 1f - SmoothStep(4.2f, 11.5f, trailDistance);
+        var macroNoise =
+            0.50f +
+            0.20f * MathF.Sin(position.X * 0.031f + position.Z * 0.019f) +
+            0.17f * MathF.Cos(position.X * 0.017f - position.Z * 0.041f) +
+            0.13f * MathF.Sin((position.X + position.Z) * 0.011f);
+        macroNoise = Math.Clamp(macroNoise, 0f, 1f);
+
+        var pathEdge = 9.6f + (macroNoise - 0.5f) * 3.2f;
+        var pathMask = 1f - SmoothStep(4.0f, pathEdge, trailDistance);
         pathMask = MathF.Max(
             pathMask,
-            CircleMask(point, VillageCenter, 18f, 42f) * 0.78f);
+            CircleMask(point, VillageCenter, 18f, 42f) *
+            (0.68f + macroNoise * 0.18f));
 
-        var swampMask = CircleMask(point, SwampCenter, 38f, 78f);
+        var swampMask = CircleMask(point, SwampCenter, 36f, 82f);
         var moistureNoise =
-            0.5f +
-            0.25f * MathF.Sin(position.X * 0.083f) +
-            0.25f * MathF.Cos(position.Z * 0.071f);
+            0.46f +
+            0.22f * MathF.Sin(position.X * 0.083f) +
+            0.18f * MathF.Cos(position.Z * 0.071f) +
+            0.14f * MathF.Sin((position.X - position.Z) * 0.047f);
         moistureNoise = Math.Clamp(moistureNoise, 0f, 1f);
 
         var rock = SmoothStep(0.18f, 0.50f, slope);
 
         var lowlandWetness =
-            (1f - SmoothStep(-0.65f, 1.65f, position.Y)) *
-            (0.38f + moistureNoise * 0.62f);
+            (1f - SmoothStep(-0.65f, 1.90f, position.Y)) *
+            (0.34f + moistureNoise * 0.58f + macroNoise * 0.08f);
+
+        // Break the artificial circular swamp silhouette without moving its
+        // gameplay center or flooding nearby travel corridors.
+        swampMask *= Math.Clamp(
+            0.76f + macroNoise * 0.28f + lowlandWetness * 0.18f,
+            0f,
+            1.08f);
         var villageYard = CircleMask(point, VillageCenter, 12f, 34f);
 
         var mud =
@@ -74,10 +91,13 @@ public static class TerrainSurfaceClassifier
         var path = pathMask * (1f - swampMask * 0.72f) * (1f - mud * 0.34f);
 
         var litterVariation =
-            0.76f +
-            0.14f * MathF.Sin(position.X * 0.037f + position.Z * 0.029f);
-        var litter = forestMask * Math.Clamp(litterVariation, 0.58f, 0.92f);
-        var grass = MathF.Max(0.08f, 1f - litter * 0.78f);
+            0.60f +
+            0.17f * MathF.Sin(position.X * 0.037f + position.Z * 0.029f) +
+            0.18f * macroNoise;
+        var litter = forestMask * Math.Clamp(litterVariation, 0.42f, 0.94f);
+
+        var uplandGrass = SmoothStep(-0.5f, 3.6f, position.Y) * 0.14f;
+        var grass = MathF.Max(0.08f, 1f - litter * 0.78f + uplandGrass);
 
         // Strong semantic surfaces suppress the generic forest/grass base.
         var swampSuppression = 1f - Math.Clamp(swampMask, 0f, 1f);
