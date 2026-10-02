@@ -1,7 +1,5 @@
 using System.Numerics;
-using System.Text;
 using Veldrid;
-using Veldrid.SPIRV;
 using Veldrid.StartupUtilities;
 using SlavicGame.Engine.Assets;
 using SlavicGame.Engine.Diagnostics;
@@ -137,9 +135,7 @@ public sealed class VeldridRenderer : IDisposable
             world,
             assetsRoot);
 
-        _shaders = factory.CreateFromSpirv(
-            new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VertexShader), "main"),
-            new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(FragmentShader), "main"));
+        _shaders = ShaderLibrary.LoadPair(factory, "terrain");
 
         var vertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
@@ -173,9 +169,7 @@ public sealed class VeldridRenderer : IDisposable
             _hudLayout,
             _hudScreenBuffer));
 
-        _hudShaders = factory.CreateFromSpirv(
-            new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(HudVertexShader), "main"),
-            new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(HudFragmentShader), "main"));
+        _hudShaders = ShaderLibrary.LoadPair(factory, "hud");
 
         var hudVertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
@@ -570,59 +564,4 @@ public sealed class VeldridRenderer : IDisposable
         [' '] = [0, 0, 0, 0, 0, 0, 0]
     };
 
-    private const string VertexShader = @"
-#version 450
-layout(set = 0, binding = 0) uniform ProjectionBuffer { mat4 Projection; };
-layout(set = 0, binding = 1) uniform ViewBuffer { mat4 View; };
-layout(location = 0) in vec3 Position;
-layout(location = 1) in vec3 Color;
-layout(location = 0) out vec3 fsin_Color;
-layout(location = 1) out float fsin_Distance;
-void main()
-{
-    vec4 viewPosition = View * vec4(Position, 1.0);
-    gl_Position = Projection * viewPosition;
-    fsin_Color = Color;
-    fsin_Distance = length(viewPosition.xyz);
-}";
-
-    private const string FragmentShader = @"
-#version 450
-layout(set = 0, binding = 2) uniform AtmosphereBuffer
-{
-    vec4 FogColorDensity;
-    vec4 Lighting;
-};
-layout(location = 0) in vec3 fsin_Color;
-layout(location = 1) in float fsin_Distance;
-layout(location = 0) out vec4 fsout_Color;
-void main()
-{
-    vec3 litColor = fsin_Color * Lighting.x;
-    float fogFactor = 1.0 - exp(-FogColorDensity.w * fsin_Distance);
-    fogFactor = clamp(fogFactor, 0.0, 0.94);
-    vec3 color = mix(litColor, FogColorDensity.rgb, fogFactor);
-    fsout_Color = vec4(color, 1.0);
-}";
-
-    private const string HudVertexShader = @"
-#version 450
-layout(set = 0, binding = 0) uniform ScreenBuffer { vec4 ScreenSize; };
-layout(location = 0) in vec2 Position;
-layout(location = 1) in vec4 Color;
-layout(location = 0) out vec4 fsin_Color;
-void main()
-{
-    vec2 ndc = vec2(
-        Position.x / ScreenSize.x * 2.0 - 1.0,
-        1.0 - Position.y / ScreenSize.y * 2.0);
-    gl_Position = vec4(ndc, 0.0, 1.0);
-    fsin_Color = Color;
-}";
-
-    private const string HudFragmentShader = @"
-#version 450
-layout(location = 0) in vec4 fsin_Color;
-layout(location = 0) out vec4 fsout_Color;
-void main() { fsout_Color = fsin_Color; }";
 }

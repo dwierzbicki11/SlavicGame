@@ -16,6 +16,9 @@ if [[ "${DOTNET_VERSION%%.*}" != "11" ]]; then
     echo "UWAGA: projekt celuje w .NET 11, a znaleziono SDK: $DOTNET_VERSION" >&2
 fi
 
+echo "[SlavicGame] compile shaders..."
+"$ROOT_DIR/tools/compile-shaders.sh"
+
 echo "[SlavicGame] restore..."
 dotnet restore "$PROJECT"
 
