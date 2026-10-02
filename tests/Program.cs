@@ -214,8 +214,15 @@ TerrainMesh.Build(new Terrain(257, 257), out var largeVertices, out var largeInd
 Check(largeIndices.Max() == largeVertices.Length - 1, "32-bit terrain indices");
 Reject(() => terrain.SampleHeight(new Vector3(float.NaN, 0, 0)), "Invalid sample");
 var world = WorldGenerator.Generate();
+var initializedRegionCount = world.Regions.Count;
+var initializedModelCount = world.Models.Count;
 world.Initialize();
-Check(world.Regions.Count == 4, "Idempotent world initialization");
+Check(world.Regions.Count == initializedRegionCount &&
+      world.Regions.Select(region => region.Id).Distinct(StringComparer.Ordinal).Count() == initializedRegionCount,
+    "Idempotent world initialization");
+Check(world.Models.Count == initializedModelCount &&
+      world.Models.Select(model => model.Id).Distinct(StringComparer.Ordinal).Count() == initializedModelCount,
+    "Idempotent model initialization");
 Check(world.Obstacles.Count == 9, "Idempotent obstacle initialization");
 Check(world.Enemies.Count == 1 && world.Enemies[0].Id == "swamp-predator",
     "World initializes one vertical-slice predator");
