@@ -83,6 +83,7 @@ catalog.Register(new AssetDescriptor(assetId, "Assets/test.glb", "model"));
 Check(catalog.Get(assetId).Path == "Assets/test.glb", "Asset catalog lookup");
 AssetIntegrationRegression.Run(Check);
 PresentationPolicyRegression.Run(Check);
+CelestialLightingRegression.Run(Check);
 
 var animation = new AnimationStateMachine();
 animation.Register("idle");
