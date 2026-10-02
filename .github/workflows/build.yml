@@ -15,12 +15,18 @@ jobs:
       - name: Install GLSL compiler
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y glslang-tools
-      - name: Compile Vulkan shaders
-        if: runner.os == 'Linux'
-        run: ./tools/compile-shaders.sh
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '11.0.x'
           dotnet-quality: 'preview'
       - run: dotnet build SlavicGame.csproj --configuration Release
+      - name: Verify compiled Vulkan shaders were copied to output
+        if: runner.os == 'Linux'
+        run: |
+          test -f bin/Release/net11.0/shaders/bin/terrain.vert.spv
+          test -f bin/Release/net11.0/shaders/bin/terrain.frag.spv
+          test -f bin/Release/net11.0/shaders/bin/hud.vert.spv
+          test -f bin/Release/net11.0/shaders/bin/hud.frag.spv
+          test -f bin/Release/net11.0/shaders/bin/pbr.vert.spv
+          test -f bin/Release/net11.0/shaders/bin/pbr.frag.spv
       - run: dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
