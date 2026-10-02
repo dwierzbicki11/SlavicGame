@@ -12,27 +12,27 @@ Pierwszy szkielet designu i central lore jest ukończony. Kolejka od 2026-10-02 
 - [x] podstawowe content formats i trwałe ID;
 - [x] persistence/save contract;
 - [x] vertical slice content package;
-- [x] production NPC/companion roster (`story/ProductionNpcRoster.md`);
-- [x] production bestiary roster scope 1.0 (`bestiary/ProductionBestiaryRoster.md`).
+- [x] production NPC/companion roster;
+- [x] production bestiary roster scope 1.0.
 
-Na tym poziomie można swobodnie implementować kolejne systemy, quest state machine, regionalny flow, bazowy NPC lifecycle i wspólny creature/encounter state model. Otwarte locki są jawnie zebrane w `DocumentationCoverage.md`.
+Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki są jawnie zebrane w `DocumentationCoverage.md`.
 
 ## Kolejka produkcyjna — od najmniejszego ryzyka
 
 ### P1 — roster i katalogi
-- [x] production NPC/companion roster: role, region, lifecycle, fallback i persistence;
-- [x] production bestiary roster używany przez scope 1.0 z jawnymi research gates;
-- [x] indeks finalnych research cards istot i identyfikacja brakujących kart (`research/bestiary/ResearchCardIndex.md`);
-- [ ] full-game content/asset catalog per R0–R6;
+- [x] production NPC/companion roster;
+- [x] production bestiary roster;
+- [x] indeks finalnych research cards istot;
+- [x] full-game content/asset family catalog R0–R6 (`design/RegionalContentAssetCatalog.md`);
 - [ ] side-quest catalog poza vertical slice.
 
 ### P2 — research packages
 - [ ] culture research package dla każdego finalnego kontekstu kulturowego;
 - [ ] domknięcie krytycznych źródeł panteonu;
-- [ ] research lock material culture dla assetów, które rzeczywiście trafiają do produkcji;
+- [ ] research lock material culture dla produkcyjnych assetów;
 - [ ] source-strength/region-fit pass południcy;
 - [ ] identity lock `forest-guardian` albo jawne pozostawienie F;
-- [ ] ogniki/błędne światła tylko jeśli zostaną awansowane do finalnego scope.
+- [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
 
 ### P3 — content production
 - [ ] side-quest production cards per region;
@@ -42,7 +42,8 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 - [ ] dialogue packages po zamknięciu rosterów.
 
 ### P4 — asset i budget lock
-- [ ] asset lists per region z reuse/LOD/variant strategy;
+- [x] asset families per region z reuse/LOD/variant strategy na poziomie planowania;
+- [ ] konkretne asset manifests/model/material/animation/audio/VFX records po art/research lockach;
 - [ ] animation/VFX/audio budgets;
 - [ ] streaming i memory budgets;
 - [ ] AI/encounter density budgets;
@@ -60,11 +61,11 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 
 1. Najpierw najniższy niezablokowany priorytet.
 2. Nie wymyślamy wartości oznaczonych research/art/playtest/performance lock.
-3. Nowy dokument powstaje tylko, gdy nie istnieje już owner tego zakresu.
-4. Zmiana central lore wymaga jawnego uzasadnienia i aktualizacji dokumentów zależnych.
-5. Każdy production card wskazuje persistence, dependencies, fail-forward i minimalne QA tam, gdzie ma to zastosowanie.
-6. Coverage jest aktualizowane po każdym większym pakiecie.
+3. Nowy dokument powstaje tylko, gdy nie istnieje owner zakresu.
+4. Zmiana central lore wymaga uzasadnienia i aktualizacji zależności.
+5. Każdy production card wskazuje persistence, dependencies, fail-forward i minimalne QA.
+6. Coverage aktualizujemy po każdym większym pakiecie.
 
 ## Następny element
 
-Najbliższy niezablokowany pakiet: **full-game content/asset catalog per R0–R6**. Następnie: side-quest catalog poza vertical slice. Research locki z `ResearchCardIndex.md` mogą być domykane równolegle wtedy, gdy są potrzebne konkretnemu finalnemu contentowi.
+Najbliższy niezablokowany pakiet: **side-quest catalog poza vertical slice**. Po nim: production cards side questów per region i culture research packages. Konkretne regionalne asset manifests są późniejszym art/research lockiem.
