@@ -9,17 +9,41 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
 
 layout(set = 1, binding = 0) uniform texture2D GrassBase;
 layout(set = 1, binding = 1) uniform texture2D GrassNormal;
-layout(set = 1, binding = 2) uniform texture2D PathBase;
-layout(set = 1, binding = 3) uniform texture2D PathNormal;
-layout(set = 1, binding = 4) uniform texture2D LitterBase;
-layout(set = 1, binding = 5) uniform texture2D LitterNormal;
-layout(set = 1, binding = 6) uniform texture2D MudBase;
-layout(set = 1, binding = 7) uniform texture2D MudNormal;
-layout(set = 1, binding = 8) uniform texture2D SwampBase;
-layout(set = 1, binding = 9) uniform texture2D SwampNormal;
-layout(set = 1, binding = 10) uniform texture2D RockBase;
-layout(set = 1, binding = 11) uniform texture2D RockNormal;
-layout(set = 1, binding = 12) uniform sampler TerrainSampler;
+layout(set = 1, binding = 2) uniform texture2D GrassRoughness;
+layout(set = 1, binding = 3) uniform texture2D GrassAo;
+layout(set = 1, binding = 4) uniform texture2D GrassHeight;
+
+layout(set = 1, binding = 5) uniform texture2D PathBase;
+layout(set = 1, binding = 6) uniform texture2D PathNormal;
+layout(set = 1, binding = 7) uniform texture2D PathRoughness;
+layout(set = 1, binding = 8) uniform texture2D PathAo;
+layout(set = 1, binding = 9) uniform texture2D PathHeight;
+
+layout(set = 1, binding = 10) uniform texture2D LitterBase;
+layout(set = 1, binding = 11) uniform texture2D LitterNormal;
+layout(set = 1, binding = 12) uniform texture2D LitterRoughness;
+layout(set = 1, binding = 13) uniform texture2D LitterAo;
+layout(set = 1, binding = 14) uniform texture2D LitterHeight;
+
+layout(set = 1, binding = 15) uniform texture2D MudBase;
+layout(set = 1, binding = 16) uniform texture2D MudNormal;
+layout(set = 1, binding = 17) uniform texture2D MudRoughness;
+layout(set = 1, binding = 18) uniform texture2D MudAo;
+layout(set = 1, binding = 19) uniform texture2D MudHeight;
+
+layout(set = 1, binding = 20) uniform texture2D SwampBase;
+layout(set = 1, binding = 21) uniform texture2D SwampNormal;
+layout(set = 1, binding = 22) uniform texture2D SwampRoughness;
+layout(set = 1, binding = 23) uniform texture2D SwampAo;
+layout(set = 1, binding = 24) uniform texture2D SwampHeight;
+
+layout(set = 1, binding = 25) uniform texture2D RockBase;
+layout(set = 1, binding = 26) uniform texture2D RockNormal;
+layout(set = 1, binding = 27) uniform texture2D RockRoughness;
+layout(set = 1, binding = 28) uniform texture2D RockAo;
+layout(set = 1, binding = 29) uniform texture2D RockHeight;
+
+layout(set = 1, binding = 30) uniform sampler TerrainSampler;
 
 layout(location = 0) in vec3 fsin_WorldPosition;
 layout(location = 1) in vec3 fsin_WorldNormal;
@@ -52,24 +76,51 @@ vec2 WarpedUv(vec2 worldXZ, float metersPerTile, float seed)
     return (worldXZ + warp) / metersPerTile;
 }
 
+vec2 SecondaryUv(vec2 worldXZ, float metersPerTile, float seed)
+{
+    return Rotation(0.67 + seed * 0.11) *
+        WarpedUv(worldXZ + vec2(17.0, -11.0), metersPerTile * 1.73, seed + 1.0);
+}
+
+float BlendMask(vec2 worldXZ, float seed)
+{
+    return smoothstep(0.22, 0.78, MacroNoise(worldXZ + seed * 29.0));
+}
+
 vec3 SampleBase(texture2D tex, vec2 worldXZ, float metersPerTile, float seed)
 {
     vec2 uvA = WarpedUv(worldXZ, metersPerTile, seed);
-    vec2 uvB = Rotation(0.67 + seed * 0.11) *
-               WarpedUv(worldXZ + vec2(17.0, -11.0), metersPerTile * 1.73, seed + 1.0);
+    vec2 uvB = SecondaryUv(worldXZ, metersPerTile, seed);
+    float blend = BlendMask(worldXZ, seed);
+    return mix(
+        texture(sampler2D(tex, TerrainSampler), uvA).rgb,
+        texture(sampler2D(tex, TerrainSampler), uvB).rgb,
+        blend);
+}
 
-    float blend = smoothstep(0.22, 0.78, MacroNoise(worldXZ + seed * 29.0));
-    vec3 a = texture(sampler2D(tex, TerrainSampler), uvA).rgb;
-    vec3 b = texture(sampler2D(tex, TerrainSampler), uvB).rgb;
-    return mix(a, b, blend);
+float SampleScalar(texture2D tex, vec2 worldXZ, float metersPerTile, float seed)
+{
+    vec2 uvA = WarpedUv(worldXZ, metersPerTile, seed);
+    vec2 uvB = SecondaryUv(worldXZ, metersPerTile, seed);
+    float blend = BlendMask(worldXZ, seed);
+    return mix(
+        texture(sampler2D(tex, TerrainSampler), uvA).r,
+        texture(sampler2D(tex, TerrainSampler), uvB).r,
+        blend);
 }
 
 vec3 SampleNormal(texture2D tex, vec2 worldXZ, float metersPerTile, float seed)
 {
-    vec2 uv = WarpedUv(worldXZ, metersPerTile, seed);
-    vec3 n = texture(sampler2D(tex, TerrainSampler), uv).xyz * 2.0 - 1.0;
-    n.xy *= 0.82;
-    return normalize(n);
+    vec2 uvA = WarpedUv(worldXZ, metersPerTile, seed);
+    vec2 uvB = SecondaryUv(worldXZ, metersPerTile, seed);
+    float blend = BlendMask(worldXZ, seed);
+
+    vec3 a = texture(sampler2D(tex, TerrainSampler), uvA).xyz * 2.0 - 1.0;
+    vec3 b = texture(sampler2D(tex, TerrainSampler), uvB).xyz * 2.0 - 1.0;
+
+    a.xy *= 0.82;
+    b.xy *= 0.82;
+    return normalize(mix(a, b, blend));
 }
 
 mat3 GroundTangentFrame(vec3 n)
@@ -89,13 +140,29 @@ void main()
 {
     vec3 weightsA = max(fsin_PrimaryWeights, vec3(0.0));
     vec3 weightsB = max(fsin_SecondaryWeights, vec3(0.0));
+    vec2 worldXZ = fsin_WorldPosition.xz;
 
-    // Break perfectly smooth biome borders with low-frequency world-space variation.
-    float organic = MacroNoise(fsin_WorldPosition.xz);
+    const float grassScale = 2.1;
+    const float litterScale = 2.0;
+    const float pathScale = 2.6;
+    const float mudScale = 2.4;
+    const float swampScale = 2.8;
+    const float rockScale = 2.7;
+
+    float organic = MacroNoise(worldXZ);
     weightsA.x *= mix(0.93, 1.07, organic);
     weightsA.y *= mix(1.06, 0.94, organic);
     weightsB.x *= mix(0.92, 1.10, organic);
     weightsB.y *= mix(1.08, 0.94, organic);
+
+    // Height-assisted blending gives each surface a chance to "win" locally
+    // instead of averaging every texture into a muddy transition.
+    weightsA.x *= mix(0.62, 1.38, SampleScalar(GrassHeight, worldXZ, grassScale, 0.2));
+    weightsA.y *= mix(0.62, 1.38, SampleScalar(LitterHeight, worldXZ, litterScale, 1.1));
+    weightsA.z *= mix(0.62, 1.38, SampleScalar(PathHeight, worldXZ, pathScale, 2.3));
+    weightsB.x *= mix(0.62, 1.38, SampleScalar(MudHeight, worldXZ, mudScale, 3.2));
+    weightsB.y *= mix(0.62, 1.38, SampleScalar(SwampHeight, worldXZ, swampScale, 4.1));
+    weightsB.z *= mix(0.62, 1.38, SampleScalar(RockHeight, worldXZ, rockScale, 5.4));
 
     float weightSum =
         weightsA.x + weightsA.y + weightsA.z +
@@ -104,17 +171,14 @@ void main()
     weightsA /= weightSum;
     weightsB /= weightSum;
 
-    vec2 worldXZ = fsin_WorldPosition.xz;
-
     vec3 albedo =
-        SampleBase(GrassBase, worldXZ, 2.1, 0.2) * weightsA.x +
-        SampleBase(LitterBase, worldXZ, 2.0, 1.1) * weightsA.y +
-        SampleBase(PathBase, worldXZ, 2.6, 2.3) * weightsA.z +
-        SampleBase(MudBase, worldXZ, 2.4, 3.2) * weightsB.x +
-        SampleBase(SwampBase, worldXZ, 2.8, 4.1) * weightsB.y +
-        SampleBase(RockBase, worldXZ, 2.7, 5.4) * weightsB.z;
+        SampleBase(GrassBase, worldXZ, grassScale, 0.2) * weightsA.x +
+        SampleBase(LitterBase, worldXZ, litterScale, 1.1) * weightsA.y +
+        SampleBase(PathBase, worldXZ, pathScale, 2.3) * weightsA.z +
+        SampleBase(MudBase, worldXZ, mudScale, 3.2) * weightsB.x +
+        SampleBase(SwampBase, worldXZ, swampScale, 4.1) * weightsB.y +
+        SampleBase(RockBase, worldXZ, rockScale, 5.4) * weightsB.z;
 
-    // Large-scale tinting stops the ground from reading as a repeated wallpaper.
     float macro = MacroNoise(worldXZ * 0.62 + vec2(13.0, -7.0));
     albedo *= mix(0.88, 1.10, macro);
     albedo *= vec3(
@@ -123,22 +187,31 @@ void main()
         0.95 + 0.025 * macro);
 
     vec3 tangentNormal =
-        SampleNormal(GrassNormal, worldXZ, 2.1, 0.2) * weightsA.x +
-        SampleNormal(LitterNormal, worldXZ, 2.0, 1.1) * weightsA.y +
-        SampleNormal(PathNormal, worldXZ, 2.6, 2.3) * weightsA.z +
-        SampleNormal(MudNormal, worldXZ, 2.4, 3.2) * weightsB.x +
-        SampleNormal(SwampNormal, worldXZ, 2.8, 4.1) * weightsB.y +
-        SampleNormal(RockNormal, worldXZ, 2.7, 5.4) * weightsB.z;
+        SampleNormal(GrassNormal, worldXZ, grassScale, 0.2) * weightsA.x +
+        SampleNormal(LitterNormal, worldXZ, litterScale, 1.1) * weightsA.y +
+        SampleNormal(PathNormal, worldXZ, pathScale, 2.3) * weightsA.z +
+        SampleNormal(MudNormal, worldXZ, mudScale, 3.2) * weightsB.x +
+        SampleNormal(SwampNormal, worldXZ, swampScale, 4.1) * weightsB.y +
+        SampleNormal(RockNormal, worldXZ, rockScale, 5.4) * weightsB.z;
     tangentNormal = normalize(tangentNormal);
 
     float roughness =
-        0.78 * weightsA.x +
-        0.82 * weightsA.y +
-        0.88 * weightsA.z +
-        0.46 * weightsB.x +
-        0.56 * weightsB.y +
-        0.74 * weightsB.z;
+        SampleScalar(GrassRoughness, worldXZ, grassScale, 0.2) * weightsA.x +
+        SampleScalar(LitterRoughness, worldXZ, litterScale, 1.1) * weightsA.y +
+        SampleScalar(PathRoughness, worldXZ, pathScale, 2.3) * weightsA.z +
+        SampleScalar(MudRoughness, worldXZ, mudScale, 3.2) * weightsB.x +
+        SampleScalar(SwampRoughness, worldXZ, swampScale, 4.1) * weightsB.y +
+        SampleScalar(RockRoughness, worldXZ, rockScale, 5.4) * weightsB.z;
     roughness = clamp(roughness, 0.08, 1.0);
+
+    float ao =
+        SampleScalar(GrassAo, worldXZ, grassScale, 0.2) * weightsA.x +
+        SampleScalar(LitterAo, worldXZ, litterScale, 1.1) * weightsA.y +
+        SampleScalar(PathAo, worldXZ, pathScale, 2.3) * weightsA.z +
+        SampleScalar(MudAo, worldXZ, mudScale, 3.2) * weightsB.x +
+        SampleScalar(SwampAo, worldXZ, swampScale, 4.1) * weightsB.y +
+        SampleScalar(RockAo, worldXZ, rockScale, 5.4) * weightsB.z;
+    ao = clamp(ao, 0.18, 1.0);
 
     vec3 baseNormal = normalize(fsin_WorldNormal);
     vec3 normal = normalize(GroundTangentFrame(baseNormal) * tangentNormal);
@@ -147,12 +220,12 @@ void main()
     float daylight = max(Lighting.x, 0.02);
 
     vec3 sunColor = SunColor(sunDirection);
-    float hemisphere = mix(0.18, 0.62, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
+    float hemisphere = mix(0.18, 0.64, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
 
-    // Slightly darken creases and wet lowland mixes to give the terrain depth.
     float wetness = clamp(weightsB.x * 0.82 + weightsB.y * 0.66, 0.0, 1.0);
     float cavity = clamp(1.0 - normal.y, 0.0, 1.0);
-    float ambientOcclusion = 1.0 - cavity * 0.18 - wetness * 0.08;
+    float geometricOcclusion = 1.0 - cavity * 0.14 - wetness * 0.06;
+    float ambientOcclusion = clamp(ao * geometricOcclusion, 0.16, 1.0);
 
     vec3 diffuse = albedo *
         (hemisphere * 0.34 + ndotl * daylight * sunColor) *
@@ -160,11 +233,13 @@ void main()
 
     vec3 viewDirection = normalize(-fsin_WorldPosition);
     vec3 halfVector = normalize(sunDirection + viewDirection);
-    float specPower = mix(5.0, 52.0, 1.0 - roughness);
+    float specPower = mix(5.0, 72.0, 1.0 - roughness);
     float specular = pow(max(dot(normal, halfVector), 0.0), specPower);
 
-    // Only mud and swamp receive a visible wet highlight.
-    vec3 color = diffuse + sunColor * specular * wetness * daylight * 0.28;
+    // Mud and swamp respond to real roughness maps, so wet highlights appear
+    // only where the material data says the surface is smooth enough.
+    float wetSpecular = wetness * (1.0 - roughness);
+    vec3 color = diffuse + sunColor * specular * wetSpecular * daylight * 0.42;
 
     float density = max(FogColorDensity.w, 0.00001);
     float fogFactor =
