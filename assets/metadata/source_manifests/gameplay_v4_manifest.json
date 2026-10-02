@@ -1,0 +1,432 @@
+{
+  "pack": "SlavicGame R0 Gameplay & NPC Pack v4",
+  "format": "glTF 2.0 binary (.glb)",
+  "asset_count": 34,
+  "category_counts": {
+    "weapons": 12,
+    "equipment": 3,
+    "hunting": 4,
+    "quest": 8,
+    "props": 1,
+    "npc_prototype": 6
+  },
+  "textures": "embedded PBR + editable PNG sources",
+  "maps": [
+    "BaseColor",
+    "Normal",
+    "MetallicRoughness"
+  ],
+  "license": "CC0-style public-domain dedication for generated geometry/textures",
+  "note": "NPC meshes are low-poly prototype characters, not final production character art.",
+  "assets": [
+    {
+      "file": "miecz_r0_01.glb",
+      "category": "weapons",
+      "tags": [
+        "sword",
+        "melee",
+        "r0"
+      ],
+      "triangles": 168,
+      "vertices": 94,
+      "size_kb": 104.9
+    },
+    {
+      "file": "miecz_r0_02.glb",
+      "category": "weapons",
+      "tags": [
+        "sword",
+        "melee",
+        "r0"
+      ],
+      "triangles": 168,
+      "vertices": 94,
+      "size_kb": 104.9
+    },
+    {
+      "file": "siekiera_r0_01.glb",
+      "category": "weapons",
+      "tags": [
+        "axe",
+        "melee",
+        "r0"
+      ],
+      "triangles": 72,
+      "vertices": 42,
+      "size_kb": 150.5
+    },
+    {
+      "file": "siekiera_r0_02.glb",
+      "category": "weapons",
+      "tags": [
+        "axe",
+        "melee",
+        "r0"
+      ],
+      "triangles": 72,
+      "vertices": 42,
+      "size_kb": 150.5
+    },
+    {
+      "file": "wlocznia_r0_01.glb",
+      "category": "weapons",
+      "tags": [
+        "spear",
+        "melee",
+        "r0"
+      ],
+      "triangles": 68,
+      "vertices": 38,
+      "size_kb": 150.0
+    },
+    {
+      "file": "wlocznia_r0_02.glb",
+      "category": "weapons",
+      "tags": [
+        "spear",
+        "melee",
+        "r0"
+      ],
+      "triangles": 68,
+      "vertices": 38,
+      "size_kb": 150.0
+    },
+    {
+      "file": "luk_r0_01.glb",
+      "category": "weapons",
+      "tags": [
+        "bow",
+        "ranged",
+        "r0"
+      ],
+      "triangles": 204,
+      "vertices": 114,
+      "size_kb": 241.0
+    },
+    {
+      "file": "luk_r0_02.glb",
+      "category": "weapons",
+      "tags": [
+        "bow",
+        "ranged",
+        "r0"
+      ],
+      "triangles": 204,
+      "vertices": 114,
+      "size_kb": 241.0
+    },
+    {
+      "file": "strzala_r0_01.glb",
+      "category": "weapons",
+      "tags": [
+        "arrow",
+        "ranged",
+        "r0"
+      ],
+      "triangles": 84,
+      "vertices": 52,
+      "size_kb": 206.8
+    },
+    {
+      "file": "kolczan_r0_01.glb",
+      "category": "equipment",
+      "tags": [
+        "quiver",
+        "ranged",
+        "r0"
+      ],
+      "triangles": 264,
+      "vertices": 146,
+      "size_kb": 186.1
+    },
+    {
+      "file": "noz_r0_01.glb",
+      "category": "weapons",
+      "tags": [
+        "knife",
+        "tool",
+        "r0"
+      ],
+      "triangles": 68,
+      "vertices": 40,
+      "size_kb": 101.5
+    },
+    {
+      "file": "tarcza_r0_01.glb",
+      "category": "weapons",
+      "tags": [
+        "shield",
+        "defense",
+        "r0"
+      ],
+      "triangles": 288,
+      "vertices": 164,
+      "size_kb": 159.3
+    },
+    {
+      "file": "tarcza_r0_02.glb",
+      "category": "weapons",
+      "tags": [
+        "shield",
+        "defense",
+        "r0"
+      ],
+      "triangles": 288,
+      "vertices": 164,
+      "size_kb": 159.2
+    },
+    {
+      "file": "wnyk_r0_01.glb",
+      "category": "hunting",
+      "tags": [
+        "snare",
+        "trap",
+        "r0"
+      ],
+      "triangles": 256,
+      "vertices": 166,
+      "size_kb": 185.4
+    },
+    {
+      "file": "pulapka_lowiecka_r0_01.glb",
+      "category": "hunting",
+      "tags": [
+        "trap",
+        "hunting",
+        "r0"
+      ],
+      "triangles": 48,
+      "vertices": 32,
+      "size_kb": 258.5
+    },
+    {
+      "file": "stojak_oprawianie_r0_01.glb",
+      "category": "hunting",
+      "tags": [
+        "rack",
+        "hunting",
+        "r0"
+      ],
+      "triangles": 156,
+      "vertices": 88,
+      "size_kb": 261.5
+    },
+    {
+      "file": "rog_mysliwski_r0_01.glb",
+      "category": "hunting",
+      "tags": [
+        "horn",
+        "hunting",
+        "r0"
+      ],
+      "triangles": 52,
+      "vertices": 30,
+      "size_kb": 122.4
+    },
+    {
+      "file": "torba_mysliwska_r0_01.glb",
+      "category": "equipment",
+      "tags": [
+        "bag",
+        "hunting",
+        "r0"
+      ],
+      "triangles": 36,
+      "vertices": 24,
+      "size_kb": 66.4
+    },
+    {
+      "file": "buklak_r0_01.glb",
+      "category": "equipment",
+      "tags": [
+        "waterskin",
+        "survival",
+        "r0"
+      ],
+      "triangles": 368,
+      "vertices": 188,
+      "size_kb": 73.6
+    },
+    {
+      "file": "fragment_mapy_mq20.glb",
+      "category": "quest",
+      "tags": [
+        "map",
+        "mq20",
+        "evidence"
+      ],
+      "triangles": 60,
+      "vertices": 40,
+      "size_kb": 92.7
+    },
+    {
+      "file": "kamien_dowodowy_r0_01.glb",
+      "category": "quest",
+      "tags": [
+        "evidence",
+        "marker",
+        "r0"
+      ],
+      "triangles": 48,
+      "vertices": 32,
+      "size_kb": 176.1
+    },
+    {
+      "file": "pieczec_stara_r0_01.glb",
+      "category": "quest",
+      "tags": [
+        "seal",
+        "evidence",
+        "r0"
+      ],
+      "triangles": 120,
+      "vertices": 66,
+      "size_kb": 94.1
+    },
+    {
+      "file": "amulet_rytualny_r0_01.glb",
+      "category": "quest",
+      "tags": [
+        "amulet",
+        "ritual",
+        "r0"
+      ],
+      "triangles": 432,
+      "vertices": 228,
+      "size_kb": 120.0
+    },
+    {
+      "file": "peczek_ziol_r0_01.glb",
+      "category": "quest",
+      "tags": [
+        "herbs",
+        "alchemy",
+        "r0"
+      ],
+      "triangles": 944,
+      "vertices": 506,
+      "size_kb": 141.9
+    },
+    {
+      "file": "misa_rytualna_r0_01.glb",
+      "category": "quest",
+      "tags": [
+        "bowl",
+        "ritual",
+        "r0"
+      ],
+      "triangles": 192,
+      "vertices": 100,
+      "size_kb": 91.1
+    },
+    {
+      "file": "klucz_stary_r0_01.glb",
+      "category": "quest",
+      "tags": [
+        "key",
+        "quest",
+        "r0"
+      ],
+      "triangles": 116,
+      "vertices": 66,
+      "size_kb": 38.9
+    },
+    {
+      "file": "dziennik_r0_01.glb",
+      "category": "quest",
+      "tags": [
+        "journal",
+        "quest",
+        "r0"
+      ],
+      "triangles": 24,
+      "vertices": 16,
+      "size_kb": 121.5
+    },
+    {
+      "file": "sakiewka_r0_01.glb",
+      "category": "props",
+      "tags": [
+        "pouch",
+        "economy",
+        "r0"
+      ],
+      "triangles": 368,
+      "vertices": 188,
+      "size_kb": 129.9
+    },
+    {
+      "file": "npc_mieszkaniec_r0_01.glb",
+      "category": "npc_prototype",
+      "tags": [
+        "npc",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 852,
+      "vertices": 444,
+      "size_kb": 191.5
+    },
+    {
+      "file": "npc_mieszkaniec_r0_02.glb",
+      "category": "npc_prototype",
+      "tags": [
+        "npc",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 944,
+      "vertices": 494,
+      "size_kb": 194.8
+    },
+    {
+      "file": "npc_mysliwy_r0_01.glb",
+      "category": "npc_prototype",
+      "tags": [
+        "npc",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 944,
+      "vertices": 494,
+      "size_kb": 194.7
+    },
+    {
+      "file": "npc_kupiec_r0_01.glb",
+      "category": "npc_prototype",
+      "tags": [
+        "npc",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 864,
+      "vertices": 452,
+      "size_kb": 192.3
+    },
+    {
+      "file": "npc_starszy_r0_01.glb",
+      "category": "npc_prototype",
+      "tags": [
+        "npc",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 972,
+      "vertices": 508,
+      "size_kb": 308.1
+    },
+    {
+      "file": "npc_lowca_r0_01.glb",
+      "category": "npc_prototype",
+      "tags": [
+        "npc",
+        "hunter",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 912,
+      "vertices": 484,
+      "size_kb": 307.5
+    }
+  ]
+}
