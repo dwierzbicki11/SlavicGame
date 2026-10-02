@@ -6,6 +6,38 @@ namespace SlavicGame.Engine.Assets;
 
 public sealed record MeshGeometry(Vector3[] Positions, uint[] Indices);
 
+public readonly struct PbrVertex
+{
+    public const uint SizeInBytes = 32;
+
+    public readonly Vector3 Position;
+    public readonly Vector3 Normal;
+    public readonly Vector2 TexCoord;
+
+    public PbrVertex(Vector3 position, Vector3 normal, Vector2 texCoord)
+    {
+        Position = position;
+        Normal = normal;
+        TexCoord = texCoord;
+    }
+}
+
+public sealed record GlbMaterialData(
+    Vector4 BaseColorFactor,
+    float MetallicFactor,
+    float RoughnessFactor,
+    byte[]? BaseColorImage,
+    byte[]? NormalImage,
+    byte[]? MetallicRoughnessImage);
+
+public sealed record GlbDrawRange(uint IndexStart, uint IndexCount, int MaterialIndex);
+
+public sealed record PbrMeshGeometry(
+    PbrVertex[] Vertices,
+    uint[] Indices,
+    GlbDrawRange[] DrawRanges,
+    GlbMaterialData[] Materials);
+
 public sealed class GlbModel
 {
     private const uint GlbMagic = 0x46546C67;
@@ -16,19 +48,23 @@ public sealed class GlbModel
     private readonly Node[] _nodes;
     private readonly int[] _sceneRoots;
     private readonly Dictionary<string, AnimationClip> _animations;
+    private readonly GlbMaterialData[] _materials;
 
     public IReadOnlyCollection<string> AnimationNames => _animations.Keys;
+    public IReadOnlyList<GlbMaterialData> Materials => _materials;
 
     private GlbModel(
         Primitive[][] meshes,
         Node[] nodes,
         int[] sceneRoots,
-        Dictionary<string, AnimationClip> animations)
+        Dictionary<string, AnimationClip> animations,
+        GlbMaterialData[] materials)
     {
         _meshes = meshes;
         _nodes = nodes;
         _sceneRoots = sceneRoots;
         _animations = animations;
+        _materials = materials;
     }
 
     public static GlbModel Load(string path)
@@ -66,15 +102,28 @@ public sealed class GlbModel
 
         var views = ParseBufferViews(root);
         var accessors = ParseAccessors(root);
+        var images = ParseImages(root, binary, views, Path.GetDirectoryName(path) ?? ".");
+        var textureSources = ParseTextureSources(root);
+        var materials = ParseMaterials(root, images, textureSources);
         var meshes = ParseMeshes(root, binary, views, accessors);
         var nodes = ParseNodes(root);
         var roots = ParseSceneRoots(root, nodes);
         var animations = ParseAnimations(root, binary, views, accessors);
 
-        return new GlbModel(meshes, nodes, roots, animations);
+        return new GlbModel(meshes, nodes, roots, animations, materials);
     }
 
     public MeshGeometry BuildMesh(
+        Matrix4x4 instanceTransform,
+        string? animationName = null,
+        float animationTimeSeconds = 0f,
+        bool sourceIsZUp = true)
+    {
+        var pbr = BuildPbrMesh(instanceTransform, animationName, animationTimeSeconds, sourceIsZUp);
+        return new MeshGeometry(pbr.Vertices.Select(vertex => vertex.Position).ToArray(), pbr.Indices);
+    }
+
+    public PbrMeshGeometry BuildPbrMesh(
         Matrix4x4 instanceTransform,
         string? animationName = null,
         float animationTimeSeconds = 0f,
@@ -91,8 +140,9 @@ public sealed class GlbModel
             ApplyAnimation(clip, animationTimeSeconds, translations, rotations, scales);
         }
 
-        var positions = new List<Vector3>();
+        var vertices = new List<PbrVertex>();
         var indices = new List<uint>();
+        var ranges = new List<GlbDrawRange>();
         var sourceToEngine = sourceIsZUp
             ? Matrix4x4.CreateRotationX(-MathF.PI / 2f)
             : Matrix4x4.Identity;
@@ -100,7 +150,11 @@ public sealed class GlbModel
         foreach (var root in _sceneRoots)
             AppendNode(root, Matrix4x4.Identity);
 
-        return new MeshGeometry(positions.ToArray(), indices.ToArray());
+        return new PbrMeshGeometry(
+            vertices.ToArray(),
+            indices.ToArray(),
+            ranges.ToArray(),
+            _materials);
 
         void AppendNode(int nodeIndex, Matrix4x4 parent)
         {
@@ -114,19 +168,68 @@ public sealed class GlbModel
             if (node.Mesh is int meshIndex)
             {
                 var final = world * sourceToEngine * instanceTransform;
+                if (!Matrix4x4.Invert(final, out var inverse))
+                    inverse = Matrix4x4.Identity;
+                var normalMatrix = Matrix4x4.Transpose(inverse);
+
                 foreach (var primitive in _meshes[meshIndex])
                 {
-                    var start = checked((uint)positions.Count);
-                    foreach (var position in primitive.Positions)
-                        positions.Add(Vector3.Transform(position, final));
+                    var startVertex = checked((uint)vertices.Count);
+                    var startIndex = checked((uint)indices.Count);
+                    var normals = primitive.Normals ?? ComputeNormals(primitive.Positions, primitive.Indices);
+                    var uvs = primitive.TexCoords ?? new Vector2[primitive.Positions.Length];
+
+                    for (var i = 0; i < primitive.Positions.Length; i++)
+                    {
+                        var position = Vector3.Transform(primitive.Positions[i], final);
+                        var normal = Vector3.TransformNormal(normals[i], normalMatrix);
+                        if (normal.LengthSquared() < 0.000001f)
+                            normal = Vector3.UnitY;
+                        else
+                            normal = Vector3.Normalize(normal);
+
+                        vertices.Add(new PbrVertex(position, normal, uvs[i]));
+                    }
+
                     foreach (var index in primitive.Indices)
-                        indices.Add(start + index);
+                        indices.Add(startVertex + index);
+
+                    ranges.Add(new GlbDrawRange(
+                        startIndex,
+                        checked((uint)primitive.Indices.Length),
+                        Math.Clamp(primitive.MaterialIndex, 0, _materials.Length - 1)));
                 }
             }
 
             foreach (var child in node.Children)
                 AppendNode(child, world);
         }
+    }
+
+    private static Vector3[] ComputeNormals(Vector3[] positions, uint[] indices)
+    {
+        var normals = new Vector3[positions.Length];
+        for (var i = 0; i + 2 < indices.Length; i += 3)
+        {
+            var ia = checked((int)indices[i]);
+            var ib = checked((int)indices[i + 1]);
+            var ic = checked((int)indices[i + 2]);
+            var edgeA = positions[ib] - positions[ia];
+            var edgeB = positions[ic] - positions[ia];
+            var face = Vector3.Cross(edgeA, edgeB);
+            if (face.LengthSquared() < 0.0000001f)
+                continue;
+            normals[ia] += face;
+            normals[ib] += face;
+            normals[ic] += face;
+        }
+
+        for (var i = 0; i < normals.Length; i++)
+            normals[i] = normals[i].LengthSquared() < 0.000001f
+                ? Vector3.UnitZ
+                : Vector3.Normalize(normals[i]);
+
+        return normals;
     }
 
     private static void ApplyAnimation(
@@ -173,7 +276,10 @@ public sealed class GlbModel
         var (a, b, amount) = FindSample(sampler.Times, time);
         var qa = Quaternion.Normalize(ReadQuaternion(sampler.Values, a));
         if (sampler.Interpolation == "STEP" || a == b) return qa;
-        return Quaternion.Normalize(Quaternion.Slerp(qa, Quaternion.Normalize(ReadQuaternion(sampler.Values, b)), amount));
+        return Quaternion.Normalize(Quaternion.Slerp(
+            qa,
+            Quaternion.Normalize(ReadQuaternion(sampler.Values, b)),
+            amount));
     }
 
     private static (int A, int B, float Amount) FindSample(float[] times, float time)
@@ -219,6 +325,139 @@ public sealed class GlbModel
                 accessor.GetProperty("type").GetString() ?? throw new InvalidDataException("Accessor type is missing.")))
             .ToArray();
 
+    private static byte[][] ParseImages(
+        JsonElement root,
+        byte[] binary,
+        BufferView[] views,
+        string baseDirectory)
+    {
+        if (!root.TryGetProperty("images", out var imagesElement))
+            return [];
+
+        var images = new List<byte[]>();
+        foreach (var image in imagesElement.EnumerateArray())
+        {
+            if (image.TryGetProperty("bufferView", out var viewElement))
+            {
+                var view = views[viewElement.GetInt32()];
+                images.Add(binary.AsSpan(view.Offset, view.Length).ToArray());
+                continue;
+            }
+
+            if (!image.TryGetProperty("uri", out var uriElement))
+                throw new NotSupportedException("GLB image must use bufferView or uri.");
+
+            var uri = uriElement.GetString() ?? string.Empty;
+            if (uri.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                var comma = uri.IndexOf(',');
+                if (comma < 0) throw new InvalidDataException("Invalid data URI image.");
+                images.Add(Convert.FromBase64String(uri[(comma + 1)..]));
+                continue;
+            }
+
+            var imagePath = Path.GetFullPath(Path.Combine(baseDirectory, Uri.UnescapeDataString(uri)));
+            images.Add(File.ReadAllBytes(imagePath));
+        }
+
+        return images.ToArray();
+    }
+
+    private static int[] ParseTextureSources(JsonElement root)
+    {
+        if (!root.TryGetProperty("textures", out var texturesElement))
+            return [];
+
+        return texturesElement.EnumerateArray()
+            .Select(texture => texture.GetProperty("source").GetInt32())
+            .ToArray();
+    }
+
+    private static GlbMaterialData[] ParseMaterials(
+        JsonElement root,
+        byte[][] images,
+        int[] textureSources)
+    {
+        var result = new List<GlbMaterialData>();
+        if (root.TryGetProperty("materials", out var materialsElement))
+        {
+            foreach (var material in materialsElement.EnumerateArray())
+            {
+                var pbr = material.TryGetProperty("pbrMetallicRoughness", out var pbrElement)
+                    ? pbrElement
+                    : default;
+
+                var baseColorFactor = pbr.ValueKind != JsonValueKind.Undefined &&
+                                      pbr.TryGetProperty("baseColorFactor", out var baseFactor)
+                    ? new Vector4(
+                        baseFactor[0].GetSingle(),
+                        baseFactor[1].GetSingle(),
+                        baseFactor[2].GetSingle(),
+                        baseFactor[3].GetSingle())
+                    : Vector4.One;
+
+                var metallic = pbr.ValueKind != JsonValueKind.Undefined &&
+                               pbr.TryGetProperty("metallicFactor", out var metallicElement)
+                    ? metallicElement.GetSingle()
+                    : 1f;
+
+                var roughness = pbr.ValueKind != JsonValueKind.Undefined &&
+                                pbr.TryGetProperty("roughnessFactor", out var roughnessElement)
+                    ? roughnessElement.GetSingle()
+                    : 1f;
+
+                var baseColorImage = pbr.ValueKind != JsonValueKind.Undefined
+                    ? ResolveTextureImage(pbr, "baseColorTexture", textureSources, images)
+                    : null;
+                var metallicRoughnessImage = pbr.ValueKind != JsonValueKind.Undefined
+                    ? ResolveTextureImage(pbr, "metallicRoughnessTexture", textureSources, images)
+                    : null;
+                var normalImage = ResolveTextureImage(material, "normalTexture", textureSources, images);
+
+                result.Add(new GlbMaterialData(
+                    baseColorFactor,
+                    metallic,
+                    roughness,
+                    baseColorImage,
+                    normalImage,
+                    metallicRoughnessImage));
+            }
+        }
+
+        if (result.Count == 0)
+        {
+            result.Add(new GlbMaterialData(
+                Vector4.One,
+                0f,
+                1f,
+                null,
+                null,
+                null));
+        }
+
+        return result.ToArray();
+    }
+
+    private static byte[]? ResolveTextureImage(
+        JsonElement owner,
+        string property,
+        int[] textureSources,
+        byte[][] images)
+    {
+        if (!owner.TryGetProperty(property, out var textureInfo))
+            return null;
+
+        var textureIndex = textureInfo.GetProperty("index").GetInt32();
+        if ((uint)textureIndex >= (uint)textureSources.Length)
+            throw new InvalidDataException($"Texture index {textureIndex} is out of range.");
+
+        var imageIndex = textureSources[textureIndex];
+        if ((uint)imageIndex >= (uint)images.Length)
+            throw new InvalidDataException($"Texture source {imageIndex} is out of range.");
+
+        return images[imageIndex];
+    }
+
     private static Primitive[][] ParseMeshes(
         JsonElement root,
         byte[] binary,
@@ -232,14 +471,29 @@ public sealed class GlbModel
             .Select(mesh => mesh.GetProperty("primitives").EnumerateArray()
                 .Select(primitive =>
                 {
-                    var positionAccessor = primitive.GetProperty("attributes").GetProperty("POSITION").GetInt32();
-                    var positions = ReadVector3Accessor(binary, views, accessors[positionAccessor]);
+                    var attributes = primitive.GetProperty("attributes");
+                    var positionAccessor = attributes.GetProperty("POSITION").GetInt32();
+                    var positions = ReadVector3Accessor(binary, views, accessors[positionAccessor], "POSITION");
+
+                    Vector3[]? normals = null;
+                    if (attributes.TryGetProperty("NORMAL", out var normalElement))
+                        normals = ReadVector3Accessor(binary, views, accessors[normalElement.GetInt32()], "NORMAL");
+
+                    Vector2[]? texCoords = null;
+                    if (attributes.TryGetProperty("TEXCOORD_0", out var texCoordElement))
+                        texCoords = ReadVector2Accessor(binary, views, accessors[texCoordElement.GetInt32()]);
+
                     uint[] indices;
                     if (primitive.TryGetProperty("indices", out var indexElement))
                         indices = ReadIndexAccessor(binary, views, accessors[indexElement.GetInt32()]);
                     else
                         indices = Enumerable.Range(0, positions.Length).Select(value => (uint)value).ToArray();
-                    return new Primitive(positions, indices);
+
+                    var materialIndex = primitive.TryGetProperty("material", out var materialElement)
+                        ? materialElement.GetInt32()
+                        : 0;
+
+                    return new Primitive(positions, normals, texCoords, indices, materialIndex);
                 }).ToArray())
             .ToArray();
     }
@@ -308,13 +562,12 @@ public sealed class GlbModel
                     var input = ReadFloatAccessor(binary, views, accessors[sampler.GetProperty("input").GetInt32()]);
                     var outputAccessor = accessors[sampler.GetProperty("output").GetInt32()];
                     var output = ReadFloatAccessor(binary, views, outputAccessor);
-                    var components = ComponentCount(outputAccessor.Type);
                     var interpolation = sampler.TryGetProperty("interpolation", out var interpolationElement)
                         ? interpolationElement.GetString() ?? "LINEAR"
                         : "LINEAR";
                     if (interpolation is not ("LINEAR" or "STEP"))
                         throw new NotSupportedException($"GLB interpolation '{interpolation}' is not supported yet.");
-                    return new AnimationSampler(input, output, components, interpolation);
+                    return new AnimationSampler(input, output, interpolation);
                 }).ToArray();
 
             var channels = animation.GetProperty("channels").EnumerateArray()
@@ -342,10 +595,14 @@ public sealed class GlbModel
         return result;
     }
 
-    private static Vector3[] ReadVector3Accessor(byte[] binary, BufferView[] views, Accessor accessor)
+    private static Vector3[] ReadVector3Accessor(
+        byte[] binary,
+        BufferView[] views,
+        Accessor accessor,
+        string semantic)
     {
         if (accessor.ComponentType != 5126 || accessor.Type != "VEC3")
-            throw new NotSupportedException("POSITION accessors must be FLOAT VEC3.");
+            throw new NotSupportedException($"{semantic} accessors must be FLOAT VEC3.");
 
         var view = views[accessor.BufferView];
         var stride = view.Stride ?? 12;
@@ -358,6 +615,25 @@ public sealed class GlbModel
                 BitConverter.ToSingle(binary, offset),
                 BitConverter.ToSingle(binary, offset + 4),
                 BitConverter.ToSingle(binary, offset + 8));
+        }
+        return values;
+    }
+
+    private static Vector2[] ReadVector2Accessor(byte[] binary, BufferView[] views, Accessor accessor)
+    {
+        if (accessor.ComponentType != 5126 || accessor.Type != "VEC2")
+            throw new NotSupportedException("TEXCOORD_0 accessors must be FLOAT VEC2.");
+
+        var view = views[accessor.BufferView];
+        var stride = view.Stride ?? 8;
+        var start = view.Offset + accessor.Offset;
+        var values = new Vector2[accessor.Count];
+        for (var i = 0; i < values.Length; i++)
+        {
+            var offset = start + i * stride;
+            values[i] = new Vector2(
+                BitConverter.ToSingle(binary, offset),
+                BitConverter.ToSingle(binary, offset + 4));
         }
         return values;
     }
@@ -429,8 +705,6 @@ public sealed class GlbModel
         var a = element.EnumerateArray().Select(value => value.GetSingle()).ToArray();
         if (a.Length != 16) throw new InvalidDataException("glTF node matrix must contain 16 values.");
 
-        // glTF stores column-major matrices for column vectors. System.Numerics uses row vectors,
-        // so reading the serialized columns as rows gives the required transpose.
         return new Matrix4x4(
             a[0], a[1], a[2], a[3],
             a[4], a[5], a[6], a[7],
@@ -438,7 +712,12 @@ public sealed class GlbModel
             a[12], a[13], a[14], a[15]);
     }
 
-    private sealed record Primitive(Vector3[] Positions, uint[] Indices);
+    private sealed record Primitive(
+        Vector3[] Positions,
+        Vector3[]? Normals,
+        Vector2[]? TexCoords,
+        uint[] Indices,
+        int MaterialIndex);
     private sealed record BufferView(int Offset, int Length, int? Stride);
     private sealed record Accessor(int BufferView, int Offset, int ComponentType, int Count, string Type);
     private sealed record Node(
@@ -448,7 +727,7 @@ public sealed class GlbModel
         Quaternion Rotation,
         Vector3 Scale,
         Matrix4x4? Matrix);
-    private sealed record AnimationSampler(float[] Times, float[] Values, int Components, string Interpolation);
+    private sealed record AnimationSampler(float[] Times, float[] Values, string Interpolation);
     private sealed record AnimationChannel(int Node, string Path, AnimationSampler Sampler);
     private sealed record AnimationClip(AnimationChannel[] Channels, float Duration);
 }
