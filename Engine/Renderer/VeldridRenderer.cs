@@ -11,6 +11,7 @@ namespace SlavicGame.Engine.Renderer;
 public sealed class VeldridRenderer : IDisposable
 {
     private readonly List<HudVertex> _hudVertices = [];
+    private readonly SkyRenderer _sky = new();
     private readonly PbrModelRenderer _pbrModels = new();
 
     private GraphicsDevice? _graphicsDevice;
@@ -127,6 +128,11 @@ public sealed class VeldridRenderer : IDisposable
             _projectionBuffer,
             _viewBuffer,
             _atmosphereBuffer));
+
+        _sky.Initialize(
+            factory,
+            _cameraLayout,
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription);
 
         _pbrModels.Initialize(
             _graphicsDevice,
@@ -288,6 +294,9 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.SetFramebuffer(framebuffer);
         _commandList.ClearColorTarget(0, atmosphereColor);
         _commandList.ClearDepthStencil(1f);
+
+        _sky.Render(_commandList, _cameraSet);
+
         _commandList.SetPipeline(_terrainPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
         _commandList.SetVertexBuffer(0, _vertexBuffer);
@@ -480,6 +489,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _graphicsDevice.WaitForIdle();
 
+        _sky.Dispose();
         _pbrModels.Dispose();
 
         _hudPipeline?.Dispose();
