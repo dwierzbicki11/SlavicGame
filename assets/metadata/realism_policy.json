@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "status": "enforced-for-new-and-promoted-assets",
+  "minimum_texture_resolution": 1024,
+  "preferred_hero_texture_resolution": 2048,
+  "required_glb_material_channels": [
+    "baseColor",
+    "normal",
+    "metallicRoughness"
+  ],
+  "required_surface_maps": [
+    "basecolor",
+    "normal",
+    "roughness",
+    "ao",
+    "height"
+  ],
+  "rules": {
+    "uvs_required": true,
+    "authored_normals_required": true,
+    "flat_color_only_materials_allowed": false,
+    "missing_normal_map_allowed": false,
+    "missing_roughness_allowed": false,
+    "placeholder_materials_allowed": false,
+    "prototype_assets_may_remain_only_when_explicitly_flagged": true
+  }
+}
