@@ -42,6 +42,8 @@ compile_shader() {
 
 compile_shader "$SRC_DIR/terrain.vert" "$OUT_DIR/terrain.vert.spv" vert
 compile_shader "$SRC_DIR/terrain.frag" "$OUT_DIR/terrain.frag.spv" frag
+compile_shader "$SRC_DIR/actor.vert"   "$OUT_DIR/actor.vert.spv"   vert
+compile_shader "$SRC_DIR/actor.frag"   "$OUT_DIR/actor.frag.spv"   frag
 compile_shader "$SRC_DIR/hud.vert"     "$OUT_DIR/hud.vert.spv"     vert
 compile_shader "$SRC_DIR/hud.frag"     "$OUT_DIR/hud.frag.spv"     frag
 compile_shader "$SRC_DIR/pbr.vert"     "$OUT_DIR/pbr.vert.spv"     vert
