@@ -52,11 +52,34 @@ internal static class AssetIntegrationRegression
             "Animation evaluation changes player bind-pose geometry over time");
 
         var world = WorldGenerator.Generate();
-        check(world.Models.Count == 21, "R0 world registers all initial GLB model instances");
+        check(world.Models.Count == 69,
+            "R0 world registers curated models plus deterministic environment decoration");
+        check(world.Models.Select(model => model.AssetPath).Distinct(StringComparer.Ordinal).Count() < world.Models.Count,
+            "R0 decoration intentionally reuses source assets for batching");
+
+        var decorationsA = WorldDecorationGenerator.Generate(world.Terrain);
+        var decorationsB = WorldDecorationGenerator.Generate(world.Terrain);
+        check(decorationsA.Count == 48 && decorationsB.Count == 48,
+            "R0 decoration pass has a bounded deterministic instance budget");
+        check(decorationsA.Zip(decorationsB).All(pair =>
+                pair.First.AssetPath == pair.Second.AssetPath &&
+                Vector3.DistanceSquared(pair.First.Position, pair.Second.Position) < 0.000001f &&
+                Vector3.DistanceSquared(pair.First.Scale, pair.Second.Scale) < 0.000001f),
+            "R0 decoration layout is deterministic across runs");
         check(world.Models.All(model => File.Exists(Path.Combine(
                 assetsRoot,
                 model.AssetPath.Replace('/', Path.DirectorySeparatorChar)))),
             "Every R0 world instance resolves to a tracked GLB file");
+
+        TerrainMesh.Build(world.Terrain, out var terrainVertices, out _);
+        check(terrainVertices.All(vertex =>
+                float.IsFinite(vertex.Normal.X) &&
+                float.IsFinite(vertex.Normal.Y) &&
+                float.IsFinite(vertex.Normal.Z) &&
+                MathF.Abs(vertex.Normal.Length() - 1f) < 0.01f),
+            "Terrain mesh contains normalized finite surface normals");
+        check(terrainVertices.Any(vertex => Vector3.Dot(vertex.Normal, Vector3.UnitY) < 0.995f),
+            "Generated terrain contains non-flat lighting normals");
 
         StaticWorldMesh.BuildWithAssets(world, assetsRoot, out var worldVertices, out var worldIndices);
         var terrainVertexCount = world.Terrain.Width * world.Terrain.Depth;

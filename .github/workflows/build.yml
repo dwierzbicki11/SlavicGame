@@ -29,4 +29,6 @@ jobs:
           test -f bin/Release/net11.0/shaders/bin/hud.frag.spv
           test -f bin/Release/net11.0/shaders/bin/pbr.vert.spv
           test -f bin/Release/net11.0/shaders/bin/pbr.frag.spv
+          test -f bin/Release/net11.0/shaders/bin/sky.vert.spv
+          test -f bin/Release/net11.0/shaders/bin/sky.frag.spv
       - run: dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release

@@ -27,8 +27,10 @@ public sealed class PbrModelRenderer : IDisposable
     private TextureView? _flatNormalView;
     private TextureView? _defaultMrView;
     private bool _disposed;
+    private int _instanceCount;
 
     public int RenderableCount => _renderables.Count;
+    public int InstanceCount => _instanceCount;
     public int DrawCallCount => _renderables.Sum(renderable => renderable.Draws.Length);
 
     public void Initialize(
@@ -82,50 +84,100 @@ public sealed class PbrModelRenderer : IDisposable
 
         CreateFallbackTextures(graphicsDevice, factory);
 
-        foreach (var instance in world.Models)
+        _instanceCount = world.Models.Count;
+
+        foreach (var assetGroup in world.Models.GroupBy(
+                     instance => instance.AssetPath,
+                     StringComparer.Ordinal))
         {
-            var relative = instance.AssetPath.Replace('/', Path.DirectorySeparatorChar);
+            var instances = assetGroup.ToArray();
+            var relative = assetGroup.Key.Replace('/', Path.DirectorySeparatorChar);
             var path = Path.Combine(assetsRoot, relative);
             if (!File.Exists(path))
-                throw new FileNotFoundException($"Required PBR world asset '{instance.Id}' was not found.", path);
+                throw new FileNotFoundException(
+                    $"Required PBR world asset '{assetGroup.Key}' was not found.",
+                    path);
 
             var model = GlbModel.Load(path);
-            var transform =
-                Matrix4x4.CreateScale(instance.Scale) *
-                Matrix4x4.CreateRotationY(instance.YawRadians) *
-                Matrix4x4.CreateTranslation(instance.Position);
-            var mesh = model.BuildPbrMesh(
-                transform,
-                animationName: null,
-                animationTimeSeconds: 0f,
-                sourceIsZUp: instance.SourceIsZUp);
+            var materialSets = new ResourceSet[model.Materials.Count];
+            for (var materialIndex = 0; materialIndex < model.Materials.Count; materialIndex++)
+                materialSets[materialIndex] = CreateMaterialSet(
+                    graphicsDevice,
+                    factory,
+                    model.Materials[materialIndex]);
 
-            var vertexBuffer = factory.CreateBuffer(new BufferDescription(
-                PbrVertex.SizeInBytes * checked((uint)mesh.Vertices.Length),
-                BufferUsage.VertexBuffer));
-            var indexBuffer = factory.CreateBuffer(new BufferDescription(
-                sizeof(uint) * checked((uint)mesh.Indices.Length),
-                BufferUsage.IndexBuffer));
-
-            graphicsDevice.UpdateBuffer(vertexBuffer, 0, mesh.Vertices);
-            graphicsDevice.UpdateBuffer(indexBuffer, 0, mesh.Indices);
-
-            var materialSets = new ResourceSet[mesh.Materials.Length];
-            for (var materialIndex = 0; materialIndex < mesh.Materials.Length; materialIndex++)
-                materialSets[materialIndex] = CreateMaterialSet(graphicsDevice, factory, mesh.Materials[materialIndex]);
-
-            var draws = mesh.DrawRanges
-                .Select(range => new DrawBatch(
-                    range.IndexStart,
-                    range.IndexCount,
-                    materialSets[Math.Clamp(range.MaterialIndex, 0, materialSets.Length - 1)]))
+            var combinedVertices = new List<PbrVertex>();
+            var indicesByMaterial = Enumerable
+                .Range(0, model.Materials.Count)
+                .Select(_ => new List<uint>())
                 .ToArray();
 
-            _renderables.Add(new Renderable(instance.Id, vertexBuffer, indexBuffer, draws));
+            foreach (var instance in instances)
+            {
+                var transform =
+                    Matrix4x4.CreateScale(instance.Scale) *
+                    Matrix4x4.CreateRotationY(instance.YawRadians) *
+                    Matrix4x4.CreateTranslation(instance.Position);
+                var mesh = model.BuildPbrMesh(
+                    transform,
+                    animationName: null,
+                    animationTimeSeconds: 0f,
+                    sourceIsZUp: instance.SourceIsZUp);
+
+                var vertexOffset = checked((uint)combinedVertices.Count);
+                combinedVertices.AddRange(mesh.Vertices);
+
+                foreach (var range in mesh.DrawRanges)
+                {
+                    var materialIndex = Math.Clamp(
+                        range.MaterialIndex,
+                        0,
+                        indicesByMaterial.Length - 1);
+                    var bucket = indicesByMaterial[materialIndex];
+                    var end = range.IndexStart + range.IndexCount;
+                    for (var sourceIndex = range.IndexStart; sourceIndex < end; sourceIndex++)
+                        bucket.Add(vertexOffset + mesh.Indices[sourceIndex]);
+                }
+            }
+
+            var combinedIndices = new List<uint>();
+            var draws = new List<DrawBatch>();
+            for (var materialIndex = 0; materialIndex < indicesByMaterial.Length; materialIndex++)
+            {
+                var bucket = indicesByMaterial[materialIndex];
+                if (bucket.Count == 0)
+                    continue;
+
+                var indexStart = checked((uint)combinedIndices.Count);
+                combinedIndices.AddRange(bucket);
+                draws.Add(new DrawBatch(
+                    indexStart,
+                    checked((uint)bucket.Count),
+                    materialSets[materialIndex]));
+            }
+
+            var vertexArray = combinedVertices.ToArray();
+            var indexArray = combinedIndices.ToArray();
+            var vertexBuffer = factory.CreateBuffer(new BufferDescription(
+                PbrVertex.SizeInBytes * checked((uint)vertexArray.Length),
+                BufferUsage.VertexBuffer));
+            var indexBuffer = factory.CreateBuffer(new BufferDescription(
+                sizeof(uint) * checked((uint)indexArray.Length),
+                BufferUsage.IndexBuffer));
+
+            graphicsDevice.UpdateBuffer(vertexBuffer, 0, vertexArray);
+            graphicsDevice.UpdateBuffer(indexBuffer, 0, indexArray);
+
+            _renderables.Add(new Renderable(
+                assetGroup.Key,
+                vertexBuffer,
+                indexBuffer,
+                draws.ToArray()));
         }
 
         EngineLog.Info(
-            $"PBR model renderer initialized: {_renderables.Count} models, {DrawCallCount} material draws.");
+            $"PBR model renderer initialized: {_instanceCount} instances batched into " +
+            $"{_renderables.Count} unique assets and {DrawCallCount} material draws.");
     }
 
     public void Render(CommandList commandList, ResourceSet cameraSet)

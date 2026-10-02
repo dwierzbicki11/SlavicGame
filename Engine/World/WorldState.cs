@@ -76,6 +76,8 @@ public sealed class WorldState
         AddModel("swamp-boardwalk", "models/static/kladka_bagienna_03.glb", 91f, 41f, new Vector3(1.4f), 0.3f, new Vector3(0.35f, 0.22f, 0.10f));
         AddModel("swamp-stump", "models/static/pien_bagienny_r0_01.glb", 108f, 31f, new Vector3(1.2f), 0f, new Vector3(0.22f, 0.28f, 0.12f));
 
+        _models.AddRange(WorldDecorationGenerator.Generate(Terrain));
+
         _enemies.Clear();
         AddEnemy("swamp-predator", 92f, 35f);
 

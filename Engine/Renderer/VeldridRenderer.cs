@@ -11,6 +11,7 @@ namespace SlavicGame.Engine.Renderer;
 public sealed class VeldridRenderer : IDisposable
 {
     private readonly List<HudVertex> _hudVertices = [];
+    private readonly SkyRenderer _sky = new();
     private readonly PbrModelRenderer _pbrModels = new();
 
     private GraphicsDevice? _graphicsDevice;
@@ -128,6 +129,11 @@ public sealed class VeldridRenderer : IDisposable
             _viewBuffer,
             _atmosphereBuffer));
 
+        _sky.Initialize(
+            factory,
+            _cameraLayout,
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription);
+
         _pbrModels.Initialize(
             _graphicsDevice,
             _cameraLayout,
@@ -139,7 +145,8 @@ public sealed class VeldridRenderer : IDisposable
 
         var vertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
-            new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float3));
+            new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float3),
+            new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3));
 
         _terrainPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
@@ -191,7 +198,8 @@ public sealed class VeldridRenderer : IDisposable
 
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
-        EngineLog.Info($"Terrain uploaded to GPU; PBR world models={_pbrModels.RenderableCount}, collision obstacles={world.Obstacles.Count}.");
+        EngineLog.Info($"Terrain uploaded to GPU; PBR world instances={_pbrModels.InstanceCount}, " +
+            $"unique assets={_pbrModels.RenderableCount}, collision obstacles={world.Obstacles.Count}.");
         EngineLog.Info($"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
@@ -286,6 +294,9 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.SetFramebuffer(framebuffer);
         _commandList.ClearColorTarget(0, atmosphereColor);
         _commandList.ClearDepthStencil(1f);
+
+        _sky.Render(_commandList, _cameraSet);
+
         _commandList.SetPipeline(_terrainPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
         _commandList.SetVertexBuffer(0, _vertexBuffer);
@@ -478,6 +489,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _graphicsDevice.WaitForIdle();
 
+        _sky.Dispose();
         _pbrModels.Dispose();
 
         _hudPipeline?.Dispose();
