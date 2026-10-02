@@ -25,6 +25,8 @@ jobs:
         run: |
           test -f bin/Release/net11.0/shaders/bin/terrain.vert.spv
           test -f bin/Release/net11.0/shaders/bin/terrain.frag.spv
+          test -f bin/Release/net11.0/shaders/bin/actor.vert.spv
+          test -f bin/Release/net11.0/shaders/bin/actor.frag.spv
           test -f bin/Release/net11.0/shaders/bin/hud.vert.spv
           test -f bin/Release/net11.0/shaders/bin/hud.frag.spv
           test -f bin/Release/net11.0/shaders/bin/pbr.vert.spv

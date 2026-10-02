@@ -12,12 +12,11 @@ public sealed class VeldridRenderer : IDisposable
 {
     private readonly List<HudVertex> _hudVertices = [];
     private readonly SkyRenderer _sky = new();
+    private readonly TerrainMaterialRenderer _terrain = new();
     private readonly PbrModelRenderer _pbrModels = new();
 
     private GraphicsDevice? _graphicsDevice;
     private CommandList? _commandList;
-    private DeviceBuffer? _vertexBuffer;
-    private DeviceBuffer? _indexBuffer;
     private DeviceBuffer? _projectionBuffer;
     private DeviceBuffer? _viewBuffer;
     private DeviceBuffer? _atmosphereBuffer;
@@ -29,16 +28,15 @@ public sealed class VeldridRenderer : IDisposable
     private ResourceSet? _cameraSet;
     private ResourceLayout? _hudLayout;
     private ResourceSet? _hudSet;
-    private Pipeline? _terrainPipeline;
+    private Pipeline? _actorPipeline;
     private Pipeline? _hudPipeline;
-    private Shader[]? _shaders;
+    private Shader[]? _actorShaders;
     private Shader[]? _hudShaders;
     private GlbModel? _playerModel;
     private GlbModel? _enemyModel;
 
     private bool _initialized;
     private bool _disposed;
-    private uint _indexCount;
     private uint _actorIndexCount;
     private uint _actorVertexCapacity;
     private uint _actorIndexCapacity;
@@ -92,25 +90,12 @@ public sealed class VeldridRenderer : IDisposable
         _commandList = factory.CreateCommandList();
 
         var assetsRoot = Path.Combine(AppContext.BaseDirectory, "assets");
-        TerrainMesh.Build(world.Terrain, out var vertices, out var indices);
         _playerModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "player_hunter_animated.glb"));
         _enemyModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "swamp_predator_animated.glb"));
-
-        _vertexBuffer = factory.CreateBuffer(new BufferDescription(
-            TerrainVertex.SizeInBytes * (uint)vertices.Length,
-            BufferUsage.VertexBuffer));
-
-        _indexBuffer = factory.CreateBuffer(new BufferDescription(
-            sizeof(uint) * (uint)indices.Length,
-            BufferUsage.IndexBuffer));
 
         _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _atmosphereBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-
-        _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, vertices);
-        _graphicsDevice.UpdateBuffer(_indexBuffer, 0, indices);
-        _indexCount = (uint)indices.Length;
 
         _actorVertexCapacity = 64;
         _actorIndexCapacity = 128;
@@ -140,6 +125,13 @@ public sealed class VeldridRenderer : IDisposable
             _cameraLayout,
             _graphicsDevice.SwapchainFramebuffer.OutputDescription);
 
+        _terrain.Initialize(
+            _graphicsDevice,
+            _cameraLayout,
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
+            world.Terrain,
+            assetsRoot);
+
         _pbrModels.Initialize(
             _graphicsDevice,
             _cameraLayout,
@@ -147,14 +139,14 @@ public sealed class VeldridRenderer : IDisposable
             world,
             assetsRoot);
 
-        _shaders = ShaderLibrary.LoadPair(factory, "terrain");
+        _actorShaders = ShaderLibrary.LoadPair(factory, "actor");
 
         var vertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
             new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float3),
             new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3));
 
-        _terrainPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+        _actorPipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
             DepthStencilStateDescription.DepthOnlyLessEqual,
             new RasterizerStateDescription(
@@ -164,7 +156,7 @@ public sealed class VeldridRenderer : IDisposable
                 true,
                 false),
             PrimitiveTopology.TriangleList,
-            new ShaderSetDescription(new[] { vertexLayout }, _shaders),
+            new ShaderSetDescription(new[] { vertexLayout }, _actorShaders),
             new[] { _cameraLayout },
             _graphicsDevice.SwapchainFramebuffer.OutputDescription));
 
@@ -204,7 +196,7 @@ public sealed class VeldridRenderer : IDisposable
 
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
-        EngineLog.Info($"Terrain uploaded to GPU; PBR world instances={_pbrModels.InstanceCount}, " +
+        EngineLog.Info($"Terrain materials + PBR world initialized; PBR world instances={_pbrModels.InstanceCount}, " +
             $"unique assets={_pbrModels.UniqueAssetCount}, spatial batches={_pbrModels.RenderableCount}, " +
             $"collision obstacles={world.Obstacles.Count}.");
         EngineLog.Info($"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
@@ -216,8 +208,6 @@ public sealed class VeldridRenderer : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!_initialized || _graphicsDevice is null ||
             _commandList is null ||
-            _vertexBuffer is null ||
-            _indexBuffer is null ||
             _projectionBuffer is null ||
             _viewBuffer is null ||
             _atmosphereBuffer is null ||
@@ -226,7 +216,7 @@ public sealed class VeldridRenderer : IDisposable
             _playerModel is null ||
             _enemyModel is null ||
             _cameraSet is null ||
-            _terrainPipeline is null ||
+            _actorPipeline is null ||
             _hudVertexBuffer is null ||
             _hudScreenBuffer is null ||
             _hudSet is null ||
@@ -310,15 +300,11 @@ public sealed class VeldridRenderer : IDisposable
 
         _sky.Render(_commandList, _cameraSet);
 
-        _commandList.SetPipeline(_terrainPipeline);
-        _commandList.SetGraphicsResourceSet(0, _cameraSet);
-        _commandList.SetVertexBuffer(0, _vertexBuffer);
-        _commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
-        _commandList.DrawIndexed(_indexCount);
+        _terrain.Render(_commandList, _cameraSet);
 
         _pbrModels.Render(_commandList, _cameraSet, camera.Position);
 
-        _commandList.SetPipeline(_terrainPipeline);
+        _commandList.SetPipeline(_actorPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
 
         if (_actorIndexCount > 0)
@@ -499,6 +485,7 @@ public sealed class VeldridRenderer : IDisposable
         _graphicsDevice.WaitForIdle();
 
         _sky.Dispose();
+        _terrain.Dispose();
         _pbrModels.Dispose();
 
         _hudPipeline?.Dispose();
@@ -507,7 +494,7 @@ public sealed class VeldridRenderer : IDisposable
         _hudVertexBuffer?.Dispose();
         _hudScreenBuffer?.Dispose();
 
-        _terrainPipeline?.Dispose();
+        _actorPipeline?.Dispose();
         _cameraSet?.Dispose();
         _cameraLayout?.Dispose();
         _projectionBuffer?.Dispose();
@@ -515,21 +502,19 @@ public sealed class VeldridRenderer : IDisposable
         _atmosphereBuffer?.Dispose();
         _actorVertexBuffer?.Dispose();
         _actorIndexBuffer?.Dispose();
-        _vertexBuffer?.Dispose();
-        _indexBuffer?.Dispose();
 
         if (_hudShaders is not null)
         {
             foreach (var shader in _hudShaders) shader.Dispose();
         }
 
-        if (_shaders is not null)
+        if (_actorShaders is not null)
         {
-            foreach (var shader in _shaders) shader.Dispose();
+            foreach (var shader in _actorShaders) shader.Dispose();
         }
 
         _hudShaders = null;
-        _shaders = null;
+        _actorShaders = null;
         _playerModel = null;
         _enemyModel = null;
         _hudPipeline = null;
@@ -537,7 +522,7 @@ public sealed class VeldridRenderer : IDisposable
         _hudLayout = null;
         _hudVertexBuffer = null;
         _hudScreenBuffer = null;
-        _terrainPipeline = null;
+        _actorPipeline = null;
         _cameraSet = null;
         _cameraLayout = null;
         _projectionBuffer = null;
@@ -545,8 +530,6 @@ public sealed class VeldridRenderer : IDisposable
         _atmosphereBuffer = null;
         _actorVertexBuffer = null;
         _actorIndexBuffer = null;
-        _vertexBuffer = null;
-        _indexBuffer = null;
         _commandList?.Dispose();
         _graphicsDevice.Dispose();
 

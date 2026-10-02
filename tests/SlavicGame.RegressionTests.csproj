@@ -37,5 +37,8 @@
     <Content Include="../assets/models/**/*.glb"
              Link="assets/models/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../assets/textures/terrain/**/*.png"
+             Link="assets/textures/terrain/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
