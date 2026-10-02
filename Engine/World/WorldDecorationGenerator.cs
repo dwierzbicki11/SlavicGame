@@ -235,10 +235,10 @@ public static class WorldDecorationGenerator
         while (placed < count && attempts++ < count * 50)
         {
             var angle = random.NextSingle() * MathF.Tau;
-            var radiusSquared = MathF.Lerp(
-                innerRadius * innerRadius,
-                outerRadius * outerRadius,
-                random.NextSingle());
+            var t = random.NextSingle();
+            var radiusSquared =
+                innerRadius * innerRadius +
+                (outerRadius * outerRadius - innerRadius * innerRadius) * t;
             var distance = MathF.Sqrt(radiusSquared);
             var point = center + new Vector2(
                 MathF.Cos(angle) * distance,
