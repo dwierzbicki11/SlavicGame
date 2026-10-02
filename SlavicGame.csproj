@@ -15,4 +15,11 @@
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.15" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="assets/**/*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
