@@ -4,9 +4,9 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 ## Próg swobodnej implementacji — stan 2026-10-03
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `research/bestiary/ResearchCardIndex.md` research ownerów, `design/RegionalContentAssetCatalog.md` rodziny content/assets R0–R6, a `quests/SideQuestCatalog.md` zamyka planistyczny scope side-content dla wszystkich regionów. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `research/bestiary/ResearchCardIndex.md` research ownerów, `design/RegionalContentAssetCatalog.md` rodziny content/assets R0–R6, a `quests/SideQuestCatalog.md` zamyka planistyczny scope side-content dla wszystkich regionów. `quests/SideQuestCardsR0.md` zamyka implementacyjny first pass trzech slotów R0. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
 
-Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, source-strength/identity locki, culture packages, konkretne asset manifests, pełne side-quest production cards i targety performance wymagające pomiarów.
+Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, source-strength/identity locki, culture packages, konkretne asset manifests, production cards side questów R1–R6 i targety performance wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
@@ -14,7 +14,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 | Świat/kosmologia | world/WorldBible.md + world/Cosmology.md + world/FourthSphereTruth.md | implementacyjny first pass + author truth |
 | Historia/central lore | story/MainStory.md + story/CrisisTruth.md + story/MysteryChronology.md | v0.2 |
 | Main quest | story/MainQuestSkeleton.md + quests/MainQuestCardsActs0To2.md + quests/MainQuestCardsAct3.md + quests/MainQuestCardsAct4.md + quests/MainQuestCardsAct5.md | MQ00–MQ56 production cards v0.1 |
-| Side quest | quests/SideQuestCatalog.md + QuestDesign.md | R0–R6 planning catalog v0.1; production cards otwarte |
+| Side quest | quests/SideQuestCatalog.md + quests/SideQuestCardsR0.md + QuestDesign.md | R0 production cards v0.1; R1–R6 planning catalog v0.1 |
 | Regiony | world/RegionBibleIndex.md + R0–R6 bibles | 7/7 production bibles v0.1 |
 | Panteon/religia | pantheon/* + research/pantheon/* | first pass; krytyczne źródła nadal rozwijane |
 | Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md | scope 1.0 v0.1; południca i forest-guardian mają jawne locki |
@@ -49,7 +49,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 4. bestiariusz: source-strength/region-fit południcy i identity lock `forest-guardian`;
 5. pełne culture research packages i research-lock szczegółów materialnych/religijnych;
 6. konkretne finalne modele/materials/animations/audio/VFX i manifesty poza vertical slice;
-7. side-quest production cards, konkretne creature assignments, encounter/POI placement oraz decyzje o scaleniu slotów po playtestach;
+7. side-quest production cards R1–R6, konkretne creature assignments, encounter/POI placement oraz decyzje o scaleniu slotów po playtestach;
 8. measured performance targets, streaming/VFX/shadow/AI budgets i wymagania sprzętowe;
 9. tuning pogody, traversal, ekonomii, AI i encounterów po playtestach;
 10. nazwy robocze F oraz elementy research/art/playtest/performance lock.
@@ -60,11 +60,11 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0 ma już implementacyjny first pass side-questów. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. side-quest production cards R0, następnie kolejne regiony bez przekraczania research locków;
+1. side-quest production cards R1, następnie R2/R4/R3/R5/R6 bez przekraczania research locków;
 2. culture research packages;
 3. bestiary source/identity locki;
 4. regional encounter/vendor/item catalogs;
