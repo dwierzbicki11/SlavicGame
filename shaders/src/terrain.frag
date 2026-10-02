@@ -29,9 +29,47 @@ layout(location = 4) in float fsin_Distance;
 
 layout(location = 0) out vec4 fsout_Color;
 
-vec3 DecodeNormal(texture2D tex, vec2 uv)
+mat2 Rotation(float angle)
 {
-    return texture(sampler2D(tex, TerrainSampler), uv).xyz * 2.0 - 1.0;
+    float c = cos(angle);
+    float s = sin(angle);
+    return mat2(c, -s, s, c);
+}
+
+float MacroNoise(vec2 p)
+{
+    float a = sin(p.x * 0.041 + p.y * 0.027);
+    float b = cos(p.x * 0.019 - p.y * 0.053);
+    float c = sin((p.x + p.y) * 0.013);
+    return clamp(0.5 + a * 0.22 + b * 0.18 + c * 0.10, 0.0, 1.0);
+}
+
+vec2 WarpedUv(vec2 worldXZ, float metersPerTile, float seed)
+{
+    vec2 warp = vec2(
+        sin(worldXZ.y * 0.021 + seed * 3.17),
+        cos(worldXZ.x * 0.024 - seed * 2.31)) * 0.22;
+    return (worldXZ + warp) / metersPerTile;
+}
+
+vec3 SampleBase(texture2D tex, vec2 worldXZ, float metersPerTile, float seed)
+{
+    vec2 uvA = WarpedUv(worldXZ, metersPerTile, seed);
+    vec2 uvB = Rotation(0.67 + seed * 0.11) *
+               WarpedUv(worldXZ + vec2(17.0, -11.0), metersPerTile * 1.73, seed + 1.0);
+
+    float blend = smoothstep(0.22, 0.78, MacroNoise(worldXZ + seed * 29.0));
+    vec3 a = texture(sampler2D(tex, TerrainSampler), uvA).rgb;
+    vec3 b = texture(sampler2D(tex, TerrainSampler), uvB).rgb;
+    return mix(a, b, blend);
+}
+
+vec3 SampleNormal(texture2D tex, vec2 worldXZ, float metersPerTile, float seed)
+{
+    vec2 uv = WarpedUv(worldXZ, metersPerTile, seed);
+    vec3 n = texture(sampler2D(tex, TerrainSampler), uv).xyz * 2.0 - 1.0;
+    n.xy *= 0.82;
+    return normalize(n);
 }
 
 mat3 GroundTangentFrame(vec3 n)
@@ -51,6 +89,14 @@ void main()
 {
     vec3 weightsA = max(fsin_PrimaryWeights, vec3(0.0));
     vec3 weightsB = max(fsin_SecondaryWeights, vec3(0.0));
+
+    // Break perfectly smooth biome borders with low-frequency world-space variation.
+    float organic = MacroNoise(fsin_WorldPosition.xz);
+    weightsA.x *= mix(0.93, 1.07, organic);
+    weightsA.y *= mix(1.06, 0.94, organic);
+    weightsB.x *= mix(0.92, 1.10, organic);
+    weightsB.y *= mix(1.08, 0.94, organic);
+
     float weightSum =
         weightsA.x + weightsA.y + weightsA.z +
         weightsB.x + weightsB.y + weightsB.z;
@@ -58,36 +104,39 @@ void main()
     weightsA /= weightSum;
     weightsB /= weightSum;
 
-    vec2 grassUv = fsin_WorldPosition.xz / 2.0;
-    vec2 pathUv = fsin_WorldPosition.xz / 2.5;
-    vec2 litterUv = fsin_WorldPosition.xz / 2.0;
-    vec2 mudUv = fsin_WorldPosition.xz / 2.5;
-    vec2 swampUv = fsin_WorldPosition.xz / 2.5;
-    vec2 rockUv = fsin_WorldPosition.xz / 2.5;
+    vec2 worldXZ = fsin_WorldPosition.xz;
 
     vec3 albedo =
-        texture(sampler2D(GrassBase, TerrainSampler), grassUv).rgb * weightsA.x +
-        texture(sampler2D(LitterBase, TerrainSampler), litterUv).rgb * weightsA.y +
-        texture(sampler2D(PathBase, TerrainSampler), pathUv).rgb * weightsA.z +
-        texture(sampler2D(MudBase, TerrainSampler), mudUv).rgb * weightsB.x +
-        texture(sampler2D(SwampBase, TerrainSampler), swampUv).rgb * weightsB.y +
-        texture(sampler2D(RockBase, TerrainSampler), rockUv).rgb * weightsB.z;
+        SampleBase(GrassBase, worldXZ, 2.1, 0.2) * weightsA.x +
+        SampleBase(LitterBase, worldXZ, 2.0, 1.1) * weightsA.y +
+        SampleBase(PathBase, worldXZ, 2.6, 2.3) * weightsA.z +
+        SampleBase(MudBase, worldXZ, 2.4, 3.2) * weightsB.x +
+        SampleBase(SwampBase, worldXZ, 2.8, 4.1) * weightsB.y +
+        SampleBase(RockBase, worldXZ, 2.7, 5.4) * weightsB.z;
+
+    // Large-scale tinting stops the ground from reading as a repeated wallpaper.
+    float macro = MacroNoise(worldXZ * 0.62 + vec2(13.0, -7.0));
+    albedo *= mix(0.88, 1.10, macro);
+    albedo *= vec3(
+        0.98 + 0.03 * macro,
+        0.97 + 0.04 * macro,
+        0.95 + 0.025 * macro);
 
     vec3 tangentNormal =
-        DecodeNormal(GrassNormal, grassUv) * weightsA.x +
-        DecodeNormal(LitterNormal, litterUv) * weightsA.y +
-        DecodeNormal(PathNormal, pathUv) * weightsA.z +
-        DecodeNormal(MudNormal, mudUv) * weightsB.x +
-        DecodeNormal(SwampNormal, swampUv) * weightsB.y +
-        DecodeNormal(RockNormal, rockUv) * weightsB.z;
+        SampleNormal(GrassNormal, worldXZ, 2.1, 0.2) * weightsA.x +
+        SampleNormal(LitterNormal, worldXZ, 2.0, 1.1) * weightsA.y +
+        SampleNormal(PathNormal, worldXZ, 2.6, 2.3) * weightsA.z +
+        SampleNormal(MudNormal, worldXZ, 2.4, 3.2) * weightsB.x +
+        SampleNormal(SwampNormal, worldXZ, 2.8, 4.1) * weightsB.y +
+        SampleNormal(RockNormal, worldXZ, 2.7, 5.4) * weightsB.z;
     tangentNormal = normalize(tangentNormal);
 
     float roughness =
         0.78 * weightsA.x +
         0.82 * weightsA.y +
         0.88 * weightsA.z +
-        0.48 * weightsB.x +
-        0.58 * weightsB.y +
+        0.46 * weightsB.x +
+        0.56 * weightsB.y +
         0.74 * weightsB.z;
     roughness = clamp(roughness, 0.08, 1.0);
 
@@ -99,16 +148,23 @@ void main()
 
     vec3 sunColor = SunColor(sunDirection);
     float hemisphere = mix(0.18, 0.62, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
-    vec3 diffuse = albedo * (hemisphere * 0.34 + ndotl * daylight * sunColor);
 
-    // A restrained wet-specular response makes mud/swamp surfaces feel damp
-    // without turning the whole terrain into plastic.
+    // Slightly darken creases and wet lowland mixes to give the terrain depth.
+    float wetness = clamp(weightsB.x * 0.82 + weightsB.y * 0.66, 0.0, 1.0);
+    float cavity = clamp(1.0 - normal.y, 0.0, 1.0);
+    float ambientOcclusion = 1.0 - cavity * 0.18 - wetness * 0.08;
+
+    vec3 diffuse = albedo *
+        (hemisphere * 0.34 + ndotl * daylight * sunColor) *
+        ambientOcclusion;
+
     vec3 viewDirection = normalize(-fsin_WorldPosition);
     vec3 halfVector = normalize(sunDirection + viewDirection);
-    float specPower = mix(5.0, 42.0, 1.0 - roughness);
+    float specPower = mix(5.0, 52.0, 1.0 - roughness);
     float specular = pow(max(dot(normal, halfVector), 0.0), specPower);
-    float wetness = weightsB.x * 0.75 + weightsB.y * 0.55;
-    vec3 color = diffuse + sunColor * specular * wetness * daylight * 0.22;
+
+    // Only mud and swamp receive a visible wet highlight.
+    vec3 color = diffuse + sunColor * specular * wetness * daylight * 0.28;
 
     float density = max(FogColorDensity.w, 0.00001);
     float fogFactor =
