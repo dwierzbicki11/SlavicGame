@@ -11,7 +11,10 @@ layout(location = 0) out vec4 fsout_Color;
 void main()
 {
     vec3 direction = normalize(fsin_WorldDirection);
-    float daylight = clamp(Lighting.x, 0.0, 1.0);
+    vec3 sunDirection = normalize(Lighting.yzw);
+    float daylight = clamp(Lighting.x / 1.15, 0.0, 1.0);
+    float sunHeight = max(sunDirection.y, 0.0);
+    float twilight = 1.0 - smoothstep(0.08, 0.42, sunHeight);
 
     vec3 nightHorizon = vec3(0.012, 0.016, 0.028);
     vec3 nightZenith = vec3(0.003, 0.006, 0.018);
@@ -21,15 +24,18 @@ void main()
     vec3 horizon = mix(nightHorizon, dayHorizon, daylight);
     vec3 zenith = mix(nightZenith, dayZenith, daylight);
 
+    vec3 sunsetHorizon = vec3(0.50, 0.16, 0.055);
+    horizon = mix(horizon, sunsetHorizon, twilight * daylight * 0.55);
+
     float vertical = clamp(direction.y * 0.5 + 0.5, 0.0, 1.0);
     float gradient = pow(vertical, 0.72);
     vec3 color = mix(horizon, zenith, gradient);
 
-    vec3 sunDirection = normalize(vec3(-0.35, 0.82, 0.28));
     float sunDot = dot(direction, sunDirection);
     float sunDisc = smoothstep(0.99925, 0.99982, sunDot);
-    float sunHalo = pow(max(sunDot, 0.0), 96.0);
-    color += vec3(1.00, 0.82, 0.58) * (sunDisc * 2.2 + sunHalo * 0.18) * daylight;
+    float sunHalo = pow(max(sunDot, 0.0), mix(48.0, 112.0, sunHeight));
+    vec3 sunColor = mix(vec3(1.00, 0.88, 0.62), vec3(1.00, 0.42, 0.12), twilight * 0.82);
+    color += sunColor * (sunDisc * 2.35 + sunHalo * 0.22) * daylight;
 
     float horizonHaze = pow(1.0 - abs(direction.y), 5.0);
     color = mix(color, FogColorDensity.rgb, horizonHaze * 0.24);
