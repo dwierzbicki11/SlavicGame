@@ -5,6 +5,28 @@ using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Renderer;
 
+public readonly struct TerrainSurfaceVertex
+{
+    public const uint SizeInBytes = 48;
+
+    public readonly System.Numerics.Vector3 Position;
+    public readonly System.Numerics.Vector3 Normal;
+    public readonly System.Numerics.Vector3 PrimaryWeights;
+    public readonly System.Numerics.Vector3 SecondaryWeights;
+
+    public TerrainSurfaceVertex(
+        System.Numerics.Vector3 position,
+        System.Numerics.Vector3 normal,
+        System.Numerics.Vector3 primaryWeights,
+        System.Numerics.Vector3 secondaryWeights)
+    {
+        Position = position;
+        Normal = normal;
+        PrimaryWeights = primaryWeights;
+        SecondaryWeights = secondaryWeights;
+    }
+}
+
 public sealed class TerrainMaterialRenderer : IDisposable
 {
     private readonly List<Texture> _textures = [];
@@ -33,10 +55,21 @@ public sealed class TerrainMaterialRenderer : IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(assetsRoot);
 
         var factory = graphicsDevice.ResourceFactory;
-        TerrainMesh.Build(terrain, out var vertices, out var indices);
+        TerrainMesh.Build(terrain, out var baseVertices, out var indices);
+        var vertices = new TerrainSurfaceVertex[baseVertices.Length];
+        for (var i = 0; i < baseVertices.Length; i++)
+        {
+            var source = baseVertices[i];
+            var weights = TerrainSurfaceClassifier.Classify(source.Position, source.Normal);
+            vertices[i] = new TerrainSurfaceVertex(
+                source.Position,
+                source.Normal,
+                weights.Primary,
+                weights.Secondary);
+        }
 
         _vertexBuffer = factory.CreateBuffer(new BufferDescription(
-            TerrainVertex.SizeInBytes * checked((uint)vertices.Length),
+            TerrainSurfaceVertex.SizeInBytes * checked((uint)vertices.Length),
             BufferUsage.VertexBuffer));
         _indexBuffer = factory.CreateBuffer(new BufferDescription(
             sizeof(uint) * checked((uint)indices.Length),
@@ -105,9 +138,11 @@ public sealed class TerrainMaterialRenderer : IDisposable
             new VertexElementDescription(
                 "Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
             new VertexElementDescription(
-                "Color", VertexElementSemantic.Color, VertexElementFormat.Float3),
+                "Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
             new VertexElementDescription(
-                "Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3));
+                "PrimaryWeights", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
+            new VertexElementDescription(
+                "SecondaryWeights", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3));
 
         _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
