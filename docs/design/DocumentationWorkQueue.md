@@ -1,162 +1,68 @@
-# Kolejność dalszej dokumentacji — od najprostszej do najtrudniejszej
+# Kolejność dalszej dokumentacji — production phase
 
-Ten dokument ustala praktyczną kolejność pogłębiania dokumentacji po zbudowaniu pełnego szkieletu v0.1.
+Pierwszy szkielet designu i central lore jest ukończony. Kolejka od 2026-10-02 służy domykaniu dokumentacji produkcyjnej, bez duplikowania istniejących bible/speców.
 
-## Poziom 1 — proste, niskie ryzyko decyzji
+## Osiągnięty próg implementacyjny
 
-Cel: ustalić rzeczy techniczne i produkcyjne, które nie zamrażają lore.
+- [x] system design first pass;
+- [x] central lore / author truth;
+- [x] campaign regional flow;
+- [x] region bibles R0–R6;
+- [x] main quest skeleton MQ00–MQ56;
+- [x] production cards MQ00–MQ56;
+- [x] podstawowe content formats i trwałe ID;
+- [x] persistence/save contract;
+- [x] vertical slice content package.
 
-- [x] konwencje trwałych ID;
-- [x] lista przedmiotów vertical slice;
-- [x] pierwszy czar i rytuał jako funkcje gameplay;
-- [x] pięć kart NPC vertical slice;
-- [x] pełna karta „Światła nad mokradłem”;
-- [x] asset list vertical slice;
-- [x] format kart przedmiotów poza vertical slice;
-- [x] format definicji broni i armor;
-- [x] format encounterów;
-- [x] format lokacji/interactable;
-- [x] format eventów zależnych od czasu — `content/TimeEventFormat.md`.
+Na tym poziomie można swobodnie implementować kolejne systemy, quest state machine i regionalny flow. Otwarte locki są jawnie zebrane w `DocumentationCoverage.md`.
 
-## Poziom 2 — proste/średnie, głównie system design
+## Kolejka produkcyjna — od najmniejszego ryzyka
 
-- [x] szczegółowy tutorial/onboarding;
-- [x] HUD spec;
-- [x] inventory UI flow;
-- [x] quest journal UI flow;
-- [x] dialogue UX flow;
-- [x] map UI;
-- [x] settings matrix;
-- [x] input action map;
-- [x] save slot UX;
-- [x] debug/developer overlay spec;
-- [x] logging/error-reporting policy.
+### P1 — roster i katalogi
+- [ ] production NPC/companion roster: finalne role, region, lifecycle, quest ownership, persistence;
+- [ ] finalny bestiary roster używany przez scope 1.0;
+- [ ] indeks finalnych research cards istot i brakujące karty;
+- [ ] full-game content/asset catalog per R0–R6;
+- [ ] side-quest catalog poza vertical slice.
 
-## Poziom 3 — średnie, gameplay i content
+### P2 — research packages
+- [ ] culture research package dla każdego finalnego kontekstu kulturowego;
+- [ ] domknięcie krytycznych źródeł panteonu;
+- [ ] research lock material culture dla assetów, które rzeczywiście trafiają do produkcji;
+- [ ] nazwa/identity lock `forest-guardian` albo jawne pozostawienie F;
+- [ ] ogniki/błędne światła jako osobna karta zjawiska.
 
-- [x] pełny melee moveset;
-- [x] podstawowy bow design;
-- [x] status effects;
-- [x] equipment slots;
-- [x] progression/skill tree;
-- [x] economy first pass;
-- [x] vendor design;
-- [x] alchemy recipes v0.1;
-- [x] tracking system;
-- [x] encounter tables startowego regionu;
-- [x] day/night event table;
-- [x] weather gameplay effects.
+### P3 — content production
+- [ ] side-quest production cards per region;
+- [ ] regional encounter rosters/tables poza R0;
+- [ ] regional vendors/services final pass;
+- [ ] item/equipment/recipe catalogs dla pełnego scope;
+- [ ] dialogue packages po zamknięciu rosterów.
 
-## Poziom 4 — średnie/trudne, konkretna zawartość
+### P4 — asset i budget lock
+- [ ] asset lists per region z reuse/LOD/variant strategy;
+- [ ] animation/VFX/audio budgets;
+- [ ] streaming i memory budgets;
+- [ ] AI/encounter density budgets;
+- [ ] production estimates zależne od faktycznej przepustowości zespołu.
 
-- [x] finalniejsze profile pięciu NPC;
-- [x] pełne grafy dialogowe vertical slice;
-- [x] wszystkie wpisy dziennika/evidence text;
-- [x] wszystkie możliwe reakcje po trzech rozwiązaniach;
-- [x] karta Żarnowca;
-- [x] karta Puszczy Żywia;
-- [x] karta Czarnych Mokradeł;
-- [x] karta Kamiennego Kręgu;
-- [x] pierwsze side questy regionu;
-- [x] pierwsze usługi/warsztaty.
+### P5 — playtest/measurement lock
+- [ ] combat/economy/progression tuning;
+- [ ] evidence/reputation thresholds;
+- [ ] traversal/weather/day-night tuning;
+- [ ] measured CPU/GPU/RAM/VRAM/streaming targets;
+- [ ] minimal/recommended hardware po pomiarach;
+- [ ] release criteria evidence.
 
-## Poziom 5 — trudne, wymagają researchu
+## Reguły kolejki
 
-- [x] research budownictwa;
-- [x] research ubioru i materiałów;
-- [x] research żywności;
-- [x] research rolnictwa i narzędzi;
-- [x] research transportu;
-- [x] research uzbrojenia;
-- [x] research pochówków;
-- [x] research handlu;
-- [x] research struktur osad;
-- [x] research praktyk religijnych używanych jako inspiracja — first-pass zasad źródłowych wykonany w Poziomie 7.
+1. Najpierw najniższy niezablokowany priorytet.
+2. Nie wymyślamy wartości oznaczonych research/art/playtest/performance lock.
+3. Nowy dokument powstaje tylko, gdy nie istnieje już owner tego zakresu.
+4. Zmiana central lore wymaga jawnego uzasadnienia i aktualizacji dokumentów zależnych.
+5. Każdy production card wskazuje persistence, dependencies, fail-forward i minimalne QA tam, gdzie ma to zastosowanie.
+6. Coverage jest aktualizowane po każdym większym pakiecie.
 
-Każdy temat powstaje jako osobna karta źródłowa, zanim przeniesiemy szczegóły do finalnej kultury.
+## Następny element
 
-## Poziom 6 — trudne, bestiariusz
-
-**Pierwszy pakiet ukończony:**
-- [x] rusałka;
-- [x] duch leśny / kandydat leszy-type;
-- [x] wodnik / vodník;
-- [x] zmora;
-- [x] strzygoń / strzyga;
-- [x] macierz dopasowania do vertical slice.
-
-Wynik: `swamp-predator` pozostaje autorskim F, ponieważ żaden sprawdzony kandydat nie pasuje wystarczająco dobrze. `forest-guardian` może być dalej rozwijany jako lokalna istota leśna, ale finalna nazwa wymaga regionalnego researchu.
-
-**Drugi pakiet do wykonania później:**
-- [x] polskie/regionalne postacie leśne;
-- [x] topielec/topielica i polski wodnik;
-- [x] południca;
-- [x] boginka/mamuna;
-- [x] upiór;
-- [ ] ogniki/błędne światła jako zjawisko.
-
-## Poziom 7 — bardzo trudne, panteon i religia
-
-- [x] kontrola Rod/Rodzanice;
-- [x] Jarowit;
-- [x] Radegast–Swarożyc;
-- [x] Siwa–Żywie;
-- [x] późny katalog polski;
-- [x] kandydaci literaccy;
-- [x] kolejne karty bogów;
-- [x] finalniejsze relacje F;
-- [x] instytucje kultowe świata gry;
-- [x] ograniczenia boskich umów.
-
-Wymaga bezpośredniejszej kontroli źródeł i ostrożności interpretacyjnej.
-
-## Poziom 8 — bardzo trudne, świat makro
-
-- [x] finalne kultury;
-- [x] języki/naming rules;
-- [x] państwa;
-- [x] geografia świata;
-- [x] gospodarka międzyregionowa;
-- [x] konflikty polityczne;
-- [x] timeline głównych epok;
-- [ ] przepływ głównej historii między regionami.
-
-## Poziom 9 — najtrudniejsze, centralne lore
-
-Na końcu, po zebraniu wystarczającej liczby danych i przetestowaniu świata:
-
-- [x] prawdziwa natura Czwartej Sfery;
-- [x] prawdziwa przyczyna kryzysu;
-- [x] pełna historia rodziny bohatera;
-- [x] finalny antagonista / przeciwnicy;
-- [x] czy i jak można zabić boga;
-- [x] główny finał;
-- [x] warianty zakończeń;
-- [x] epilogi;
-- [ ] ostateczna chronologia tajemnicy.
-
-Te decyzje mają największy koszt retconu, więc robimy je dopiero wtedy, gdy wcześniejsze warstwy są stabilne.
-
-## Reguła przechodzenia dalej
-
-Nie trzeba ukończyć 100% jednego poziomu, by rozpocząć następny, ale:
-
-- preferujemy najniższy niezamknięty poziom;
-- pomijamy element, jeśli wymaga informacji z trudniejszego poziomu;
-- wracamy po zdobyciu brakującego researchu;
-- nie zamrażamy finalnego lore tylko po to, by „odhaczyć dokument”.
-
-
-## Stan po Poziomie 9
-
-**Poziomy 1–9 mają kompletny first pass.**
-
-Od tej chwili kolejka nie odpowiada już na pytanie „czym ma być gra?”, tylko „jak szczegółowo produkcyjnie rozpisać znany już projekt?”.
-
-Następna faza dokumentacji:
-- main quest cards;
-- region bibles;
-- companion/NPC roster;
-- final content lists;
-- production budgets;
-- implementation specs wynikające z playtestów.
+Najbliższy niezablokowany pakiet: **production NPC/companion roster**, potem **finalny bestiary roster**. Są potrzebne przed pełnymi regionalnymi asset/content listami i dialogami.
