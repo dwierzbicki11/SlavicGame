@@ -13,18 +13,13 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 
 ## Aktywny element
 
-### MQ11 „Prawo łowcy” — BLOCKED
+### MQ11 „Prawo łowcy” — IMPLEMENTING
 
-Karta `story/MainQuestCardsAct1.md` ma status `implementation-ready v0.1`, ale jej kontrakt wymaga zapisu **reputation/faction world state** jako konsekwencji `MQ11-D01`. W aktualnym kodzie nie istnieje runtime owner dla reputacji. Implementowanie MQ11 wyłącznie flagami questa oznaczałoby pominięcie jawnej zależności specyfikacji i stworzenie późniejszego długu/migracji save.
+Ponowna analiza aktualnego `main` wykazała, że wcześniejszy blocker był błędny: runtime reputacji już istnieje jako `Engine/Reputation/ReputationSystem.cs`, jest właścicielem scope `Faction`, ma zakres -100..100 oraz `Capture`/`Restore`, a `GameProgress` posiada instancję `ReputationSystem`. Nie tworzymy więc drugiego systemu reputacji.
 
-**Blocker:** brak minimalnego, trwałego kontraktu reputacji/faction standing w runtime oraz jego save/load API.
+Bieżący PR implementuje wyłącznie MQ11: `MQ11_POLICY_SEEN`, dwie wymagane perspektywy, przypadek testowy kosztu procedury, trwałe trzy warianty `MQ11-D01`, jednorazową konsekwencję faction reputation, `MQ11_COMPLETE` oraz bezwarunkowy handoff do MQ12. Numericzne wartości reputacji i finalne faction IDs pozostają danymi content/tuningu przekazywanymi do kontraktu kampanii; kod nie zgaduje ich wartości.
 
-**Praca konieczna do odblokowania MQ11:**
-1. potwierdzić owner/spec semantyki reputacji (zakres, identyfikatory frakcji, operacje i persistence);
-2. zaimplementować minimalny runtime zgodny z tym kontraktem wraz z regresjami save/load;
-3. dopiero po scaleniu tego blockera wrócić do MQ11 i zaimplementować `MQ11_POLICY_SEEN`, wymagane perspektywy/test case, trwałe `MQ11-D01`, konsekwencję reputacyjną, `MQ11_COMPLETE` i bezwarunkowy handoff do MQ12.
-
-Nie należy wybierać MQ12 ani innego elementu podczas tego blockera.
+MQ11 zostaje ukończone dopiero po regresjach, zielonym CI i merge tego PR do `main`.
 
 ## Kolejka po MQ11
 
@@ -36,4 +31,4 @@ Kolejność jest warunkowa i podlega ponownej analizie po każdym merge:
 
 ## Otwarte decyzje implementacyjne
 
-- Reputation/faction runtime: brak owner/spec wystarczającego do bezpiecznego kodowania konsekwencji MQ11. To jest twardy blocker bieżącego zadania, nie zgoda na ad-hoc wartości reputacji.
+- MQ11: finalne faction IDs i wartości delta reputacji są content/tuning data; nie blokują kontraktu kampanii, ponieważ runtime przyjmuje je jawnie i utrwala wynik.
