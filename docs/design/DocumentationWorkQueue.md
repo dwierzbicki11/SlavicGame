@@ -8,19 +8,20 @@ Pierwszy szkielet designu i central lore jest ukończony. Kolejka od 2026-10-02 
 - [x] central lore / author truth;
 - [x] campaign regional flow;
 - [x] region bibles R0–R6;
-- [x] main quest skeleton MQ00–MQ56;
-- [x] production cards MQ00–MQ56;
+- [x] main quest skeleton i production cards MQ00–MQ56;
 - [x] podstawowe content formats i trwałe ID;
 - [x] persistence/save contract;
-- [x] vertical slice content package.
+- [x] vertical slice content package;
+- [x] production NPC/companion roster (`story/ProductionNpcRoster.md`);
+- [x] production bestiary roster scope 1.0 (`bestiary/ProductionBestiaryRoster.md`).
 
-Na tym poziomie można swobodnie implementować kolejne systemy, quest state machine i regionalny flow. Otwarte locki są jawnie zebrane w `DocumentationCoverage.md`.
+Na tym poziomie można swobodnie implementować kolejne systemy, quest state machine, regionalny flow, bazowy NPC lifecycle i wspólny creature/encounter state model. Otwarte locki są jawnie zebrane w `DocumentationCoverage.md`.
 
 ## Kolejka produkcyjna — od najmniejszego ryzyka
 
 ### P1 — roster i katalogi
-- [ ] production NPC/companion roster: finalne role, region, lifecycle, quest ownership, persistence;
-- [ ] finalny bestiary roster używany przez scope 1.0;
+- [x] production NPC/companion roster: role, region, lifecycle, fallback i persistence;
+- [x] production bestiary roster używany przez scope 1.0 z jawnymi research gates;
 - [ ] indeks finalnych research cards istot i brakujące karty;
 - [ ] full-game content/asset catalog per R0–R6;
 - [ ] side-quest catalog poza vertical slice.
@@ -30,7 +31,8 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 - [ ] domknięcie krytycznych źródeł panteonu;
 - [ ] research lock material culture dla assetów, które rzeczywiście trafiają do produkcji;
 - [ ] nazwa/identity lock `forest-guardian` albo jawne pozostawienie F;
-- [ ] ogniki/błędne światła jako osobna karta zjawiska.
+- [ ] ogniki/błędne światła jako osobna karta zjawiska;
+- [ ] południca jako karta wymagana przed finalnym lockiem `ENTITY_NOON_PHENOMENON`.
 
 ### P3 — content production
 - [ ] side-quest production cards per region;
@@ -65,4 +67,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy, quest state mac
 
 ## Następny element
 
-Najbliższy niezablokowany pakiet: **production NPC/companion roster**, potem **finalny bestiary roster**. Są potrzebne przed pełnymi regionalnymi asset/content listami i dialogami.
+Najbliższy niezablokowany pakiet: **indeks finalnych research cards bestiariusza i identyfikacja brakujących kart**. Następnie: pełny regionalny content/asset catalog oraz side-quest catalog.
