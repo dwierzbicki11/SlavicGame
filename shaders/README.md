@@ -2,7 +2,8 @@
 
 Źródła GLSL są w `shaders/src/`:
 
-- `terrain.vert` / `terrain.frag` — teren i prosty kolorowy pass,
+- `terrain.vert` / `terrain.frag` — sześciowarstwowe materiały PBR podłoża,
+- `actor.vert` / `actor.frag` — prosty dynamiczny pass postaci i przeciwników,
 - `hud.vert` / `hud.frag` — HUD,
 - `pbr.vert` / `pbr.frag` — modele GLB z materiałami PBR,
 - `sky.vert` / `sky.frag` — proceduralne niebo, horyzont i słońce.
