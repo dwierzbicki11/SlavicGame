@@ -33,12 +33,14 @@ public sealed record GameSaveSnapshot(
     DivineRelationshipSnapshot[] DivineRelationships,
     RelationshipSnapshot[] Relationships,
     string[] WorldFlags,
+    TrackSnapshot[] Tracks,
+    NavigationSnapshot Navigation,
     BoundaryPhenomenonSnapshot[] BoundaryPhenomena,
     EnemySaveEntry[] Enemies);
 
 public static class SaveGameService
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     public static GameSaveSnapshot Capture(WorldState world)
     {
@@ -61,6 +63,8 @@ public static class SaveGameService
             world.Progress.DivineRelationships.Capture(),
             world.Progress.Relationships.Capture(),
             world.Progress.CaptureFlags(),
+            world.Progress.Tracking.Capture(),
+            world.Progress.Navigation.Capture(),
             world.Cosmology.Capture(),
             world.Enemies.Select(enemy =>
             {
@@ -121,6 +125,8 @@ public static class SaveGameService
         world.Progress.DivineRelationships.Restore(snapshot.DivineRelationships ?? []);
         world.Progress.Relationships.Restore(snapshot.Relationships ?? []);
         world.Progress.RestoreFlags(snapshot.WorldFlags ?? []);
+        world.Progress.Tracking.Restore(snapshot.Tracks ?? []);
+        world.Progress.Navigation.Restore(snapshot.Navigation ?? new NavigationSnapshot(null, []));
         world.Cosmology.Restore(snapshot.BoundaryPhenomena ?? []);
 
         var byId = world.Enemies.ToDictionary(enemy => enemy.Id, StringComparer.Ordinal);
