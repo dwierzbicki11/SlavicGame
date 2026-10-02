@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.Quest;
+using SlavicGame.Engine.Reputation;
 
 namespace SlavicGame.RegressionTests;
 
@@ -62,6 +63,45 @@ internal static class MainQuestCampaignRegression
         Check(!restoredCampaign.CompleteMq10(), "MQ10 completion is idempotent");
         Check(restored.HasFlag(MainQuestCampaign.Mq10Complete), "MQ10 completion flag is durable");
         Check(restored.Quests.Get(MainQuestCampaign.Mq11Id).Phase == QuestPhase.Offered, "MQ10 completion unlocks MQ11");
+
+        Check(restoredCampaign.SeeMq11Policy(), "MQ11 policy beat activates quest");
+        Check(!restoredCampaign.ChooseMq11Position(Mq11Position.ConditionalCooperation, "debrzyn-authority", 5), "MQ11 decision waits for required perspectives and test case");
+        Check(restoredCampaign.RecordMq11Perspective(administration: true), "MQ11 administration perspective is durable");
+        Check(restoredCampaign.RecordMq11Perspective(administration: false), "MQ11 community perspective is durable");
+        Check(restoredCampaign.RecordMq11ProcedureCost(), "MQ11 procedure cost test case is durable");
+
+        restored.Reputation.Change(ReputationScope.Faction, "debrzyn-authority", -40);
+        Check(restoredCampaign.ChooseMq11Position(Mq11Position.ConditionalCooperation, "debrzyn-authority", 5), "MQ11 accepts a position from hostile reputation state");
+        Check(restored.Reputation.Get(ReputationScope.Faction, "debrzyn-authority") == -35, "MQ11 applies configured faction reputation consequence once");
+        Check(!restoredCampaign.ChooseMq11Position(Mq11Position.LocalArrangement, "debrzyn-authority", 20), "MQ11-D01 cannot be selected twice");
+        Check(restored.Reputation.Get(ReputationScope.Faction, "debrzyn-authority") == -35, "repeated MQ11 choice cannot duplicate reputation consequence");
+
+        var mq11Flags = restored.CaptureFlags();
+        var mq11Quests = restored.Quests.Capture();
+        var mq11Reputation = restored.Reputation.Capture();
+        var mq11Reloaded = new GameProgress();
+        mq11Reloaded.RestoreFlags(mq11Flags);
+        mq11Reloaded.Quests.Restore(mq11Quests);
+        mq11Reloaded.Reputation.Restore(mq11Reputation);
+        var mq11Campaign = new MainQuestCampaign(mq11Reloaded);
+        Check(mq11Reloaded.HasFlag(MainQuestCampaign.Mq11DecisionConditional), "save/load keeps MQ11-D01 choice");
+        Check(mq11Reloaded.Reputation.Get(ReputationScope.Faction, "debrzyn-authority") == -35, "save/load keeps MQ11 faction consequence");
+        Check(mq11Campaign.CompleteMq11(), "MQ11 completes after persisted decision");
+        Check(!mq11Campaign.CompleteMq11(), "MQ11 completion is idempotent");
+        Check(mq11Reloaded.HasFlag(MainQuestCampaign.Mq11Complete), "MQ11 completion flag is durable");
+        Check(mq11Reloaded.Quests.Get(MainQuestCampaign.Mq12Id).Phase == QuestPhase.Offered, "every MQ11 result keeps MQ12 available");
+
+        foreach (var position in Enum.GetValues<Mq11Position>())
+        {
+            var branch = new GameProgress();
+            branch.RestoreFlags(mq11Flags.Where(flag => !flag.StartsWith("MQ11-D01_", StringComparison.Ordinal)));
+            branch.Quests.Restore(mq11Quests);
+            branch.Reputation.Change(ReputationScope.Faction, "debrzyn-authority", -20);
+            var branchCampaign = new MainQuestCampaign(branch);
+            Check(branchCampaign.ChooseMq11Position(position, "debrzyn-authority", 0), $"MQ11 position {position} is available");
+            Check(branchCampaign.CompleteMq11(), $"MQ11 position {position} completes quest");
+            Check(branch.Quests.Get(MainQuestCampaign.Mq12Id).Phase == QuestPhase.Offered, $"MQ11 position {position} unlocks MQ12");
+        }
 
         return checks;
     }
