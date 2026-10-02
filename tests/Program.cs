@@ -216,6 +216,7 @@ Reject(() => terrain.SampleHeight(new Vector3(float.NaN, 0, 0)), "Invalid sample
 var world = WorldGenerator.Generate();
 var initializedRegionCount = world.Regions.Count;
 var initializedModelCount = world.Models.Count;
+var initializedObstacleCount = world.Obstacles.Count;
 world.Initialize();
 Check(world.Regions.Count == initializedRegionCount &&
       world.Regions.Select(region => region.Id).Distinct(StringComparer.Ordinal).Count() == initializedRegionCount,
@@ -223,7 +224,9 @@ Check(world.Regions.Count == initializedRegionCount &&
 Check(world.Models.Count == initializedModelCount &&
       world.Models.Select(model => model.Id).Distinct(StringComparer.Ordinal).Count() == initializedModelCount,
     "Idempotent model initialization");
-Check(world.Obstacles.Count == 9, "Idempotent obstacle initialization");
+Check(world.Obstacles.Count == initializedObstacleCount &&
+      world.Obstacles.Select(obstacle => obstacle.Id).Distinct(StringComparer.Ordinal).Count() == initializedObstacleCount,
+    "Idempotent obstacle initialization");
 Check(world.Enemies.Count == 1 && world.Enemies[0].Id == "swamp-predator",
     "World initializes one vertical-slice predator");
 StaticWorldMesh.Build(world, out var worldVertices, out var worldIndices);
