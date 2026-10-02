@@ -43,6 +43,27 @@ internal static class AssetIntegrationRegression
             }
         }
 
+        var realismSamples = new[]
+        {
+            housePath,
+            palisadePath,
+            grassClutterPath
+        };
+        var realismReports = realismSamples
+            .Select(AssetRealismAudit.InspectGlb)
+            .ToArray();
+
+        check(realismReports.All(report => report.MaterialCount > 0),
+            "Realism audit reads material data from visible GLB assets");
+        check(realismReports.All(report =>
+                report.Issues.All(issue => !string.IsNullOrWhiteSpace(issue.Code))),
+            "Realism audit returns structured issue codes");
+        Console.WriteLine(
+            "[REALISM] " +
+            string.Join(" | ", realismReports.Select(report =>
+                $"{Path.GetFileName(report.Path)}={report.Tier},minTex={report.MinimumTextureEdge}px," +
+                $"issues={report.Issues.Count}")));
+
         var house = GlbModel.Load(housePath);
         var houseMesh = house.BuildMesh(Matrix4x4.Identity, sourceIsZUp: true);
         check(houseMesh.Positions.Length > 0 && houseMesh.Indices.Length > 0,
