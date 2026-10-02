@@ -212,6 +212,30 @@ for (var i = 0; i < indices.Length; i += 3)
 }
 TerrainMesh.Build(new Terrain(257, 257), out var largeVertices, out var largeIndices);
 Check(largeIndices.Max() == largeVertices.Length - 1, "32-bit terrain indices");
+
+var villageSurface = TerrainSurfaceClassifier.Classify(
+    new Vector3(0f, 0f, -85f),
+    Vector3.UnitY);
+Check(villageSurface.Path > villageSurface.Grass &&
+      villageSurface.Path > villageSurface.ForestLitter,
+    "Village center resolves primarily to path/yard ground");
+
+var swampSurface = TerrainSurfaceClassifier.Classify(
+    new Vector3(95f, -0.5f, 35f),
+    Vector3.UnitY);
+Check(swampSurface.Mud + swampSurface.Swamp > 0.70f,
+    "Swamp center resolves primarily to wet ground");
+
+var steepSurface = TerrainSurfaceClassifier.Classify(
+    new Vector3(45f, 3f, 45f),
+    Vector3.Normalize(new Vector3(0.85f, 0.35f, 0.10f)));
+Check(steepSurface.Rock > 0.85f,
+    "Steep terrain resolves to rock");
+
+var surfaceTotal =
+    villageSurface.Grass + villageSurface.ForestLitter + villageSurface.Path +
+    villageSurface.Mud + villageSurface.Swamp + villageSurface.Rock;
+Near(surfaceTotal, 1f, "Terrain material weights stay normalized");
 Reject(() => terrain.SampleHeight(new Vector3(float.NaN, 0, 0)), "Invalid sample");
 var world = WorldGenerator.Generate();
 var initializedRegionCount = world.Regions.Count;
