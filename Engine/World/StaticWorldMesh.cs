@@ -1,4 +1,5 @@
 using System.Numerics;
+using SlavicGame.Engine.Assets;
 
 namespace SlavicGame.Engine.World;
 
@@ -20,6 +21,56 @@ public static class StaticWorldMesh
         foreach (var obstacle in world.Obstacles)
         {
             AddBox(obstacle, vertexList, indexList);
+        }
+
+        vertices = vertexList.ToArray();
+        indices = indexList.ToArray();
+    }
+
+
+    public static void BuildWithAssets(
+        WorldState world,
+        string assetsRoot,
+        out TerrainVertex[] vertices,
+        out uint[] indices)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetsRoot);
+
+        TerrainMesh.Build(world.Terrain, out var terrainVertices, out var terrainIndices);
+        var vertexList = new List<TerrainVertex>(terrainVertices);
+        var indexList = new List<uint>(terrainIndices);
+        var cache = new Dictionary<string, GlbModel>(StringComparer.Ordinal);
+
+        foreach (var instance in world.Models)
+        {
+            var relative = instance.AssetPath.Replace('/', Path.DirectorySeparatorChar);
+            var path = Path.Combine(assetsRoot, relative);
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Required world asset '{instance.Id}' was not found.", path);
+
+            if (!cache.TryGetValue(path, out var model))
+            {
+                model = GlbModel.Load(path);
+                cache.Add(path, model);
+            }
+
+            var transform =
+                Matrix4x4.CreateScale(instance.Scale) *
+                Matrix4x4.CreateRotationY(instance.YawRadians) *
+                Matrix4x4.CreateTranslation(instance.Position);
+
+            var mesh = model.BuildMesh(
+                transform,
+                animationName: null,
+                animationTimeSeconds: 0f,
+                sourceIsZUp: instance.SourceIsZUp);
+
+            var start = checked((uint)vertexList.Count);
+            foreach (var position in mesh.Positions)
+                vertexList.Add(new TerrainVertex(position, instance.Color));
+            foreach (var index in mesh.Indices)
+                indexList.Add(start + index);
         }
 
         vertices = vertexList.ToArray();
