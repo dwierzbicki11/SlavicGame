@@ -25,6 +25,9 @@ public static class TerrainSurfaceClassifier
         var slope = 1f - Math.Clamp(normal.Y, 0f, 1f);
 
         var forestMask = CircleMask(point, Vector2.Zero, 68f, 115f);
+        var villageClearing = CircleMask(point, VillageCenter, 30f, 58f);
+        forestMask *= 1f - villageClearing * 0.96f;
+
         foreach (var zone in ForestLayout.Zones)
         {
             forestMask = MathF.Max(
@@ -55,9 +58,20 @@ public static class TerrainSurfaceClassifier
         moistureNoise = Math.Clamp(moistureNoise, 0f, 1f);
 
         var rock = SmoothStep(0.18f, 0.50f, slope);
-        var mud = swampMask * (0.28f + moistureNoise * 0.46f);
+
+        var lowlandWetness =
+            (1f - SmoothStep(-0.65f, 1.65f, position.Y)) *
+            (0.38f + moistureNoise * 0.62f);
+        var villageYard = CircleMask(point, VillageCenter, 12f, 34f);
+
+        var mud =
+            swampMask * (0.28f + moistureNoise * 0.46f) +
+            pathMask * lowlandWetness * 0.22f +
+            villageYard * lowlandWetness * 0.18f;
+        mud = Math.Clamp(mud, 0f, 1f);
+
         var swamp = swampMask * (1f - mud * 0.52f);
-        var path = pathMask * (1f - swampMask * 0.72f);
+        var path = pathMask * (1f - swampMask * 0.72f) * (1f - mud * 0.34f);
 
         var litterVariation =
             0.76f +
