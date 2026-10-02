@@ -138,10 +138,18 @@ public sealed class Terrain
         {
             var nx = x / (float)(Width - 1);
             var nz = z / (float)(Depth - 1);
-            var large = MathF.Sin(nx * MathF.PI * 2.2f) * 2.5f
-                      + MathF.Cos(nz * MathF.PI * 1.7f) * 2f;
-            var detail = MathF.Sin((nx + nz) * MathF.PI * 8f) * 0.45f;
-            _heights[x, z] = large + detail;
+            var worldX = (x - (Width - 1) * 0.5f) * CellSize;
+            var worldZ = (z - (Depth - 1) * 0.5f) * CellSize;
+
+            // Broad landforms stay stable as the map grows, while world-space
+            // detail prevents a kilometre-scale terrain from becoming almost flat.
+            var large = MathF.Sin(nx * MathF.PI * 2.2f) * 3.2f
+                      + MathF.Cos(nz * MathF.PI * 1.7f) * 2.7f;
+            var regional = MathF.Sin((nx + nz) * MathF.PI * 8f) * 0.65f;
+            var local = MathF.Sin(worldX * 0.082f) * MathF.Cos(worldZ * 0.067f) * 1.65f
+                      + MathF.Sin((worldX + worldZ) * 0.041f) * 0.55f;
+
+            _heights[x, z] = large + regional + local;
         }
     }
 }
