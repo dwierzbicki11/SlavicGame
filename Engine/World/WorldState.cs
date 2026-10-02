@@ -24,9 +24,9 @@ public sealed class WorldState
     public PlayerVitals Player { get; } = new();
     public GameProgress Progress { get; } = new();
     public CosmologyState Cosmology { get; } = new();
-    // ~1 km x 1 km terrain: 16x the area of the original R0 prototype.
-    // The current R0 locations occupy only the central playable slice and can expand outward.
-    public Terrain Terrain { get; } = new(257, 257, 4f);
+    // ~2.0 km x 2.0 km terrain (~4.2 km²): R0 now occupies only the central part
+    // of a larger exploration map, leaving room for distinct forest biomes.
+    public Terrain Terrain { get; } = new(513, 513, 4f);
     public float PlayerRadius { get; } = 0.55f;
     public string CurrentRegion { get; private set; } = "starting-forest";
 
@@ -37,6 +37,15 @@ public sealed class WorldState
         _regions.Add(new WorldRegion("old-village", "Żarnowiec", WorldRegionType.Village, 0f, -85f, 32f));
         _regions.Add(new WorldRegion("black-swamp", "Czarne Mokradła", WorldRegionType.Swamp, 95f, 35f, 48f));
         _regions.Add(new WorldRegion("old-shrine", "Kamienny Krąg", WorldRegionType.Shrine, -85f, 55f, 22f));
+
+        foreach (var forest in ForestLayout.Zones)
+            _regions.Add(new WorldRegion(
+                forest.Id,
+                forest.Name,
+                WorldRegionType.Forest,
+                forest.Center.X,
+                forest.Center.Y,
+                forest.Radius));
 
         _obstacles.Clear();
         AddObstacle("village-hut-a", -10f, -88f, 8f, 7f, 5f, new Vector3(0.32f, 0.20f, 0.10f));
