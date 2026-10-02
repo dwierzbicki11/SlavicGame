@@ -1,42 +1,32 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ12. Ten dokument nie zastępuje specyfikacji systemów ani questów; wskazuje wyłącznie, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ13. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
-
-Implementujemy dokładnie jeden element naraz. Następny element może rozpocząć się dopiero po ukończeniu testów, zielonym CI i scaleniu bieżącego PR do `main`. Odkryte zależności trafiają tutaj jako blocker lub pozycja kolejki, bez rozpoczynania równoległej implementacji.
+Implementujemy dokładnie jeden element naraz. Następny rozpoczynamy dopiero po testach, zielonym CI i merge bieżącego PR do `main`. Blockery usuwamy minimalnie w ramach tego samego aktywnego zadania.
 
 ## Ukończone
-
-- [x] Act 0: MQ00 → MQ01 → MQ10 handoff — scalone.
-- [x] MQ10 „Znak pod drogą” — trwały state contract, evidence gating, persistence, idempotencja i odblokowanie MQ11 — scalone.
-- [x] MQ11 „Prawo łowcy” — trzy warianty `MQ11-D01`, trwała konsekwencja reputacji, persistence, regresje i bezwarunkowy handoff do MQ12 — scalone po zielonym CI.
-- [x] MQ12 „Las, który myli drogę” — tracking/navigation runtime, deterministyczna anomalia trasy, próg 2/3 punktów, fallback encounteru, persistence/recovery, `MQ12_NODE_CONFIRMED`, completion i handoff do MQ13 — scalone po zielonym CI.
+- [x] Act 0: MQ00 → MQ01 → MQ10 handoff.
+- [x] MQ10 „Znak pod drogą”.
+- [x] MQ11 „Prawo łowcy”.
+- [x] MQ12 „Las, który myli drogę” wraz z tracking/navigation runtime.
+- [x] MQ13 „Dwie mapy” — `MapOverlayState`, jawne dataset/evidence IDs, predicted point, deterministyczna synteza `NETWORK_HYPOTHESIS`, persistence/save-load, idempotencja i regresje; scalone po zielonym CI.
 
 ## Aktywny element
-
-### MQ13 „Dwie mapy” — BLOCKED (map overlay / evidence synthesis runtime)
-
-Karta MQ13 jest `implementation-ready v0.1` i wymaga `MQ10_COMPLETE`, `MQ11_COMPLETE`, `MQ12_COMPLETE`, journal/evidence, map overlay oraz persistence. Pierwsze trzy zależności są już w `main`, podobnie jak trwały quest/journal progress i persistence. Ponowna analiza aktualnego `main` nie wykazała jednak runtime ownera/kontraktu dla map overlay ani deterministycznej syntezy wymaganych pakietów evidence.
-
-Nie wolno implementować MQ13 wyłącznie przez quest flagi, ponieważ zgadywałoby to semantykę nałożenia map, wyboru przewidywanego punktu, minimalnego kontra rozszerzonego evidence set oraz zachowania overlay po ponownym otwarciu i save/load.
-
-### Minimalna praca konieczna do usunięcia blockera
-
-W ramach tego samego aktywnego zadania MQ13 należy kolejno:
-
-1. ustalić minimalny runtime contract `MapOverlayState`/odpowiednika: jawne ID warstw/datasetów, aktywacja overlay, trwały wynik syntezy i bezpieczne ponowne otwarcie po save/load;
-2. ustalić minimalny evidence-synthesis contract przyjmujący jawne wymagane evidence IDs i opcjonalne evidence, bez kodowania nazw contentu w silniku;
-3. umożliwić zapis co najmniej jednego jawnie wybranego/przewidywanego punktu i deterministyczne potwierdzenie zależności;
-4. zaimplementować kontrakty z persistence i regresjami; nie budować przy tym pełnego renderera mapy ani finalnego UI;
-5. po usunięciu blockera wrócić bezpośrednio do MQ13 i zaimplementować walidację trzech pakietów evidence, overlay, test hipotezy, `NETWORK_HYPOTHESIS`, `MQ13_COMPLETE` oraz handoff do Aktu II.
+### Synchronizacja kolejki po MQ13 — w toku
+MQ13 jest zakończone. Ponowna analiza aktualnego `main`, DocumentationWorkQueue, DocumentationCoverage i kart Aktu II wskazuje MQ20 „Sól i milczenie” jako pierwszy następny kandydat. Nie rozpoczynamy kodu MQ20 w tym samym kroku synchronizacji readiness; najpierw ta zmiana przechodzi branch/PR/CI/merge.
 
 ## Kolejka po MQ13
-
-Kolejność jest warunkowa i podlega ponownej analizie po każdym merge. Następny element wolno wybrać dopiero po pełnym zakończeniu MQ13 i ponownej analizie aktualnego `main`, `DocumentationWorkQueue.md` oraz `DocumentationCoverage.md`.
+1. **MQ20 „Sól i milczenie”** — `implementation-ready v0.1`; wymaga `MQ13_COMPLETE`, travel/region state, dialogue, reputation, journal/evidence i persistence. Na początku implementacji trzeba potwierdzić minimalne runtime contracts travel/region state oraz wielodrogowego dostępu do mapy. Brak któregoś jest blockerem MQ20 i wolno wtedy wykonać tylko minimalną pracę konieczną do jego usunięcia.
+2. **MQ21 „Cena przejścia”** — po MQ20; faction/reputation, dialogue, travel permissions, economy/world state, persistence.
+3. **MQ22 „Kamień pod kamieniem”** — po MQ21; exploration/tracking, environmental interaction, hazard/encounter state, journal/evidence, persistence.
+4. **MQ23 „Żelazna Brama”** — po MQ22; faction/reputation, resource/world state, dialogue, persistence.
+5. **MQ24 „Droga bez granicy”** — po MQ23; travel/navigation, dialogue, tracking, map/journal, persistence.
+6. **MQ25 „Archiwum bez jednego języka”** — po MQ20–MQ24; journal/evidence, map overlay, language/context tags, persistence.
 
 ## Otwarte decyzje implementacyjne
-
-- MQ13: konkretne IDs warstw mapy, trzech wymaganych pakietów evidence, opcjonalnych evidence oraz przewidywanych punktów są danymi contentowymi; runtime ma je przyjmować jawnie.
-- MQ13: wizualny sposób nałożenia map, animacje i finalny UX pozostają po stronie content/UI; blocker dotyczy deterministycznego state/synthesis/persistence contract.
-- MQ13: rozszerzony evidence set może wzbogacać prezentację, ale nie może zmieniać minimalnej możliwości ukończenia questa.
+- MQ20: finalne NPC, dialogi, encounter parametry, asset IDs i tuning są contentem; runtime nie może ich zgadywać.
+- MQ20: dostęp do fragmentu mapy musi mieć co najmniej jedną działającą drogę spośród przysługi, negocjacji, reputacji lub dowodu środowiskowego, bez pojedynczego krytycznego NPC.
+- MQ20: wynik konfliktu ujścia jest niezależny od trwałego `MQ20_REMOTE_NODE_EVIDENCE`; wybór polityczny nie może usunąć krytycznego evidence.
+- Akt II: decyzje MQ21/MQ23 mogą zmieniać wsparcie i ekonomię, ale nie mogą zamknąć krytycznej trasy kampanii.
+- MQ25: opcjonalny evidence może wzbogacać syntezę, ale minimalny zestaw musi wystarczać do ukończenia aktu.
