@@ -81,16 +81,34 @@ public sealed class TerrainMaterialRenderer : IDisposable
         _materialLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             Texture("GrassBase"),
             Texture("GrassNormal"),
+            Texture("GrassRoughness"),
+            Texture("GrassAo"),
+            Texture("GrassHeight"),
             Texture("PathBase"),
             Texture("PathNormal"),
+            Texture("PathRoughness"),
+            Texture("PathAo"),
+            Texture("PathHeight"),
             Texture("LitterBase"),
             Texture("LitterNormal"),
+            Texture("LitterRoughness"),
+            Texture("LitterAo"),
+            Texture("LitterHeight"),
             Texture("MudBase"),
             Texture("MudNormal"),
+            Texture("MudRoughness"),
+            Texture("MudAo"),
+            Texture("MudHeight"),
             Texture("SwampBase"),
             Texture("SwampNormal"),
+            Texture("SwampRoughness"),
+            Texture("SwampAo"),
+            Texture("SwampHeight"),
             Texture("RockBase"),
             Texture("RockNormal"),
+            Texture("RockRoughness"),
+            Texture("RockAo"),
+            Texture("RockHeight"),
             new ResourceLayoutElementDescription(
                 "TerrainSampler",
                 ResourceKind.Sampler,
@@ -100,22 +118,34 @@ public sealed class TerrainMaterialRenderer : IDisposable
         {
             LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "basecolor", srgb: true),
             LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "normal", srgb: false),
-
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "roughness", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "ao", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "height", srgb: false),
             LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "basecolor", srgb: true),
             LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "normal", srgb: false),
-
+            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "roughness", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "ao", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "height", srgb: false),
             LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "basecolor", srgb: true),
             LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "normal", srgb: false),
-
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "roughness", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "ao", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "height", srgb: false),
             LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "basecolor", srgb: true),
             LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "normal", srgb: false),
-
+            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "roughness", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "ao", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "height", srgb: false),
             LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "basecolor", srgb: true),
             LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "normal", srgb: false),
-
+            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "roughness", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "ao", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "height", srgb: false),
             LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "basecolor", srgb: true),
             LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "normal", srgb: false),
-
+            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "roughness", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "ao", srgb: false),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "height", srgb: false),
             graphicsDevice.Aniso4xSampler
         };
         _materialSet = factory.CreateResourceSet(
@@ -148,8 +178,8 @@ public sealed class TerrainMaterialRenderer : IDisposable
 
         EngineLog.Info(
             $"Terrain material renderer initialized: {vertices.Length} vertices, " +
-            $"{indices.Length / 3} triangles, 6 blended PBR surface materials, " +
-            $"12 sampled textures.");
+            $"{indices.Length / 3} triangles, 6 height-blended PBR surface materials, " +
+            $"30 sampled textures.");
     }
 
     public void Render(CommandList commandList, ResourceSet cameraSet)
