@@ -228,8 +228,10 @@ Check(worldIndices.Max() == worldVertices.Length - 1, "Static world indices addr
 world.SetPlayerPosition(new Vector3(0, 999, -85));
 Check(world.CurrentRegion == "old-village", "Village detection");
 world.SetPlayerPosition(new Vector3(10000, 0, -10000));
-Near(world.PlayerPosition.X, 127, "East boundary");
-Near(world.PlayerPosition.Z, -127, "South boundary");
+var worldHalfWidth = (world.Terrain.Width - 1) * world.Terrain.CellSize * 0.5f;
+var worldHalfDepth = (world.Terrain.Depth - 1) * world.Terrain.CellSize * 0.5f;
+Near(world.PlayerPosition.X, worldHalfWidth, "East boundary");
+Near(world.PlayerPosition.Z, -worldHalfDepth, "South boundary");
 Near(world.PlayerPosition.Y, world.Terrain.SampleHeight(world.PlayerPosition), "Ground following");
 Reject(() => world.SetPlayerPosition(new Vector3(float.PositiveInfinity, 0, 0)), "Invalid player position");
 Reject(() => new WorldObstacle("invalid", Vector3.Zero, Vector2.Zero, 1f, Vector3.One),
