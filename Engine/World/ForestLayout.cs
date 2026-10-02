@@ -31,8 +31,8 @@ public static class ForestLayout
             ForestBiome.Oak,
             new Vector2(-520f, 430f),
             300f,
-            105,
-            48,
+            150,
+            70,
             28f),
         new ForestZone(
             "perun-pinewood",
@@ -40,8 +40,8 @@ public static class ForestLayout
             ForestBiome.Pine,
             new Vector2(-535f, -430f),
             285f,
-            115,
-            42,
+            165,
+            60,
             24f),
         new ForestZone(
             "birch-grove",
@@ -49,8 +49,8 @@ public static class ForestLayout
             ForestBiome.Birch,
             new Vector2(505f, 435f),
             250f,
-            82,
-            44,
+            125,
+            65,
             30f),
         new ForestZone(
             "wet-forest",
@@ -58,8 +58,8 @@ public static class ForestLayout
             ForestBiome.Wetland,
             new Vector2(530f, -360f),
             270f,
-            74,
-            52,
+            110,
+            80,
             26f)
     ];
 
