@@ -4,7 +4,8 @@
 
 - `terrain.vert` / `terrain.frag` — teren i prosty kolorowy pass,
 - `hud.vert` / `hud.frag` — HUD,
-- `pbr.vert` / `pbr.frag` — modele GLB z materiałami PBR.
+- `pbr.vert` / `pbr.frag` — modele GLB z materiałami PBR,
+- `sky.vert` / `sky.frag` — proceduralne niebo, horyzont i słońce.
 
 Renderer **nie przechowuje shaderów jako stringów C#**. Vulkan ładuje skompilowane pliki SPIR-V z:
 
