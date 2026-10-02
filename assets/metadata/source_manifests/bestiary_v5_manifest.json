@@ -1,0 +1,419 @@
+{
+  "pack": "SlavicGame R0 Bestiary + Ritual + Vertical Slice Pack v5",
+  "format": "glTF 2.0 binary (.glb)",
+  "asset_count": 30,
+  "category_counts": {
+    "bestiary": 6,
+    "wildlife": 4,
+    "ritual": 11,
+    "evidence": 7,
+    "alchemy": 2
+  },
+  "textures": "embedded PBR textures + editable PNG source maps",
+  "maps": [
+    "BaseColor",
+    "Normal",
+    "MetallicRoughness"
+  ],
+  "license": "CC0-style public-domain dedication for generated geometry/textures",
+  "important_notes": [
+    "Monster meshes are static prototype silhouettes, not rigged/animated final characters.",
+    "forest_guardian and swamp_predator identities remain generic where documentation keeps final folklore identity open.",
+    "magic/ognik/orb assets are static mesh proxies intended to be replaced by VFX/particle systems."
+  ],
+  "assets": [
+    {
+      "file": "topielec_proto_r0_01.glb",
+      "category": "bestiary",
+      "tags": [
+        "swamp",
+        "undead_like",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 1312,
+      "vertices": 680,
+      "size_kb": 189.6,
+      "notes": "Prototype only; final folklore identity requires research lock."
+    },
+    {
+      "file": "upior_proto_r0_01.glb",
+      "category": "bestiary",
+      "tags": [
+        "revenant",
+        "night",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 868,
+      "vertices": 452,
+      "size_kb": 175.4,
+      "notes": ""
+    },
+    {
+      "file": "forest_guardian_proto_r0_01.glb",
+      "category": "bestiary",
+      "tags": [
+        "forest_guardian",
+        "forest",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 664,
+      "vertices": 358,
+      "size_kb": 191.8,
+      "notes": "Identity intentionally generic pending final forest-guardian naming/research lock."
+    },
+    {
+      "file": "boginka_proto_r0_01.glb",
+      "category": "bestiary",
+      "tags": [
+        "water_spirit",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 892,
+      "vertices": 468,
+      "size_kb": 126.4,
+      "notes": ""
+    },
+    {
+      "file": "poludnica_proto_r0_01.glb",
+      "category": "bestiary",
+      "tags": [
+        "field_spirit",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 752,
+      "vertices": 386,
+      "size_kb": 121.9,
+      "notes": ""
+    },
+    {
+      "file": "swamp_predator_proto_r0_01.glb",
+      "category": "bestiary",
+      "tags": [
+        "swamp_predator",
+        "prototype",
+        "r0"
+      ],
+      "triangles": 820,
+      "vertices": 424,
+      "size_kb": 123.4,
+      "notes": "Generic silhouette because final folkloric identity remains open."
+    },
+    {
+      "file": "dzik_r0_01.glb",
+      "category": "wildlife",
+      "tags": [
+        "boar",
+        "wildlife",
+        "r0"
+      ],
+      "triangles": 840,
+      "vertices": 436,
+      "size_kb": 180.3,
+      "notes": ""
+    },
+    {
+      "file": "wilk_r0_01.glb",
+      "category": "wildlife",
+      "tags": [
+        "wolf",
+        "wildlife",
+        "r0"
+      ],
+      "triangles": 840,
+      "vertices": 436,
+      "size_kb": 74.8,
+      "notes": ""
+    },
+    {
+      "file": "jelen_r0_01.glb",
+      "category": "wildlife",
+      "tags": [
+        "deer",
+        "wildlife",
+        "r0"
+      ],
+      "triangles": 976,
+      "vertices": 510,
+      "size_kb": 134.1,
+      "notes": ""
+    },
+    {
+      "file": "kruk_r0_01.glb",
+      "category": "wildlife",
+      "tags": [
+        "raven",
+        "wildlife",
+        "r0"
+      ],
+      "triangles": 440,
+      "vertices": 230,
+      "size_kb": 118.9,
+      "notes": ""
+    },
+    {
+      "file": "krag_rytualny_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "ritual_circle",
+        "magic",
+        "r0"
+      ],
+      "triangles": 1056,
+      "vertices": 544,
+      "size_kb": 74.5,
+      "notes": ""
+    },
+    {
+      "file": "kamien_runiczny_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "rune_stone",
+        "magic",
+        "r0"
+      ],
+      "triangles": 116,
+      "vertices": 66,
+      "size_kb": 145.3,
+      "notes": ""
+    },
+    {
+      "file": "oltar_rytualny_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "altar",
+        "magic",
+        "r0"
+      ],
+      "triangles": 60,
+      "vertices": 40,
+      "size_kb": 144.1,
+      "notes": ""
+    },
+    {
+      "file": "swiece_rytualne_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "candles",
+        "ritual",
+        "r0"
+      ],
+      "triangles": 204,
+      "vertices": 114,
+      "size_kb": 116.6,
+      "notes": ""
+    },
+    {
+      "file": "talizman_wiszacy_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "talisman",
+        "ritual",
+        "r0"
+      ],
+      "triangles": 512,
+      "vertices": 270,
+      "size_kb": 118.5,
+      "notes": ""
+    },
+    {
+      "file": "misa_ofiarna_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "offering",
+        "ritual",
+        "r0"
+      ],
+      "triangles": 272,
+      "vertices": 142,
+      "size_kb": 158.9,
+      "notes": ""
+    },
+    {
+      "file": "paliki_rytualne_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "stakes",
+        "ritual",
+        "r0"
+      ],
+      "triangles": 312,
+      "vertices": 180,
+      "size_kb": 173.3,
+      "notes": ""
+    },
+    {
+      "file": "orb_magic_proxy_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "magic_fx_proxy",
+        "r0"
+      ],
+      "triangles": 1184,
+      "vertices": 594,
+      "size_kb": 81.6,
+      "notes": "Static mesh proxy for later VFX replacement."
+    },
+    {
+      "file": "slady_pazurow_r0_01.glb",
+      "category": "evidence",
+      "tags": [
+        "tracking",
+        "claw_marks",
+        "r0"
+      ],
+      "triangles": 48,
+      "vertices": 32,
+      "size_kb": 160.7,
+      "notes": ""
+    },
+    {
+      "file": "trop_bagienny_r0_01.glb",
+      "category": "evidence",
+      "tags": [
+        "tracking",
+        "footprint",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 320,
+      "vertices": 168,
+      "size_kb": 66.1,
+      "notes": ""
+    },
+    {
+      "file": "zlamana_galaz_r0_01.glb",
+      "category": "evidence",
+      "tags": [
+        "tracking",
+        "branch",
+        "r0"
+      ],
+      "triangles": 96,
+      "vertices": 54,
+      "size_kb": 167.1,
+      "notes": ""
+    },
+    {
+      "file": "slady_krwi_proxy_r0_01.glb",
+      "category": "evidence",
+      "tags": [
+        "tracking",
+        "evidence",
+        "r0"
+      ],
+      "triangles": 240,
+      "vertices": 126,
+      "size_kb": 54.5,
+      "notes": "Abstract visual proxy; not intended as graphic content."
+    },
+    {
+      "file": "strzep_tkaniny_r0_01.glb",
+      "category": "evidence",
+      "tags": [
+        "evidence",
+        "cloth",
+        "r0"
+      ],
+      "triangles": 12,
+      "vertices": 8,
+      "size_kb": 55.3,
+      "notes": ""
+    },
+    {
+      "file": "fragment_wezla_r0_01.glb",
+      "category": "evidence",
+      "tags": [
+        "network_node",
+        "evidence",
+        "r0"
+      ],
+      "triangles": 492,
+      "vertices": 248,
+      "size_kb": 152.4,
+      "notes": ""
+    },
+    {
+      "file": "zwęglone_drewno_rytualne_r0_01.glb",
+      "category": "evidence",
+      "tags": [
+        "ritual",
+        "evidence",
+        "r0"
+      ],
+      "triangles": 84,
+      "vertices": 50,
+      "size_kb": 108.1,
+      "notes": ""
+    },
+    {
+      "file": "ognik_proxy_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "will_o_wisp_proxy",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 1760,
+      "vertices": 882,
+      "size_kb": 79.1,
+      "notes": "Static prototype for future particle/VFX implementation."
+    },
+    {
+      "file": "znak_ochronny_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "ward",
+        "magic",
+        "r0"
+      ],
+      "triangles": 48,
+      "vertices": 32,
+      "size_kb": 164.3,
+      "notes": ""
+    },
+    {
+      "file": "mikstura_proxy_r0_01.glb",
+      "category": "alchemy",
+      "tags": [
+        "potion",
+        "alchemy",
+        "r0"
+      ],
+      "triangles": 224,
+      "vertices": 118,
+      "size_kb": 159.7,
+      "notes": ""
+    },
+    {
+      "file": "sakiewka_ziol_r0_01.glb",
+      "category": "alchemy",
+      "tags": [
+        "herbs",
+        "alchemy",
+        "r0"
+      ],
+      "triangles": 360,
+      "vertices": 184,
+      "size_kb": 170.8,
+      "notes": ""
+    },
+    {
+      "file": "amulet_kosciany_r0_01.glb",
+      "category": "ritual",
+      "tags": [
+        "bone_charm",
+        "ritual",
+        "r0"
+      ],
+      "triangles": 92,
+      "vertices": 54,
+      "size_kb": 114.3,
+      "notes": ""
+    }
+  ]
+}

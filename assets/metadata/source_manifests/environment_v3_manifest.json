@@ -1,0 +1,483 @@
+{
+  "pack": "SlavicGame R0 Environment Pack v3",
+  "format": "glTF 2.0 binary (.glb)",
+  "asset_count": 38,
+  "category_counts": {
+    "vegetation": 12,
+    "swamp": 10,
+    "religious": 3,
+    "interior": 9,
+    "ruins": 4
+  },
+  "textures": "embedded PBR textures + editable PNG sources",
+  "maps": [
+    "BaseColor",
+    "Normal",
+    "MetallicRoughness"
+  ],
+  "license": "CC0-style public-domain dedication for generated geometry/textures",
+  "assets": [
+    {
+      "file": "dab_stary_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "tree",
+        "forest",
+        "r0"
+      ],
+      "triangles": 1992,
+      "vertices": 1010,
+      "size_kb": 172.4
+    },
+    {
+      "file": "dab_stary_r0_02.glb",
+      "category": "vegetation",
+      "tags": [
+        "tree",
+        "forest",
+        "r0"
+      ],
+      "triangles": 1992,
+      "vertices": 1010,
+      "size_kb": 172.4
+    },
+    {
+      "file": "brzoza_r0_02.glb",
+      "category": "vegetation",
+      "tags": [
+        "tree",
+        "forest",
+        "r0"
+      ],
+      "triangles": 1992,
+      "vertices": 1010,
+      "size_kb": 172.4
+    },
+    {
+      "file": "sosna_r0_02.glb",
+      "category": "vegetation",
+      "tags": [
+        "tree",
+        "forest",
+        "r0"
+      ],
+      "triangles": 1992,
+      "vertices": 1010,
+      "size_kb": 172.4
+    },
+    {
+      "file": "olsza_bagienna_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "tree",
+        "forest",
+        "r0"
+      ],
+      "triangles": 1992,
+      "vertices": 1010,
+      "size_kb": 172.4
+    },
+    {
+      "file": "krzak_r0_02.glb",
+      "category": "vegetation",
+      "tags": [
+        "bush",
+        "forest",
+        "r0"
+      ],
+      "triangles": 640,
+      "vertices": 336,
+      "size_kb": 76.8
+    },
+    {
+      "file": "krzak_r0_03.glb",
+      "category": "vegetation",
+      "tags": [
+        "bush",
+        "forest",
+        "r0"
+      ],
+      "triangles": 640,
+      "vertices": 336,
+      "size_kb": 76.8
+    },
+    {
+      "file": "krzak_r0_04.glb",
+      "category": "vegetation",
+      "tags": [
+        "bush",
+        "forest",
+        "r0"
+      ],
+      "triangles": 640,
+      "vertices": 336,
+      "size_kb": 76.8
+    },
+    {
+      "file": "paproc_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "fern",
+        "forest",
+        "groundcover",
+        "r0"
+      ],
+      "triangles": 576,
+      "vertices": 384,
+      "size_kb": 104.8
+    },
+    {
+      "file": "grzyby_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "mushrooms",
+        "forest",
+        "r0"
+      ],
+      "triangles": 288,
+      "vertices": 160,
+      "size_kb": 115.9
+    },
+    {
+      "file": "powalone_drzewo_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "deadwood",
+        "forest",
+        "r0"
+      ],
+      "triangles": 232,
+      "vertices": 126,
+      "size_kb": 90.5
+    },
+    {
+      "file": "korzenie_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "roots",
+        "forest",
+        "r0"
+      ],
+      "triangles": 280,
+      "vertices": 154,
+      "size_kb": 91.4
+    },
+    {
+      "file": "trzciny_r0_01.glb",
+      "category": "swamp",
+      "tags": [
+        "reeds",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 960,
+      "vertices": 540,
+      "size_kb": 171.5
+    },
+    {
+      "file": "trzciny_r0_02.glb",
+      "category": "swamp",
+      "tags": [
+        "reeds",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 960,
+      "vertices": 540,
+      "size_kb": 171.5
+    },
+    {
+      "file": "trzciny_r0_03.glb",
+      "category": "swamp",
+      "tags": [
+        "reeds",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 960,
+      "vertices": 540,
+      "size_kb": 171.5
+    },
+    {
+      "file": "wyspa_bagienna_r0_01.glb",
+      "category": "swamp",
+      "tags": [
+        "mud",
+        "island",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 800,
+      "vertices": 414,
+      "size_kb": 142.0
+    },
+    {
+      "file": "pien_bagienny_r0_01.glb",
+      "category": "swamp",
+      "tags": [
+        "stump",
+        "moss",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 224,
+      "vertices": 128,
+      "size_kb": 156.7
+    },
+    {
+      "file": "kladka_bagienna_01.glb",
+      "category": "swamp",
+      "tags": [
+        "boardwalk",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 140,
+      "vertices": 84,
+      "size_kb": 202.3
+    },
+    {
+      "file": "kladka_bagienna_02.glb",
+      "category": "swamp",
+      "tags": [
+        "boardwalk",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 200,
+      "vertices": 124,
+      "size_kb": 204.9
+    },
+    {
+      "file": "kladka_bagienna_03.glb",
+      "category": "swamp",
+      "tags": [
+        "boardwalk",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 248,
+      "vertices": 156,
+      "size_kb": 206.9
+    },
+    {
+      "file": "kladka_bagienna_uszkodzona_01.glb",
+      "category": "swamp",
+      "tags": [
+        "boardwalk",
+        "broken",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 108,
+      "vertices": 72,
+      "size_kb": 119.1
+    },
+    {
+      "file": "pulapka_rybacka_r0_01.glb",
+      "category": "swamp",
+      "tags": [
+        "fishtrap",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 656,
+      "vertices": 358,
+      "size_kb": 72.6
+    },
+    {
+      "file": "znak_bagienny_r0_01.glb",
+      "category": "religious",
+      "tags": [
+        "marker",
+        "swamp",
+        "r0"
+      ],
+      "triangles": 176,
+      "vertices": 96,
+      "size_kb": 175.0
+    },
+    {
+      "file": "stol_wnetrze_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "table",
+        "interior",
+        "r0"
+      ],
+      "triangles": 108,
+      "vertices": 72,
+      "size_kb": 202.2
+    },
+    {
+      "file": "stol_wnetrze_r0_02.glb",
+      "category": "interior",
+      "tags": [
+        "table",
+        "interior",
+        "r0"
+      ],
+      "triangles": 108,
+      "vertices": 72,
+      "size_kb": 202.1
+    },
+    {
+      "file": "lawa_wnetrze_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "bench",
+        "interior",
+        "r0"
+      ],
+      "triangles": 36,
+      "vertices": 24,
+      "size_kb": 198.8
+    },
+    {
+      "file": "lawa_wnetrze_r0_02.glb",
+      "category": "interior",
+      "tags": [
+        "bench",
+        "interior",
+        "r0"
+      ],
+      "triangles": 36,
+      "vertices": 24,
+      "size_kb": 198.7
+    },
+    {
+      "file": "kufer_r0_02.glb",
+      "category": "interior",
+      "tags": [
+        "chest",
+        "interior",
+        "r0"
+      ],
+      "triangles": 108,
+      "vertices": 62,
+      "size_kb": 234.7
+    },
+    {
+      "file": "wieszak_scienny_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "rack",
+        "interior",
+        "r0"
+      ],
+      "triangles": 72,
+      "vertices": 48,
+      "size_kb": 200.4
+    },
+    {
+      "file": "naczynia_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "pots",
+        "kitchen",
+        "r0"
+      ],
+      "triangles": 480,
+      "vertices": 252,
+      "size_kb": 116.3
+    },
+    {
+      "file": "ziola_suszone_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "herbs",
+        "alchemy",
+        "interior",
+        "r0"
+      ],
+      "triangles": 1916,
+      "vertices": 1016,
+      "size_kb": 237.1
+    },
+    {
+      "file": "krosno_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "loom",
+        "craft",
+        "interior",
+        "r0"
+      ],
+      "triangles": 216,
+      "vertices": 144,
+      "size_kb": 263.9
+    },
+    {
+      "file": "mur_ruina_r0_01.glb",
+      "category": "ruins",
+      "tags": [
+        "ruin",
+        "stonewall",
+        "r0"
+      ],
+      "triangles": 120,
+      "vertices": 80,
+      "size_kb": 91.9
+    },
+    {
+      "file": "mur_ruina_r0_02.glb",
+      "category": "ruins",
+      "tags": [
+        "ruin",
+        "stonewall",
+        "r0"
+      ],
+      "triangles": 144,
+      "vertices": 96,
+      "size_kb": 92.9
+    },
+    {
+      "file": "mur_ruina_r0_03.glb",
+      "category": "ruins",
+      "tags": [
+        "ruin",
+        "stonewall",
+        "r0"
+      ],
+      "triangles": 264,
+      "vertices": 176,
+      "size_kb": 98.2
+    },
+    {
+      "file": "kapliczka_ruina_r0_01.glb",
+      "category": "ruins",
+      "tags": [
+        "ruin",
+        "shrine",
+        "r0"
+      ],
+      "triangles": 324,
+      "vertices": 182,
+      "size_kb": 177.7
+    },
+    {
+      "file": "kamienny_krag_fragment_r0_01.glb",
+      "category": "religious",
+      "tags": [
+        "standingstones",
+        "ritual",
+        "r0"
+      ],
+      "triangles": 320,
+      "vertices": 168,
+      "size_kb": 92.8
+    },
+    {
+      "file": "znacznik_grobu_r0_01.glb",
+      "category": "religious",
+      "tags": [
+        "grave",
+        "marker",
+        "r0"
+      ],
+      "triangles": 92,
+      "vertices": 50,
+      "size_kb": 202.9
+    }
+  ]
+}

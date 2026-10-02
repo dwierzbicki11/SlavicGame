@@ -1,0 +1,925 @@
+{
+  "strategy": "vertex-cluster prototype LOD",
+  "lod1_target_ratio": 0.55,
+  "lod2_target_ratio": 0.25,
+  "assets": [
+    {
+      "file": "amulet_kosciany_r0_01.glb",
+      "lod0_faces": 92,
+      "lod1_faces": 42,
+      "lod2_faces": 42
+    },
+    {
+      "file": "amulet_rytualny_r0_01.glb",
+      "lod0_faces": 432,
+      "lod1_faces": 243,
+      "lod2_faces": 156
+    },
+    {
+      "file": "basket_r0_01.glb",
+      "lod0_faces": 624,
+      "lod1_faces": 320,
+      "lod2_faces": 160
+    },
+    {
+      "file": "bela_siana_r0_01.glb",
+      "lod0_faces": 288,
+      "lod1_faces": 144,
+      "lod2_faces": 48
+    },
+    {
+      "file": "boginka_proto_r0_01.glb",
+      "lod0_faces": 892,
+      "lod1_faces": 428,
+      "lod2_faces": 270
+    },
+    {
+      "file": "brama_wioskowa_r0_01.glb",
+      "lod0_faces": 116,
+      "lod1_faces": 60,
+      "lod2_faces": 36
+    },
+    {
+      "file": "bridge_broken_r0_01.glb",
+      "lod0_faces": 120,
+      "lod1_faces": 56,
+      "lod2_faces": 40
+    },
+    {
+      "file": "brzoza_r0_01.glb",
+      "lod0_faces": 1672,
+      "lod1_faces": 927,
+      "lod2_faces": 415
+    },
+    {
+      "file": "brzoza_r0_02.glb",
+      "lod0_faces": 1992,
+      "lod1_faces": 1025,
+      "lod2_faces": 475
+    },
+    {
+      "file": "buklak_r0_01.glb",
+      "lod0_faces": 368,
+      "lod1_faces": 224,
+      "lod2_faces": 94
+    },
+    {
+      "file": "campfire_unlit_r0_01.glb",
+      "lod0_faces": 816,
+      "lod1_faces": 476,
+      "lod2_faces": 283
+    },
+    {
+      "file": "cave_entrance_r0_01.glb",
+      "lod0_faces": 960,
+      "lod1_faces": 486,
+      "lod2_faces": 213
+    },
+    {
+      "file": "chata_r0_variant_01.glb",
+      "lod0_faces": 2444,
+      "lod1_faces": 1220,
+      "lod2_faces": 540
+    },
+    {
+      "file": "chata_r0_variant_02.glb",
+      "lod0_faces": 2480,
+      "lod1_faces": 1352,
+      "lod2_faces": 664
+    },
+    {
+      "file": "chata_r0_variant_03.glb",
+      "lod0_faces": 2216,
+      "lod1_faces": 1300,
+      "lod2_faces": 686
+    },
+    {
+      "file": "chata_r0_variant_04.glb",
+      "lod0_faces": 2540,
+      "lod1_faces": 1204,
+      "lod2_faces": 796
+    },
+    {
+      "file": "cliff_chunk_r0_01.glb",
+      "lod0_faces": 320,
+      "lod1_faces": 140,
+      "lod2_faces": 140
+    },
+    {
+      "file": "dab_r0_02.glb",
+      "lod0_faces": 1672,
+      "lod1_faces": 853,
+      "lod2_faces": 317
+    },
+    {
+      "file": "dab_stary_r0_01.glb",
+      "lod0_faces": 1992,
+      "lod1_faces": 1021,
+      "lod2_faces": 366
+    },
+    {
+      "file": "dab_stary_r0_02.glb",
+      "lod0_faces": 1992,
+      "lod1_faces": 1000,
+      "lod2_faces": 613
+    },
+    {
+      "file": "drogowskaz_r0_01.glb",
+      "lod0_faces": 60,
+      "lod1_faces": 36,
+      "lod2_faces": 36
+    },
+    {
+      "file": "dziennik_r0_01.glb",
+      "lod0_faces": 24,
+      "lod1_faces": 24,
+      "lod2_faces": 24
+    },
+    {
+      "file": "dzik_r0_01.glb",
+      "lod0_faces": 840,
+      "lod1_faces": 496,
+      "lod2_faces": 250
+    },
+    {
+      "file": "fence_broken_r0_01.glb",
+      "lod0_faces": 264,
+      "lod1_faces": 136,
+      "lod2_faces": 112
+    },
+    {
+      "file": "forest_guardian_proto_r0_01.glb",
+      "lod0_faces": 664,
+      "lod1_faces": 328,
+      "lod2_faces": 119
+    },
+    {
+      "file": "fragment_mapy_mq20.glb",
+      "lod0_faces": 60,
+      "lod1_faces": 36,
+      "lod2_faces": 28
+    },
+    {
+      "file": "fragment_wezla_r0_01.glb",
+      "lod0_faces": 492,
+      "lod1_faces": 312,
+      "lod2_faces": 100
+    },
+    {
+      "file": "garnek_gliniany_r0_01.glb",
+      "lod0_faces": 192,
+      "lod1_faces": 88,
+      "lod2_faces": 48
+    },
+    {
+      "file": "grzyby_r0_01.glb",
+      "lod0_faces": 288,
+      "lod1_faces": 150,
+      "lod2_faces": 72
+    },
+    {
+      "file": "jelen_r0_01.glb",
+      "lod0_faces": 976,
+      "lod1_faces": 515,
+      "lod2_faces": 222
+    },
+    {
+      "file": "kamien_dowodowy_r0_01.glb",
+      "lod0_faces": 48,
+      "lod1_faces": 32,
+      "lod2_faces": 12
+    },
+    {
+      "file": "kamien_kultowy_r0_01.glb",
+      "lod0_faces": 92,
+      "lod1_faces": 60,
+      "lod2_faces": 60
+    },
+    {
+      "file": "kamien_runiczny_r0_01.glb",
+      "lod0_faces": 116,
+      "lod1_faces": 52,
+      "lod2_faces": 52
+    },
+    {
+      "file": "kamienny_krag_fragment_r0_01.glb",
+      "lod0_faces": 320,
+      "lod1_faces": 160,
+      "lod2_faces": 46
+    },
+    {
+      "file": "kapliczka_ruina_r0_01.glb",
+      "lod0_faces": 324,
+      "lod1_faces": 174,
+      "lod2_faces": 95
+    },
+    {
+      "file": "kladka_bagienna_01.glb",
+      "lod0_faces": 140,
+      "lod1_faces": 68,
+      "lod2_faces": 48
+    },
+    {
+      "file": "kladka_bagienna_02.glb",
+      "lod0_faces": 200,
+      "lod1_faces": 84,
+      "lod2_faces": 40
+    },
+    {
+      "file": "kladka_bagienna_03.glb",
+      "lod0_faces": 248,
+      "lod1_faces": 130,
+      "lod2_faces": 40
+    },
+    {
+      "file": "kladka_bagienna_uszkodzona_01.glb",
+      "lod0_faces": 108,
+      "lod1_faces": 55,
+      "lod2_faces": 44
+    },
+    {
+      "file": "klucz_stary_r0_01.glb",
+      "lod0_faces": 116,
+      "lod1_faces": 76,
+      "lod2_faces": 44
+    },
+    {
+      "file": "kolczan_r0_01.glb",
+      "lod0_faces": 264,
+      "lod1_faces": 144,
+      "lod2_faces": 64
+    },
+    {
+      "file": "korzenie_r0_01.glb",
+      "lod0_faces": 280,
+      "lod1_faces": 159,
+      "lod2_faces": 123
+    },
+    {
+      "file": "kowadlo_r0_01.glb",
+      "lod0_faces": 48,
+      "lod1_faces": 40,
+      "lod2_faces": 40
+    },
+    {
+      "file": "krag_rytualny_r0_01.glb",
+      "lod0_faces": 1056,
+      "lod1_faces": 606,
+      "lod2_faces": 222
+    },
+    {
+      "file": "krosno_r0_01.glb",
+      "lod0_faces": 216,
+      "lod1_faces": 120,
+      "lod2_faces": 64
+    },
+    {
+      "file": "kruk_r0_01.glb",
+      "lod0_faces": 440,
+      "lod1_faces": 304,
+      "lod2_faces": 104
+    },
+    {
+      "file": "krzak_r0_01.glb",
+      "lod0_faces": 560,
+      "lod1_faces": 197,
+      "lod2_faces": 197
+    },
+    {
+      "file": "krzak_r0_02.glb",
+      "lod0_faces": 640,
+      "lod1_faces": 411,
+      "lod2_faces": 190
+    },
+    {
+      "file": "krzak_r0_03.glb",
+      "lod0_faces": 640,
+      "lod1_faces": 386,
+      "lod2_faces": 172
+    },
+    {
+      "file": "krzak_r0_04.glb",
+      "lod0_faces": 640,
+      "lod1_faces": 442,
+      "lod2_faces": 200
+    },
+    {
+      "file": "kufer_r0_02.glb",
+      "lod0_faces": 108,
+      "lod1_faces": 60,
+      "lod2_faces": 60
+    },
+    {
+      "file": "kuznia_r0_01.glb",
+      "lod0_faces": 2228,
+      "lod1_faces": 1200,
+      "lod2_faces": 700
+    },
+    {
+      "file": "lantern_proxy_r0_01.glb",
+      "lod0_faces": 60,
+      "lod1_faces": 24,
+      "lod2_faces": 20
+    },
+    {
+      "file": "lawa_wnetrze_r0_01.glb",
+      "lod0_faces": 36,
+      "lod1_faces": 20,
+      "lod2_faces": 12
+    },
+    {
+      "file": "lawa_wnetrze_r0_02.glb",
+      "lod0_faces": 36,
+      "lod1_faces": 20,
+      "lod2_faces": 12
+    },
+    {
+      "file": "lozko_r0_01.glb",
+      "lod0_faces": 84,
+      "lod1_faces": 44,
+      "lod2_faces": 18
+    },
+    {
+      "file": "luk_r0_01.glb",
+      "lod0_faces": 204,
+      "lod1_faces": 104,
+      "lod2_faces": 48
+    },
+    {
+      "file": "luk_r0_02.glb",
+      "lod0_faces": 204,
+      "lod1_faces": 112,
+      "lod2_faces": 48
+    },
+    {
+      "file": "miecz_r0_01.glb",
+      "lod0_faces": 168,
+      "lod1_faces": 98,
+      "lod2_faces": 29
+    },
+    {
+      "file": "miecz_r0_02.glb",
+      "lod0_faces": 168,
+      "lod1_faces": 84,
+      "lod2_faces": 29
+    },
+    {
+      "file": "mikstura_proxy_r0_01.glb",
+      "lod0_faces": 224,
+      "lod1_faces": 92,
+      "lod2_faces": 92
+    },
+    {
+      "file": "misa_ofiarna_r0_01.glb",
+      "lod0_faces": 272,
+      "lod1_faces": 184,
+      "lod2_faces": 96
+    },
+    {
+      "file": "misa_rytualna_r0_01.glb",
+      "lod0_faces": 192,
+      "lod1_faces": 84,
+      "lod2_faces": 84
+    },
+    {
+      "file": "most_drewniany_r0_01.glb",
+      "lod0_faces": 324,
+      "lod1_faces": 166,
+      "lod2_faces": 74
+    },
+    {
+      "file": "mur_ruina_r0_01.glb",
+      "lod0_faces": 120,
+      "lod1_faces": 100,
+      "lod2_faces": 100
+    },
+    {
+      "file": "mur_ruina_r0_02.glb",
+      "lod0_faces": 144,
+      "lod1_faces": 102,
+      "lod2_faces": 102
+    },
+    {
+      "file": "mur_ruina_r0_03.glb",
+      "lod0_faces": 264,
+      "lod1_faces": 114,
+      "lod2_faces": 114
+    },
+    {
+      "file": "naczynia_r0_01.glb",
+      "lod0_faces": 480,
+      "lod1_faces": 257,
+      "lod2_faces": 80
+    },
+    {
+      "file": "noz_r0_01.glb",
+      "lod0_faces": 68,
+      "lod1_faces": 60,
+      "lod2_faces": 60
+    },
+    {
+      "file": "npc_kupiec_r0_01.glb",
+      "lod0_faces": 864,
+      "lod1_faces": 471,
+      "lod2_faces": 202
+    },
+    {
+      "file": "npc_lowca_r0_01.glb",
+      "lod0_faces": 912,
+      "lod1_faces": 533,
+      "lod2_faces": 223
+    },
+    {
+      "file": "npc_mieszkaniec_r0_01.glb",
+      "lod0_faces": 852,
+      "lod1_faces": 475,
+      "lod2_faces": 192
+    },
+    {
+      "file": "npc_mieszkaniec_r0_02.glb",
+      "lod0_faces": 944,
+      "lod1_faces": 530,
+      "lod2_faces": 252
+    },
+    {
+      "file": "npc_mysliwy_r0_01.glb",
+      "lod0_faces": 944,
+      "lod1_faces": 538,
+      "lod2_faces": 237
+    },
+    {
+      "file": "npc_starszy_r0_01.glb",
+      "lod0_faces": 972,
+      "lod1_faces": 509,
+      "lod2_faces": 238
+    },
+    {
+      "file": "ognik_proxy_r0_01.glb",
+      "lod0_faces": 1760,
+      "lod1_faces": 904,
+      "lod2_faces": 402
+    },
+    {
+      "file": "olsza_bagienna_r0_01.glb",
+      "lod0_faces": 1992,
+      "lod1_faces": 1101,
+      "lod2_faces": 518
+    },
+    {
+      "file": "oltar_rytualny_r0_01.glb",
+      "lod0_faces": 60,
+      "lod1_faces": 36,
+      "lod2_faces": 26
+    },
+    {
+      "file": "orb_magic_proxy_r0_01.glb",
+      "lod0_faces": 1184,
+      "lod1_faces": 656,
+      "lod2_faces": 280
+    },
+    {
+      "file": "palenisko_r0_01.glb",
+      "lod0_faces": 464,
+      "lod1_faces": 232,
+      "lod2_faces": 120
+    },
+    {
+      "file": "paliki_rytualne_r0_01.glb",
+      "lod0_faces": 312,
+      "lod1_faces": 168,
+      "lod2_faces": 87
+    },
+    {
+      "file": "paproc_r0_01.glb",
+      "lod0_faces": 576,
+      "lod1_faces": 364,
+      "lod2_faces": 112
+    },
+    {
+      "file": "path_curve_90.glb",
+      "lod0_faces": 96,
+      "lod1_faces": 62,
+      "lod2_faces": 62
+    },
+    {
+      "file": "path_straight_4m.glb",
+      "lod0_faces": 12,
+      "lod1_faces": 12,
+      "lod2_faces": 12
+    },
+    {
+      "file": "peczek_ziol_r0_01.glb",
+      "lod0_faces": 944,
+      "lod1_faces": 606,
+      "lod2_faces": 240
+    },
+    {
+      "file": "pieczec_stara_r0_01.glb",
+      "lod0_faces": 120,
+      "lod1_faces": 48,
+      "lod2_faces": 48
+    },
+    {
+      "file": "pien_bagienny_r0_01.glb",
+      "lod0_faces": 224,
+      "lod1_faces": 126,
+      "lod2_faces": 55
+    },
+    {
+      "file": "pien_r0_01.glb",
+      "lod0_faces": 132,
+      "lod1_faces": 59,
+      "lod2_faces": 59
+    },
+    {
+      "file": "polka_r0_01.glb",
+      "lod0_faces": 72,
+      "lod1_faces": 40,
+      "lod2_faces": 24
+    },
+    {
+      "file": "poludnica_proto_r0_01.glb",
+      "lod0_faces": 752,
+      "lod1_faces": 364,
+      "lod2_faces": 164
+    },
+    {
+      "file": "pomost_r0_01.glb",
+      "lod0_faces": 816,
+      "lod1_faces": 536,
+      "lod2_faces": 320
+    },
+    {
+      "file": "powalone_drzewo_r0_01.glb",
+      "lod0_faces": 232,
+      "lod1_faces": 138,
+      "lod2_faces": 94
+    },
+    {
+      "file": "pulapka_lowiecka_r0_01.glb",
+      "lod0_faces": 48,
+      "lod1_faces": 32,
+      "lod2_faces": 32
+    },
+    {
+      "file": "pulapka_rybacka_r0_01.glb",
+      "lod0_faces": 656,
+      "lod1_faces": 460,
+      "lod2_faces": 176
+    },
+    {
+      "file": "riverbank_rocky_r0_01.glb",
+      "lod0_faces": 560,
+      "lod1_faces": 396,
+      "lod2_faces": 164
+    },
+    {
+      "file": "rog_mysliwski_r0_01.glb",
+      "lod0_faces": 52,
+      "lod1_faces": 28,
+      "lod2_faces": 28
+    },
+    {
+      "file": "rope_coil_r0_01.glb",
+      "lod0_faces": 216,
+      "lod1_faces": 120,
+      "lod2_faces": 56
+    },
+    {
+      "file": "sack_r0_01.glb",
+      "lod0_faces": 128,
+      "lod1_faces": 69,
+      "lod2_faces": 69
+    },
+    {
+      "file": "sakiewka_r0_01.glb",
+      "lod0_faces": 368,
+      "lod1_faces": 241,
+      "lod2_faces": 94
+    },
+    {
+      "file": "sakiewka_ziol_r0_01.glb",
+      "lod0_faces": 360,
+      "lod1_faces": 241,
+      "lod2_faces": 97
+    },
+    {
+      "file": "siekiera_r0_01.glb",
+      "lod0_faces": 72,
+      "lod1_faces": 34,
+      "lod2_faces": 34
+    },
+    {
+      "file": "siekiera_r0_02.glb",
+      "lod0_faces": 72,
+      "lod1_faces": 32,
+      "lod2_faces": 32
+    },
+    {
+      "file": "skrzynia_kufer_r0_01.glb",
+      "lod0_faces": 60,
+      "lod1_faces": 36,
+      "lod2_faces": 22
+    },
+    {
+      "file": "slady_krwi_proxy_r0_01.glb",
+      "lod0_faces": 240,
+      "lod1_faces": 95,
+      "lod2_faces": 95
+    },
+    {
+      "file": "slady_pazurow_r0_01.glb",
+      "lod0_faces": 48,
+      "lod1_faces": 32,
+      "lod2_faces": 32
+    },
+    {
+      "file": "sosna_r0_01.glb",
+      "lod0_faces": 1672,
+      "lod1_faces": 1026,
+      "lod2_faces": 447
+    },
+    {
+      "file": "sosna_r0_02.glb",
+      "lod0_faces": 1992,
+      "lod1_faces": 968,
+      "lod2_faces": 465
+    },
+    {
+      "file": "spichlerz_r0_01.glb",
+      "lod0_faces": 976,
+      "lod1_faces": 576,
+      "lod2_faces": 256
+    },
+    {
+      "file": "stajnia_r0_01.glb",
+      "lod0_faces": 188,
+      "lod1_faces": 84,
+      "lod2_faces": 40
+    },
+    {
+      "file": "stodola_r0_01.glb",
+      "lod0_faces": 140,
+      "lod1_faces": 84,
+      "lod2_faces": 36
+    },
+    {
+      "file": "stoisko_targowe_r0_01.glb",
+      "lod0_faces": 68,
+      "lod1_faces": 36,
+      "lod2_faces": 12
+    },
+    {
+      "file": "stojak_narzedzia_r0_01.glb",
+      "lod0_faces": 232,
+      "lod1_faces": 152,
+      "lod2_faces": 76
+    },
+    {
+      "file": "stojak_oprawianie_r0_01.glb",
+      "lod0_faces": 156,
+      "lod1_faces": 92,
+      "lod2_faces": 40
+    },
+    {
+      "file": "stol_warsztatowy_r0_01.glb",
+      "lod0_faces": 72,
+      "lod1_faces": 32,
+      "lod2_faces": 24
+    },
+    {
+      "file": "stol_wnetrze_r0_01.glb",
+      "lod0_faces": 108,
+      "lod1_faces": 68,
+      "lod2_faces": 36
+    },
+    {
+      "file": "stol_wnetrze_r0_02.glb",
+      "lod0_faces": 108,
+      "lod1_faces": 68,
+      "lod2_faces": 36
+    },
+    {
+      "file": "stos_drewna_r0_02.glb",
+      "lod0_faces": 696,
+      "lod1_faces": 408,
+      "lod2_faces": 160
+    },
+    {
+      "file": "strzala_r0_01.glb",
+      "lod0_faces": 84,
+      "lod1_faces": 60,
+      "lod2_faces": 25
+    },
+    {
+      "file": "strzep_tkaniny_r0_01.glb",
+      "lod0_faces": 12,
+      "lod1_faces": 12,
+      "lod2_faces": 12
+    },
+    {
+      "file": "swamp_predator_proto_r0_01.glb",
+      "lod0_faces": 820,
+      "lod1_faces": 451,
+      "lod2_faces": 197
+    },
+    {
+      "file": "swiece_rytualne_r0_01.glb",
+      "lod0_faces": 204,
+      "lod1_faces": 118,
+      "lod2_faces": 34
+    },
+    {
+      "file": "taboret_r0_01.glb",
+      "lod0_faces": 200,
+      "lod1_faces": 108,
+      "lod2_faces": 24
+    },
+    {
+      "file": "talizman_wiszacy_r0_01.glb",
+      "lod0_faces": 512,
+      "lod1_faces": 279,
+      "lod2_faces": 173
+    },
+    {
+      "file": "tarcza_r0_01.glb",
+      "lod0_faces": 288,
+      "lod1_faces": 172,
+      "lod2_faces": 100
+    },
+    {
+      "file": "tarcza_r0_02.glb",
+      "lod0_faces": 288,
+      "lod1_faces": 172,
+      "lod2_faces": 100
+    },
+    {
+      "file": "terrain_dirt_4m.glb",
+      "lod0_faces": 12,
+      "lod1_faces": 12,
+      "lod2_faces": 12
+    },
+    {
+      "file": "terrain_grass_4m.glb",
+      "lod0_faces": 12,
+      "lod1_faces": 12,
+      "lod2_faces": 12
+    },
+    {
+      "file": "terrain_mud_4m.glb",
+      "lod0_faces": 12,
+      "lod1_faces": 12,
+      "lod2_faces": 12
+    },
+    {
+      "file": "terrain_ramp.glb",
+      "lod0_faces": 12,
+      "lod1_faces": 4,
+      "lod2_faces": 4
+    },
+    {
+      "file": "topielec_proto_r0_01.glb",
+      "lod0_faces": 1312,
+      "lod1_faces": 808,
+      "lod2_faces": 427
+    },
+    {
+      "file": "torba_mysliwska_r0_01.glb",
+      "lod0_faces": 36,
+      "lod1_faces": 20,
+      "lod2_faces": 20
+    },
+    {
+      "file": "torch_unlit_r0_01.glb",
+      "lod0_faces": 60,
+      "lod1_faces": 40,
+      "lod2_faces": 40
+    },
+    {
+      "file": "trop_bagienny_r0_01.glb",
+      "lod0_faces": 320,
+      "lod1_faces": 231,
+      "lod2_faces": 101
+    },
+    {
+      "file": "trzciny_r0_01.glb",
+      "lod0_faces": 960,
+      "lod1_faces": 373,
+      "lod2_faces": 266
+    },
+    {
+      "file": "trzciny_r0_02.glb",
+      "lod0_faces": 960,
+      "lod1_faces": 416,
+      "lod2_faces": 220
+    },
+    {
+      "file": "trzciny_r0_03.glb",
+      "lod0_faces": 960,
+      "lod1_faces": 425,
+      "lod2_faces": 270
+    },
+    {
+      "file": "upior_proto_r0_01.glb",
+      "lod0_faces": 868,
+      "lod1_faces": 426,
+      "lod2_faces": 276
+    },
+    {
+      "file": "water_plane_4m.glb",
+      "lod0_faces": 12,
+      "lod1_faces": 12,
+      "lod2_faces": 12
+    },
+    {
+      "file": "wiadro_r0_01.glb",
+      "lod0_faces": 240,
+      "lod1_faces": 112,
+      "lod2_faces": 48
+    },
+    {
+      "file": "wieszak_scienny_r0_01.glb",
+      "lod0_faces": 72,
+      "lod1_faces": 40,
+      "lod2_faces": 36
+    },
+    {
+      "file": "wieza_straznicza_r0_01.glb",
+      "lod0_faces": 284,
+      "lod1_faces": 152,
+      "lod2_faces": 64
+    },
+    {
+      "file": "wilk_r0_01.glb",
+      "lod0_faces": 840,
+      "lod1_faces": 448,
+      "lod2_faces": 188
+    },
+    {
+      "file": "wlocznia_r0_01.glb",
+      "lod0_faces": 68,
+      "lod1_faces": 42,
+      "lod2_faces": 22
+    },
+    {
+      "file": "wlocznia_r0_02.glb",
+      "lod0_faces": 68,
+      "lod1_faces": 42,
+      "lod2_faces": 22
+    },
+    {
+      "file": "wnyk_r0_01.glb",
+      "lod0_faces": 256,
+      "lod1_faces": 124,
+      "lod2_faces": 60
+    },
+    {
+      "file": "wozek_reczny_r0_01.glb",
+      "lod0_faces": 1060,
+      "lod1_faces": 496,
+      "lod2_faces": 246
+    },
+    {
+      "file": "wyspa_bagienna_r0_01.glb",
+      "lod0_faces": 800,
+      "lod1_faces": 450,
+      "lod2_faces": 278
+    },
+    {
+      "file": "ziola_suszone_r0_01.glb",
+      "lod0_faces": 1916,
+      "lod1_faces": 1129,
+      "lod2_faces": 407
+    },
+    {
+      "file": "zlamana_galaz_r0_01.glb",
+      "lod0_faces": 96,
+      "lod1_faces": 50,
+      "lod2_faces": 20
+    },
+    {
+      "file": "znacznik_grobu_r0_01.glb",
+      "lod0_faces": 92,
+      "lod1_faces": 56,
+      "lod2_faces": 56
+    },
+    {
+      "file": "znak_bagienny_r0_01.glb",
+      "lod0_faces": 176,
+      "lod1_faces": 98,
+      "lod2_faces": 71
+    },
+    {
+      "file": "znak_ochronny_r0_01.glb",
+      "lod0_faces": 48,
+      "lod1_faces": 32,
+      "lod2_faces": 16
+    },
+    {
+      "file": "zw\u0119glone_drewno_rytualne_r0_01.glb",
+      "lod0_faces": 84,
+      "lod1_faces": 48,
+      "lod2_faces": 48
+    }
+  ]
+}

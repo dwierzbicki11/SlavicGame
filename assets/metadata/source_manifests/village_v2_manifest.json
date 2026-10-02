@@ -1,0 +1,431 @@
+{
+  "pack": "SlavicGame R0 Village Pack v2",
+  "format": "glTF 2.0 binary (.glb)",
+  "textures": "PBR textures embedded in each GLB; editable source PNGs included",
+  "maps": [
+    "BaseColor",
+    "Normal",
+    "MetallicRoughness"
+  ],
+  "materials": [
+    "wood",
+    "darkwood",
+    "thatch",
+    "stone",
+    "iron",
+    "leaf",
+    "cloth",
+    "clay"
+  ],
+  "license": "CC0-style public-domain dedication for generated geometry and procedural textures",
+  "asset_count": 33,
+  "category_counts": {
+    "architecture": 11,
+    "infrastructure": 2,
+    "interior": 5,
+    "tools": 3,
+    "farm": 1,
+    "props": 5,
+    "vegetation": 5,
+    "religious": 1
+  },
+  "assets": [
+    {
+      "file": "chata_r0_variant_01.glb",
+      "category": "architecture",
+      "tags": [
+        "house",
+        "village",
+        "r0"
+      ],
+      "triangles": 2444,
+      "vertices": 1390,
+      "size_kb": 505.4
+    },
+    {
+      "file": "chata_r0_variant_02.glb",
+      "category": "architecture",
+      "tags": [
+        "house",
+        "village",
+        "r0"
+      ],
+      "triangles": 2480,
+      "vertices": 1414,
+      "size_kb": 506.3
+    },
+    {
+      "file": "chata_r0_variant_03.glb",
+      "category": "architecture",
+      "tags": [
+        "house",
+        "village",
+        "r0"
+      ],
+      "triangles": 2216,
+      "vertices": 1262,
+      "size_kb": 499.7
+    },
+    {
+      "file": "chata_r0_variant_04.glb",
+      "category": "architecture",
+      "tags": [
+        "house",
+        "village",
+        "r0"
+      ],
+      "triangles": 2540,
+      "vertices": 1454,
+      "size_kb": 507.5
+    },
+    {
+      "file": "spichlerz_r0_01.glb",
+      "category": "architecture",
+      "tags": [
+        "granary",
+        "storage",
+        "r0"
+      ],
+      "triangles": 976,
+      "vertices": 538,
+      "size_kb": 432.6
+    },
+    {
+      "file": "stodola_r0_01.glb",
+      "category": "architecture",
+      "tags": [
+        "barn",
+        "farm",
+        "r0"
+      ],
+      "triangles": 140,
+      "vertices": 94,
+      "size_kb": 328.5
+    },
+    {
+      "file": "kuznia_r0_01.glb",
+      "category": "architecture",
+      "tags": [
+        "forge",
+        "blacksmith",
+        "r0"
+      ],
+      "triangles": 2228,
+      "vertices": 1270,
+      "size_kb": 501.2
+    },
+    {
+      "file": "stajnia_r0_01.glb",
+      "category": "architecture",
+      "tags": [
+        "stable",
+        "farm",
+        "r0"
+      ],
+      "triangles": 188,
+      "vertices": 126,
+      "size_kb": 330.4
+    },
+    {
+      "file": "wieza_straznicza_r0_01.glb",
+      "category": "architecture",
+      "tags": [
+        "watchtower",
+        "defense",
+        "r0"
+      ],
+      "triangles": 284,
+      "vertices": 190,
+      "size_kb": 335.5
+    },
+    {
+      "file": "brama_wioskowa_r0_01.glb",
+      "category": "architecture",
+      "tags": [
+        "gate",
+        "defense",
+        "village",
+        "r0"
+      ],
+      "triangles": 116,
+      "vertices": 78,
+      "size_kb": 327.4
+    },
+    {
+      "file": "most_drewniany_r0_01.glb",
+      "category": "infrastructure",
+      "tags": [
+        "bridge",
+        "wood",
+        "r0"
+      ],
+      "triangles": 324,
+      "vertices": 216,
+      "size_kb": 219.2
+    },
+    {
+      "file": "pomost_r0_01.glb",
+      "category": "infrastructure",
+      "tags": [
+        "pier",
+        "river",
+        "r0"
+      ],
+      "triangles": 816,
+      "vertices": 460,
+      "size_kb": 228.1
+    },
+    {
+      "file": "stoisko_targowe_r0_01.glb",
+      "category": "architecture",
+      "tags": [
+        "market",
+        "stall",
+        "r0"
+      ],
+      "triangles": 68,
+      "vertices": 46,
+      "size_kb": 264.8
+    },
+    {
+      "file": "lozko_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "bed",
+        "interior",
+        "r0"
+      ],
+      "triangles": 84,
+      "vertices": 56,
+      "size_kb": 265.5
+    },
+    {
+      "file": "skrzynia_kufer_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "chest",
+        "storage",
+        "r0"
+      ],
+      "triangles": 60,
+      "vertices": 40,
+      "size_kb": 241.7
+    },
+    {
+      "file": "taboret_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "stool",
+        "furniture",
+        "r0"
+      ],
+      "triangles": 200,
+      "vertices": 108,
+      "size_kb": 210.5
+    },
+    {
+      "file": "polka_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "shelf",
+        "furniture",
+        "r0"
+      ],
+      "triangles": 72,
+      "vertices": 48,
+      "size_kb": 208.0
+    },
+    {
+      "file": "palenisko_r0_01.glb",
+      "category": "interior",
+      "tags": [
+        "hearth",
+        "fireplace",
+        "r0"
+      ],
+      "triangles": 464,
+      "vertices": 276,
+      "size_kb": 193.8
+    },
+    {
+      "file": "kowadlo_r0_01.glb",
+      "category": "tools",
+      "tags": [
+        "anvil",
+        "forge",
+        "r0"
+      ],
+      "triangles": 48,
+      "vertices": 32,
+      "size_kb": 37.3
+    },
+    {
+      "file": "stol_warsztatowy_r0_01.glb",
+      "category": "tools",
+      "tags": [
+        "workbench",
+        "forge",
+        "r0"
+      ],
+      "triangles": 72,
+      "vertices": 48,
+      "size_kb": 208.3
+    },
+    {
+      "file": "stojak_narzedzia_r0_01.glb",
+      "category": "tools",
+      "tags": [
+        "tools",
+        "rack",
+        "r0"
+      ],
+      "triangles": 232,
+      "vertices": 138,
+      "size_kb": 247.5
+    },
+    {
+      "file": "bela_siana_r0_01.glb",
+      "category": "farm",
+      "tags": [
+        "hay",
+        "farm",
+        "r0"
+      ],
+      "triangles": 288,
+      "vertices": 150,
+      "size_kb": 210.7
+    },
+    {
+      "file": "wiadro_r0_01.glb",
+      "category": "props",
+      "tags": [
+        "bucket",
+        "village",
+        "r0"
+      ],
+      "triangles": 240,
+      "vertices": 126,
+      "size_kb": 154.6
+    },
+    {
+      "file": "garnek_gliniany_r0_01.glb",
+      "category": "props",
+      "tags": [
+        "pottery",
+        "kitchen",
+        "r0"
+      ],
+      "triangles": 192,
+      "vertices": 100,
+      "size_kb": 61.1
+    },
+    {
+      "file": "stos_drewna_r0_02.glb",
+      "category": "props",
+      "tags": [
+        "firewood",
+        "village",
+        "r0"
+      ],
+      "triangles": 696,
+      "vertices": 380,
+      "size_kb": 222.5
+    },
+    {
+      "file": "wozek_reczny_r0_01.glb",
+      "category": "props",
+      "tags": [
+        "cart",
+        "village",
+        "r0"
+      ],
+      "triangles": 1060,
+      "vertices": 616,
+      "size_kb": 274.6
+    },
+    {
+      "file": "dab_r0_02.glb",
+      "category": "vegetation",
+      "tags": [
+        "tree",
+        "forest",
+        "r0"
+      ],
+      "triangles": 1672,
+      "vertices": 848,
+      "size_kb": 199.4
+    },
+    {
+      "file": "brzoza_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "tree",
+        "forest",
+        "r0"
+      ],
+      "triangles": 1672,
+      "vertices": 848,
+      "size_kb": 171.3
+    },
+    {
+      "file": "sosna_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "tree",
+        "forest",
+        "r0"
+      ],
+      "triangles": 1672,
+      "vertices": 848,
+      "size_kb": 199.4
+    },
+    {
+      "file": "krzak_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "bush",
+        "forest",
+        "r0"
+      ],
+      "triangles": 560,
+      "vertices": 294,
+      "size_kb": 72.1
+    },
+    {
+      "file": "pien_r0_01.glb",
+      "category": "vegetation",
+      "tags": [
+        "stump",
+        "forest",
+        "r0"
+      ],
+      "triangles": 132,
+      "vertices": 78,
+      "size_kb": 94.5
+    },
+    {
+      "file": "drogowskaz_r0_01.glb",
+      "category": "props",
+      "tags": [
+        "sign",
+        "road",
+        "r0"
+      ],
+      "triangles": 60,
+      "vertices": 34,
+      "size_kb": 206.9
+    },
+    {
+      "file": "kamien_kultowy_r0_01.glb",
+      "category": "religious",
+      "tags": [
+        "shrine",
+        "stone",
+        "r0"
+      ],
+      "triangles": 92,
+      "vertices": 50,
+      "size_kb": 207.9
+    }
+  ]
+}

@@ -1,0 +1,447 @@
+{
+  "pack": "SlavicGame R0 Animated Prototype Pack v6",
+  "rig_type": "rigid articulated glTF node hierarchy (prototype rig, not smooth skinned mesh)",
+  "coordinate_system": "Z-up prototype geometry",
+  "asset_count": 16,
+  "assets": [
+    {
+      "file": "player_hunter_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "player"
+    },
+    {
+      "file": "npc_villager_a_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "npc"
+    },
+    {
+      "file": "npc_villager_b_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "npc"
+    },
+    {
+      "file": "npc_hunter_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "npc"
+    },
+    {
+      "file": "npc_merchant_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "npc"
+    },
+    {
+      "file": "npc_elder_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "npc"
+    },
+    {
+      "file": "topielec_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "monster"
+    },
+    {
+      "file": "upior_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "monster"
+    },
+    {
+      "file": "forest_guardian_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "monster"
+    },
+    {
+      "file": "boginka_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "monster"
+    },
+    {
+      "file": "poludnica_animated.glb",
+      "type": "humanoid_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "role": "monster"
+    },
+    {
+      "file": "swamp_predator_animated.glb",
+      "type": "quadruped_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death"
+      ],
+      "role": "monster"
+    },
+    {
+      "file": "wolf_animated.glb",
+      "type": "quadruped_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death"
+      ],
+      "role": "wildlife"
+    },
+    {
+      "file": "boar_animated.glb",
+      "type": "quadruped_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death"
+      ],
+      "role": "wildlife"
+    },
+    {
+      "file": "deer_animated.glb",
+      "type": "quadruped_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death"
+      ],
+      "role": "wildlife"
+    },
+    {
+      "file": "raven_animated.glb",
+      "type": "bird_rigid_node_rig",
+      "animations": [
+        "Idle",
+        "Fly",
+        "TakeOff"
+      ],
+      "role": "wildlife"
+    }
+  ],
+  "validation": [
+    {
+      "file": "boar_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death"
+      ],
+      "nodes": 8,
+      "meshes": 4
+    },
+    {
+      "file": "boginka_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "deer_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death"
+      ],
+      "nodes": 8,
+      "meshes": 4
+    },
+    {
+      "file": "forest_guardian_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "npc_elder_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "npc_hunter_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 15,
+      "meshes": 9
+    },
+    {
+      "file": "npc_merchant_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "npc_villager_a_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "npc_villager_b_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "player_hunter_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 15,
+      "meshes": 9
+    },
+    {
+      "file": "poludnica_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "raven_animated.glb",
+      "animations": [
+        "Idle",
+        "Fly",
+        "TakeOff"
+      ],
+      "nodes": 6,
+      "meshes": 4
+    },
+    {
+      "file": "swamp_predator_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death"
+      ],
+      "nodes": 8,
+      "meshes": 4
+    },
+    {
+      "file": "topielec_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "upior_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death",
+        "Interact"
+      ],
+      "nodes": 14,
+      "meshes": 8
+    },
+    {
+      "file": "wolf_animated.glb",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hit",
+        "Death"
+      ],
+      "nodes": 8,
+      "meshes": 4
+    }
+  ],
+  "notes": [
+    "These GLBs contain real glTF animation clips.",
+    "They use rigid articulated node rigs. Final character art should later use smooth skinning, authored topology and higher quality animation.",
+    "Humanoids: Idle/Walk/Run/Attack/Hit/Death/Interact. Quadrupeds: Idle/Walk/Run/Attack/Hit/Death. Raven: Idle/Fly/TakeOff."
+  ]
+}

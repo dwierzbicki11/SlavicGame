@@ -1,0 +1,23 @@
+{
+  "r0_vertical_slice_model_coverage": {
+    "village_architecture": "covered",
+    "farm_buildings": "covered",
+    "forest_environment": "covered",
+    "swamp_environment": "covered",
+    "ruins_religious": "covered",
+    "interior_props": "covered",
+    "weapons_hunting": "covered",
+    "quest_evidence": "covered",
+    "wildlife": "prototype covered",
+    "bestiary": "prototype covered",
+    "player_npc": "animated prototype covered",
+    "ritual_magic": "mesh proxy covered",
+    "terrain_modules": "prototype covered",
+    "lod": "generated for static assets",
+    "collision": "prototype colliders generated",
+    "final_character_skinning": "NOT final — rigid node rigs",
+    "final_animation_quality": "NOT final — procedural prototype clips",
+    "final_monster_identity": "some research locks remain open",
+    "final_PBR_art": "NOT final AAA — procedural PBR/prototype assets"
+  }
+}

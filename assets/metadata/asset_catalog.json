@@ -1,0 +1,1568 @@
+[
+  {
+    "file": "chata_r0_variant_02.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 506.3,
+    "collider": "colliders/chata_r0_variant_02.glb",
+    "lod1": "lod/lod1/chata_r0_variant_02.glb",
+    "lod2": "lod/lod2/chata_r0_variant_02.glb"
+  },
+  {
+    "file": "chata_r0_variant_03.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 499.7,
+    "collider": "colliders/chata_r0_variant_03.glb",
+    "lod1": "lod/lod1/chata_r0_variant_03.glb",
+    "lod2": "lod/lod2/chata_r0_variant_03.glb"
+  },
+  {
+    "file": "pien_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 94.5,
+    "collider": "colliders/pien_r0_01.glb",
+    "lod1": "lod/lod1/pien_r0_01.glb",
+    "lod2": "lod/lod2/pien_r0_01.glb"
+  },
+  {
+    "file": "stol_warsztatowy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 208.3,
+    "collider": "colliders/stol_warsztatowy_r0_01.glb",
+    "lod1": "lod/lod1/stol_warsztatowy_r0_01.glb",
+    "lod2": "lod/lod2/stol_warsztatowy_r0_01.glb"
+  },
+  {
+    "file": "brzoza_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 171.3,
+    "collider": "colliders/brzoza_r0_01.glb",
+    "lod1": "lod/lod1/brzoza_r0_01.glb",
+    "lod2": "lod/lod2/brzoza_r0_01.glb"
+  },
+  {
+    "file": "stos_drewna_r0_02.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 222.5,
+    "collider": "colliders/stos_drewna_r0_02.glb",
+    "lod1": "lod/lod1/stos_drewna_r0_02.glb",
+    "lod2": "lod/lod2/stos_drewna_r0_02.glb"
+  },
+  {
+    "file": "stoisko_targowe_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 264.8,
+    "collider": "colliders/stoisko_targowe_r0_01.glb",
+    "lod1": "lod/lod1/stoisko_targowe_r0_01.glb",
+    "lod2": "lod/lod2/stoisko_targowe_r0_01.glb"
+  },
+  {
+    "file": "taboret_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 210.5,
+    "collider": "colliders/taboret_r0_01.glb",
+    "lod1": "lod/lod1/taboret_r0_01.glb",
+    "lod2": "lod/lod2/taboret_r0_01.glb"
+  },
+  {
+    "file": "kowadlo_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 37.3,
+    "collider": "colliders/kowadlo_r0_01.glb",
+    "lod1": "lod/lod1/kowadlo_r0_01.glb",
+    "lod2": "lod/lod2/kowadlo_r0_01.glb"
+  },
+  {
+    "file": "stodola_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 328.5,
+    "collider": "colliders/stodola_r0_01.glb",
+    "lod1": "lod/lod1/stodola_r0_01.glb",
+    "lod2": "lod/lod2/stodola_r0_01.glb"
+  },
+  {
+    "file": "drogowskaz_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 206.9,
+    "collider": "colliders/drogowskaz_r0_01.glb",
+    "lod1": "lod/lod1/drogowskaz_r0_01.glb",
+    "lod2": "lod/lod2/drogowskaz_r0_01.glb"
+  },
+  {
+    "file": "krzak_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 72.1,
+    "collider": "colliders/krzak_r0_01.glb",
+    "lod1": "lod/lod1/krzak_r0_01.glb",
+    "lod2": "lod/lod2/krzak_r0_01.glb"
+  },
+  {
+    "file": "stojak_narzedzia_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 247.5,
+    "collider": "colliders/stojak_narzedzia_r0_01.glb",
+    "lod1": "lod/lod1/stojak_narzedzia_r0_01.glb",
+    "lod2": "lod/lod2/stojak_narzedzia_r0_01.glb"
+  },
+  {
+    "file": "kuznia_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 501.2,
+    "collider": "colliders/kuznia_r0_01.glb",
+    "lod1": "lod/lod1/kuznia_r0_01.glb",
+    "lod2": "lod/lod2/kuznia_r0_01.glb"
+  },
+  {
+    "file": "palenisko_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 193.8,
+    "collider": "colliders/palenisko_r0_01.glb",
+    "lod1": "lod/lod1/palenisko_r0_01.glb",
+    "lod2": "lod/lod2/palenisko_r0_01.glb"
+  },
+  {
+    "file": "pomost_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 228.1,
+    "collider": "colliders/pomost_r0_01.glb",
+    "lod1": "lod/lod1/pomost_r0_01.glb",
+    "lod2": "lod/lod2/pomost_r0_01.glb"
+  },
+  {
+    "file": "garnek_gliniany_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 61.1,
+    "collider": "colliders/garnek_gliniany_r0_01.glb",
+    "lod1": "lod/lod1/garnek_gliniany_r0_01.glb",
+    "lod2": "lod/lod2/garnek_gliniany_r0_01.glb"
+  },
+  {
+    "file": "most_drewniany_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 219.2,
+    "collider": "colliders/most_drewniany_r0_01.glb",
+    "lod1": "lod/lod1/most_drewniany_r0_01.glb",
+    "lod2": "lod/lod2/most_drewniany_r0_01.glb"
+  },
+  {
+    "file": "wieza_straznicza_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 335.5,
+    "collider": "colliders/wieza_straznicza_r0_01.glb",
+    "lod1": "lod/lod1/wieza_straznicza_r0_01.glb",
+    "lod2": "lod/lod2/wieza_straznicza_r0_01.glb"
+  },
+  {
+    "file": "lozko_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 265.5,
+    "collider": "colliders/lozko_r0_01.glb",
+    "lod1": "lod/lod1/lozko_r0_01.glb",
+    "lod2": "lod/lod2/lozko_r0_01.glb"
+  },
+  {
+    "file": "kamien_kultowy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 207.9,
+    "collider": "colliders/kamien_kultowy_r0_01.glb",
+    "lod1": "lod/lod1/kamien_kultowy_r0_01.glb",
+    "lod2": "lod/lod2/kamien_kultowy_r0_01.glb"
+  },
+  {
+    "file": "dab_r0_02.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 199.4,
+    "collider": "colliders/dab_r0_02.glb",
+    "lod1": "lod/lod1/dab_r0_02.glb",
+    "lod2": "lod/lod2/dab_r0_02.glb"
+  },
+  {
+    "file": "bela_siana_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 210.7,
+    "collider": "colliders/bela_siana_r0_01.glb",
+    "lod1": "lod/lod1/bela_siana_r0_01.glb",
+    "lod2": "lod/lod2/bela_siana_r0_01.glb"
+  },
+  {
+    "file": "chata_r0_variant_04.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 507.5,
+    "collider": "colliders/chata_r0_variant_04.glb",
+    "lod1": "lod/lod1/chata_r0_variant_04.glb",
+    "lod2": "lod/lod2/chata_r0_variant_04.glb"
+  },
+  {
+    "file": "skrzynia_kufer_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 241.7,
+    "collider": "colliders/skrzynia_kufer_r0_01.glb",
+    "lod1": "lod/lod1/skrzynia_kufer_r0_01.glb",
+    "lod2": "lod/lod2/skrzynia_kufer_r0_01.glb"
+  },
+  {
+    "file": "spichlerz_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 432.6,
+    "collider": "colliders/spichlerz_r0_01.glb",
+    "lod1": "lod/lod1/spichlerz_r0_01.glb",
+    "lod2": "lod/lod2/spichlerz_r0_01.glb"
+  },
+  {
+    "file": "polka_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 208.0,
+    "collider": "colliders/polka_r0_01.glb",
+    "lod1": "lod/lod1/polka_r0_01.glb",
+    "lod2": "lod/lod2/polka_r0_01.glb"
+  },
+  {
+    "file": "sosna_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 199.4,
+    "collider": "colliders/sosna_r0_01.glb",
+    "lod1": "lod/lod1/sosna_r0_01.glb",
+    "lod2": "lod/lod2/sosna_r0_01.glb"
+  },
+  {
+    "file": "brama_wioskowa_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 327.4,
+    "collider": "colliders/brama_wioskowa_r0_01.glb",
+    "lod1": "lod/lod1/brama_wioskowa_r0_01.glb",
+    "lod2": "lod/lod2/brama_wioskowa_r0_01.glb"
+  },
+  {
+    "file": "chata_r0_variant_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 505.4,
+    "collider": "colliders/chata_r0_variant_01.glb",
+    "lod1": "lod/lod1/chata_r0_variant_01.glb",
+    "lod2": "lod/lod2/chata_r0_variant_01.glb"
+  },
+  {
+    "file": "wozek_reczny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 274.6,
+    "collider": "colliders/wozek_reczny_r0_01.glb",
+    "lod1": "lod/lod1/wozek_reczny_r0_01.glb",
+    "lod2": "lod/lod2/wozek_reczny_r0_01.glb"
+  },
+  {
+    "file": "stajnia_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 330.4,
+    "collider": "colliders/stajnia_r0_01.glb",
+    "lod1": "lod/lod1/stajnia_r0_01.glb",
+    "lod2": "lod/lod2/stajnia_r0_01.glb"
+  },
+  {
+    "file": "wiadro_r0_01.glb",
+    "kind": "static",
+    "source_pack": "village_v2",
+    "size_kb": 154.6,
+    "collider": "colliders/wiadro_r0_01.glb",
+    "lod1": "lod/lod1/wiadro_r0_01.glb",
+    "lod2": "lod/lod2/wiadro_r0_01.glb"
+  },
+  {
+    "file": "trzciny_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 171.5,
+    "collider": "colliders/trzciny_r0_02.glb",
+    "lod1": "lod/lod1/trzciny_r0_02.glb",
+    "lod2": "lod/lod2/trzciny_r0_02.glb"
+  },
+  {
+    "file": "znacznik_grobu_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 202.9,
+    "collider": "colliders/znacznik_grobu_r0_01.glb",
+    "lod1": "lod/lod1/znacznik_grobu_r0_01.glb",
+    "lod2": "lod/lod2/znacznik_grobu_r0_01.glb"
+  },
+  {
+    "file": "krzak_r0_04.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 76.8,
+    "collider": "colliders/krzak_r0_04.glb",
+    "lod1": "lod/lod1/krzak_r0_04.glb",
+    "lod2": "lod/lod2/krzak_r0_04.glb"
+  },
+  {
+    "file": "wieszak_scienny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 200.4,
+    "collider": "colliders/wieszak_scienny_r0_01.glb",
+    "lod1": "lod/lod1/wieszak_scienny_r0_01.glb",
+    "lod2": "lod/lod2/wieszak_scienny_r0_01.glb"
+  },
+  {
+    "file": "korzenie_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 91.4,
+    "collider": "colliders/korzenie_r0_01.glb",
+    "lod1": "lod/lod1/korzenie_r0_01.glb",
+    "lod2": "lod/lod2/korzenie_r0_01.glb"
+  },
+  {
+    "file": "ziola_suszone_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 237.1,
+    "collider": "colliders/ziola_suszone_r0_01.glb",
+    "lod1": "lod/lod1/ziola_suszone_r0_01.glb",
+    "lod2": "lod/lod2/ziola_suszone_r0_01.glb"
+  },
+  {
+    "file": "dab_stary_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 172.4,
+    "collider": "colliders/dab_stary_r0_02.glb",
+    "lod1": "lod/lod1/dab_stary_r0_02.glb",
+    "lod2": "lod/lod2/dab_stary_r0_02.glb"
+  },
+  {
+    "file": "stol_wnetrze_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 202.2,
+    "collider": "colliders/stol_wnetrze_r0_01.glb",
+    "lod1": "lod/lod1/stol_wnetrze_r0_01.glb",
+    "lod2": "lod/lod2/stol_wnetrze_r0_01.glb"
+  },
+  {
+    "file": "pien_bagienny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 156.7,
+    "collider": "colliders/pien_bagienny_r0_01.glb",
+    "lod1": "lod/lod1/pien_bagienny_r0_01.glb",
+    "lod2": "lod/lod2/pien_bagienny_r0_01.glb"
+  },
+  {
+    "file": "kufer_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 234.7,
+    "collider": "colliders/kufer_r0_02.glb",
+    "lod1": "lod/lod1/kufer_r0_02.glb",
+    "lod2": "lod/lod2/kufer_r0_02.glb"
+  },
+  {
+    "file": "kladka_bagienna_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 202.3,
+    "collider": "colliders/kladka_bagienna_01.glb",
+    "lod1": "lod/lod1/kladka_bagienna_01.glb",
+    "lod2": "lod/lod2/kladka_bagienna_01.glb"
+  },
+  {
+    "file": "dab_stary_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 172.4,
+    "collider": "colliders/dab_stary_r0_01.glb",
+    "lod1": "lod/lod1/dab_stary_r0_01.glb",
+    "lod2": "lod/lod2/dab_stary_r0_01.glb"
+  },
+  {
+    "file": "sosna_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 172.4,
+    "collider": "colliders/sosna_r0_02.glb",
+    "lod1": "lod/lod1/sosna_r0_02.glb",
+    "lod2": "lod/lod2/sosna_r0_02.glb"
+  },
+  {
+    "file": "krzak_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 76.8,
+    "collider": "colliders/krzak_r0_02.glb",
+    "lod1": "lod/lod1/krzak_r0_02.glb",
+    "lod2": "lod/lod2/krzak_r0_02.glb"
+  },
+  {
+    "file": "powalone_drzewo_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 90.5,
+    "collider": "colliders/powalone_drzewo_r0_01.glb",
+    "lod1": "lod/lod1/powalone_drzewo_r0_01.glb",
+    "lod2": "lod/lod2/powalone_drzewo_r0_01.glb"
+  },
+  {
+    "file": "mur_ruina_r0_03.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 98.2,
+    "collider": "colliders/mur_ruina_r0_03.glb",
+    "lod1": "lod/lod1/mur_ruina_r0_03.glb",
+    "lod2": "lod/lod2/mur_ruina_r0_03.glb"
+  },
+  {
+    "file": "kladka_bagienna_03.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 206.9,
+    "collider": "colliders/kladka_bagienna_03.glb",
+    "lod1": "lod/lod1/kladka_bagienna_03.glb",
+    "lod2": "lod/lod2/kladka_bagienna_03.glb"
+  },
+  {
+    "file": "kapliczka_ruina_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 177.7,
+    "collider": "colliders/kapliczka_ruina_r0_01.glb",
+    "lod1": "lod/lod1/kapliczka_ruina_r0_01.glb",
+    "lod2": "lod/lod2/kapliczka_ruina_r0_01.glb"
+  },
+  {
+    "file": "olsza_bagienna_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 172.4,
+    "collider": "colliders/olsza_bagienna_r0_01.glb",
+    "lod1": "lod/lod1/olsza_bagienna_r0_01.glb",
+    "lod2": "lod/lod2/olsza_bagienna_r0_01.glb"
+  },
+  {
+    "file": "kladka_bagienna_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 204.9,
+    "collider": "colliders/kladka_bagienna_02.glb",
+    "lod1": "lod/lod1/kladka_bagienna_02.glb",
+    "lod2": "lod/lod2/kladka_bagienna_02.glb"
+  },
+  {
+    "file": "mur_ruina_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 91.9,
+    "collider": "colliders/mur_ruina_r0_01.glb",
+    "lod1": "lod/lod1/mur_ruina_r0_01.glb",
+    "lod2": "lod/lod2/mur_ruina_r0_01.glb"
+  },
+  {
+    "file": "kamienny_krag_fragment_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 92.8,
+    "collider": "colliders/kamienny_krag_fragment_r0_01.glb",
+    "lod1": "lod/lod1/kamienny_krag_fragment_r0_01.glb",
+    "lod2": "lod/lod2/kamienny_krag_fragment_r0_01.glb"
+  },
+  {
+    "file": "brzoza_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 172.4,
+    "collider": "colliders/brzoza_r0_02.glb",
+    "lod1": "lod/lod1/brzoza_r0_02.glb",
+    "lod2": "lod/lod2/brzoza_r0_02.glb"
+  },
+  {
+    "file": "stol_wnetrze_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 202.1,
+    "collider": "colliders/stol_wnetrze_r0_02.glb",
+    "lod1": "lod/lod1/stol_wnetrze_r0_02.glb",
+    "lod2": "lod/lod2/stol_wnetrze_r0_02.glb"
+  },
+  {
+    "file": "grzyby_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 115.9,
+    "collider": "colliders/grzyby_r0_01.glb",
+    "lod1": "lod/lod1/grzyby_r0_01.glb",
+    "lod2": "lod/lod2/grzyby_r0_01.glb"
+  },
+  {
+    "file": "krzak_r0_03.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 76.8,
+    "collider": "colliders/krzak_r0_03.glb",
+    "lod1": "lod/lod1/krzak_r0_03.glb",
+    "lod2": "lod/lod2/krzak_r0_03.glb"
+  },
+  {
+    "file": "krosno_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 263.9,
+    "collider": "colliders/krosno_r0_01.glb",
+    "lod1": "lod/lod1/krosno_r0_01.glb",
+    "lod2": "lod/lod2/krosno_r0_01.glb"
+  },
+  {
+    "file": "znak_bagienny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 175.0,
+    "collider": "colliders/znak_bagienny_r0_01.glb",
+    "lod1": "lod/lod1/znak_bagienny_r0_01.glb",
+    "lod2": "lod/lod2/znak_bagienny_r0_01.glb"
+  },
+  {
+    "file": "kladka_bagienna_uszkodzona_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 119.1,
+    "collider": "colliders/kladka_bagienna_uszkodzona_01.glb",
+    "lod1": "lod/lod1/kladka_bagienna_uszkodzona_01.glb",
+    "lod2": "lod/lod2/kladka_bagienna_uszkodzona_01.glb"
+  },
+  {
+    "file": "lawa_wnetrze_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 198.8,
+    "collider": "colliders/lawa_wnetrze_r0_01.glb",
+    "lod1": "lod/lod1/lawa_wnetrze_r0_01.glb",
+    "lod2": "lod/lod2/lawa_wnetrze_r0_01.glb"
+  },
+  {
+    "file": "lawa_wnetrze_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 198.7,
+    "collider": "colliders/lawa_wnetrze_r0_02.glb",
+    "lod1": "lod/lod1/lawa_wnetrze_r0_02.glb",
+    "lod2": "lod/lod2/lawa_wnetrze_r0_02.glb"
+  },
+  {
+    "file": "pulapka_rybacka_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 72.6,
+    "collider": "colliders/pulapka_rybacka_r0_01.glb",
+    "lod1": "lod/lod1/pulapka_rybacka_r0_01.glb",
+    "lod2": "lod/lod2/pulapka_rybacka_r0_01.glb"
+  },
+  {
+    "file": "trzciny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 171.5,
+    "collider": "colliders/trzciny_r0_01.glb",
+    "lod1": "lod/lod1/trzciny_r0_01.glb",
+    "lod2": "lod/lod2/trzciny_r0_01.glb"
+  },
+  {
+    "file": "wyspa_bagienna_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 142.0,
+    "collider": "colliders/wyspa_bagienna_r0_01.glb",
+    "lod1": "lod/lod1/wyspa_bagienna_r0_01.glb",
+    "lod2": "lod/lod2/wyspa_bagienna_r0_01.glb"
+  },
+  {
+    "file": "trzciny_r0_03.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 171.5,
+    "collider": "colliders/trzciny_r0_03.glb",
+    "lod1": "lod/lod1/trzciny_r0_03.glb",
+    "lod2": "lod/lod2/trzciny_r0_03.glb"
+  },
+  {
+    "file": "naczynia_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 116.3,
+    "collider": "colliders/naczynia_r0_01.glb",
+    "lod1": "lod/lod1/naczynia_r0_01.glb",
+    "lod2": "lod/lod2/naczynia_r0_01.glb"
+  },
+  {
+    "file": "paproc_r0_01.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 104.8,
+    "collider": "colliders/paproc_r0_01.glb",
+    "lod1": "lod/lod1/paproc_r0_01.glb",
+    "lod2": "lod/lod2/paproc_r0_01.glb"
+  },
+  {
+    "file": "mur_ruina_r0_02.glb",
+    "kind": "static",
+    "source_pack": "environment_v3",
+    "size_kb": 92.9,
+    "collider": "colliders/mur_ruina_r0_02.glb",
+    "lod1": "lod/lod1/mur_ruina_r0_02.glb",
+    "lod2": "lod/lod2/mur_ruina_r0_02.glb"
+  },
+  {
+    "file": "npc_mieszkaniec_r0_02.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 194.8,
+    "collider": "colliders/npc_mieszkaniec_r0_02.glb",
+    "lod1": "lod/lod1/npc_mieszkaniec_r0_02.glb",
+    "lod2": "lod/lod2/npc_mieszkaniec_r0_02.glb"
+  },
+  {
+    "file": "misa_rytualna_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 91.1,
+    "collider": "colliders/misa_rytualna_r0_01.glb",
+    "lod1": "lod/lod1/misa_rytualna_r0_01.glb",
+    "lod2": "lod/lod2/misa_rytualna_r0_01.glb"
+  },
+  {
+    "file": "npc_lowca_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 307.5,
+    "collider": "colliders/npc_lowca_r0_01.glb",
+    "lod1": "lod/lod1/npc_lowca_r0_01.glb",
+    "lod2": "lod/lod2/npc_lowca_r0_01.glb"
+  },
+  {
+    "file": "wlocznia_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 150.0,
+    "collider": "colliders/wlocznia_r0_01.glb",
+    "lod1": "lod/lod1/wlocznia_r0_01.glb",
+    "lod2": "lod/lod2/wlocznia_r0_01.glb"
+  },
+  {
+    "file": "sakiewka_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 129.9,
+    "collider": "colliders/sakiewka_r0_01.glb",
+    "lod1": "lod/lod1/sakiewka_r0_01.glb",
+    "lod2": "lod/lod2/sakiewka_r0_01.glb"
+  },
+  {
+    "file": "kolczan_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 186.1,
+    "collider": "colliders/kolczan_r0_01.glb",
+    "lod1": "lod/lod1/kolczan_r0_01.glb",
+    "lod2": "lod/lod2/kolczan_r0_01.glb"
+  },
+  {
+    "file": "pulapka_lowiecka_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 258.5,
+    "collider": "colliders/pulapka_lowiecka_r0_01.glb",
+    "lod1": "lod/lod1/pulapka_lowiecka_r0_01.glb",
+    "lod2": "lod/lod2/pulapka_lowiecka_r0_01.glb"
+  },
+  {
+    "file": "buklak_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 73.6,
+    "collider": "colliders/buklak_r0_01.glb",
+    "lod1": "lod/lod1/buklak_r0_01.glb",
+    "lod2": "lod/lod2/buklak_r0_01.glb"
+  },
+  {
+    "file": "noz_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 101.5,
+    "collider": "colliders/noz_r0_01.glb",
+    "lod1": "lod/lod1/noz_r0_01.glb",
+    "lod2": "lod/lod2/noz_r0_01.glb"
+  },
+  {
+    "file": "siekiera_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 150.5,
+    "collider": "colliders/siekiera_r0_01.glb",
+    "lod1": "lod/lod1/siekiera_r0_01.glb",
+    "lod2": "lod/lod2/siekiera_r0_01.glb"
+  },
+  {
+    "file": "kamien_dowodowy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 176.1,
+    "collider": "colliders/kamien_dowodowy_r0_01.glb",
+    "lod1": "lod/lod1/kamien_dowodowy_r0_01.glb",
+    "lod2": "lod/lod2/kamien_dowodowy_r0_01.glb"
+  },
+  {
+    "file": "npc_kupiec_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 192.3,
+    "collider": "colliders/npc_kupiec_r0_01.glb",
+    "lod1": "lod/lod1/npc_kupiec_r0_01.glb",
+    "lod2": "lod/lod2/npc_kupiec_r0_01.glb"
+  },
+  {
+    "file": "miecz_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 104.9,
+    "collider": "colliders/miecz_r0_01.glb",
+    "lod1": "lod/lod1/miecz_r0_01.glb",
+    "lod2": "lod/lod2/miecz_r0_01.glb"
+  },
+  {
+    "file": "amulet_rytualny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 120.0,
+    "collider": "colliders/amulet_rytualny_r0_01.glb",
+    "lod1": "lod/lod1/amulet_rytualny_r0_01.glb",
+    "lod2": "lod/lod2/amulet_rytualny_r0_01.glb"
+  },
+  {
+    "file": "rog_mysliwski_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 122.4,
+    "collider": "colliders/rog_mysliwski_r0_01.glb",
+    "lod1": "lod/lod1/rog_mysliwski_r0_01.glb",
+    "lod2": "lod/lod2/rog_mysliwski_r0_01.glb"
+  },
+  {
+    "file": "miecz_r0_02.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 104.9,
+    "collider": "colliders/miecz_r0_02.glb",
+    "lod1": "lod/lod1/miecz_r0_02.glb",
+    "lod2": "lod/lod2/miecz_r0_02.glb"
+  },
+  {
+    "file": "tarcza_r0_02.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 159.2,
+    "collider": "colliders/tarcza_r0_02.glb",
+    "lod1": "lod/lod1/tarcza_r0_02.glb",
+    "lod2": "lod/lod2/tarcza_r0_02.glb"
+  },
+  {
+    "file": "luk_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 241.0,
+    "collider": "colliders/luk_r0_01.glb",
+    "lod1": "lod/lod1/luk_r0_01.glb",
+    "lod2": "lod/lod2/luk_r0_01.glb"
+  },
+  {
+    "file": "strzala_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 206.8,
+    "collider": "colliders/strzala_r0_01.glb",
+    "lod1": "lod/lod1/strzala_r0_01.glb",
+    "lod2": "lod/lod2/strzala_r0_01.glb"
+  },
+  {
+    "file": "wlocznia_r0_02.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 150.0,
+    "collider": "colliders/wlocznia_r0_02.glb",
+    "lod1": "lod/lod1/wlocznia_r0_02.glb",
+    "lod2": "lod/lod2/wlocznia_r0_02.glb"
+  },
+  {
+    "file": "npc_starszy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 308.1,
+    "collider": "colliders/npc_starszy_r0_01.glb",
+    "lod1": "lod/lod1/npc_starszy_r0_01.glb",
+    "lod2": "lod/lod2/npc_starszy_r0_01.glb"
+  },
+  {
+    "file": "tarcza_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 159.3,
+    "collider": "colliders/tarcza_r0_01.glb",
+    "lod1": "lod/lod1/tarcza_r0_01.glb",
+    "lod2": "lod/lod2/tarcza_r0_01.glb"
+  },
+  {
+    "file": "peczek_ziol_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 141.9,
+    "collider": "colliders/peczek_ziol_r0_01.glb",
+    "lod1": "lod/lod1/peczek_ziol_r0_01.glb",
+    "lod2": "lod/lod2/peczek_ziol_r0_01.glb"
+  },
+  {
+    "file": "torba_mysliwska_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 66.4,
+    "collider": "colliders/torba_mysliwska_r0_01.glb",
+    "lod1": "lod/lod1/torba_mysliwska_r0_01.glb",
+    "lod2": "lod/lod2/torba_mysliwska_r0_01.glb"
+  },
+  {
+    "file": "dziennik_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 121.5,
+    "collider": "colliders/dziennik_r0_01.glb",
+    "lod1": "lod/lod1/dziennik_r0_01.glb",
+    "lod2": "lod/lod2/dziennik_r0_01.glb"
+  },
+  {
+    "file": "luk_r0_02.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 241.0,
+    "collider": "colliders/luk_r0_02.glb",
+    "lod1": "lod/lod1/luk_r0_02.glb",
+    "lod2": "lod/lod2/luk_r0_02.glb"
+  },
+  {
+    "file": "stojak_oprawianie_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 261.5,
+    "collider": "colliders/stojak_oprawianie_r0_01.glb",
+    "lod1": "lod/lod1/stojak_oprawianie_r0_01.glb",
+    "lod2": "lod/lod2/stojak_oprawianie_r0_01.glb"
+  },
+  {
+    "file": "pieczec_stara_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 94.1,
+    "collider": "colliders/pieczec_stara_r0_01.glb",
+    "lod1": "lod/lod1/pieczec_stara_r0_01.glb",
+    "lod2": "lod/lod2/pieczec_stara_r0_01.glb"
+  },
+  {
+    "file": "siekiera_r0_02.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 150.5,
+    "collider": "colliders/siekiera_r0_02.glb",
+    "lod1": "lod/lod1/siekiera_r0_02.glb",
+    "lod2": "lod/lod2/siekiera_r0_02.glb"
+  },
+  {
+    "file": "wnyk_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 185.4,
+    "collider": "colliders/wnyk_r0_01.glb",
+    "lod1": "lod/lod1/wnyk_r0_01.glb",
+    "lod2": "lod/lod2/wnyk_r0_01.glb"
+  },
+  {
+    "file": "npc_mysliwy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 194.7,
+    "collider": "colliders/npc_mysliwy_r0_01.glb",
+    "lod1": "lod/lod1/npc_mysliwy_r0_01.glb",
+    "lod2": "lod/lod2/npc_mysliwy_r0_01.glb"
+  },
+  {
+    "file": "fragment_mapy_mq20.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 92.7,
+    "collider": "colliders/fragment_mapy_mq20.glb",
+    "lod1": "lod/lod1/fragment_mapy_mq20.glb",
+    "lod2": "lod/lod2/fragment_mapy_mq20.glb"
+  },
+  {
+    "file": "npc_mieszkaniec_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 191.5,
+    "collider": "colliders/npc_mieszkaniec_r0_01.glb",
+    "lod1": "lod/lod1/npc_mieszkaniec_r0_01.glb",
+    "lod2": "lod/lod2/npc_mieszkaniec_r0_01.glb"
+  },
+  {
+    "file": "klucz_stary_r0_01.glb",
+    "kind": "static",
+    "source_pack": "gameplay_v4",
+    "size_kb": 38.9,
+    "collider": "colliders/klucz_stary_r0_01.glb",
+    "lod1": "lod/lod1/klucz_stary_r0_01.glb",
+    "lod2": "lod/lod2/klucz_stary_r0_01.glb"
+  },
+  {
+    "file": "krag_rytualny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 74.5,
+    "collider": "colliders/krag_rytualny_r0_01.glb",
+    "lod1": "lod/lod1/krag_rytualny_r0_01.glb",
+    "lod2": "lod/lod2/krag_rytualny_r0_01.glb"
+  },
+  {
+    "file": "kamien_runiczny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 145.3,
+    "collider": "colliders/kamien_runiczny_r0_01.glb",
+    "lod1": "lod/lod1/kamien_runiczny_r0_01.glb",
+    "lod2": "lod/lod2/kamien_runiczny_r0_01.glb"
+  },
+  {
+    "file": "slady_pazurow_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 160.7,
+    "collider": "colliders/slady_pazurow_r0_01.glb",
+    "lod1": "lod/lod1/slady_pazurow_r0_01.glb",
+    "lod2": "lod/lod2/slady_pazurow_r0_01.glb"
+  },
+  {
+    "file": "swiece_rytualne_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 116.6,
+    "collider": "colliders/swiece_rytualne_r0_01.glb",
+    "lod1": "lod/lod1/swiece_rytualne_r0_01.glb",
+    "lod2": "lod/lod2/swiece_rytualne_r0_01.glb"
+  },
+  {
+    "file": "slady_krwi_proxy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 54.5,
+    "collider": "colliders/slady_krwi_proxy_r0_01.glb",
+    "lod1": "lod/lod1/slady_krwi_proxy_r0_01.glb",
+    "lod2": "lod/lod2/slady_krwi_proxy_r0_01.glb"
+  },
+  {
+    "file": "ognik_proxy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 79.1,
+    "collider": "colliders/ognik_proxy_r0_01.glb",
+    "lod1": "lod/lod1/ognik_proxy_r0_01.glb",
+    "lod2": "lod/lod2/ognik_proxy_r0_01.glb"
+  },
+  {
+    "file": "talizman_wiszacy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 118.5,
+    "collider": "colliders/talizman_wiszacy_r0_01.glb",
+    "lod1": "lod/lod1/talizman_wiszacy_r0_01.glb",
+    "lod2": "lod/lod2/talizman_wiszacy_r0_01.glb"
+  },
+  {
+    "file": "amulet_kosciany_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 114.3,
+    "collider": "colliders/amulet_kosciany_r0_01.glb",
+    "lod1": "lod/lod1/amulet_kosciany_r0_01.glb",
+    "lod2": "lod/lod2/amulet_kosciany_r0_01.glb"
+  },
+  {
+    "file": "upior_proto_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 175.4,
+    "collider": "colliders/upior_proto_r0_01.glb",
+    "lod1": "lod/lod1/upior_proto_r0_01.glb",
+    "lod2": "lod/lod2/upior_proto_r0_01.glb"
+  },
+  {
+    "file": "fragment_wezla_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 152.4,
+    "collider": "colliders/fragment_wezla_r0_01.glb",
+    "lod1": "lod/lod1/fragment_wezla_r0_01.glb",
+    "lod2": "lod/lod2/fragment_wezla_r0_01.glb"
+  },
+  {
+    "file": "wilk_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 74.8,
+    "collider": "colliders/wilk_r0_01.glb",
+    "lod1": "lod/lod1/wilk_r0_01.glb",
+    "lod2": "lod/lod2/wilk_r0_01.glb"
+  },
+  {
+    "file": "boginka_proto_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 126.4,
+    "collider": "colliders/boginka_proto_r0_01.glb",
+    "lod1": "lod/lod1/boginka_proto_r0_01.glb",
+    "lod2": "lod/lod2/boginka_proto_r0_01.glb"
+  },
+  {
+    "file": "forest_guardian_proto_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 191.8,
+    "collider": "colliders/forest_guardian_proto_r0_01.glb",
+    "lod1": "lod/lod1/forest_guardian_proto_r0_01.glb",
+    "lod2": "lod/lod2/forest_guardian_proto_r0_01.glb"
+  },
+  {
+    "file": "zlamana_galaz_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 167.1,
+    "collider": "colliders/zlamana_galaz_r0_01.glb",
+    "lod1": "lod/lod1/zlamana_galaz_r0_01.glb",
+    "lod2": "lod/lod2/zlamana_galaz_r0_01.glb"
+  },
+  {
+    "file": "strzep_tkaniny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 55.3,
+    "collider": "colliders/strzep_tkaniny_r0_01.glb",
+    "lod1": "lod/lod1/strzep_tkaniny_r0_01.glb",
+    "lod2": "lod/lod2/strzep_tkaniny_r0_01.glb"
+  },
+  {
+    "file": "jelen_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 134.1,
+    "collider": "colliders/jelen_r0_01.glb",
+    "lod1": "lod/lod1/jelen_r0_01.glb",
+    "lod2": "lod/lod2/jelen_r0_01.glb"
+  },
+  {
+    "file": "dzik_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 180.3,
+    "collider": "colliders/dzik_r0_01.glb",
+    "lod1": "lod/lod1/dzik_r0_01.glb",
+    "lod2": "lod/lod2/dzik_r0_01.glb"
+  },
+  {
+    "file": "mikstura_proxy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 159.7,
+    "collider": "colliders/mikstura_proxy_r0_01.glb",
+    "lod1": "lod/lod1/mikstura_proxy_r0_01.glb",
+    "lod2": "lod/lod2/mikstura_proxy_r0_01.glb"
+  },
+  {
+    "file": "misa_ofiarna_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 158.9,
+    "collider": "colliders/misa_ofiarna_r0_01.glb",
+    "lod1": "lod/lod1/misa_ofiarna_r0_01.glb",
+    "lod2": "lod/lod2/misa_ofiarna_r0_01.glb"
+  },
+  {
+    "file": "orb_magic_proxy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 81.6,
+    "collider": "colliders/orb_magic_proxy_r0_01.glb",
+    "lod1": "lod/lod1/orb_magic_proxy_r0_01.glb",
+    "lod2": "lod/lod2/orb_magic_proxy_r0_01.glb"
+  },
+  {
+    "file": "kruk_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 118.9,
+    "collider": "colliders/kruk_r0_01.glb",
+    "lod1": "lod/lod1/kruk_r0_01.glb",
+    "lod2": "lod/lod2/kruk_r0_01.glb"
+  },
+  {
+    "file": "poludnica_proto_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 121.9,
+    "collider": "colliders/poludnica_proto_r0_01.glb",
+    "lod1": "lod/lod1/poludnica_proto_r0_01.glb",
+    "lod2": "lod/lod2/poludnica_proto_r0_01.glb"
+  },
+  {
+    "file": "znak_ochronny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 164.3,
+    "collider": "colliders/znak_ochronny_r0_01.glb",
+    "lod1": "lod/lod1/znak_ochronny_r0_01.glb",
+    "lod2": "lod/lod2/znak_ochronny_r0_01.glb"
+  },
+  {
+    "file": "zwęglone_drewno_rytualne_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 108.1,
+    "collider": "colliders/zwęglone_drewno_rytualne_r0_01.glb",
+    "lod1": "lod/lod1/zwęglone_drewno_rytualne_r0_01.glb",
+    "lod2": "lod/lod2/zwęglone_drewno_rytualne_r0_01.glb"
+  },
+  {
+    "file": "paliki_rytualne_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 173.3,
+    "collider": "colliders/paliki_rytualne_r0_01.glb",
+    "lod1": "lod/lod1/paliki_rytualne_r0_01.glb",
+    "lod2": "lod/lod2/paliki_rytualne_r0_01.glb"
+  },
+  {
+    "file": "oltar_rytualny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 144.1,
+    "collider": "colliders/oltar_rytualny_r0_01.glb",
+    "lod1": "lod/lod1/oltar_rytualny_r0_01.glb",
+    "lod2": "lod/lod2/oltar_rytualny_r0_01.glb"
+  },
+  {
+    "file": "swamp_predator_proto_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 123.4,
+    "collider": "colliders/swamp_predator_proto_r0_01.glb",
+    "lod1": "lod/lod1/swamp_predator_proto_r0_01.glb",
+    "lod2": "lod/lod2/swamp_predator_proto_r0_01.glb"
+  },
+  {
+    "file": "sakiewka_ziol_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 170.8,
+    "collider": "colliders/sakiewka_ziol_r0_01.glb",
+    "lod1": "lod/lod1/sakiewka_ziol_r0_01.glb",
+    "lod2": "lod/lod2/sakiewka_ziol_r0_01.glb"
+  },
+  {
+    "file": "topielec_proto_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 189.6,
+    "collider": "colliders/topielec_proto_r0_01.glb",
+    "lod1": "lod/lod1/topielec_proto_r0_01.glb",
+    "lod2": "lod/lod2/topielec_proto_r0_01.glb"
+  },
+  {
+    "file": "trop_bagienny_r0_01.glb",
+    "kind": "static",
+    "source_pack": "bestiary_v5",
+    "size_kb": 66.1,
+    "collider": "colliders/trop_bagienny_r0_01.glb",
+    "lod1": "lod/lod1/trop_bagienny_r0_01.glb",
+    "lod2": "lod/lod2/trop_bagienny_r0_01.glb"
+  },
+  {
+    "file": "raven_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 9.9,
+    "collider": "colliders/raven_animated.glb"
+  },
+  {
+    "file": "wolf_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 12.8,
+    "collider": "colliders/wolf_animated.glb"
+  },
+  {
+    "file": "swamp_predator_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 12.8,
+    "collider": "colliders/swamp_predator_animated.glb"
+  },
+  {
+    "file": "poludnica_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.7,
+    "collider": "colliders/poludnica_animated.glb"
+  },
+  {
+    "file": "upior_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.7,
+    "collider": "colliders/upior_animated.glb"
+  },
+  {
+    "file": "boginka_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.7,
+    "collider": "colliders/boginka_animated.glb"
+  },
+  {
+    "file": "npc_merchant_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.6,
+    "collider": "colliders/npc_merchant_animated.glb"
+  },
+  {
+    "file": "topielec_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.7,
+    "collider": "colliders/topielec_animated.glb"
+  },
+  {
+    "file": "npc_hunter_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 22.6,
+    "collider": "colliders/npc_hunter_animated.glb"
+  },
+  {
+    "file": "boar_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 12.8,
+    "collider": "colliders/boar_animated.glb"
+  },
+  {
+    "file": "npc_villager_b_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.7,
+    "collider": "colliders/npc_villager_b_animated.glb"
+  },
+  {
+    "file": "forest_guardian_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.7,
+    "collider": "colliders/forest_guardian_animated.glb"
+  },
+  {
+    "file": "deer_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 12.8,
+    "collider": "colliders/deer_animated.glb"
+  },
+  {
+    "file": "npc_villager_a_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.7,
+    "collider": "colliders/npc_villager_a_animated.glb"
+  },
+  {
+    "file": "npc_elder_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 21.8,
+    "collider": "colliders/npc_elder_animated.glb"
+  },
+  {
+    "file": "player_hunter_animated.glb",
+    "kind": "animated",
+    "source_pack": "animated_v6",
+    "size_kb": 22.6,
+    "collider": "colliders/player_hunter_animated.glb"
+  },
+  {
+    "file": "terrain_grass_4m.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "terrain",
+      "r0"
+    ],
+    "size_kb": 1.2,
+    "collider": "colliders/terrain_grass_4m.glb",
+    "lod1": "lod/lod1/terrain_grass_4m.glb",
+    "lod2": "lod/lod2/terrain_grass_4m.glb"
+  },
+  {
+    "file": "terrain_dirt_4m.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "terrain",
+      "r0"
+    ],
+    "size_kb": 1.2,
+    "collider": "colliders/terrain_dirt_4m.glb",
+    "lod1": "lod/lod1/terrain_dirt_4m.glb",
+    "lod2": "lod/lod2/terrain_dirt_4m.glb"
+  },
+  {
+    "file": "terrain_mud_4m.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "terrain",
+      "r0"
+    ],
+    "size_kb": 1.2,
+    "collider": "colliders/terrain_mud_4m.glb",
+    "lod1": "lod/lod1/terrain_mud_4m.glb",
+    "lod2": "lod/lod2/terrain_mud_4m.glb"
+  },
+  {
+    "file": "water_plane_4m.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "terrain",
+      "r0"
+    ],
+    "size_kb": 1.2,
+    "collider": "colliders/water_plane_4m.glb",
+    "lod1": "lod/lod1/water_plane_4m.glb",
+    "lod2": "lod/lod2/water_plane_4m.glb"
+  },
+  {
+    "file": "path_straight_4m.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "road",
+      "r0"
+    ],
+    "size_kb": 1.2,
+    "collider": "colliders/path_straight_4m.glb",
+    "lod1": "lod/lod1/path_straight_4m.glb",
+    "lod2": "lod/lod2/path_straight_4m.glb"
+  },
+  {
+    "file": "path_curve_90.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "road",
+      "r0"
+    ],
+    "size_kb": 4.7,
+    "collider": "colliders/path_curve_90.glb",
+    "lod1": "lod/lod1/path_curve_90.glb",
+    "lod2": "lod/lod2/path_curve_90.glb"
+  },
+  {
+    "file": "terrain_ramp.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "terrain",
+      "slope",
+      "r0"
+    ],
+    "size_kb": 1.2,
+    "collider": "colliders/terrain_ramp.glb",
+    "lod1": "lod/lod1/terrain_ramp.glb",
+    "lod2": "lod/lod2/terrain_ramp.glb"
+  },
+  {
+    "file": "cliff_chunk_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "cliff",
+      "r0"
+    ],
+    "size_kb": 5.1,
+    "collider": "colliders/cliff_chunk_r0_01.glb",
+    "lod1": "lod/lod1/cliff_chunk_r0_01.glb",
+    "lod2": "lod/lod2/cliff_chunk_r0_01.glb"
+  },
+  {
+    "file": "riverbank_rocky_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "riverbank",
+      "r0"
+    ],
+    "size_kb": 7.8,
+    "collider": "colliders/riverbank_rocky_r0_01.glb",
+    "lod1": "lod/lod1/riverbank_rocky_r0_01.glb",
+    "lod2": "lod/lod2/riverbank_rocky_r0_01.glb"
+  },
+  {
+    "file": "cave_entrance_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "cave",
+      "r0"
+    ],
+    "size_kb": 12.4,
+    "collider": "colliders/cave_entrance_r0_01.glb",
+    "lod1": "lod/lod1/cave_entrance_r0_01.glb",
+    "lod2": "lod/lod2/cave_entrance_r0_01.glb"
+  },
+  {
+    "file": "fence_broken_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "fence",
+      "r0"
+    ],
+    "size_kb": 6.3,
+    "collider": "colliders/fence_broken_r0_01.glb",
+    "lod1": "lod/lod1/fence_broken_r0_01.glb",
+    "lod2": "lod/lod2/fence_broken_r0_01.glb"
+  },
+  {
+    "file": "bridge_broken_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "bridge",
+      "r0"
+    ],
+    "size_kb": 5.8,
+    "collider": "colliders/bridge_broken_r0_01.glb",
+    "lod1": "lod/lod1/bridge_broken_r0_01.glb",
+    "lod2": "lod/lod2/bridge_broken_r0_01.glb"
+  },
+  {
+    "file": "campfire_unlit_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "camp",
+      "r0"
+    ],
+    "size_kb": 11.5,
+    "collider": "colliders/campfire_unlit_r0_01.glb",
+    "lod1": "lod/lod1/campfire_unlit_r0_01.glb",
+    "lod2": "lod/lod2/campfire_unlit_r0_01.glb"
+  },
+  {
+    "file": "basket_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "prop",
+      "storage",
+      "r0"
+    ],
+    "size_kb": 11.2,
+    "collider": "colliders/basket_r0_01.glb",
+    "lod1": "lod/lod1/basket_r0_01.glb",
+    "lod2": "lod/lod2/basket_r0_01.glb"
+  },
+  {
+    "file": "sack_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "prop",
+      "storage",
+      "r0"
+    ],
+    "size_kb": 4.0,
+    "collider": "colliders/sack_r0_01.glb",
+    "lod1": "lod/lod1/sack_r0_01.glb",
+    "lod2": "lod/lod2/sack_r0_01.glb"
+  },
+  {
+    "file": "torch_unlit_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "prop",
+      "light",
+      "r0"
+    ],
+    "size_kb": 2.8,
+    "collider": "colliders/torch_unlit_r0_01.glb",
+    "lod1": "lod/lod1/torch_unlit_r0_01.glb",
+    "lod2": "lod/lod2/torch_unlit_r0_01.glb"
+  },
+  {
+    "file": "lantern_proxy_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "prop",
+      "light",
+      "r0"
+    ],
+    "size_kb": 2.7,
+    "collider": "colliders/lantern_proxy_r0_01.glb",
+    "lod1": "lod/lod1/lantern_proxy_r0_01.glb",
+    "lod2": "lod/lod2/lantern_proxy_r0_01.glb"
+  },
+  {
+    "file": "rope_coil_r0_01.glb",
+    "kind": "static",
+    "source_pack": "integration_v6",
+    "tags": [
+      "prop",
+      "r0"
+    ],
+    "size_kb": 9.9,
+    "collider": "colliders/rope_coil_r0_01.glb",
+    "lod1": "lod/lod1/rope_coil_r0_01.glb",
+    "lod2": "lod/lod2/rope_coil_r0_01.glb"
+  }
+]
