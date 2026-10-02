@@ -20,6 +20,21 @@ internal static class AssetIntegrationRegression
         check(houseMesh.Positions.Length > 0 && houseMesh.Indices.Length > 0,
             "Static GLB loader returns renderable house geometry");
 
+        var housePbr = house.BuildPbrMesh(Matrix4x4.Identity, sourceIsZUp: true);
+        check(housePbr.Vertices.Length == houseMesh.Positions.Length && housePbr.DrawRanges.Length > 0,
+            "PBR GLB path preserves geometry and material draw ranges");
+        check(housePbr.Vertices.All(vertex =>
+                float.IsFinite(vertex.Normal.X) &&
+                float.IsFinite(vertex.Normal.Y) &&
+                float.IsFinite(vertex.Normal.Z) &&
+                vertex.Normal.LengthSquared() > 0.5f),
+            "PBR GLB vertices contain valid normals");
+        check(housePbr.Materials.Any(material =>
+                material.BaseColorImage is { Length: > 0 } ||
+                material.NormalImage is { Length: > 0 } ||
+                material.MetallicRoughnessImage is { Length: > 0 }),
+            "Tracked R0 house exposes embedded PBR texture data");
+
         var player = GlbModel.Load(playerPath);
         check(player.AnimationNames.Contains("Idle") &&
               player.AnimationNames.Contains("Walk") &&
