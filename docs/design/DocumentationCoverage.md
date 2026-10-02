@@ -4,9 +4,9 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 ## Próg swobodnej implementacji — stan 2026-10-02
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje role, lifecycle, fallbacki i persistence powracających NPC, a `bestiary/ProductionBestiaryRoster.md` zamyka funkcjonalny roster istot scope 1.0. `research/bestiary/ResearchCardIndex.md` mapuje każdy wymagany slot na ownera badawczego lub jawny status F oraz oddziela braki identity/art lock od blokad implementacyjnych. Implementacja quest state machine, persistence, objective graph, regionalnego flow, NPC availability i wspólnego creature/encounter state model nie musi czekać na dalsze dopisywanie fabuły.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `research/bestiary/ResearchCardIndex.md` research ownerów, a `design/RegionalContentAssetCatalog.md` planistyczny zakres rodzin content/assets R0–R6. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
 
-Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, wskazane source-strength/identity locki, culture packages, finalne assety i targety performance wymagające pomiarów.
+Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, source-strength/identity locki, culture packages, konkretne asset manifests i targety performance wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
@@ -16,7 +16,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, w
 | Main quest | story/MainQuestSkeleton.md + quests/MainQuestCardsActs0To2.md + quests/MainQuestCardsAct3.md + quests/MainQuestCardsAct4.md + quests/MainQuestCardsAct5.md | MQ00–MQ56 production cards v0.1 |
 | Regiony | world/RegionBibleIndex.md + R0–R6 bibles | 7/7 production bibles v0.1 |
 | Panteon/religia | pantheon/* + research/pantheon/* | first pass; krytyczne źródła nadal rozwijane |
-| Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md + research/bestiary/* | scope 1.0 roster z research-owner map v0.1; południca i forest-guardian mają jawne locki |
+| Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md | scope 1.0 v0.1; południca i forest-guardian mają jawne locki |
 | Kultury | world/Cultures.md + world/MacroCultures.md | framework/macro v0.1; pełne packages niegotowe |
 | Quest framework | design/QuestDesign.md | v0.1 |
 | Vertical slice quest | quests/LightOverSwamp*.md | pełny pakiet v0.1 |
@@ -38,33 +38,34 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, w
 | Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md | first pass |
 | Material culture research | research/material-culture/* | first pass; production lock niepełny |
 | Asset list vertical slice | design/VerticalSliceAssetList.md | v0.1 |
-| Asset list full game | design/ProductionContentCatalog.md + region bibles | struktura istnieje; finalne ilości/listy otwarte |
+| Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + region bibles | R0–R6 planning catalog v0.1; finalne manifesty/art lock otwarte |
 
 ## Jawne otwarte decyzje
 
 1. finalne liczby balansu: damage, economy, drop rates, reputation, evidence thresholds;
 2. finalne dialogi, VO i lokalizacja;
-3. finalne personalia/łączenie slotów NPC, appearance i killability windows po krytycznych funkcjach;
-4. bestiariusz: source-strength/region-fit południcy i identity lock `forest-guardian`; pozostałe wymagane sloty mają ownera lub jawny status F;
-5. pełne culture research packages oraz research-lock szczegółów materialnych/religijnych;
-6. finalne asset listy poza vertical slice i budżety produkcyjne;
+3. finalne personalia/łączenie slotów NPC, appearance i killability windows;
+4. bestiariusz: source-strength/region-fit południcy i identity lock `forest-guardian`;
+5. pełne culture research packages i research-lock szczegółów materialnych/religijnych;
+6. konkretne finalne modele/materials/animations/audio/VFX i manifesty poza vertical slice;
 7. art/level locks: layouty, liczby encounterów, landmarków, osad i side questów;
 8. measured performance targets, streaming/VFX/shadow/AI budgets i wymagania sprzętowe;
 9. tuning pogody, traversal, ekonomii, AI i encounterów po playtestach;
-10. nazwy robocze oznaczone F oraz elementy jawnie opisane jako research/art/playtest/performance lock.
+10. nazwy robocze F oraz elementy research/art/playtest/performance lock.
 
 ## Definicja „pełnej dokumentacji projektu”
 
-Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spec, wszystkie główne questy mają karty, każdy region ma bible, każda finalna istota ma research card albo jawny status F bez fałszywej historyzacji, każda finalna kultura ma research package, zakończenia są rozpisane, asset listy istnieją dla pełnego scope, targety performance są zmierzone i release criteria są spełnione.
+Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spec, wszystkie główne questy mają karty, każdy region ma bible, każda finalna istota ma research card albo jawny status F, każda finalna kultura ma research package, zakończenia są rozpisane, asset listy istnieją dla pełnego scope, targety performance są zmierzone i release criteria są spełnione.
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Dalsza dokumentacja ma charakter produkcyjnego uszczegóławiania, research/content locków, balansu i pomiarów. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets jest również zdefiniowany. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. full-game asset/content lists per R0–R6;
-2. side-quest packages poza vertical slice;
+1. side-quest catalog poza vertical slice;
+2. side-quest production cards per region;
 3. culture research packages;
-4. bestiary source/identity locki wskazane w `ResearchCardIndex.md`;
-5. później balance/playtest/performance locks.
+4. bestiary source/identity locki;
+5. konkretne asset manifests po art/research lockach;
+6. później balance/playtest/performance locks.
