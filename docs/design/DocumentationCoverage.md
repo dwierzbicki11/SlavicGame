@@ -4,9 +4,9 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 ## Próg swobodnej implementacji — stan 2026-10-02
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje role, lifecycle, fallbacki i persistence powracających NPC, a `bestiary/ProductionBestiaryRoster.md` zamyka funkcjonalny roster istot scope 1.0 bez udawania, że otwarte research locki są faktami folklorystycznymi. Implementacja quest state machine, persistence, objective graph, regionalnego flow, NPC availability i wspólnego creature/encounter state model nie musi czekać na dalsze dopisywanie fabuły.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje role, lifecycle, fallbacki i persistence powracających NPC, a `bestiary/ProductionBestiaryRoster.md` zamyka funkcjonalny roster istot scope 1.0. `research/bestiary/ResearchCardIndex.md` mapuje każdy wymagany slot na ownera badawczego lub jawny status F oraz oddziela braki identity/art lock od blokad implementacyjnych. Implementacja quest state machine, persistence, objective graph, regionalnego flow, NPC availability i wspólnego creature/encounter state model nie musi czekać na dalsze dopisywanie fabuły.
 
-Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, research cards wskazanych istot, culture packages, finalne assety i targety performance wymagające pomiarów.
+Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, wskazane source-strength/identity locki, culture packages, finalne assety i targety performance wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
@@ -16,7 +16,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, r
 | Main quest | story/MainQuestSkeleton.md + quests/MainQuestCardsActs0To2.md + quests/MainQuestCardsAct3.md + quests/MainQuestCardsAct4.md + quests/MainQuestCardsAct5.md | MQ00–MQ56 production cards v0.1 |
 | Regiony | world/RegionBibleIndex.md + R0–R6 bibles | 7/7 production bibles v0.1 |
 | Panteon/religia | pantheon/* + research/pantheon/* | first pass; krytyczne źródła nadal rozwijane |
-| Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/* | scope 1.0 roster v0.1; część research locks otwarta |
+| Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md + research/bestiary/* | scope 1.0 roster z research-owner map v0.1; południca i forest-guardian mają jawne locki |
 | Kultury | world/Cultures.md + world/MacroCultures.md | framework/macro v0.1; pełne packages niegotowe |
 | Quest framework | design/QuestDesign.md | v0.1 |
 | Vertical slice quest | quests/LightOverSwamp*.md | pełny pakiet v0.1 |
@@ -45,7 +45,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, r
 1. finalne liczby balansu: damage, economy, drop rates, reputation, evidence thresholds;
 2. finalne dialogi, VO i lokalizacja;
 3. finalne personalia/łączenie slotów NPC, appearance i killability windows po krytycznych funkcjach;
-4. brakujące research cards istot, szczególnie południcy, oraz identity lock `forest-guardian`;
+4. bestiariusz: source-strength/region-fit południcy i identity lock `forest-guardian`; pozostałe wymagane sloty mają ownera lub jawny status F;
 5. pełne culture research packages oraz research-lock szczegółów materialnych/religijnych;
 6. finalne asset listy poza vertical slice i budżety produkcyjne;
 7. art/level locks: layouty, liczby encounterów, landmarków, osad i side questów;
@@ -63,8 +63,8 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ## Kolejny priorytet
 
-1. indeks research cards bestiariusza + brakujące karty;
-2. culture research packages;
-3. full-game asset/content lists per region;
-4. side-quest packages poza vertical slice;
+1. full-game asset/content lists per R0–R6;
+2. side-quest packages poza vertical slice;
+3. culture research packages;
+4. bestiary source/identity locki wskazane w `ResearchCardIndex.md`;
 5. później balance/playtest/performance locks.
