@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.Quest;
 
@@ -5,6 +6,9 @@ namespace SlavicGame.RegressionTests;
 
 internal static class MainQuestCampaignRegression
 {
+    [ModuleInitializer]
+    internal static void Initialize() => Run();
+
     public static int Run()
     {
         var checks = 0;
