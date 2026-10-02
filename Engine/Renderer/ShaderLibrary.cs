@@ -18,15 +18,7 @@ public static class ShaderLibrary
 
     private static Shader Load(ResourceFactory factory, string fileName, ShaderStages stage)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "shaders", "bin", fileName);
-        if (!File.Exists(path))
-        {
-            throw new FileNotFoundException(
-                $"Compiled Vulkan shader '{fileName}' is missing. " +
-                "Run ./tools/compile-shaders.sh or ./run.sh before starting SlavicGame.",
-                path);
-        }
-
+        var path = ResolveShaderPath(fileName);
         var spirv = File.ReadAllBytes(path);
         if (spirv.Length < 4 ||
             spirv[0] != 0x03 ||
@@ -39,5 +31,50 @@ public static class ShaderLibrary
         }
 
         return factory.CreateShader(new ShaderDescription(stage, spirv, "main"));
+    }
+
+    private static string ResolveShaderPath(string fileName)
+    {
+        var attempted = new List<string>();
+
+        var outputPath = Path.Combine(AppContext.BaseDirectory, "shaders", "bin", fileName);
+        attempted.Add(outputPath);
+        if (File.Exists(outputPath))
+            return outputPath;
+
+        var workingDirectoryPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "shaders",
+            "bin",
+            fileName);
+        attempted.Add(workingDirectoryPath);
+        if (File.Exists(workingDirectoryPath))
+            return workingDirectoryPath;
+
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        for (var depth = 0; directory is not null && depth < 10; depth++, directory = directory.Parent)
+        {
+            var projectFile = Path.Combine(directory.FullName, "SlavicGame.csproj");
+            if (!File.Exists(projectFile))
+                continue;
+
+            var projectShaderPath = Path.Combine(
+                directory.FullName,
+                "shaders",
+                "bin",
+                fileName);
+            attempted.Add(projectShaderPath);
+            if (File.Exists(projectShaderPath))
+                return projectShaderPath;
+
+            break;
+        }
+
+        throw new FileNotFoundException(
+            $"Compiled Vulkan shader '{fileName}' is missing. " +
+            "On Linux, 'dotnet build' and 'dotnet run' compile shaders automatically. " +
+            "You can also run ./tools/compile-shaders.sh manually. " +
+            $"Checked: {string.Join(", ", attempted)}",
+            outputPath);
     }
 }
