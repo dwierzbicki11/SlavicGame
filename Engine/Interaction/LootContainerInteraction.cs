@@ -17,7 +17,9 @@ public enum LootContainerResult
 {
     Looted,
     Empty,
-    InvalidTarget
+    InvalidTarget,
+    ItemNotFound,
+    InvalidQuantity
 }
 
 /// <summary>
@@ -34,17 +36,8 @@ public sealed class LootContainerInteractionState
         InventoryState inventory,
         Action<string>? questEvent = null)
     {
-        ArgumentNullException.ThrowIfNull(target);
-        ArgumentNullException.ThrowIfNull(container);
-        ArgumentNullException.ThrowIfNull(inventory);
-
-        if (!target.Enabled ||
-            string.IsNullOrWhiteSpace(container.TargetId) ||
-            !StringComparer.Ordinal.Equals(target.Id, container.TargetId) ||
-            container.Contents is null)
-        {
+        if (!TryValidate(target, container, inventory))
             return LootContainerResult.InvalidTarget;
-        }
 
         var remaining = GetOrCreate(container);
         if (remaining.Count == 0)
@@ -54,9 +47,40 @@ public sealed class LootContainerInteractionState
             inventory.Add(pair.Key, pair.Value);
 
         remaining.Clear();
+        EmitCompletedQuestEvent(container, questEvent);
+        return LootContainerResult.Looted;
+    }
 
-        if (!string.IsNullOrWhiteSpace(container.QuestEventId))
-            questEvent?.Invoke(container.QuestEventId);
+    public LootContainerResult Take(
+        InteractionTarget target,
+        LootContainerDefinition container,
+        InventoryState inventory,
+        string itemId,
+        int quantity,
+        Action<string>? questEvent = null)
+    {
+        if (!TryValidate(target, container, inventory))
+            return LootContainerResult.InvalidTarget;
+        if (string.IsNullOrWhiteSpace(itemId) || quantity <= 0)
+            return LootContainerResult.InvalidQuantity;
+
+        var remaining = GetOrCreate(container);
+        if (remaining.Count == 0)
+            return LootContainerResult.Empty;
+        if (!remaining.TryGetValue(itemId, out var available))
+            return LootContainerResult.ItemNotFound;
+        if (quantity > available)
+            return LootContainerResult.InvalidQuantity;
+
+        inventory.Add(itemId, quantity);
+        var left = available - quantity;
+        if (left == 0)
+            remaining.Remove(itemId);
+        else
+            remaining[itemId] = left;
+
+        if (remaining.Count == 0)
+            EmitCompletedQuestEvent(container, questEvent);
 
         return LootContainerResult.Looted;
     }
@@ -101,6 +125,29 @@ public sealed class LootContainerInteractionState
 
             _remaining.Add(snapshot.TargetId, contents);
         }
+    }
+
+    private static bool TryValidate(
+        InteractionTarget target,
+        LootContainerDefinition container,
+        InventoryState inventory)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(container);
+        ArgumentNullException.ThrowIfNull(inventory);
+
+        return target.Enabled &&
+               !string.IsNullOrWhiteSpace(container.TargetId) &&
+               StringComparer.Ordinal.Equals(target.Id, container.TargetId) &&
+               container.Contents is not null;
+    }
+
+    private static void EmitCompletedQuestEvent(
+        LootContainerDefinition container,
+        Action<string>? questEvent)
+    {
+        if (!string.IsNullOrWhiteSpace(container.QuestEventId))
+            questEvent?.Invoke(container.QuestEventId);
     }
 
     private Dictionary<string, int> GetOrCreate(LootContainerDefinition container)
