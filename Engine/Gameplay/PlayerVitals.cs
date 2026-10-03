@@ -27,14 +27,27 @@ public sealed class PlayerVitals
         return true;
     }
 
-    public void UpdateStamina(bool sprinting, double deltaSeconds)
+    public void UpdateStamina(
+        bool sprinting,
+        double deltaSeconds,
+        float drainMultiplier = 1f,
+        float recoveryMultiplier = 1f)
     {
         if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0)
             return;
+        if (!float.IsFinite(drainMultiplier) || drainMultiplier < 0f)
+            throw new ArgumentOutOfRangeException(nameof(drainMultiplier));
+        if (!float.IsFinite(recoveryMultiplier) || recoveryMultiplier < 0f)
+            throw new ArgumentOutOfRangeException(nameof(recoveryMultiplier));
 
         if (sprinting && CanSprint)
         {
-            Stamina = MathF.Max(0f, Stamina - SprintDrainPerSecond * (float)deltaSeconds);
+            Stamina = MathF.Max(
+                0f,
+                Stamina -
+                SprintDrainPerSecond *
+                drainMultiplier *
+                (float)deltaSeconds);
             _recoveryDelayRemaining = StaminaRecoveryDelaySeconds;
             return;
         }
@@ -48,7 +61,12 @@ public sealed class PlayerVitals
         }
 
         if (recoverySeconds > 0.0)
-            Stamina = MathF.Min(MaxStamina, Stamina + StaminaRecoveryPerSecond * (float)recoverySeconds);
+            Stamina = MathF.Min(
+                MaxStamina,
+                Stamina +
+                StaminaRecoveryPerSecond *
+                recoveryMultiplier *
+                (float)recoverySeconds);
     }
 
     public void TakeDamage(float amount)
