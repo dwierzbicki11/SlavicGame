@@ -58,6 +58,10 @@ public sealed class NpcWorldRuntime
     private readonly List<NpcWorldActor> _actors = [];
     private readonly Dictionary<string, Vector3> _lastPositions =
         new(StringComparer.Ordinal);
+    private readonly Dictionary<string, double> _routineTimeOffsets =
+        new(StringComparer.Ordinal);
+    private readonly Dictionary<string, double> _dialogueFreezeStarted =
+        new(StringComparer.Ordinal);
 
     public IReadOnlyList<NpcWorldActor> Actors => _actors;
 
@@ -84,12 +88,21 @@ public sealed class NpcWorldRuntime
                     npc.Id,
                     StringComparison.Ordinal);
 
+            var routineOffset =
+                _routineTimeOffsets.GetValueOrDefault(npc.Id);
+
             NpcRoutineSample motion;
             if (speaking &&
                 _lastPositions.TryGetValue(
                     npc.Id,
                     out var frozenPosition))
             {
+                if (!_dialogueFreezeStarted.ContainsKey(npc.Id))
+                {
+                    _dialogueFreezeStarted[npc.Id] =
+                        world.Time.TimeOfDayHours;
+                }
+
                 motion = new NpcRoutineSample(
                     new Vector2(
                         frozenPosition.X,
@@ -99,11 +112,23 @@ public sealed class NpcWorldRuntime
             }
             else
             {
+                if (_dialogueFreezeStarted.Remove(
+                        npc.Id,
+                        out var frozenAtHours))
+                {
+                    routineOffset += ForwardHours(
+                        frozenAtHours,
+                        world.Time.TimeOfDayHours);
+                    _routineTimeOffsets[npc.Id] =
+                        routineOffset;
+                }
+
                 motion = NpcRoutineMotion.Sample(
                     npc.Id,
                     slot.Activity,
                     fallback,
-                    world.Time.TimeOfDayHours);
+                    world.Time.TimeOfDayHours -
+                    routineOffset);
             }
 
             var horizontal =
@@ -279,6 +304,18 @@ public sealed class NpcWorldRuntime
         };
         var from = PoseFor(npcId, locationId, "");
         return WorldPlacementOrientation.YawFacing(from, target);
+    }
+
+    private static double ForwardHours(
+        double from,
+        double to)
+    {
+        var delta = to - from;
+        while (delta < 0d)
+            delta += 24d;
+        while (delta >= 24d)
+            delta -= 24d;
+        return delta;
     }
 
     private static float Facing(Vector3 from, Vector3 target) =>
