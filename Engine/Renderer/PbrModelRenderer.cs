@@ -37,7 +37,7 @@ public sealed class PbrModelRenderer : IDisposable
     public int RenderableCount => _renderables.Count;
     public int InstanceCount => _instanceCount;
     public int UniqueAssetCount => _uniqueAssetCount;
-    public int DrawCallCount => _renderables.Sum(renderable => renderable.Draws.Length);
+    public int DrawCallCount => _renderables.Sum(renderable => renderable.Lod0.Draws.Length);
 
     public void Initialize(
         GraphicsDevice graphicsDevice,
@@ -120,6 +120,11 @@ public sealed class PbrModelRenderer : IDisposable
                     path);
 
             var model = GlbModel.Load(path);
+            var lod1Path = ResolveLodPath(assetsRoot, assetGroup.Key, "lod1");
+            var lod2Path = ResolveLodPath(assetsRoot, assetGroup.Key, "lod2");
+            var lod1Model = File.Exists(lod1Path) ? GlbModel.Load(lod1Path) : null;
+            var lod2Model = File.Exists(lod2Path) ? GlbModel.Load(lod2Path) : null;
+
             var materialSets = new ResourceSet[model.Materials.Count][];
             for (var materialIndex = 0; materialIndex < model.Materials.Count; materialIndex++)
                 materialSets[materialIndex] = CreateMaterialSets(
@@ -128,70 +133,33 @@ public sealed class PbrModelRenderer : IDisposable
                     model.Materials[materialIndex],
                     textureQuality);
 
-            foreach (var chunkGroup in assetGroup.GroupBy(instance => GetChunkKey(instance.Position)))
+            foreach (var chunkGroup in assetGroup.GroupBy(
+                         instance => GetChunkKey(instance.Position)))
             {
                 var instances = chunkGroup.ToArray();
-                var combinedVertices = new List<PbrVertex>();
-                var indicesByMaterial = Enumerable
-                    .Range(0, model.Materials.Count)
-                    .Select(_ => new List<uint>())
-                    .ToArray();
 
-                foreach (var instance in instances)
-                {
-                    var transform =
-                        Matrix4x4.CreateScale(instance.Scale) *
-                        Matrix4x4.CreateRotationY(instance.YawRadians) *
-                        Matrix4x4.CreateTranslation(instance.Position);
-                    var mesh = model.BuildPbrMesh(
-                        transform,
-                        animationName: null,
-                        animationTimeSeconds: 0f,
-                        sourceIsZUp: instance.SourceIsZUp);
-
-                    var vertexOffset = checked((uint)combinedVertices.Count);
-                    combinedVertices.AddRange(mesh.Vertices);
-
-                    foreach (var range in mesh.DrawRanges)
-                    {
-                        var materialIndex = Math.Clamp(
-                            range.MaterialIndex,
-                            0,
-                            indicesByMaterial.Length - 1);
-                        var bucket = indicesByMaterial[materialIndex];
-                        var rangeEnd = range.IndexStart + range.IndexCount;
-                        for (var sourceIndex = range.IndexStart; sourceIndex < rangeEnd; sourceIndex++)
-                            bucket.Add(vertexOffset + mesh.Indices[sourceIndex]);
-                    }
-                }
-
-                var combinedIndices = new List<uint>();
-                var draws = new List<DrawBatch>();
-                for (var materialIndex = 0; materialIndex < indicesByMaterial.Length; materialIndex++)
-                {
-                    var bucket = indicesByMaterial[materialIndex];
-                    if (bucket.Count == 0)
-                        continue;
-
-                    var indexStart = checked((uint)combinedIndices.Count);
-                    combinedIndices.AddRange(bucket);
-                    draws.Add(new DrawBatch(
-                        indexStart,
-                        checked((uint)bucket.Count),
-                        materialSets[materialIndex]));
-                }
-
-                var vertexArray = combinedVertices.ToArray();
-                var indexArray = combinedIndices.ToArray();
-                var vertexBuffer = factory.CreateBuffer(new BufferDescription(
-                    PbrVertex.SizeInBytes * checked((uint)vertexArray.Length),
-                    BufferUsage.VertexBuffer));
-                var indexBuffer = factory.CreateBuffer(new BufferDescription(
-                    sizeof(uint) * checked((uint)indexArray.Length),
-                    BufferUsage.IndexBuffer));
-
-                graphicsDevice.UpdateBuffer(vertexBuffer, 0, vertexArray);
-                graphicsDevice.UpdateBuffer(indexBuffer, 0, indexArray);
+                var lod0 = BuildLodGeometry(
+                    graphicsDevice,
+                    factory,
+                    model,
+                    materialSets,
+                    instances);
+                var lod1 = lod1Model is null
+                    ? null
+                    : BuildLodGeometry(
+                        graphicsDevice,
+                        factory,
+                        lod1Model,
+                        materialSets,
+                        instances);
+                var lod2 = lod2Model is null
+                    ? null
+                    : BuildLodGeometry(
+                        graphicsDevice,
+                        factory,
+                        lod2Model,
+                        materialSets,
+                        instances);
 
                 var center = new Vector3(
                     instances.Average(instance => instance.Position.X),
@@ -207,16 +175,16 @@ public sealed class PbrModelRenderer : IDisposable
                     ClassifyAsset(assetGroup.Key),
                     center,
                     radius,
-                    vertexBuffer,
-                    indexBuffer,
-                    draws.ToArray()));
+                    lod0,
+                    lod1,
+                    lod2));
             }
         }
 
         EngineLog.Info(
             $"PBR model renderer initialized: {_instanceCount} instances, " +
             $"{_uniqueAssetCount} unique assets, {_renderables.Count} spatial batches, " +
-            $"{DrawCallCount} material draws.");
+            $"{DrawCallCount} LOD0 material draws; LOD1/LOD2 enabled where assets exist.");
     }
 
     public void Render(
@@ -227,7 +195,8 @@ public sealed class PbrModelRenderer : IDisposable
         CameraFrustum frustum,
         float renderDistance,
         float vegetationDistance,
-        float groundClutterDistance)
+        float groundClutterDistance,
+        ModelLodQuality lodQuality)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_pipeline is null)
@@ -258,16 +227,22 @@ public sealed class PbrModelRenderer : IDisposable
             if (categoryDistance <= 0f)
                 continue;
 
+            var distanceSquared = delta.LengthSquared();
             var maxDistance = categoryDistance + renderable.Radius;
-            if (delta.LengthSquared() > maxDistance * maxDistance)
+            if (distanceSquared > maxDistance * maxDistance)
                 continue;
             if (!frustum.IntersectsSphere(renderable.Center, renderable.Radius))
                 continue;
 
-            commandList.SetVertexBuffer(0, renderable.VertexBuffer);
-            commandList.SetIndexBuffer(renderable.IndexBuffer, IndexFormat.UInt32);
+            var geometry = SelectLodGeometry(
+                renderable,
+                MathF.Sqrt(distanceSquared),
+                lodQuality);
 
-            foreach (var draw in renderable.Draws)
+            commandList.SetVertexBuffer(0, geometry.VertexBuffer);
+            commandList.SetIndexBuffer(geometry.IndexBuffer, IndexFormat.UInt32);
+
+            foreach (var draw in geometry.Draws)
             {
                 commandList.SetGraphicsResourceSet(
                     1,
@@ -289,7 +264,8 @@ public sealed class PbrModelRenderer : IDisposable
         Vector3 focusPosition,
         float shadowDistance,
         float vegetationDistance,
-        float groundClutterDistance)
+        float groundClutterDistance,
+        ModelLodQuality lodQuality)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -317,14 +293,20 @@ public sealed class PbrModelRenderer : IDisposable
             if (categoryDistance <= 0f)
                 continue;
 
+            var distanceSquared = delta.LengthSquared();
             var maxDistance = categoryDistance + renderable.Radius;
-            if (delta.LengthSquared() > maxDistance * maxDistance)
+            if (distanceSquared > maxDistance * maxDistance)
                 continue;
 
-            commandList.SetVertexBuffer(0, renderable.VertexBuffer);
-            commandList.SetIndexBuffer(renderable.IndexBuffer, IndexFormat.UInt32);
+            var geometry = SelectLodGeometry(
+                renderable,
+                MathF.Sqrt(distanceSquared),
+                lodQuality);
 
-            foreach (var draw in renderable.Draws)
+            commandList.SetVertexBuffer(0, geometry.VertexBuffer);
+            commandList.SetIndexBuffer(geometry.IndexBuffer, IndexFormat.UInt32);
+
+            foreach (var draw in geometry.Draws)
             {
                 commandList.DrawIndexed(
                     draw.IndexCount,
@@ -334,6 +316,127 @@ public sealed class PbrModelRenderer : IDisposable
                     instanceStart: 0);
             }
         }
+    }
+
+    private static string ResolveLodPath(
+        string assetsRoot,
+        string assetPath,
+        string lodFolder)
+    {
+        return Path.Combine(
+            assetsRoot,
+            "lod",
+            lodFolder,
+            Path.GetFileName(assetPath));
+    }
+
+    private static LodGeometry BuildLodGeometry(
+        GraphicsDevice graphicsDevice,
+        ResourceFactory factory,
+        GlbModel model,
+        ResourceSet[][] materialSets,
+        IReadOnlyList<WorldModelInstance> instances)
+    {
+        var combinedVertices = new List<PbrVertex>();
+        var indicesByMaterial = Enumerable
+            .Range(0, materialSets.Length)
+            .Select(_ => new List<uint>())
+            .ToArray();
+
+        foreach (var instance in instances)
+        {
+            var transform =
+                Matrix4x4.CreateScale(instance.Scale) *
+                Matrix4x4.CreateRotationY(instance.YawRadians) *
+                Matrix4x4.CreateTranslation(instance.Position);
+
+            var mesh = model.BuildPbrMesh(
+                transform,
+                animationName: null,
+                animationTimeSeconds: 0f,
+                sourceIsZUp: instance.SourceIsZUp);
+
+            var vertexOffset = checked((uint)combinedVertices.Count);
+            combinedVertices.AddRange(mesh.Vertices);
+
+            foreach (var range in mesh.DrawRanges)
+            {
+                var materialIndex = Math.Clamp(
+                    range.MaterialIndex,
+                    0,
+                    indicesByMaterial.Length - 1);
+                var bucket = indicesByMaterial[materialIndex];
+                var rangeEnd = range.IndexStart + range.IndexCount;
+                for (var sourceIndex = range.IndexStart; sourceIndex < rangeEnd; sourceIndex++)
+                    bucket.Add(vertexOffset + mesh.Indices[sourceIndex]);
+            }
+        }
+
+        var combinedIndices = new List<uint>();
+        var draws = new List<DrawBatch>();
+
+        for (var materialIndex = 0; materialIndex < indicesByMaterial.Length; materialIndex++)
+        {
+            var bucket = indicesByMaterial[materialIndex];
+            if (bucket.Count == 0)
+                continue;
+
+            var indexStart = checked((uint)combinedIndices.Count);
+            combinedIndices.AddRange(bucket);
+            draws.Add(new DrawBatch(
+                indexStart,
+                checked((uint)bucket.Count),
+                materialSets[materialIndex]));
+        }
+
+        var vertexArray = combinedVertices.ToArray();
+        var indexArray = combinedIndices.ToArray();
+
+        var vertexBuffer = factory.CreateBuffer(new BufferDescription(
+            PbrVertex.SizeInBytes * checked((uint)vertexArray.Length),
+            BufferUsage.VertexBuffer));
+        var indexBuffer = factory.CreateBuffer(new BufferDescription(
+            sizeof(uint) * checked((uint)indexArray.Length),
+            BufferUsage.IndexBuffer));
+
+        graphicsDevice.UpdateBuffer(vertexBuffer, 0, vertexArray);
+        graphicsDevice.UpdateBuffer(indexBuffer, 0, indexArray);
+
+        return new LodGeometry(
+            vertexBuffer,
+            indexBuffer,
+            draws.ToArray(),
+            vertexArray.Length,
+            indexArray.Length);
+    }
+
+    private static LodGeometry SelectLodGeometry(
+        Renderable renderable,
+        float distance,
+        ModelLodQuality quality)
+    {
+        var (lod1Distance, lod2Distance) =
+            GraphicsQualityCatalog.ModelLodDistances(quality);
+
+        // Vegetation tolerates a faster transition because its silhouette
+        // dominates long before small branch detail does.
+        if (renderable.Kind == RenderableKind.Vegetation)
+        {
+            lod1Distance *= 0.72f;
+            lod2Distance *= 0.72f;
+        }
+        else if (renderable.Kind == RenderableKind.GroundClutter)
+        {
+            lod1Distance *= 0.55f;
+            lod2Distance *= 0.55f;
+        }
+
+        if (distance >= lod2Distance && renderable.Lod2 is not null)
+            return renderable.Lod2;
+        if (distance >= lod1Distance && renderable.Lod1 is not null)
+            return renderable.Lod1;
+
+        return renderable.Lod0;
     }
 
     private ResourceSet[] CreateMaterialSets(
@@ -473,8 +576,9 @@ public sealed class PbrModelRenderer : IDisposable
 
         foreach (var renderable in _renderables)
         {
-            renderable.VertexBuffer.Dispose();
-            renderable.IndexBuffer.Dispose();
+            renderable.Lod0.Dispose();
+            renderable.Lod1?.Dispose();
+            renderable.Lod2?.Dispose();
         }
         _renderables.Clear();
 
@@ -568,9 +672,23 @@ public sealed class PbrModelRenderer : IDisposable
         RenderableKind Kind,
         Vector3 Center,
         float Radius,
+        LodGeometry Lod0,
+        LodGeometry? Lod1,
+        LodGeometry? Lod2);
+
+    private sealed record LodGeometry(
         DeviceBuffer VertexBuffer,
         DeviceBuffer IndexBuffer,
-        DrawBatch[] Draws);
+        DrawBatch[] Draws,
+        int VertexCount,
+        int IndexCount) : IDisposable
+    {
+        public void Dispose()
+        {
+            VertexBuffer.Dispose();
+            IndexBuffer.Dispose();
+        }
+    }
 
     private sealed record DrawBatch(
         uint IndexStart,
