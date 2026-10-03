@@ -158,9 +158,24 @@ Każda moc powinna odpowiadać na pytania:
 - jak przeciwnik lub świat może na nią odpowiedzieć?
 - czy istnieje niemagiczna alternatywa?
 
+## Język inkantacji F
+
+Pierwsza grywalna warstwa używa sześciu całkowicie fikcyjnych słów. Nie są one rekonstrukcją języka ani rytuałów historycznych.
+
+| Słowo | Funkcja mechaniczna |
+|---|---|
+| `ZAR` | siła / ciepło / zapłon |
+| `VEK` | kierunek / uwolnienie |
+| `ZIVA` | życie / żywy wzorzec |
+| `DAR` | wymiana / odnowienie |
+| `VEDA` | rozpoznanie / ujawnienie |
+| `NAW` | echo / ślad zza granicy |
+
+Pierwsze frazy to `ZAR VEK`, `ZIVA DAR` i `VEDA NAW`. W kodzie fraza składa się z osobnych słów, ma czas wypowiedzenia i identyfikatory `voice cue`, dzięki czemu dubbing lub przyszłe rozpoznawanie mowy można dołożyć bez zmiany reguł czaru. Podczas castu HUD ujawnia słowa kolejno, a przerwanie obrażeniem zatrzymuje inkantację.
+
 ## Status
 
-Model danych dla czarów, rytuałów, alchemii i kosztów istnieje w kodzie. Wykonywanie, VFX, UI, crafting i nauka znaków pozostają do implementacji.
+Działa wykonywanie trzech czarów, koszty, cooldown, przerwanie obrażeniem, podstawowe VFX, ujawnianie magicznych śladów oraz warstwa inkantacji słowo-po-słowie. Model rytuałów i alchemii istnieje, ale ich pełne wykonywanie, crafting, nauka znaków w świecie i finalny audio/VFX pozostają do implementacji.
 
 
 ## Author truth: pochodzenie znaków i „dawnej mocy”
