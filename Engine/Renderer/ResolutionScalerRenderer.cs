@@ -223,10 +223,13 @@ public sealed class ResolutionScalerRenderer : IDisposable
         if (_presentationParameters is null)
             throw new InvalidOperationException("Presentation parameters are missing.");
 
-        // Veldrid/Vulkan offscreen single-sample render targets need a Y flip
-        // when sampled for display. On the multisample path ResolveTexture
-        // already yields display-oriented data on affected drivers/backends,
-        // so applying the same flip again turns the image upside down.
+        // This parameter corrects the orientation of the scene source sampled
+        // by the direct-present shader and by EASU. When EASU is followed by
+        // RCAS, RCAS performs one additional final offscreen->swapchain Y
+        // correction in fsr_rcas.frag. Native FSR bypasses EASU/RCAS entirely.
+        //
+        // On the multisample path ResolveTexture already yields
+        // display-oriented scene data on affected drivers/backends.
         var flipY = _sceneSampleCount == TextureSampleCount.Count1 ? 1f : 0f;
         commandList.UpdateBuffer(
             _presentationParameters,
@@ -243,10 +246,12 @@ public sealed class ResolutionScalerRenderer : IDisposable
         var outputWidth = Math.Max(1u, swapchainFramebuffer.Width);
         var outputHeight = Math.Max(1u, swapchainFramebuffer.Height);
 
-        if (upscaler == UpscalerMode.Fsr1 &&
-            outputWidth >= _width &&
-            outputHeight >= _height &&
-            (outputWidth > _width || outputHeight > _height))
+        if (FsrPresentationPolicy.UsesUpscalePass(
+                upscaler,
+                _width,
+                _height,
+                outputWidth,
+                outputHeight))
         {
             EnsureFsrTarget(outputWidth, outputHeight);
             PresentFsr1(
