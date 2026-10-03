@@ -8,6 +8,9 @@ public enum CameraPreference
 
 public enum RenderResolution
 {
+    Qhd540,
+    Hd576,
+    Hd648,
     Hd720,
     Hd768,
     Hd900,
@@ -89,6 +92,20 @@ public enum TerrainDetailQuality
     Ultra
 }
 
+public enum ModelLodQuality
+{
+    Aggressive,
+    Balanced,
+    Quality,
+    Ultra
+}
+
+public enum UpscalerMode
+{
+    Bilinear,
+    Fsr1
+}
+
 public readonly record struct ResolutionSize(int Width, int Height)
 {
     public override string ToString() => $"{Width}X{Height}";
@@ -99,6 +116,9 @@ public static class ResolutionCatalog
     public static ResolutionSize Get(RenderResolution resolution) =>
         resolution switch
         {
+            RenderResolution.Qhd540 => new(960, 540),
+            RenderResolution.Hd576 => new(1024, 576),
+            RenderResolution.Hd648 => new(1152, 648),
             RenderResolution.Hd720 => new(1280, 720),
             RenderResolution.Hd768 => new(1366, 768),
             RenderResolution.Hd900 => new(1600, 900),
@@ -204,6 +224,26 @@ public static class GraphicsQualityCatalog
             TerrainDetailQuality.Ultra => 3f,
             _ => 2f
         };
+
+    public static int TerrainMeshStep(TerrainDetailQuality quality) =>
+        quality switch
+        {
+            TerrainDetailQuality.Low => 4,
+            TerrainDetailQuality.Medium => 2,
+            TerrainDetailQuality.High => 1,
+            TerrainDetailQuality.Ultra => 1,
+            _ => 1
+        };
+
+    public static (float Lod1, float Lod2) ModelLodDistances(ModelLodQuality quality) =>
+        quality switch
+        {
+            ModelLodQuality.Aggressive => (18f, 45f),
+            ModelLodQuality.Balanced => (30f, 90f),
+            ModelLodQuality.Quality => (55f, 160f),
+            ModelLodQuality.Ultra => (90f, 280f),
+            _ => (55f, 160f)
+        };
 }
 
 public static class GraphicsPresetCatalog
@@ -234,6 +274,9 @@ public static class GraphicsPresetCatalog
                 settings.GroundClutter = GroundClutterQuality.Off;
                 settings.ShadowDistance = ShadowDistanceQuality.Short;
                 settings.TerrainDetail = TerrainDetailQuality.Low;
+                settings.ModelLod = ModelLodQuality.Aggressive;
+                settings.Upscaler = UpscalerMode.Fsr1;
+                settings.FsrSharpness = 0.55f;
                 settings.NormalMapping = false;
                 settings.SpecularHighlights = false;
                 break;
@@ -250,6 +293,9 @@ public static class GraphicsPresetCatalog
                 settings.GroundClutter = GroundClutterQuality.Low;
                 settings.ShadowDistance = ShadowDistanceQuality.Medium;
                 settings.TerrainDetail = TerrainDetailQuality.Medium;
+                settings.ModelLod = ModelLodQuality.Balanced;
+                settings.Upscaler = UpscalerMode.Fsr1;
+                settings.FsrSharpness = 0.45f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = false;
                 break;
@@ -266,6 +312,9 @@ public static class GraphicsPresetCatalog
                 settings.GroundClutter = GroundClutterQuality.Medium;
                 settings.ShadowDistance = ShadowDistanceQuality.Far;
                 settings.TerrainDetail = TerrainDetailQuality.High;
+                settings.ModelLod = ModelLodQuality.Quality;
+                settings.Upscaler = UpscalerMode.Fsr1;
+                settings.FsrSharpness = 0.35f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = true;
                 break;
@@ -282,6 +331,9 @@ public static class GraphicsPresetCatalog
                 settings.GroundClutter = GroundClutterQuality.High;
                 settings.ShadowDistance = ShadowDistanceQuality.Ultra;
                 settings.TerrainDetail = TerrainDetailQuality.Ultra;
+                settings.ModelLod = ModelLodQuality.Ultra;
+                settings.Upscaler = UpscalerMode.Fsr1;
+                settings.FsrSharpness = 0.25f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = true;
                 break;
@@ -326,6 +378,9 @@ public static class GraphicsPresetCatalog
             GroundClutter = source.GroundClutter,
             ShadowDistance = source.ShadowDistance,
             TerrainDetail = source.TerrainDetail,
+            ModelLod = source.ModelLod,
+            Upscaler = source.Upscaler,
+            FsrSharpness = source.FsrSharpness,
             NormalMapping = source.NormalMapping,
             SpecularHighlights = source.SpecularHighlights,
             Fog = source.Fog,
@@ -349,6 +404,9 @@ public static class GraphicsPresetCatalog
         left.GroundClutter == right.GroundClutter &&
         left.ShadowDistance == right.ShadowDistance &&
         left.TerrainDetail == right.TerrainDetail &&
+        left.ModelLod == right.ModelLod &&
+        left.Upscaler == right.Upscaler &&
+        MathF.Abs(left.FsrSharpness - right.FsrSharpness) < 0.001f &&
         left.NormalMapping == right.NormalMapping &&
         left.SpecularHighlights == right.SpecularHighlights &&
         left.Fog == right.Fog &&
@@ -382,6 +440,9 @@ public sealed class GameSettings
     public GroundClutterQuality GroundClutter { get; set; } = GroundClutterQuality.Medium;
     public ShadowDistanceQuality ShadowDistance { get; set; } = ShadowDistanceQuality.Far;
     public TerrainDetailQuality TerrainDetail { get; set; } = TerrainDetailQuality.High;
+    public ModelLodQuality ModelLod { get; set; } = ModelLodQuality.Quality;
+    public UpscalerMode Upscaler { get; set; } = UpscalerMode.Fsr1;
+    public float FsrSharpness { get; set; } = 0.35f;
     public bool NormalMapping { get; set; } = true;
     public bool SpecularHighlights { get; set; } = true;
     public bool Fog { get; set; } = true;
@@ -413,5 +474,10 @@ public sealed class GameSettings
             ShadowDistance = ShadowDistanceQuality.Far;
         if (!Enum.IsDefined(TerrainDetail))
             TerrainDetail = TerrainDetailQuality.High;
+        if (!Enum.IsDefined(ModelLod))
+            ModelLod = ModelLodQuality.Quality;
+        if (!Enum.IsDefined(Upscaler))
+            Upscaler = UpscalerMode.Fsr1;
+        FsrSharpness = Math.Clamp(FsrSharpness, 0f, 1f);
     }
 }
