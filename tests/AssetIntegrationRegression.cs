@@ -310,10 +310,49 @@ internal static class AssetIntegrationRegression
             },
             StringComparer.Ordinal);
 
+        var wildlifeModelFiles = world.Wildlife.Actors
+            .Select(actor => WildlifeVisualCatalog.ModelFile(actor.Species))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(file => file, StringComparer.Ordinal)
+            .ToArray();
+
+        check(wildlifeModelFiles.Length == 4,
+            "R0 wildlife uses four animated model families");
+
+        var wildlifeModels = wildlifeModelFiles.ToDictionary(
+            file => file,
+            file =>
+            {
+                var path = Path.Combine(
+                    assetsRoot,
+                    "models",
+                    "animated",
+                    file);
+                check(File.Exists(path),
+                    $"Wildlife model asset exists: {file}");
+                var model = GlbModel.Load(path);
+                if (file == "raven_animated.glb")
+                {
+                    check(model.AnimationNames.Contains("Fly"),
+                        "Raven wildlife model contains Fly clip");
+                }
+                else
+                {
+                    check(model.AnimationNames.Contains("Idle") &&
+                          model.AnimationNames.Contains("Walk") &&
+                          model.AnimationNames.Contains("Run"),
+                        $"Ground wildlife model {file} contains Idle, Walk and Run clips");
+                }
+
+                return model;
+            },
+            StringComparer.Ordinal);
+
         ActorModelMesh.Build(
             world,
             player,
             npcModels,
+            wildlifeModels,
             enemy,
             0.35,
             0f,
@@ -322,7 +361,14 @@ internal static class AssetIntegrationRegression
             out var actorIndices);
 
         check(actorVertices.Length > 0 && actorIndices.Length > 0,
-            "Animated player, settlers and enemy models produce dynamic actor geometry");
+            "Animated player, settlers, wildlife and enemy models produce dynamic actor geometry");
+
+        check(
+            wildlifeModelFiles.Contains("deer_animated.glb") &&
+            wildlifeModelFiles.Contains("boar_animated.glb") &&
+            wildlifeModelFiles.Contains("wolf_animated.glb") &&
+            wildlifeModelFiles.Contains("raven_animated.glb"),
+            "Wildlife renderer covers deer, boar, wolf and raven assets");
 
         var questNpcIds = new[]
         {
