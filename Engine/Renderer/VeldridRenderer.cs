@@ -351,8 +351,17 @@ public sealed class VeldridRenderer : IDisposable
             }
             else
             {
-                AddGameplayText($"Q CZAR: {world.Magic.Current.Name} / F RZUC / L NAUKA / R RYTUAL", 18, 122, displayWidth - 36);
-                AddGameplayText($"{world.Magic.Current.Incantation} / KOSZT {world.Magic.Current.Cost:0} / ODNOWIENIE {world.Magic.Cooldown:0.0}", 18, 146, displayWidth - 36);
+                var currentSpellLearned = SlavicGame.Engine.Magic.SpellLessons.IsLearned(world, world.Magic.Current.Id);
+                AddGameplayText(
+                    currentSpellLearned
+                        ? $"Q CZAR: {world.Magic.Current.Name} / F RZUC / L NAUKA / R RYTUAL"
+                        : "Q CZAR: NIEPOZNANY / L NAUKA / R RYTUAL",
+                    18, 122, displayWidth - 36);
+                AddGameplayText(
+                    currentSpellLearned
+                        ? $"{world.Magic.Current.Incantation} / KOSZT {world.Magic.Current.Cost:0} / ODNOWIENIE {world.Magic.Cooldown:0.0}"
+                        : "INKANTACJA I KOSZT POZOSTAJA NIEZNANE",
+                    18, 146, displayWidth - 36);
                 AddGameplayText(world.Magic.Message, 18, 170, displayWidth - 36);
                 AddGameplayText(world.SpellLearning.Message, 18, 194, displayWidth - 36);
                 AddGameplayText(world.Rituals.Message, 18, 218, displayWidth - 36);
