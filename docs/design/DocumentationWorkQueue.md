@@ -27,17 +27,16 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] side-quest catalog poza vertical slice (`quests/SideQuestCatalog.md`).
 
 ### P2 — research packages
-- [x] culture research framework: stabilne `CULT_*` IDs, H/R/F/U oraz source/evidence policy (`research/cultures/CultureResearchFramework.md`);
-- [x] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5) na poziomie evidence package v0.1; R5 ma osobną wieloźródłową bazę porównawczą i jawne locki zamiast stereotypowej analogii;
-- [x] krytyczny source-policy lock panteonu (`research/pantheon/CriticalSourceLock.md`): hierarchia świadectwo/opracowanie/rekonstrukcja, regionalność i H/R/F/U są kontraktem produkcyjnym;
-- [x] material-culture production asset research lock v0.1 (`research/material-culture/ProductionAssetResearchLock.md`): L0–L3 locator grades, evidence ledger i family-level PASS; exact historical-final geometry/costume/technology pozostaje enumerowanym locator/art lockiem;
-- [x] source-strength/region-fit pass południcy (`research/bestiary/Poludnica.md` v0.2): rozdzielone H/R/F/U, R4 nie jest signature fit, R5 tylko warunkowo na faktycznych polach;
-- [x] identity lock `forest-guardian`: CLOSED/F (`research/bestiary/ForestGuardianIdentityLock.md`); świadoma fikcja zamiast wymuszonej etykiety folklorystycznej;
+- [x] culture research framework i R0–R5 evidence packages v0.1;
+- [x] krytyczny source-policy lock panteonu (`research/pantheon/CriticalSourceLock.md`);
+- [x] material-culture production asset research lock v0.1 (`research/material-culture/ProductionAssetResearchLock.md`);
+- [x] source-strength/region-fit pass południcy (`research/bestiary/Poludnica.md` v0.2);
+- [x] identity lock `forest-guardian`: CLOSED/F (`research/bestiary/ForestGuardianIdentityLock.md`);
 - [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
 
 ### P3 — content production
-- [x] side-quest production cards per region; R0–R6 gotowe (`quests/SideQuestCardsR0.md`–`SideQuestCardsR6.md`), 21/21 planowanych slotów ma implementacyjny first pass;
-- [ ] regional encounter rosters/tables poza R0;
+- [x] side-quest production cards per region; R0–R6, 21/21 slotów;
+- [x] regional encounter rosters/tables poza R0 (`design/RegionalEncounterRosters.md`): R1–R6 family-level implementation pass, persistence/filters/QA; final weights, density i placement pozostają playtest/data lockiem;
 - [ ] regional vendors/services final pass;
 - [ ] item/equipment/recipe catalogs dla pełnego scope;
 - [ ] dialogue packages po zamknięciu rosterów.
@@ -69,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P2 ma zamknięte culture evidence packages R0–R5, południcę, identity `forest-guardian`, krytyczny source-policy panteonu oraz **material-culture family-level production research lock**. Exact locators pozostają jawnie wymagane dopiero przy oznaczaniu konkretnego assetu jako `historical-final`. Następny najmniejszy niezablokowany pakiet to P3: **regional encounter rosters/tables poza R0**, następnie regional vendors/services i item/equipment/recipe catalogs. P4 może równolegle zacząć manifesty tylko dla rodzin, które mają wystarczający research/art lock.
+P2 jest zamknięte na poziomie wymaganym do implementacji, a regional encounter rosters R1–R6 mają implementation pass. Następny najmniejszy niezablokowany pakiet P3 to **regional vendors/services final pass**, następnie item/equipment/recipe catalogs. P4 może równolegle zacząć manifesty tylko dla rodzin z wystarczającym research/art lockiem.
