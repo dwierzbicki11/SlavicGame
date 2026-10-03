@@ -154,3 +154,37 @@ bash tools/tts/setup-local.sh
 ```
 
 TTS jest domyślnie używany dla zaklęć protagonisty. Sam start gry nie musi od razu uruchomić modelu — model jest ładowany przy pierwszej wypowiadanej kwestii/zaklęciu.
+
+
+## Python 3.12 resolver workaround
+
+Na Pythonie 3.12 nie używamy już zwykłego:
+
+```bash
+pip install chatterbox-tts
+```
+
+Upstream ma zgłoszone przypadki, w których resolver próbuje dobrać lub budować niezgodne wydanie NumPy/pkuseg mimo że sam Chatterbox deklaruje wsparcie dla Pythona 3.12.
+
+SlavicGame instaluje teraz runtime w kontrolowanej kolejności:
+
+1. `numpy==1.26.4`;
+2. `torch==2.6.0` + `torchaudio==2.6.0`;
+3. minimalne zależności potrzebne do programowego multilingual TTS;
+4. `chatterbox-tts==0.1.7 --no-deps`;
+5. test importu `ChatterboxMultilingualTTS` i potwierdzenie języka `pl`.
+
+Celowo pomijamy:
+- `gradio` — nie jest potrzebne do TTS uruchamianego przez grę;
+- `spacy-pkuseg` — służy chińskiej segmentacji i nie jest używany dla `language_id="pl"`;
+- dodatki językowe niepotrzebne do polskich inkantacji.
+
+Po aktualizacji repo zalecane jest pełne przebudowanie środowiska:
+
+```bash
+git pull
+rm -rf .venv-tts
+bash tools/tts/setup-local.sh
+```
+
+Jeżeli instalator zakończy się poprawnie, musi wypisać `[tts] Polish: Polish` oraz `[tts] Import test: OK`.
