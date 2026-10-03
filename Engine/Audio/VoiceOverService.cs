@@ -22,10 +22,12 @@ public sealed class VoiceOverService : IDisposable
 
     public static VoiceOverService CreateFromEnvironment()
     {
-        var config = TtsRuntimeConfig.FromEnvironment();
+        var config = LocalTtsRuntimeConfig.FromEnvironment();
         if (!config.Enabled)
         {
-            EngineLog.Info("Emotional TTS disabled: set OPENAI_API_KEY to enable.");
+            EngineLog.Info(
+                "Free local emotional TTS is not installed. Run tools/tts/setup-local.sh (Linux/macOS) " +
+                "or tools/tts/setup-local.ps1 (Windows).");
             return new VoiceOverService(null, null);
         }
 
@@ -35,8 +37,8 @@ public sealed class VoiceOverService : IDisposable
 
         try
         {
-            var provider = new OpenAiTextToSpeechProvider(config);
-            EngineLog.Info($"Emotional TTS enabled: model={config.Model}, voice={config.Voice}.");
+            var provider = new LocalChatterboxTtsProvider(config);
+            EngineLog.Info("Emotional TTS enabled with free local Chatterbox Multilingual.");
             return new VoiceOverService(provider, player);
         }
         catch
