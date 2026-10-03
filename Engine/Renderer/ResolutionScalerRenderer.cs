@@ -246,10 +246,12 @@ public sealed class ResolutionScalerRenderer : IDisposable
         var outputWidth = Math.Max(1u, swapchainFramebuffer.Width);
         var outputHeight = Math.Max(1u, swapchainFramebuffer.Height);
 
-        if (upscaler == UpscalerMode.Fsr1 &&
-            outputWidth >= _width &&
-            outputHeight >= _height &&
-            (outputWidth > _width || outputHeight > _height))
+        if (FsrPresentationPolicy.UsesUpscalePass(
+                upscaler,
+                _width,
+                _height,
+                outputWidth,
+                outputHeight))
         {
             EnsureFsrTarget(outputWidth, outputHeight);
             PresentFsr1(
