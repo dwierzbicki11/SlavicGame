@@ -73,7 +73,7 @@ public sealed class WaterInteractionState
             SplashPulse - 3.6f * (float)deltaSeconds);
 
         var position = world.PlayerPosition;
-        HeatExposure = CampfireSystem.HeatAt(position);
+        HeatExposure = world.Campfires.HeatAt(world, position);
         RainExposure = Math.Clamp(world.Weather.RainIntensity, 0f, 1f);
 
         WaterDepth = DepthAt(world, position);

@@ -374,3 +374,42 @@ Heat:
 - partially offsets rain wetting at close range.
 
 Both fires receive a tiny animated geometry effect (ground glow + two low-poly flame layers) in the existing actor pass. No particle system, transparency pass, volumetric light or extra render target is used.
+
+
+## Campfire interaction pass
+
+Ogniska nie są już stałymi źródłami ciepła.
+
+### Stany
+
+- `village-firepit` startuje rozpalone i jest traktowane jako utrzymywane/zabezpieczone przed deszczem;
+- `forest-hunter-firepit` startuje zgaszone i jest wystawione na pogodę;
+- stan `lit/extinguished` jest zapisany w world flags, więc przeżywa save/load.
+
+### Żywica
+
+W starting forest znajduje się pierwsze źródło `forest-resin`.
+Interakcja `E` daje 3 porcje:
+- jedna wystarcza do rozpalenia leśnego ogniska;
+- pozostałe zostają na kolejne rozpalenie lub przyszłą recepturę `marsh-sight-tonic`.
+
+### Pogoda
+
+Rozpalone, odsłonięte leśne ognisko zbiera ekspozycję na deszcz. Silny deszcz/ulewa po odpowiednio długiej ekspozycji je gasi. Chronione ognisko wioski pozostaje dostępnym punktem ogrzania.
+
+### Interakcja
+
+`E` ma priorytet:
+1. interakcja questowa;
+2. interakcja środowiskowa.
+
+Przy ognisku:
+- rozpalone → `E ZGAS OGNISKO`;
+- zgaszone + żywica → `E ROZPAL OGNISKO`;
+- zgaszone bez żywicy → prompt informuje o wymaganym materiale.
+
+Tylko rozpalone ognisko:
+- generuje ciepło;
+- przyspiesza suszenie;
+- redukuje wychłodzenie;
+- renderuje flame/glow mesh.

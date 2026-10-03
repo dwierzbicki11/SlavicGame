@@ -436,7 +436,13 @@ public sealed class GameEngine : IDisposable
             !_world.Magic.IsCasting &&
             !_world.Cinematics.IsPlaying)
         {
-            _world.QuestInteractions.TryInteract(_world);
+            var questResult =
+                _world.QuestInteractions.TryInteract(_world);
+            if (questResult ==
+                SlavicGame.Engine.Gameplay.QuestInteractionResult.None)
+            {
+                _world.EnvironmentInteractions.TryInteract(_world);
+            }
         }
 
         if (_window.ConsumeKeyPress(Key.F) && !_world.Rituals.IsPerforming)

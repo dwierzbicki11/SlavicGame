@@ -389,3 +389,8 @@ The R0 river is now gameplay-active: movement slows with real water depth, deep 
 ### Environmental exposure
 
 Deep river water now physically drifts the player downstream. Rain can keep the player wet away from water, wet/windy exposure builds a non-damaging chill state that reduces stamina recovery, and two animated campfires provide visible heat sources that rapidly dry and warm the player.
+
+
+### Campfires and resin
+
+Environmental `E` interactions now support gathering forest resin and lighting/extinguishing campfires. The village fire starts lit, the hunter-camp fire requires resin, exposed fire can be extinguished by sustained heavy rain, and campfire state persists through save/load via world flags.

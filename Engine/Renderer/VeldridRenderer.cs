@@ -375,8 +375,15 @@ public sealed class VeldridRenderer : IDisposable
                 AddGameplayText(world.Magic.Message, 18, 170, displayWidth - 36);
                 AddGameplayText(world.SpellLearning.Message, 18, 194, displayWidth - 36);
                 AddGameplayText(world.Rituals.Message, 18, 218, displayWidth - 36);
-                if (!string.IsNullOrWhiteSpace(world.QuestInteractions.HudText))
-                    AddGameplayText(world.QuestInteractions.HudText, 18, 242, displayWidth - 36);
+                var interactionText =
+                    world.QuestInteractions.Current?.Prompt ??
+                    world.EnvironmentInteractions.Current?.Prompt ??
+                    (!string.IsNullOrWhiteSpace(world.EnvironmentInteractions.Message)
+                        ? world.EnvironmentInteractions.Message
+                        : world.QuestInteractions.Message);
+
+                if (!string.IsNullOrWhiteSpace(interactionText))
+                    AddGameplayText(interactionText, 18, 242, displayWidth - 36);
 
                 AddGameplayText(world.Melee.Message, 18, 266, displayWidth - 36);
 
