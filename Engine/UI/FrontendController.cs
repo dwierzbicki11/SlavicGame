@@ -15,6 +15,8 @@ public enum FrontendAction
 
 public sealed class FrontendController
 {
+    private const int MaxVisibleSettings = 12;
+
     private static readonly SettingCategory[] SettingsTabs =
     [
         SettingCategory.Display,
@@ -205,7 +207,7 @@ public sealed class FrontendController
             .Where(item => item.Category == activeCategory)
             .ToArray();
 
-        var items = definitions
+        var allItems = definitions
             .Select((definition, index) =>
                 new MenuItemView(
                     definition.Label,
@@ -214,10 +216,20 @@ public sealed class FrontendController
                     definition.RequiresRestart))
             .ToList();
 
-        items.Add(new MenuItemView(
+        allItems.Add(new MenuItemView(
             "POWROT",
             null,
             _settingsSelection == definitions.Length));
+
+        var maxStart = Math.Max(0, allItems.Count - MaxVisibleSettings);
+        var viewportStart = Math.Clamp(
+            _settingsSelection - MaxVisibleSettings / 2,
+            0,
+            maxStart);
+        var visibleItems = allItems
+            .Skip(viewportStart)
+            .Take(MaxVisibleSettings)
+            .ToArray();
 
         var tabs = SettingsTabs
             .Select((category, index) =>
@@ -226,18 +238,25 @@ public sealed class FrontendController
                     index == _settingsTabIndex))
             .ToArray();
 
+        var position = Math.Clamp(
+            _settingsSelection + 1,
+            1,
+            Math.Max(1, allItems.Count));
+        var categoryTitle =
+            $"{CategoryName(activeCategory)}  {position}/{allItems.Count}";
+
         var footer = _restartRequired
-            ? "RESTART WYMAGANY DLA MSAA / PELNEJ JAKOSCI TEKSTUR"
-            : "TAB ZAKLADKA   W/S WYBOR   A/D LUB ENTER ZMIANA   ESC POWROT";
+            ? "W/S PRZEWIJANIE   A/D ZMIANA   TAB ZAKLADKA   * RESTART WYMAGANY"
+            : "W/S PRZEWIJANIE   A/D LUB ENTER ZMIANA   TAB ZAKLADKA   ESC POWROT";
 
         return new MenuView(
             "USTAWIENIA",
-            "TAB  ZMIANA ZAKLADKI",
+            "USTAWIENIA SA STOSOWANE I ZAPISYWANE AUTOMATYCZNIE",
             tabs,
             [
                 new MenuPanelView(
-                    CategoryName(activeCategory),
-                    items)
+                    categoryTitle,
+                    visibleItems)
             ],
             footer);
     }
