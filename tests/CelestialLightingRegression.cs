@@ -50,5 +50,25 @@ internal static class CelestialLightingRegression
             "Cloud cover attenuates direct sunlight");
         check(clearNoon.SunColor.X >= clearNoon.SunColor.Z,
             "Daylight spectrum remains physically warmer than blue-biased night light");
+
+        check(sunrise.SunColor.Z < noon.SunColor.Z &&
+              sunset.SunColor.Z < noon.SunColor.Z,
+            "Sunlight is visibly warmer near sunrise and sunset than at noon");
+        check(sunset.SunColor.Y < sunrise.SunColor.Y,
+            "Evening sunlight is redder than morning sunlight");
+        check(MathF.Abs(night.MoonDirection.Length() - 1f) < 0.001f,
+            "Moon direction is normalized");
+        check(night.MoonDirection.Y > 0f,
+            "Moon rises above the horizon while the sun is below it");
+        check(night.NightFactor > noon.NightFactor,
+            "Night factor rises after sunset");
+        check(night.MoonIntensity > 0f,
+            "Clear night produces visible moonlight");
+
+        time.SetTimeOfDay(23.0);
+        weather.SetCondition(WeatherKind.Storm, true);
+        var stormNight = CelestialLighting.Evaluate(time, weather);
+        check(stormNight.MoonIntensity < night.MoonIntensity,
+            "Heavy cloud cover attenuates moon visibility");
     }
 }

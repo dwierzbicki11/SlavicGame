@@ -5,6 +5,7 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
 {
     vec4 FogColorDensity;
     vec4 Lighting;
+    vec4 SunColorTime;
 };
 
 layout(set = 1, binding = 0) uniform MaterialBuffer
@@ -70,11 +71,6 @@ vec3 FresnelSchlick(float cosTheta, vec3 f0)
     return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-vec3 SunColor(vec3 sunDirection)
-{
-    float horizon = 1.0 - smoothstep(0.08, 0.48, max(sunDirection.y, 0.0));
-    return mix(vec3(1.0, 0.95, 0.86), vec3(1.0, 0.47, 0.20), horizon * 0.82);
-}
 
 void main()
 {
@@ -108,7 +104,7 @@ void main()
     vec3 diffuse = kd * albedo / PI;
 
     float lightStrength = max(Lighting.x, 0.02);
-    vec3 sunColor = SunColor(lightDirection);
+    vec3 sunColor = SunColorTime.rgb;
     vec3 ambient = albedo * (0.028 + 0.050 * max(lightDirection.y, 0.0)) * (1.0 - metallic * 0.35);
     vec3 color = ambient + (diffuse + specular) * sunColor * ndotl * (1.75 * lightStrength);
 

@@ -3,6 +3,7 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
 {
     vec4 FogColorDensity;
     vec4 Lighting;
+    vec4 SunColorTime;
 };
 
 layout(location = 0) in vec3 fsin_Color;
@@ -17,7 +18,9 @@ void main()
     float direct = max(dot(normal, sunDirection), 0.0);
     float daylight = max(Lighting.x, 0.02);
 
-    vec3 color = fsin_Color * (0.30 + direct * daylight * 0.88);
+    vec3 sunColor = SunColorTime.rgb;
+    vec3 ambient = fsin_Color * 0.26;
+    vec3 color = ambient + fsin_Color * sunColor * direct * daylight * 0.92;
 
     float density = max(FogColorDensity.w, 0.00001);
     float fogFactor = 1.0 - exp(-density * fsin_Distance);
