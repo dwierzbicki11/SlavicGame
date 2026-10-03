@@ -20,6 +20,7 @@ jobs:
         run: |
           bash -n tools/tts/setup-local.sh
           python3 -m py_compile tools/tts/chatterbox_server.py
+          bash tools/check-tts-installer.sh
       - name: Validate Windows TTS setup syntax
         if: runner.os == 'Windows'
         shell: pwsh
