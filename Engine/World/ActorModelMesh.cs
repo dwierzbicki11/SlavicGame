@@ -10,6 +10,7 @@ public static class ActorModelMesh
         WorldState world,
         GlbModel playerModel,
         IReadOnlyDictionary<string, GlbModel> npcModels,
+        IReadOnlyDictionary<string, GlbModel> wildlifeModels,
         GlbModel enemyModel,
         double animationSeconds,
         float playerYaw,
@@ -20,6 +21,7 @@ public static class ActorModelMesh
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(playerModel);
         ArgumentNullException.ThrowIfNull(npcModels);
+        ArgumentNullException.ThrowIfNull(wildlifeModels);
         ArgumentNullException.ThrowIfNull(enemyModel);
 
         var vertexList = new List<TerrainVertex>();
@@ -91,6 +93,48 @@ public static class ActorModelMesh
                     vertexList,
                     indexList);
             }
+        }
+
+        const float wildlifeRenderDistance = 150f;
+        var wildlifeRenderDistanceSquared =
+            wildlifeRenderDistance * wildlifeRenderDistance;
+
+        foreach (var wildlife in world.Wildlife.Actors)
+        {
+            var toWildlife = wildlife.Position - world.PlayerPosition;
+            if (toWildlife.LengthSquared() > wildlifeRenderDistanceSquared)
+                continue;
+
+            var modelFile =
+                WildlifeVisualCatalog.ModelFile(wildlife.Species);
+            if (!wildlifeModels.TryGetValue(modelFile, out var wildlifeModel))
+            {
+                throw new KeyNotFoundException(
+                    $"Wildlife model '{modelFile}' for '{wildlife.Id}' was not loaded.");
+            }
+
+            var transform =
+                Matrix4x4.CreateScale(wildlife.Definition.Scale) *
+                Matrix4x4.CreateRotationY(wildlife.YawRadians) *
+                Matrix4x4.CreateTranslation(wildlife.Position);
+            var clip = wildlife.AnimationClip;
+            if (!wildlifeModel.AnimationNames.Contains(clip))
+            {
+                clip = WildlifeVisualCatalog.IsFlying(wildlife.Species)
+                    ? "Fly"
+                    : "Idle";
+            }
+
+            Append(
+                wildlifeModel.BuildMesh(
+                    transform,
+                    clip,
+                    (time + StableAnimationOffset(wildlife.Id)) *
+                    (wildlife.Motion == WildlifeMotion.Flee ? 1.35f : 1f),
+                    sourceIsZUp: true),
+                wildlife.Definition.Color,
+                vertexList,
+                indexList);
         }
 
         foreach (var enemy in world.Enemies)
