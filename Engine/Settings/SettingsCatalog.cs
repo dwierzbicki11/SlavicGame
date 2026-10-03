@@ -124,6 +124,17 @@ public static class SettingsCatalog
             s => ShadowDistanceName(s.ShadowDistance),
             (s, direction) =>
                 s.ShadowDistance = CycleEnum(s.ShadowDistance, direction)),
+        new(
+            "terrain-detail",
+            SettingCategory.Graphics,
+            "JAKOSC TERENU",
+            s => TerrainDetailName(s.TerrainDetail),
+            (s, direction) =>
+                s.TerrainDetail = CycleEnum(s.TerrainDetail, direction)),
+        Toggle("normal-mapping", SettingCategory.Graphics, "NORMAL MAPPING",
+            s => s.NormalMapping, (s, v) => s.NormalMapping = v),
+        Toggle("specular", SettingCategory.Graphics, "ODBICIA SPECULAR",
+            s => s.SpecularHighlights, (s, v) => s.SpecularHighlights = v),
         Toggle("sky", SettingCategory.Graphics, "NIEBO",
             s => s.Sky, (s, v) => s.Sky = v),
         Toggle("sun", SettingCategory.Graphics, "SLONCE",
@@ -222,6 +233,16 @@ public static class SettingsCatalog
             ShadowDistanceQuality.Far => "180M",
             ShadowDistanceQuality.Ultra => "210M",
             _ => "180M"
+        };
+
+    private static string TerrainDetailName(TerrainDetailQuality quality) =>
+        quality switch
+        {
+            TerrainDetailQuality.Low => "NISKA",
+            TerrainDetailQuality.Medium => "SREDNIA",
+            TerrainDetailQuality.High => "WYSOKA",
+            TerrainDetailQuality.Ultra => "ULTRA",
+            _ => "WYSOKA"
         };
 
     private static string TextureName(TextureQuality quality) =>
