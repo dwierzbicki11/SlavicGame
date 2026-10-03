@@ -237,6 +237,15 @@ public static class NpcVisualCatalog
             "arrive-and-trade" or
             "go-to-fields" => "Walk",
 
+            "field-work" or
+            "wood-work" or
+            "craft-work" or
+            "market-trade" or
+            "trade-and-prepare" or
+            "maintain-crossing" or
+            "tend-shrine" or
+            "home-and-search" => "Interact",
+
             _ => "Idle"
         };
     }
