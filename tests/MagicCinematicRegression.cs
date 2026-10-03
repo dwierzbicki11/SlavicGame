@@ -123,5 +123,82 @@ public static class MagicCinematicRegression
               relativeWorld.Cinematics.CameraPosition.Y >
                   relativeWorld.Terrain.SampleHeight(relativeWorld.Cinematics.CameraPosition),
             "Player-relative cinematic camera follows the captured player anchor");
+
+        var ritualWorld = WorldGenerator.Generate();
+        var ritualRuntime = ritualWorld.Rituals;
+        var ritualQuest = ritualWorld.Progress.Quests.Get(VerticalSliceBootstrap.ContractQuestId);
+
+        check(ritualRuntime.Validate(ritualWorld).Failure == RitualStartFailure.NotLearned,
+            "Release-bound-echo ritual is gated by learned knowledge");
+
+        ritualWorld.Progress.SetFlag(VerticalSliceRituals.LearnedFlag);
+        ritualWorld.Progress.SetFlag(VerticalSliceRituals.IdentitySignFlag);
+        ritualWorld.Progress.SetFlag(VerticalSliceRituals.BoundarySignFlag);
+        check(ritualRuntime.Validate(ritualWorld).Failure == RitualStartFailure.WrongLocation,
+            "Known ritual still requires the authored ritual location");
+
+        ritualWorld.SetPlayerPosition(new Vector3(-85, 0, 55));
+        ritualWorld.Time.SetTimeOfDay(12);
+        check(ritualRuntime.Validate(ritualWorld).Failure == RitualStartFailure.WrongTime,
+            "Release-bound-echo refuses daylight without consuming anything");
+
+        ritualWorld.Time.SetTimeOfDay(23);
+        check(ritualRuntime.Validate(ritualWorld).Failure == RitualStartFailure.MissingItem,
+            "Ritual reports missing critical items");
+
+        ritualWorld.Progress.Inventory.Add("missing-person-keepsake");
+        ritualWorld.Progress.Inventory.Add("ritual-thread");
+        check(ritualRuntime.Validate(ritualWorld).Failure == RitualStartFailure.MissingEvidence,
+            "Ritual requires confirmed identity evidence");
+
+        ritualQuest.SetPhase(QuestPhase.Preparation);
+        ritualQuest.AddEvidence(new EvidenceEntry(
+            "light-over-swamp.keepsake-owner",
+            VerticalSliceBootstrap.ContractQuestId,
+            KnowledgeKind.ConfirmedFact,
+            "Pamiatka nalezala do zaginionego.",
+            "missing-family"));
+        check(ritualRuntime.Validate(ritualWorld).Failure == RitualStartFailure.MissingKnowledge,
+            "Ritual requires knowledge that the keepsake anchors the apparition");
+
+        ritualWorld.Progress.SetFlag(VerticalSliceRituals.AnchorKnowledgeFlag);
+        var firstRitualStart = ritualRuntime.TryStart(ritualWorld);
+        check(firstRitualStart.Started && ritualRuntime.CurrentStep == RitualStep.DefineArea,
+            "Validated release-bound-echo begins its seven-step sequence");
+        check(ritualWorld.Progress.Inventory.Contains("missing-person-keepsake") &&
+              ritualWorld.Progress.Inventory.Contains("ritual-thread"),
+            "Starting ritual does not consume critical quest items");
+
+        ritualWorld.Player.TakeDamage(1);
+        ritualRuntime.Update(ritualWorld, 0.25);
+        check(!ritualRuntime.IsPerforming &&
+              ritualWorld.Progress.Inventory.Contains("missing-person-keepsake") &&
+              ritualWorld.Progress.Inventory.Contains("ritual-thread") &&
+              !ritualWorld.Progress.HasFlag(VerticalSliceRituals.ReleasedFlag),
+            "Damage interrupts ritual safely without consuming items or resolving apparition");
+
+        ritualWorld.Player.Restore();
+        check(ritualRuntime.TryStart(ritualWorld).Started, "Interrupted ritual can be retried");
+        ritualRuntime.Update(ritualWorld, 2.1);
+        check(ritualRuntime.IsPerforming && ritualRuntime.CurrentStep == RitualStep.RecognitionSign,
+            "Ritual advances deterministically through authored steps");
+        ritualRuntime.Update(ritualWorld, 10);
+        check(!ritualRuntime.IsPerforming &&
+              ritualWorld.Progress.HasFlag(VerticalSliceRituals.ReleasedFlag) &&
+              ritualQuest.Resolution == QuestResolution.RitualClosure &&
+              ritualWorld.Progress.Inventory.Count("missing-person-keepsake") == 0 &&
+              ritualWorld.Progress.Inventory.Count("ritual-thread") == 0 &&
+              ritualRuntime.ConsumeCompletionSignal(),
+            "Completed ritual commits items once and persists the ritual-closure outcome");
+        check(ritualRuntime.Validate(ritualWorld).Failure == RitualStartFailure.AlreadyResolved,
+            "Resolved apparition cannot run release-bound-echo twice");
+
+        var ritualRestored = WorldGenerator.Generate();
+        SaveGameService.Restore(ritualRestored, SaveGameService.Serialize(ritualWorld));
+        check(ritualRestored.Progress.HasFlag(VerticalSliceRituals.ReleasedFlag) &&
+              ritualRestored.Progress.Quests.Get(VerticalSliceBootstrap.ContractQuestId).Resolution ==
+                  QuestResolution.RitualClosure &&
+              ritualRestored.Progress.Inventory.Count("missing-person-keepsake") == 0,
+            "Ritual closure outcome and consumed anchor survive save/load");
     }
 }
