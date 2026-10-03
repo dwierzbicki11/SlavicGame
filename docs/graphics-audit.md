@@ -2,6 +2,12 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-04
+
+- **Sun-shadow PCF cost was disproportionately high for a full-screen fragment path — fixed on `perf/shadow-pcf-four-tap`.** `SampleSunShadow` used a 3x3 kernel, issuing 9 point-sampled shadow-map fetches for every sun-shadowed terrain/PBR fragment. The filter now uses four symmetric sub-texel taps around the receiver, preserving a soft filtered edge while reducing shadow-map texture fetches by 55.6% (9 -> 4). This directly targets texture bandwidth/fill-rate pressure on weak integrated GPUs.
+- **Terrain shader still uses eager `mix` for cloud/sun shadows — open.** `terrain.frag` still evaluates `CloudShadowFactor(...)` and `SampleSunShadow(...)` as arguments to `mix`, so disabling those settings may not skip their cost. The PBR shader was already fixed. Next shader iteration should convert terrain to the same frame-uniform branch pattern and add a regression/source check if practical.
+- **Shadow depth pass begins before `shadowEnabled` is tested — open.** `VeldridRenderer` calls `UpdateLight` and `BeginDepthPass` before checking `settings.SunShadows`/sun intensity. Even with shadows disabled this still updates shadow matrices, binds the 2048x2048 depth framebuffer and clears it. Move the update/begin work inside the enabled branch, while keeping a valid sample resource bound for material pipelines.
+
 ## 2026-10-03
 
 - **Disabled PBR shadow features still executed their full fragment cost — fixed on `perf/skip-disabled-shadow-work`.** `pbr.frag` used `mix(1.0, CloudShadowFactor(...), flag)` and `mix(1.0, SampleSunShadow(...), flag)`. GLSL `mix` does not provide lazy evaluation, so disabling cloud shadows or sun shadows did not skip cloud-noise/PCF work. The shader now uses frame-uniform branches and only calls the expensive functions when their setting is enabled. This makes the existing quality switches actually reduce fragment workload, which matters especially at 1080p on fill-rate-limited GPUs.
