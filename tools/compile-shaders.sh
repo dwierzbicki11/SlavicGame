@@ -48,7 +48,9 @@ compile_shader "$SRC_DIR/hud.vert"     "$OUT_DIR/hud.vert.spv"     vert
 compile_shader "$SRC_DIR/hud.frag"     "$OUT_DIR/hud.frag.spv"     frag
 compile_shader "$SRC_DIR/pbr.vert"     "$OUT_DIR/pbr.vert.spv"     vert
 compile_shader "$SRC_DIR/pbr.frag"     "$OUT_DIR/pbr.frag.spv"     frag
-compile_shader "$SRC_DIR/sky.vert"     "$OUT_DIR/sky.vert.spv"     vert
-compile_shader "$SRC_DIR/sky.frag"     "$OUT_DIR/sky.frag.spv"     frag
+compile_shader "$SRC_DIR/sky.vert"          "$OUT_DIR/sky.vert.spv"          vert
+compile_shader "$SRC_DIR/sky.frag"          "$OUT_DIR/sky.frag.spv"          frag
+compile_shader "$SRC_DIR/shadow_depth.vert" "$OUT_DIR/shadow_depth.vert.spv" vert
+compile_shader "$SRC_DIR/shadow_depth.frag" "$OUT_DIR/shadow_depth.frag.spv" frag
 
 echo "[shader] Gotowe. SPIR-V: $OUT_DIR"
