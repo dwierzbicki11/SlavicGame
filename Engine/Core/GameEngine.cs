@@ -179,6 +179,8 @@ public sealed class GameEngine : IDisposable
             resolution.Height);
         _renderer.SetShadowResolution(
             GraphicsQualityCatalog.ShadowMapSize(_settings.ShadowQuality));
+        _renderer.SetShadowDistance(
+            GraphicsQualityCatalog.ShadowDistance(_settings.ShadowDistance));
         _renderer.SetTextureQuality(_settings.TextureQuality);
         _renderer.SetVSync(_settings.VSync);
 
