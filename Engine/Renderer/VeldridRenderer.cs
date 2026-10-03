@@ -50,7 +50,11 @@ public sealed class VeldridRenderer : IDisposable
     public GraphicsDevice GraphicsDevice =>
         _graphicsDevice ?? throw new InvalidOperationException("Renderer has not been initialized.");
 
-    public void Initialize(GameWindow window, WorldState world, bool vsync)
+    public void Initialize(
+        GameWindow window,
+        WorldState world,
+        bool vsync,
+        TextureQuality textureQuality)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_initialized) return;
@@ -58,7 +62,7 @@ public sealed class VeldridRenderer : IDisposable
         ArgumentNullException.ThrowIfNull(world);
         try
         {
-            InitializeResources(window, world, vsync);
+            InitializeResources(window, world, vsync, textureQuality);
             _initialized = true;
         }
         catch
@@ -68,7 +72,11 @@ public sealed class VeldridRenderer : IDisposable
         }
     }
 
-    private void InitializeResources(GameWindow window, WorldState world, bool vsync)
+    private void InitializeResources(
+        GameWindow window,
+        WorldState world,
+        bool vsync,
+        TextureQuality textureQuality)
     {
         PresentationPolicy.Apply(vsync);
 
@@ -138,7 +146,8 @@ public sealed class VeldridRenderer : IDisposable
             _shadows.SampleLayout,
             _graphicsDevice.SwapchainFramebuffer.OutputDescription,
             world.Terrain,
-            assetsRoot);
+            assetsRoot,
+            textureQuality);
 
         _pbrModels.Initialize(
             _graphicsDevice,
@@ -146,7 +155,8 @@ public sealed class VeldridRenderer : IDisposable
             _shadows.SampleLayout,
             _graphicsDevice.SwapchainFramebuffer.OutputDescription,
             world,
-            assetsRoot);
+            assetsRoot,
+            textureQuality);
 
         _actorShaders = ShaderLibrary.LoadPair(factory, "actor");
 
@@ -584,6 +594,15 @@ public sealed class VeldridRenderer : IDisposable
         var fogBlend = Math.Clamp(weather.FogDensity / 0.032f, 0f, 1f) * 0.58f;
         var final = Vector3.Lerp(twilightTint, fogColor, fogBlend);
         return new RgbaFloat(final.X, final.Y, final.Z, 1f);
+    }
+
+    public void SetTextureQuality(TextureQuality quality)
+    {
+        if (_graphicsDevice is null)
+            return;
+
+        _terrain.SetTextureQuality(quality);
+        _pbrModels.SetTextureQuality(quality);
     }
 
     public void SetRenderResolution(int width, int height)
