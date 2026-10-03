@@ -13,6 +13,9 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
     vec4 SkyWeather;
     vec4 MoonParameters;
     vec4 CelestialParameters;
+    vec4 GraphicsFeatures0;
+    vec4 GraphicsFeatures1;
+    vec4 GraphicsFeatures2;
 };
 
 layout(location = 0) in vec3 fsin_WorldDirection;
@@ -143,6 +146,12 @@ vec3 RenderMoon(vec3 direction, vec3 moonDirection, float phase)
 void main()
 {
     vec3 direction = normalize(fsin_WorldDirection);
+
+    if (GraphicsFeatures1.w < 0.5)
+    {
+        fsout_Color = vec4(FogColorDensity.rgb, 1.0);
+        return;
+    }
     vec3 sunDirection = normalize(Lighting.yzw);
     vec3 moonDirection = normalize(MoonParameters.xyz);
 
@@ -168,11 +177,13 @@ void main()
     color += sunColor *
         (mieGlow * 0.11 + tightGlow * 0.38 + sunDisc * 3.8) *
         max(sunIntensity, 0.10) *
-        sunAboveHorizon;
+        sunAboveHorizon *
+        GraphicsFeatures1.x;
 
     // Dense procedural star catalogue. Daylight, moon glow and clouds wash it out.
     float stars = StarField(direction, timeSeconds);
     float starVisibility =
+        GraphicsFeatures1.z *
         pow(nightFactor, 1.65) *
         smoothstep(-0.03, 0.18, direction.y) *
         (1.0 - cloudiness * 0.92);
@@ -185,6 +196,7 @@ void main()
     // Moon follows the opposite celestial arc to the sun.
     vec3 moon = RenderMoon(direction, moonDirection, lunarPhase);
     float moonVisibility =
+        GraphicsFeatures1.y *
         MoonParameters.w *
         smoothstep(-0.035, 0.025, moonDirection.y) *
         (1.0 - cloudiness * 0.82);
@@ -197,7 +209,7 @@ void main()
         sunDirection,
         timeSeconds,
         wind,
-        cloudiness);
+        cloudiness * GraphicsFeatures0.x);
     float cloudOpacity = cloudMarch.x;
     if (cloudOpacity > 0.001)
     {
@@ -239,8 +251,9 @@ void main()
     }
 
     float horizonHaze = pow(1.0 - abs(clamp(direction.y, -1.0, 1.0)), 5.0);
-    float hazeStrength = mix(0.16, 0.36, cloudiness) +
-        clamp(FogColorDensity.w / 0.032, 0.0, 1.0) * 0.28;
+    float hazeStrength = GraphicsFeatures0.w *
+        (mix(0.16, 0.36, cloudiness) +
+        clamp(FogColorDensity.w / 0.032, 0.0, 1.0) * 0.28);
     color = mix(color, FogColorDensity.rgb, horizonHaze * hazeStrength);
 
     // Keep sky HDR enough for bright celestial discs, then compress gently.
