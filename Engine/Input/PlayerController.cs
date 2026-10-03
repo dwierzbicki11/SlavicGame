@@ -25,16 +25,34 @@ public static class PlayerController
         if (input.Left) move -= camera.GetMoveRight();
 
         var isMoving = move.LengthSquared() > 0.001f;
-        var sprinting = isMoving && input.Running && world.Player.CanSprint;
+        var waterDepth = WaterInteractionState.DepthAt(
+            world,
+            world.PlayerPosition);
+        var waterSpeedMultiplier =
+            WaterInteractionState.MovementSpeedMultiplierForDepth(
+                waterDepth);
+        var sprinting =
+            isMoving &&
+            input.Running &&
+            world.Player.CanSprint &&
+            WaterInteractionState.CanSprintAtDepth(waterDepth);
 
         if (isMoving)
         {
             move = Vector3.Normalize(move);
-            var speed = sprinting ? 9f : 5f;
-            world.SetPlayerPosition(world.PlayerPosition + move * speed * (float)deltaSeconds);
+            var speed = (sprinting ? 9f : 5f) * waterSpeedMultiplier;
+            world.SetPlayerPosition(
+                world.PlayerPosition +
+                move * speed * (float)deltaSeconds);
         }
 
-        world.Player.UpdateStamina(sprinting, deltaSeconds);
+        world.Player.UpdateStamina(
+            sprinting,
+            deltaSeconds,
+            WaterInteractionState.StaminaDrainMultiplierForDepth(waterDepth),
+            WaterInteractionState.StaminaRecoveryMultiplier(
+                waterDepth,
+                world.WaterInteraction.Wetness));
         camera.Follow(world.PlayerPosition, (float)deltaSeconds, world.Terrain);
     }
 }
