@@ -236,3 +236,44 @@ Dodano:
 
 ### Performance contract
 Małe rekwizyty są klasyfikowane przez `WorldModelRenderPolicy` jako short-range props i używają dystansu ground clutter. Budynki, ruiny, jaskinia i główne landmarki zachowują pełny world render distance. To pozwala zwiększać gęstość lokacji bez utrzymywania wszystkich drobnych modeli na dużym dystansie, szczególnie na Low/Balanced i słabszych iGPU.
+
+
+## Runtime correction pass — orientation + river channel
+
+### Object orientation contract
+
+Ręcznie rozmieszczone obiekty nie polegają już wyłącznie na przypadkowych wartościach `YawRadians`.
+
+`WorldPlacementOrientation` definiuje wspólną konwencję:
+- statyczne modele źródłowe są Z-up;
+- ich semantyczny front +Y po konwersji GLB odpowiada engine `-Z`;
+- obiekty kierunkowe dostają yaw z docelowej kotwicy przestrzennej.
+
+Przykłady:
+- chaty/stodoła/stajnia/wieża → wnętrze Żarnowca;
+- kuźnia i jej wyposażenie → stanowisko kuźni;
+- rekwizyty rynku → środek targu;
+- drogowskazy → kierunek podejścia;
+- wejście jaskini → ścieżka dojścia;
+- most/kładka → oś przeprawy;
+- ślady pazurów → obszar drapieżnika;
+- ślad krwi → rejon pamiątki;
+- elementy Kamiennego Kręgu → jego środek.
+
+Elementy naturalne i celowo losowe, np. drzewa/krzewy, zachowują proceduralny yaw.
+
+### River terrain contract
+
+Rzeka nie używa już jednej lewitującej płaszczyzny na stałej wysokości.
+
+`WaterLandscape` definiuje teraz:
+- lokalny poziom wody `WaterLevel(z)`;
+- łagodny spadek w kierunku +Z;
+- centralne dno około 1.30 m pod taflą;
+- płytką strefę przy brzegu;
+- suchy shoulder brzegu, który wraca do oryginalnego terenu zamiast być wciskany pod wodę;
+- powierzchnię wody węższą od pełnego profilu koryta.
+
+Woda jest generowana jako 5-kolumnowy ribbon co 4 m. Dwa przesuwające się downstream pasma fazy zmieniają kolor i dają niewielkie przemieszczenie wysokości, więc przepływ jest widoczny bez kosztownych odbić/SSR.
+
+Oba brzegi dostają deterministyczny pas `riverbank_rocky_r0_01.glb`. Te modele używają short-range cullingu, dzięki czemu wizualne koryto nie obciąża mocno słabszych iGPU.
