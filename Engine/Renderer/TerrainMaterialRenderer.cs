@@ -32,15 +32,13 @@ public sealed class TerrainMaterialRenderer : IDisposable
     private readonly List<Texture> _textures = [];
     private readonly List<TextureView> _views = [];
 
-    private DeviceBuffer? _vertexBuffer;
-    private DeviceBuffer? _indexBuffer;
+    private readonly TerrainGeometry?[] _geometries = new TerrainGeometry?[3];
     private ResourceLayout? _materialLayout;
     private readonly ResourceSet?[] _materialSets = new ResourceSet?[4];
     private readonly Sampler?[] _qualitySamplers = new Sampler?[4];
     private TextureQuality _textureQuality = TextureQuality.High;
     private Pipeline? _pipeline;
     private Shader[]? _shaders;
-    private uint _indexCount;
     private bool _disposed;
 
     public void Initialize(
@@ -61,28 +59,21 @@ public sealed class TerrainMaterialRenderer : IDisposable
         _textureQuality = textureQuality;
 
         var factory = graphicsDevice.ResourceFactory;
-        TerrainMesh.Build(terrain, out var baseVertices, out var indices);
-        var vertices = new TerrainSurfaceVertex[baseVertices.Length];
-        for (var i = 0; i < baseVertices.Length; i++)
-        {
-            var source = baseVertices[i];
-            var weights = TerrainSurfaceClassifier.Classify(source.Position, source.Normal);
-            vertices[i] = new TerrainSurfaceVertex(
-                source.Position,
-                source.Normal,
-                weights.Primary,
-                weights.Secondary);
-        }
-
-        _vertexBuffer = factory.CreateBuffer(new BufferDescription(
-            TerrainSurfaceVertex.SizeInBytes * checked((uint)vertices.Length),
-            BufferUsage.VertexBuffer));
-        _indexBuffer = factory.CreateBuffer(new BufferDescription(
-            sizeof(uint) * checked((uint)indices.Length),
-            BufferUsage.IndexBuffer));
-        graphicsDevice.UpdateBuffer(_vertexBuffer, 0, vertices);
-        graphicsDevice.UpdateBuffer(_indexBuffer, 0, indices);
-        _indexCount = checked((uint)indices.Length);
+        _geometries[0] = CreateGeometry(
+            graphicsDevice,
+            factory,
+            terrain,
+            GraphicsQualityCatalog.TerrainMeshStep(TerrainDetailQuality.Low));
+        _geometries[1] = CreateGeometry(
+            graphicsDevice,
+            factory,
+            terrain,
+            GraphicsQualityCatalog.TerrainMeshStep(TerrainDetailQuality.Medium));
+        _geometries[2] = CreateGeometry(
+            graphicsDevice,
+            factory,
+            terrain,
+            GraphicsQualityCatalog.TerrainMeshStep(TerrainDetailQuality.High));
 
         _materialLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             Texture("GrassBase"),
@@ -195,51 +186,104 @@ public sealed class TerrainMaterialRenderer : IDisposable
             [cameraLayout, _materialLayout, shadowLayout],
             outputDescription));
 
+        var low = _geometries[0]!;
+        var medium = _geometries[1]!;
+        var high = _geometries[2]!;
         EngineLog.Info(
-            $"Terrain material renderer initialized: {vertices.Length} vertices, " +
-            $"{indices.Length / 3} triangles, 6 height-blended PBR surface materials, " +
-            $"30 sampled textures, runtime quality={textureQuality}, " +
-            $"max uploaded edge={GraphicsQualityCatalog.TextureMaximumDimension(textureQuality)}.");
+            $"Terrain geometry LOD initialized: " +
+            $"LOW={low.VertexCount} vertices/{low.IndexCount / 3} tris, " +
+            $"MEDIUM={medium.VertexCount} vertices/{medium.IndexCount / 3} tris, " +
+            $"HIGH={high.VertexCount} vertices/{high.IndexCount / 3} tris; " +
+            $"6 PBR surface materials, 30 textures, texture quality={textureQuality}.");
     }
 
     public void Render(
         CommandList commandList,
         ResourceSet cameraSet,
-        ResourceSet shadowSet)
+        ResourceSet shadowSet,
+        TerrainDetailQuality terrainDetail)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         var materialSet = _materialSets[(int)_textureQuality];
-        if (_pipeline is null ||
-            materialSet is null ||
-            _vertexBuffer is null ||
-            _indexBuffer is null)
-        {
+        var geometry = GetGeometry(terrainDetail);
+        if (_pipeline is null || materialSet is null)
             throw new InvalidOperationException("Terrain material renderer is not initialized.");
-        }
 
         commandList.SetPipeline(_pipeline);
         commandList.SetGraphicsResourceSet(0, cameraSet);
         commandList.SetGraphicsResourceSet(1, materialSet);
         commandList.SetGraphicsResourceSet(2, shadowSet);
-        commandList.SetVertexBuffer(0, _vertexBuffer);
-        commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
-        commandList.DrawIndexed(_indexCount);
+        commandList.SetVertexBuffer(0, geometry.VertexBuffer);
+        commandList.SetIndexBuffer(geometry.IndexBuffer, IndexFormat.UInt32);
+        commandList.DrawIndexed(geometry.IndexCount);
     }
 
     public void RenderShadow(
         CommandList commandList,
         Pipeline shadowPipeline,
-        ResourceSet shadowDepthSet)
+        ResourceSet shadowDepthSet,
+        TerrainDetailQuality terrainDetail)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_vertexBuffer is null || _indexBuffer is null)
-            throw new InvalidOperationException("Terrain material renderer is not initialized.");
+        var geometry = GetGeometry(terrainDetail);
 
         commandList.SetPipeline(shadowPipeline);
         commandList.SetGraphicsResourceSet(0, shadowDepthSet);
-        commandList.SetVertexBuffer(0, _vertexBuffer);
-        commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
-        commandList.DrawIndexed(_indexCount);
+        commandList.SetVertexBuffer(0, geometry.VertexBuffer);
+        commandList.SetIndexBuffer(geometry.IndexBuffer, IndexFormat.UInt32);
+        commandList.DrawIndexed(geometry.IndexCount);
+    }
+
+    private static TerrainGeometry CreateGeometry(
+        GraphicsDevice graphicsDevice,
+        ResourceFactory factory,
+        Terrain terrain,
+        int gridStep)
+    {
+        TerrainMesh.Build(terrain, gridStep, out var baseVertices, out var indices);
+        var vertices = new TerrainSurfaceVertex[baseVertices.Length];
+
+        for (var i = 0; i < baseVertices.Length; i++)
+        {
+            var source = baseVertices[i];
+            var weights = TerrainSurfaceClassifier.Classify(
+                source.Position,
+                source.Normal);
+            vertices[i] = new TerrainSurfaceVertex(
+                source.Position,
+                source.Normal,
+                weights.Primary,
+                weights.Secondary);
+        }
+
+        var vertexBuffer = factory.CreateBuffer(new BufferDescription(
+            TerrainSurfaceVertex.SizeInBytes * checked((uint)vertices.Length),
+            BufferUsage.VertexBuffer));
+        var indexBuffer = factory.CreateBuffer(new BufferDescription(
+            sizeof(uint) * checked((uint)indices.Length),
+            BufferUsage.IndexBuffer));
+
+        graphicsDevice.UpdateBuffer(vertexBuffer, 0, vertices);
+        graphicsDevice.UpdateBuffer(indexBuffer, 0, indices);
+
+        return new TerrainGeometry(
+            vertexBuffer,
+            indexBuffer,
+            checked((uint)indices.Length),
+            vertices.Length);
+    }
+
+    private TerrainGeometry GetGeometry(TerrainDetailQuality quality)
+    {
+        var index = quality switch
+        {
+            TerrainDetailQuality.Low => 0,
+            TerrainDetailQuality.Medium => 1,
+            _ => 2
+        };
+
+        return _geometries[index] ??
+            throw new InvalidOperationException("Terrain geometry LOD is not initialized.");
     }
 
     private TextureView LoadTexture(
@@ -295,8 +339,8 @@ public sealed class TerrainMaterialRenderer : IDisposable
             sampler?.Dispose();
         _materialLayout?.Dispose();
         _pipeline?.Dispose();
-        _vertexBuffer?.Dispose();
-        _indexBuffer?.Dispose();
+        foreach (var geometry in _geometries)
+            geometry?.Dispose();
 
         if (_shaders is not null)
             foreach (var shader in _shaders)
@@ -313,8 +357,20 @@ public sealed class TerrainMaterialRenderer : IDisposable
         Array.Clear(_qualitySamplers);
         _materialLayout = null;
         _pipeline = null;
-        _vertexBuffer = null;
-        _indexBuffer = null;
+        Array.Clear(_geometries);
         _shaders = null;
+    }
+
+    private sealed record TerrainGeometry(
+        DeviceBuffer VertexBuffer,
+        DeviceBuffer IndexBuffer,
+        uint IndexCount,
+        int VertexCount) : IDisposable
+    {
+        public void Dispose()
+        {
+            VertexBuffer.Dispose();
+            IndexBuffer.Dispose();
+        }
     }
 }
