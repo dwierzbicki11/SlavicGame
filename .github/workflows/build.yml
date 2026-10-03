@@ -15,6 +15,25 @@ jobs:
       - name: Install GLSL compiler
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y glslang-tools
+      - name: Validate local TTS helper syntax
+        if: runner.os == 'Linux'
+        run: |
+          bash -n tools/tts/setup-local.sh
+          python3 -m py_compile tools/tts/chatterbox_server.py
+      - name: Validate Windows TTS setup syntax
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'tools/tts/setup-local.ps1'),
+            [ref]$tokens,
+            [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '11.0.x'
