@@ -228,7 +228,7 @@ public sealed class MenuRenderer : IDisposable
             var x = left + panelIndex * (panelWidth + gap);
             var panelHeight = MathF.Min(
                 height - top - 92f,
-                80f + panel.Items.Count * 36f);
+                80f + panel.Items.Count * 30f);
 
             AddQuad(
                 x,
@@ -254,7 +254,7 @@ public sealed class MenuRenderer : IDisposable
             for (var i = 0; i < panel.Items.Count; i++)
             {
                 var item = panel.Items[i];
-                var y = top + 62f + i * 36f;
+                var y = top + 62f + i * 30f;
 
                 if (item.Selected)
                 {
@@ -262,7 +262,7 @@ public sealed class MenuRenderer : IDisposable
                         x + 10f,
                         y - 8f,
                         panelWidth - 20f,
-                        34f,
+                        28f,
                         new Vector4(0.25f, 0.17f, 0.07f, 0.94f));
                 }
 
