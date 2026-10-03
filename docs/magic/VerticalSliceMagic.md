@@ -143,3 +143,42 @@ Save przechowuje:
 - finalny wygląd alfabetu;
 - dokładne miejsce rytuału;
 - VFX/audio.
+
+
+## Runtime status — release-bound-echo
+
+Pierwszy executable pass rytuału jest podpięty do runtime.
+
+Sterowanie:
+- `R` — próba rozpoczęcia rytuału;
+- podczas aktywnego rytuału ruch, zwykłe czary i cutscenki są blokowane;
+- HUD pokazuje bieżący etap lub konkretny brakujący warunek.
+
+Runtime wymaga:
+- flagi poznania `magic.ritual.release-bound-echo.learned`;
+- znaków `magic.sign.identity.learned` i `magic.sign.boundary.learned`;
+- miejsca `old-shrine` / Kamienny Krąg;
+- okna 20:00–06:00;
+- `missing-person-keepsake`;
+- `ritual-thread`;
+- ConfirmedFact `light-over-swamp.keepsake-owner`;
+- wiedzy `light-over-swamp.anchor-link-known`;
+- braku aktywnego zagrożenia w promieniu 25 m.
+
+Sekwencja runtime:
+1. wyznaczenie granicy;
+2. umieszczenie kotwicy;
+3. znak rozpoznania;
+4. oczekiwanie na reakcję;
+5. potwierdzenie tożsamości;
+6. domknięcie więzi;
+7. obserwacja skutku.
+
+Przerwanie przez obrażenia lub zagrożenie nie zużywa krytycznych przedmiotów. `missing-person-keepsake` i `ritual-thread` są usuwane dopiero w finalnym commit point po ukończeniu wszystkich etapów.
+
+Sukces:
+- ustawia `swamp.apparition-released`;
+- ustawia `magic.ritual.release-bound-echo.completed`;
+- zapisuje `QuestResolution.RitualClosure` dla `light-over-swamp`;
+- może uruchomić scenę `contract-resolution`;
+- rezultat, zużycie przedmiotów i quest resolution przechodzą przez istniejący save/load.
