@@ -213,3 +213,20 @@ Asset ma:
 - docelowy format asset importu;
 - VO;
 - finalny art direction po pierwszym asset pipeline.
+
+
+## Runtime NPC asset status
+
+P0 placeholder requirement for visible settlers is now implemented:
+- five authored NPC silhouette variants on the shared animated rig;
+- eight ambient Żarnowiec settlers;
+- lightweight role accessories;
+- idle/walk reuse from the shared rig;
+- no fake dialogue prompt on ambient settlers.
+
+Still open for P1:
+- final researched clothing families;
+- dedicated work animations;
+- more face/hair variety;
+- authored hand placement for held props;
+- final texture/material pass.
