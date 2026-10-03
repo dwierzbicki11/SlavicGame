@@ -28,6 +28,7 @@ public sealed class WorldState
     public CinematicPlayer Cinematics { get; } = new();
     public SwampApparitionRuntime Apparition { get; } = new();
     public NpcWorldRuntime NpcWorld { get; } = new();
+    public WildlifeWorldRuntime Wildlife { get; } = new();
     public DialogueRuntime Dialogue { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
@@ -202,6 +203,7 @@ public sealed class WorldState
 
         SetPlayerPosition(Vector3.Zero);
         NpcWorld.Update(this);
+        Wildlife.Reset(this);
         Dialogue.Close();
         Apparition.Reset(this);
         WaterInteraction.Reset(PlayerPosition);
@@ -214,6 +216,7 @@ public sealed class WorldState
         SetPlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
         NpcWorld.Update(this);
+        Wildlife.Update(this, deltaSeconds);
         Dialogue.Update(this);
         Campfires.Update(this, deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
