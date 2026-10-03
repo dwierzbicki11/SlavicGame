@@ -47,6 +47,40 @@ public enum GraphicsPreset
     Ultra
 }
 
+public enum RenderDistanceQuality
+{
+    VeryLow,
+    Low,
+    Medium,
+    High,
+    Ultra
+}
+
+public enum VegetationDistanceQuality
+{
+    Off,
+    Short,
+    Medium,
+    Far,
+    Ultra
+}
+
+public enum GroundClutterQuality
+{
+    Off,
+    Low,
+    Medium,
+    High
+}
+
+public enum ShadowDistanceQuality
+{
+    Short,
+    Medium,
+    Far,
+    Ultra
+}
+
 public readonly record struct ResolutionSize(int Width, int Height)
 {
     public override string ToString() => $"{Width}X{Height}";
@@ -110,6 +144,48 @@ public static class GraphicsQualityCatalog
             TextureQuality.Ultra => int.MaxValue,
             _ => 2048
         };
+
+    public static float RenderDistance(RenderDistanceQuality quality) =>
+        quality switch
+        {
+            RenderDistanceQuality.VeryLow => 180f,
+            RenderDistanceQuality.Low => 300f,
+            RenderDistanceQuality.Medium => 450f,
+            RenderDistanceQuality.High => 650f,
+            RenderDistanceQuality.Ultra => 900f,
+            _ => 650f
+        };
+
+    public static float VegetationDistance(VegetationDistanceQuality quality) =>
+        quality switch
+        {
+            VegetationDistanceQuality.Off => 0f,
+            VegetationDistanceQuality.Short => 90f,
+            VegetationDistanceQuality.Medium => 180f,
+            VegetationDistanceQuality.Far => 320f,
+            VegetationDistanceQuality.Ultra => 520f,
+            _ => 320f
+        };
+
+    public static float GroundClutterDistance(GroundClutterQuality quality) =>
+        quality switch
+        {
+            GroundClutterQuality.Off => 0f,
+            GroundClutterQuality.Low => 30f,
+            GroundClutterQuality.Medium => 70f,
+            GroundClutterQuality.High => 140f,
+            _ => 70f
+        };
+
+    public static float ShadowDistance(ShadowDistanceQuality quality) =>
+        quality switch
+        {
+            ShadowDistanceQuality.Short => 70f,
+            ShadowDistanceQuality.Medium => 120f,
+            ShadowDistanceQuality.Far => 180f,
+            ShadowDistanceQuality.Ultra => 210f,
+            _ => 120f
+        };
 }
 
 public static class GraphicsPresetCatalog
@@ -135,6 +211,10 @@ public static class GraphicsPresetCatalog
                 settings.SunShadows = false;
                 settings.ShadowQuality = ShadowQuality.Low;
                 settings.TextureQuality = TextureQuality.Low;
+                settings.RenderDistance = RenderDistanceQuality.VeryLow;
+                settings.VegetationDistance = VegetationDistanceQuality.Short;
+                settings.GroundClutter = GroundClutterQuality.Off;
+                settings.ShadowDistance = ShadowDistanceQuality.Short;
                 break;
 
             case GraphicsPreset.Balanced:
@@ -144,6 +224,10 @@ public static class GraphicsPresetCatalog
                 settings.SunShadows = true;
                 settings.ShadowQuality = ShadowQuality.Low;
                 settings.TextureQuality = TextureQuality.Medium;
+                settings.RenderDistance = RenderDistanceQuality.Medium;
+                settings.VegetationDistance = VegetationDistanceQuality.Medium;
+                settings.GroundClutter = GroundClutterQuality.Low;
+                settings.ShadowDistance = ShadowDistanceQuality.Medium;
                 break;
 
             case GraphicsPreset.High:
@@ -153,6 +237,10 @@ public static class GraphicsPresetCatalog
                 settings.SunShadows = true;
                 settings.ShadowQuality = ShadowQuality.Medium;
                 settings.TextureQuality = TextureQuality.High;
+                settings.RenderDistance = RenderDistanceQuality.High;
+                settings.VegetationDistance = VegetationDistanceQuality.Far;
+                settings.GroundClutter = GroundClutterQuality.Medium;
+                settings.ShadowDistance = ShadowDistanceQuality.Far;
                 break;
 
             case GraphicsPreset.Ultra:
@@ -162,6 +250,10 @@ public static class GraphicsPresetCatalog
                 settings.SunShadows = true;
                 settings.ShadowQuality = ShadowQuality.High;
                 settings.TextureQuality = TextureQuality.Ultra;
+                settings.RenderDistance = RenderDistanceQuality.Ultra;
+                settings.VegetationDistance = VegetationDistanceQuality.Ultra;
+                settings.GroundClutter = GroundClutterQuality.High;
+                settings.ShadowDistance = ShadowDistanceQuality.Ultra;
                 break;
         }
     }
@@ -199,6 +291,10 @@ public static class GraphicsPresetCatalog
             SunShadows = source.SunShadows,
             ShadowQuality = source.ShadowQuality,
             TextureQuality = source.TextureQuality,
+            RenderDistance = source.RenderDistance,
+            VegetationDistance = source.VegetationDistance,
+            GroundClutter = source.GroundClutter,
+            ShadowDistance = source.ShadowDistance,
             Fog = source.Fog,
             TerrainPbr = source.TerrainPbr,
             ModelPbr = source.ModelPbr
@@ -215,6 +311,10 @@ public static class GraphicsPresetCatalog
         left.SunShadows == right.SunShadows &&
         left.ShadowQuality == right.ShadowQuality &&
         left.TextureQuality == right.TextureQuality &&
+        left.RenderDistance == right.RenderDistance &&
+        left.VegetationDistance == right.VegetationDistance &&
+        left.GroundClutter == right.GroundClutter &&
+        left.ShadowDistance == right.ShadowDistance &&
         left.Fog == right.Fog &&
         left.TerrainPbr == right.TerrainPbr &&
         left.ModelPbr == right.ModelPbr;
@@ -241,6 +341,10 @@ public sealed class GameSettings
     public bool SunShadows { get; set; } = true;
     public ShadowQuality ShadowQuality { get; set; } = ShadowQuality.Medium;
     public TextureQuality TextureQuality { get; set; } = TextureQuality.High;
+    public RenderDistanceQuality RenderDistance { get; set; } = RenderDistanceQuality.High;
+    public VegetationDistanceQuality VegetationDistance { get; set; } = VegetationDistanceQuality.Far;
+    public GroundClutterQuality GroundClutter { get; set; } = GroundClutterQuality.Medium;
+    public ShadowDistanceQuality ShadowDistance { get; set; } = ShadowDistanceQuality.Far;
     public bool Fog { get; set; } = true;
     public bool TerrainPbr { get; set; } = true;
     public bool ModelPbr { get; set; } = true;
@@ -260,5 +364,13 @@ public sealed class GameSettings
             ShadowQuality = ShadowQuality.Medium;
         if (!Enum.IsDefined(TextureQuality))
             TextureQuality = TextureQuality.High;
+        if (!Enum.IsDefined(RenderDistance))
+            RenderDistance = RenderDistanceQuality.High;
+        if (!Enum.IsDefined(VegetationDistance))
+            VegetationDistance = VegetationDistanceQuality.Far;
+        if (!Enum.IsDefined(GroundClutter))
+            GroundClutter = GroundClutterQuality.Medium;
+        if (!Enum.IsDefined(ShadowDistance))
+            ShadowDistance = ShadowDistanceQuality.Far;
     }
 }
