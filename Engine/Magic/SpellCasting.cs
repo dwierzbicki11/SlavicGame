@@ -4,19 +4,33 @@ using SlavicGame.Engine.World;
 namespace SlavicGame.Engine.Magic;
 
 public enum SpellEffect { Spark, Mend, Reveal }
-public sealed record CastSpell(string Id, string Name, string Incantation, SpellEffect Effect,
-    float Cost, double Cooldown, Vector3 Color);
+
+public sealed record CastSpell(
+    string Id,
+    string Name,
+    IncantationPhrase Phrase,
+    SpellEffect Effect,
+    float Cost,
+    double Cooldown,
+    Vector3 Color)
+{
+    public string Incantation => Phrase.Text;
+}
+
 public sealed record MagicSnapshot(int Selected, double Cooldown);
 
 public sealed class SpellCasting
 {
-    // Original fictional words, not reconstructed historical language.
     public static IReadOnlyList<CastSpell> Spells { get; } = Array.AsReadOnly(new[]
     {
-        new CastSpell("spell.spark", "ISKRA", "ZAR VEK", SpellEffect.Spark, 24f, 2.0, new Vector3(1f, 0.38f, 0.06f)),
-        new CastSpell("spell.mend", "SZEPT ZYCIA", "ZIVA DAR", SpellEffect.Mend, 35f, 8.0, new Vector3(0.2f, 0.9f, 0.4f)),
-        new CastSpell("spell.reveal-trace", "ODSLONIECIE SLADU", "VEDA NAW", SpellEffect.Reveal, 18f, 5.0, new Vector3(0.25f, 0.7f, 1f))
+        new CastSpell("spell.spark", "ISKRA", MagicLanguage.Spark, SpellEffect.Spark,
+            24f, 2.0, new Vector3(1f, 0.38f, 0.06f)),
+        new CastSpell("spell.mend", "SZEPT ZYCIA", MagicLanguage.Mend, SpellEffect.Mend,
+            35f, 8.0, new Vector3(0.2f, 0.9f, 0.4f)),
+        new CastSpell("spell.reveal-trace", "ODSLONIECIE SLADU", MagicLanguage.RevealTrace, SpellEffect.Reveal,
+            18f, 5.0, new Vector3(0.25f, 0.7f, 1f))
     });
+
     public int Selected { get; private set; }
     public CastSpell Current => Spells[Selected];
     public double Cooldown { get; private set; }
@@ -26,9 +40,15 @@ public sealed class SpellCasting
     public Vector3 FlashPosition { get; private set; }
     public Vector3 FlashColor { get; private set; }
     public string Message { get; private set; } = "Q ZMIANA CZARU / F RZUC / C SCENKA";
+    public bool IsCasting => CastingRemaining > 0;
+    public double CastingProgress =>
+        !IsCasting || _castingDuration <= 0
+            ? 0
+            : Math.Clamp(1.0 - CastingRemaining / _castingDuration, 0.0, 1.0);
+
     private Vector3 _direction;
     private float _healthAtStart;
-    public bool IsCasting => CastingRemaining > 0;
+    private double _castingDuration;
 
     public void SelectNext()
     {
@@ -39,15 +59,18 @@ public sealed class SpellCasting
     {
         if (!world.Player.IsAlive || world.Cinematics.IsPlaying || IsCasting) return false;
         if (Cooldown > 0) { Message = "CZAR SIE ODNAWIA"; return false; }
-        if (!float.IsFinite(direction.X) || !float.IsFinite(direction.Y) || !float.IsFinite(direction.Z) || direction.LengthSquared() < 0.001f) return false;
+        if (!float.IsFinite(direction.X) || !float.IsFinite(direction.Y) || !float.IsFinite(direction.Z) ||
+            direction.LengthSquared() < 0.001f) return false;
         if (Current.Effect == SpellEffect.Mend && world.Player.Health >= world.Player.MaxHealth)
         { Message = "ZDROWIE JEST PELNE"; return false; }
         if (!world.Player.TrySpendStamina(Current.Cost)) { Message = "BRAK STAMINY"; return false; }
+
         _direction = Vector3.Normalize(direction);
         _healthAtStart = world.Player.Health;
-        CastingRemaining = 0.9;
+        _castingDuration = Current.Phrase.DurationSeconds;
+        CastingRemaining = _castingDuration;
         Cooldown = Current.Cooldown + CastingRemaining;
-        Message = Current.Incantation;
+        Message = Current.Phrase.CueAt(0);
         return true;
     }
 
@@ -58,24 +81,36 @@ public sealed class SpellCasting
         RevealRemaining = Math.Max(0, RevealRemaining - dt);
         FlashRemaining = Math.Max(0, FlashRemaining - dt);
         if (!IsCasting) return;
+
         if (!world.Player.IsAlive || world.Player.Health < _healthAtStart)
-        { Cancel(); Message = "INKANTACJA PRZERWANA"; return; }
+        {
+            Cancel();
+            Message = "INKANTACJA PRZERWANA";
+            return;
+        }
+
         CastingRemaining = Math.Max(0, CastingRemaining - dt);
+        var elapsed = Math.Max(0, _castingDuration - CastingRemaining);
+        Message = Current.Phrase.CueAt(elapsed);
         if (IsCasting) return;
+
         var origin = world.PlayerPosition + Vector3.UnitY * 1.1f;
         FlashColor = Current.Color;
         FlashRemaining = 0.6;
         FlashPosition = origin;
+
         switch (Current.Effect)
         {
             case SpellEffect.Mend:
                 world.Player.Heal(25f);
-                Message = "ZIVA DAR - ODZYSKANO 25 ZDROWIA";
+                Message = $"{Current.Incantation} - ODZYSKANO 25 ZDROWIA";
                 break;
+
             case SpellEffect.Reveal:
                 RevealRemaining = 12;
-                Message = "VEDA NAW - SZUKAJ BLEKITNYCH SLADOW";
+                Message = $"{Current.Incantation} - SZUKAJ BLEKITNYCH SLADOW";
                 break;
+
             case SpellEffect.Spark:
                 var target = world.Enemies.Where(e => e.IsAlive)
                     .Select(e => (Enemy: e, Point: e.Position + Vector3.UnitY * 0.85f))
@@ -83,14 +118,20 @@ public sealed class SpellCasting
                         Vector3.DistanceSquared(origin, e.Point) > 0.001f &&
                         Vector3.Dot(Vector3.Normalize(e.Point - origin), _direction) >= 0.90f &&
                         HasLineOfSight(world, origin, e.Point))
-                    .OrderBy(e => Vector3.DistanceSquared(origin, e.Point)).FirstOrDefault();
+                    .OrderBy(e => Vector3.DistanceSquared(origin, e.Point))
+                    .FirstOrDefault();
+
                 if (target.Enemy is not null)
                 {
                     target.Enemy.TakeDamage(22f);
                     FlashPosition = target.Point;
-                    Message = "ZAR VEK - TRAFIENIE";
+                    Message = $"{Current.Incantation} - TRAFIENIE";
                 }
-                else { FlashPosition = origin + _direction * 3f; Message = "ZAR VEK - BRAK CELU W ZASIEGU"; }
+                else
+                {
+                    FlashPosition = origin + _direction * 3f;
+                    Message = $"{Current.Incantation} - BRAK CELU W ZASIEGU";
+                }
                 break;
         }
     }
@@ -98,7 +139,7 @@ public sealed class SpellCasting
     public static bool HasLineOfSight(WorldState world, Vector3 from, Vector3 to)
     {
         if (world.Terrain.IntersectGroundSegment(from, to, 0.05f) is not null) return false;
-        // Segment / AABB slab test prevents casting through hut and shrine colliders.
+
         foreach (var obstacle in world.Obstacles)
         {
             var min = obstacle.Position - new Vector3(obstacle.HalfSize.X, 0, obstacle.HalfSize.Y);
@@ -107,24 +148,37 @@ public sealed class SpellCasting
             float enter = 0, exit = 1;
             if (Slab(from.X, delta.X, min.X, max.X, ref enter, ref exit) &&
                 Slab(from.Y, delta.Y, min.Y, max.Y, ref enter, ref exit) &&
-                Slab(from.Z, delta.Z, min.Z, max.Z, ref enter, ref exit)) return false;
+                Slab(from.Z, delta.Z, min.Z, max.Z, ref enter, ref exit))
+                return false;
         }
         return true;
     }
+
     private static bool Slab(float origin, float delta, float min, float max, ref float enter, ref float exit)
     {
         if (MathF.Abs(delta) < 0.000001f) return origin >= min && origin <= max;
-        var a = (min - origin) / delta; var b = (max - origin) / delta;
-        enter = MathF.Max(enter, MathF.Min(a, b)); exit = MathF.Min(exit, MathF.Max(a, b));
+        var a = (min - origin) / delta;
+        var b = (max - origin) / delta;
+        enter = MathF.Max(enter, MathF.Min(a, b));
+        exit = MathF.Min(exit, MathF.Max(a, b));
         return enter <= exit;
     }
-    public void Cancel() => CastingRemaining = 0;
+
+    public void Cancel()
+    {
+        CastingRemaining = 0;
+        _castingDuration = 0;
+    }
+
     public MagicSnapshot Capture() => new(Selected, Cooldown);
+
     public void Restore(MagicSnapshot? state)
     {
         Selected = state is not null ? Math.Clamp(state.Selected, 0, Spells.Count - 1) : 0;
-        Cooldown = state is not null && double.IsFinite(state.Cooldown) ? Math.Clamp(state.Cooldown, 0, 9) : 0;
-        CastingRemaining = RevealRemaining = FlashRemaining = 0;
+        Cooldown = state is not null && double.IsFinite(state.Cooldown)
+            ? Math.Clamp(state.Cooldown, 0, 9)
+            : 0;
+        CastingRemaining = RevealRemaining = FlashRemaining = _castingDuration = 0;
         Message = "Q ZMIANA CZARU / F RZUC / C SCENKA";
     }
 }
