@@ -29,8 +29,8 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 ### P2 — research packages
 - [x] culture research framework: stabilne `CULT_*` IDs, H/R/F/U oraz source/evidence policy (`research/cultures/CultureResearchFramework.md`);
 - [x] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5) na poziomie evidence package v0.1; R5 ma osobną wieloźródłową bazę porównawczą i jawne locki zamiast stereotypowej analogii;
-- [ ] domknięcie krytycznych źródeł panteonu;
-- [ ] research lock material culture dla produkcyjnych assetów;
+- [x] krytyczny source-policy lock panteonu (`research/pantheon/CriticalSourceLock.md`): hierarchia świadectwo/opracowanie/rekonstrukcja, regionalność i H/R/F/U są kontraktem produkcyjnym;
+- [ ] research lock material culture dla produkcyjnych assetów — następnie finalne locatory;
 - [x] source-strength/region-fit pass południcy (`research/bestiary/Poludnica.md` v0.2): rozdzielone H/R/F/U, R4 nie jest signature fit, R5 tylko warunkowo na faktycznych polach;
 - [x] identity lock `forest-guardian`: CLOSED/F (`research/bestiary/ForestGuardianIdentityLock.md`); świadoma fikcja zamiast wymuszonej etykiety folklorystycznej;
 - [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
@@ -69,4 +69,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-Culture evidence packages R0–R5, source-strength/region-fit południcy i identity lock `forest-guardian` są zamknięte na poziomie potrzebnym do implementacji. Następny najmniejszy niezablokowany pakiet P2: **domknięcie krytycznych źródeł panteonu**. Potem finalne material-culture locators; równolegle P3 może przejść do regionalnych encounter rosters/tables poza R0.
+Culture evidence packages R0–R5, source-strength/region-fit południcy, identity lock `forest-guardian` i krytyczny source-policy lock panteonu są zamknięte na poziomie potrzebnym do implementacji. Następny najmniejszy niezablokowany pakiet P2: **finalne material-culture locators / production asset research lock**. Równolegle P3 może przejść do regionalnych encounter rosters/tables poza R0.
