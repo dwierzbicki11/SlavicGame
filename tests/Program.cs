@@ -154,6 +154,26 @@ Check(restoredPickupState.IsCollected(pickupTarget.Id), "Pickup consumed state s
 Check(restoredPickupState.TryCollect(pickupTarget with { Id = "other" }, pickup, inventory) == PickupResult.InvalidTarget,
     "Pickup definition cannot collect a mismatched interaction target");
 
+var lootState = new LootContainerInteractionState();
+var lootTarget = new InteractionTarget("chest-old-village-01", new Vector3(1, 0, 0), InteractionKind.Inspect, "Przeszukaj skrzynie");
+var lootDefinition = new LootContainerDefinition(lootTarget.Id,
+    [new LootStack("marsh-herb", 3), new LootStack("old-coin", 2)],
+    "quest:old-chest-looted");
+string? lootQuestEvent = null;
+Check(lootState.LootAll(lootTarget, lootDefinition, inventory, id => lootQuestEvent = id) == LootContainerResult.Looted,
+    "Loot container transfers all stacks into inventory");
+Check(inventory.Count("marsh-herb") == 5 && inventory.Count("old-coin") == 2 && lootQuestEvent == "quest:old-chest-looted",
+    "Loot container updates inventory and quest integration event");
+Check(lootState.LootAll(lootTarget, lootDefinition, inventory) == LootContainerResult.Empty && inventory.Count("old-coin") == 2,
+    "Loot container cannot duplicate consumed contents");
+var lootSnapshot = lootState.Capture();
+var restoredLootState = new LootContainerInteractionState();
+restoredLootState.Restore(lootSnapshot);
+Check(restoredLootState.LootAll(lootTarget, lootDefinition, inventory) == LootContainerResult.Empty,
+    "Empty loot container state survives save restore");
+Check(restoredLootState.LootAll(lootTarget with { Id = "other" }, lootDefinition, inventory) == LootContainerResult.InvalidTarget,
+    "Loot container definition rejects mismatched interaction target");
+
 var questJournal = new QuestJournal();
 var contract = questJournal.Get(VerticalSliceBootstrap.ContractQuestId);
 contract.SetPhase(QuestPhase.Investigation);
