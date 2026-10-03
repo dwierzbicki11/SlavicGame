@@ -174,3 +174,75 @@ Finalny wording powstaje dopiero po:
 - tonie kultury;
 - naming rules;
 - voice direction.
+
+
+# Runtime implementation pass
+
+Vertical slice ma teraz wykonywalny runtime dialogów dla pięciu głównych ról NPC.
+
+## World presence
+
+NPC nie są już wyłącznie wpisami harmonogramu:
+- runtime wylicza ich aktualną pozycję z pory dnia, lokacji i aktywności;
+- w dzień i noc mogą przebywać w różnych miejscach;
+- każdy NPC jest renderowany istniejącym humanoidalnym modelem placeholderowym z kolorem zależnym od roli;
+- podczas rozmowy NPC obraca się w stronę gracza.
+
+## Sterowanie
+
+Po podejściu do NPC:
+- `E` — rozpocznij rozmowę;
+- `W/S` — zmień zaznaczoną odpowiedź;
+- `E` — wybierz odpowiedź;
+- `Esc` — zakończ rozmowę.
+
+Dialog blokuje ruch, atak, czary i pozostały gameplay input.
+
+## Choice gates
+
+Opcje mogą być ukryte przez:
+- quest phase;
+- evidence;
+- item;
+- reputation;
+- divine favor;
+- world flag.
+
+Runtime nie pokazuje opcji, której wymagań gracz nie spełnia.
+
+## Effects
+
+Wykonywane efekty wspierają:
+- zmianę fazy questa;
+- dodanie evidence;
+- give/take item;
+- reputację;
+- relację z NPC;
+- divine favor;
+- world flag.
+
+## Vertical-slice graphs
+
+Pierwszy runtime obejmuje:
+- `missing-family` — przyjęcie zlecenia, ślady, identyfikacja pamiątki, reakcja po wyniku;
+- `crossing-keeper` — stan przeprawy i hipoteza dwóch przyczyn;
+- `herbalist` — receptura oraz przygotowanie do nauki Mend;
+- `community-guard` — relacje świadków i reakcja na rozpoznanego drapieżnika;
+- `shrine-keeper` — znaczenie miejsca, niepewność identyfikacji, rytuał i przygotowanie nauczyciela magii.
+
+## Teacher contract
+
+`TeacherId` w `SpellLessonDefinition` nie jest już tylko metadanymi.
+
+Aby użyć `L` do nauki:
+1. gracz musi odbyć odpowiednią rozmowę z nauczycielem;
+2. runtime zapisuje `dialogue.teacher.<npc-id>.ready`;
+3. nauczyciel musi być fizycznie w pobliżu;
+4. dopiero wtedy oceniane są pozostałe wymagania lekcji.
+
+Dotyczy:
+- Spark → shrine-keeper;
+- Mend → herbalist;
+- Reveal Trace → shrine-keeper.
+
+Stan przygotowania nauczyciela jest world flagiem, więc przechodzi przez istniejący save/load.

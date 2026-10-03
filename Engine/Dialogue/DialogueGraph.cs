@@ -19,6 +19,7 @@ public enum DialogueEffectKind
     GiveItem,
     TakeItem,
     ChangeReputation,
+    ChangeRelationship,
     ChangeDivineFavor,
     SetWorldFlag
 }

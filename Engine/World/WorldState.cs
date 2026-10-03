@@ -2,6 +2,7 @@ using System.Numerics;
 using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.AI;
 using SlavicGame.Engine.NPC;
+using SlavicGame.Engine.Dialogue;
 
 namespace SlavicGame.Engine.World;
 
@@ -25,6 +26,8 @@ public sealed class WorldState
     public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
+    public NpcWorldRuntime NpcWorld { get; } = new();
+    public DialogueRuntime Dialogue { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();
@@ -171,6 +174,8 @@ public sealed class WorldState
             new NpcScheduleSlot(19, 7, "old-village", "rest"));
 
         SetPlayerPosition(Vector3.Zero);
+        NpcWorld.Update(this);
+        Dialogue.Close();
         WaterInteraction.Reset(PlayerPosition);
         Footprints.Reset(PlayerPosition);
     }
@@ -180,6 +185,8 @@ public sealed class WorldState
         Time.Update(deltaSeconds);
         SetPlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
+        NpcWorld.Update(this);
+        Dialogue.Update(this);
         Campfires.Update(this, deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
         Footprints.Update(this, deltaSeconds);

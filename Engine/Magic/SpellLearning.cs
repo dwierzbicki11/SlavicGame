@@ -1,5 +1,6 @@
 using SlavicGame.Engine.Quest;
 using SlavicGame.Engine.World;
+using SlavicGame.Engine.Dialogue;
 
 namespace SlavicGame.Engine.Magic;
 
@@ -135,6 +136,21 @@ public sealed class SpellLearningSystem
 
         if (!string.Equals(world.CurrentRegion, lesson.RequiredRegionId, StringComparison.Ordinal))
             missing.Add($"MIEJSCE: {lesson.RequiredRegionId.ToUpperInvariant()}");
+
+        if (!string.IsNullOrWhiteSpace(lesson.TeacherId))
+        {
+            if (!world.Progress.HasFlag(DialogueRuntime.TeacherReadyFlag(lesson.TeacherId)))
+            {
+                missing.Add($"POROZMAWIAJ Z: {NpcPresentation.DisplayName(lesson.TeacherId)}");
+            }
+            else if (!world.NpcWorld.IsNearby(
+                         lesson.TeacherId,
+                         world.PlayerPosition,
+                         4.25f))
+            {
+                missing.Add($"NAUCZYCIEL NIE JEST W POBLIZU: {NpcPresentation.DisplayName(lesson.TeacherId)}");
+            }
+        }
 
         foreach (var requirement in lesson.Requirements)
         {

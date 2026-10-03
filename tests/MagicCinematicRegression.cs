@@ -5,6 +5,7 @@ using SlavicGame.Engine.Audio;
 using SlavicGame.Engine.Save;
 using SlavicGame.Engine.Quest;
 using SlavicGame.Engine.World;
+using SlavicGame.Engine.Dialogue;
 
 public static class MagicCinematicRegression
 {
@@ -43,26 +44,52 @@ public static class MagicCinematicRegression
         check(!magic.TryStart(world, Vector3.UnitZ) && magic.Message.Contains("NIE ZNASZ", StringComparison.Ordinal),
             "Unknown spell cannot be cast");
 
-        world.SetPlayerPosition(new Vector3(-85, 0, 55));
+        world.Time.SetTimeOfDay(10);
+        world.NpcWorld.Update(world);
+        var shrineTeacher = world.NpcWorld.Find("shrine-keeper")
+            ?? throw new Exception("Shrine keeper must be present for Spark lesson");
+        world.SetPlayerPosition(shrineTeacher.Position);
+        world.NpcWorld.Update(world);
+
+        check(world.Dialogue.Start(world, "shrine-keeper") &&
+              world.Dialogue.ChooseById(world, "sk.teacher") &&
+              world.Progress.HasFlag(
+                  DialogueRuntime.TeacherReadyFlag("shrine-keeper")),
+            "Spark teacher conversation prepares the contextual lesson");
+        world.Dialogue.Close();
+
         world.SpellLearning.RefreshMessage(world);
         check(world.SpellLearning.TryLearnCurrent(world) &&
               SpellLessons.IsLearned(world, "spell.spark") &&
               magic.Current.Id == "spell.spark",
-            "Reaching the shrine teaches Spark through the contextual lesson");
+            "Speaking with nearby shrine keeper teaches Spark through the contextual lesson");
 
-        world.SetPlayerPosition(new Vector3(0, 0, -85));
+        world.NpcWorld.Update(world);
+        var herbalistTeacher = world.NpcWorld.Find("herbalist")
+            ?? throw new Exception("Herbalist must be present for Mend lesson");
+        world.SetPlayerPosition(herbalistTeacher.Position);
+        world.NpcWorld.Update(world);
+
+        check(world.Dialogue.Start(world, "herbalist") &&
+              world.Dialogue.ChooseById(world, "hb.teacher") &&
+              world.Progress.HasFlag(
+                  DialogueRuntime.TeacherReadyFlag("herbalist")),
+            "Mend teacher conversation prepares the contextual lesson");
+        world.Dialogue.Close();
+
         world.Player.TakeDamage(35);
         world.SpellLearning.Update(world);
         var bandagesBeforeLesson = world.Progress.Inventory.Count("simple-bandage");
         check(world.SpellLearning.TryLearnCurrent(world) &&
               SpellLessons.IsLearned(world, "spell.mend") &&
               world.Progress.Inventory.Count("simple-bandage") == bandagesBeforeLesson - 1,
-            "Mend requires a real wound and consumes one practice bandage");
+            "Mend requires herbalist proximity, a real wound and one practice bandage");
 
-        world.SetPlayerPosition(new Vector3(-85, 0, 55));
+        world.SetPlayerPosition(shrineTeacher.Position);
+        world.NpcWorld.Update(world);
         check(!world.SpellLearning.TryLearnCurrent(world) &&
               !SpellLessons.IsLearned(world, "spell.reveal-trace"),
-            "Reveal Trace remains locked without identity and anchor knowledge");
+            "Reveal Trace remains locked beside its teacher without identity and anchor knowledge");
 
         var learningQuest = world.Progress.Quests.Get(VerticalSliceBootstrap.ContractQuestId);
         learningQuest.AddEvidence(new EvidenceEntry(

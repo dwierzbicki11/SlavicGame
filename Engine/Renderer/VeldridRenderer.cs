@@ -370,6 +370,57 @@ public sealed class VeldridRenderer : IDisposable
                 AddGameplayText(world.Cinematics.Subtitle, 18, displayHeight - 66, displayWidth - 36);
                 AddGameplayText("SPACJA / ESC - POMIN", 18, displayHeight - 32, displayWidth - 36);
             }
+            else if (world.Dialogue.IsOpen)
+            {
+                var node = world.Dialogue.CurrentNode;
+                var choices = world.Dialogue.AvailableChoices(world);
+                var panelHeight = MathF.Min(320f, MathF.Max(210f, 145f + choices.Count * 34f));
+                var panelTop = displayHeight - panelHeight;
+
+                AddHudQuad(
+                    0,
+                    panelTop,
+                    displayWidth,
+                    panelHeight,
+                    new Vector4(0.02f, 0.02f, 0.018f, 0.92f));
+
+                if (world.Dialogue.SpeakerId is not null)
+                {
+                    AddGameplayText(
+                        NpcPresentation.DisplayName(world.Dialogue.SpeakerId),
+                        24,
+                        panelTop + 18,
+                        displayWidth - 48);
+                }
+
+                if (node is not null)
+                {
+                    AddGameplayText(
+                        node.Text,
+                        24,
+                        panelTop + 50,
+                        displayWidth - 48);
+                }
+
+                for (var i = 0; i < choices.Count; i++)
+                {
+                    var prefix =
+                        i == world.Dialogue.SelectedChoiceIndex
+                            ? "> "
+                            : "  ";
+                    AddGameplayText(
+                        prefix + choices[i].Text,
+                        36,
+                        panelTop + 92 + i * 32,
+                        displayWidth - 72);
+                }
+
+                AddGameplayText(
+                    "W/S WYBOR  E POTWIERDZ  ESC ZAKONCZ",
+                    24,
+                    displayHeight - 30,
+                    displayWidth - 48);
+            }
             else
             {
                 var currentSpellLearned = SlavicGame.Engine.Magic.SpellLessons.IsLearned(world, world.Magic.Current.Id);
@@ -388,10 +439,18 @@ public sealed class VeldridRenderer : IDisposable
                 AddGameplayText(world.Rituals.Message, 18, 218, displayWidth - 36);
                 var interactionText =
                     world.QuestInteractions.Current?.Prompt ??
-                    world.EnvironmentInteractions.Current?.Prompt ??
-                    (!string.IsNullOrWhiteSpace(world.EnvironmentInteractions.Message)
-                        ? world.EnvironmentInteractions.Message
-                        : world.QuestInteractions.Message);
+                    world.EnvironmentInteractions.Current?.Prompt;
+
+                if (string.IsNullOrWhiteSpace(interactionText))
+                    interactionText = world.NpcWorld.HudPrompt(world.PlayerPosition);
+
+                if (string.IsNullOrWhiteSpace(interactionText))
+                {
+                    interactionText =
+                        !string.IsNullOrWhiteSpace(world.EnvironmentInteractions.Message)
+                            ? world.EnvironmentInteractions.Message
+                            : world.QuestInteractions.Message;
+                }
 
                 if (!string.IsNullOrWhiteSpace(interactionText))
                     AddGameplayText(interactionText, 18, 242, displayWidth - 36);
