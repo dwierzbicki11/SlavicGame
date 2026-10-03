@@ -303,3 +303,34 @@ Playback rzeki korzysta z osobnego `SdlPcmPlayer`, niezależnego od TTS, więc a
 - ripple istnieją tylko w wodzie;
 - foam to kilka quadów w pobliżu kamienistych brzegów;
 - audio jest proceduralne, bez streamowania dużych assetów.
+
+
+## Wading gameplay pass
+
+Rzeka wpływa teraz na ruch gracza zależnie od faktycznej głębokości w miejscu brodzenia.
+
+### Depth-driven movement
+- do około 8 cm: brak kary;
+- wraz z głębokością prędkość spada płynnie;
+- około 35 cm: ruch jest wyraźnie wolniejszy;
+- około 75 cm i głębiej: ruch spada w okolice 55–68% prędkości lądowej;
+- sprint jest blokowany powyżej około 58 cm.
+
+### Stamina
+Płytsze brodzenie nadal pozwala sprintować, ale koszt staminy rośnie z głębokością nawet do około +85%. Regeneracja staminy jest wolniejsza w wodzie i lekko obniżona także po wyjściu, gdy ubranie jest jeszcze mokre.
+
+### Wetness
+`WaterInteractionState.Wetness` rośnie podczas wejścia do wody zależnie od głębokości i schodzi stopniowo po wyjściu. Pełne wyschnięcie trwa około półtorej minuty w neutralnych warunkach. Stan jest tymczasowy i nie jest zapisywany w save.
+
+HUD pokazuje:
+- głębokość wody w cm podczas brodzenia;
+- procent mokrego ubrania;
+- po wyjściu tylko wetness, dopóki stan jest istotny.
+
+### Footstep splash
+Przebyty dystans w wodzie generuje rytmiczne splash pulses. Pulse:
+- wzmacnia ripple;
+- uruchamia krótki transient szumu w proceduralnym ambience;
+- ma cooldown, żeby pojedynczy krok nie generował wielu dźwięków na kolejnych frame'ach.
+
+Całość pozostaje bez osobnego particle systemu i bez dodatkowych tekstur VFX.
