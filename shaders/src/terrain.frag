@@ -1,6 +1,7 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 #include "../include/clouds.glsl"
+#include "../include/shadows.glsl"
 
 const float PI = 3.14159265359;
 
@@ -49,6 +50,13 @@ layout(set = 1, binding = 28) uniform texture2D RockAo;
 layout(set = 1, binding = 29) uniform texture2D RockHeight;
 
 layout(set = 1, binding = 30) uniform sampler TerrainSampler;
+
+layout(set = 2, binding = 0) uniform ShadowDataBuffer
+{
+    mat4 LightViewProjection;
+};
+layout(set = 2, binding = 1) uniform texture2D ShadowMap;
+layout(set = 2, binding = 2) uniform sampler ShadowSampler;
 
 layout(location = 0) in vec3 fsin_WorldPosition;
 layout(location = 1) in vec3 fsin_WorldNormal;
@@ -226,6 +234,14 @@ void main()
         SkyWeather.w,
         SkyWeather.z,
         SkyWeather.x);
+    float geometryShadow = SampleSunShadow(
+        ShadowMap,
+        ShadowSampler,
+        LightViewProjection,
+        fsin_WorldPosition,
+        normal,
+        sunDirection);
+    float directShadow = cloudShadow * geometryShadow;
     float hemisphere = mix(0.18, 0.64, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
 
     float wetness = clamp(weightsB.x * 0.82 + weightsB.y * 0.66, 0.0, 1.0);
@@ -234,7 +250,7 @@ void main()
     float ambientOcclusion = clamp(ao * geometricOcclusion, 0.16, 1.0);
 
     vec3 diffuse = albedo *
-        (hemisphere * 0.34 + ndotl * daylight * sunColor * cloudShadow) *
+        (hemisphere * 0.34 + ndotl * daylight * sunColor * directShadow) *
         ambientOcclusion;
 
     vec3 viewDirection = normalize(-fsin_WorldPosition);
@@ -246,7 +262,7 @@ void main()
     // only where the material data says the surface is smooth enough.
     float wetSpecular = wetness * (1.0 - roughness);
     vec3 color = diffuse +
-        sunColor * specular * wetSpecular * daylight * cloudShadow * 0.42;
+        sunColor * specular * wetSpecular * daylight * directShadow * 0.42;
 
     float density = max(FogColorDensity.w, 0.00001);
     float fogFactor =

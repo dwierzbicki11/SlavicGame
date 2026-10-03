@@ -44,6 +44,7 @@ public sealed class TerrainMaterialRenderer : IDisposable
     public void Initialize(
         GraphicsDevice graphicsDevice,
         ResourceLayout cameraLayout,
+        ResourceLayout shadowLayout,
         OutputDescription outputDescription,
         Terrain terrain,
         string assetsRoot)
@@ -51,6 +52,7 @@ public sealed class TerrainMaterialRenderer : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(graphicsDevice);
         ArgumentNullException.ThrowIfNull(cameraLayout);
+        ArgumentNullException.ThrowIfNull(shadowLayout);
         ArgumentNullException.ThrowIfNull(terrain);
         ArgumentException.ThrowIfNullOrWhiteSpace(assetsRoot);
 
@@ -173,7 +175,7 @@ public sealed class TerrainMaterialRenderer : IDisposable
                 false),
             PrimitiveTopology.TriangleList,
             new ShaderSetDescription([vertexLayout], _shaders),
-            [cameraLayout, _materialLayout],
+            [cameraLayout, _materialLayout, shadowLayout],
             outputDescription));
 
         EngineLog.Info(
@@ -182,7 +184,10 @@ public sealed class TerrainMaterialRenderer : IDisposable
             $"30 sampled textures.");
     }
 
-    public void Render(CommandList commandList, ResourceSet cameraSet)
+    public void Render(
+        CommandList commandList,
+        ResourceSet cameraSet,
+        ResourceSet shadowSet)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_pipeline is null ||
@@ -196,6 +201,23 @@ public sealed class TerrainMaterialRenderer : IDisposable
         commandList.SetPipeline(_pipeline);
         commandList.SetGraphicsResourceSet(0, cameraSet);
         commandList.SetGraphicsResourceSet(1, _materialSet);
+        commandList.SetGraphicsResourceSet(2, shadowSet);
+        commandList.SetVertexBuffer(0, _vertexBuffer);
+        commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
+        commandList.DrawIndexed(_indexCount);
+    }
+
+    public void RenderShadow(
+        CommandList commandList,
+        Pipeline shadowPipeline,
+        ResourceSet shadowDepthSet)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_vertexBuffer is null || _indexBuffer is null)
+            throw new InvalidOperationException("Terrain material renderer is not initialized.");
+
+        commandList.SetPipeline(shadowPipeline);
+        commandList.SetGraphicsResourceSet(0, shadowDepthSet);
         commandList.SetVertexBuffer(0, _vertexBuffer);
         commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
         commandList.DrawIndexed(_indexCount);

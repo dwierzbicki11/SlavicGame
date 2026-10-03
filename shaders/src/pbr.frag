@@ -1,6 +1,7 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 #include "../include/clouds.glsl"
+#include "../include/shadows.glsl"
 
 const float PI = 3.14159265359;
 
@@ -22,6 +23,13 @@ layout(set = 1, binding = 1) uniform texture2D BaseColorTexture;
 layout(set = 1, binding = 2) uniform texture2D NormalTexture;
 layout(set = 1, binding = 3) uniform texture2D MetallicRoughnessTexture;
 layout(set = 1, binding = 4) uniform sampler MaterialSampler;
+
+layout(set = 2, binding = 0) uniform ShadowDataBuffer
+{
+    mat4 LightViewProjection;
+};
+layout(set = 2, binding = 1) uniform texture2D ShadowMap;
+layout(set = 2, binding = 2) uniform sampler ShadowSampler;
 
 layout(location = 0) in vec3 fsin_WorldPosition;
 layout(location = 1) in vec3 fsin_WorldNormal;
@@ -115,10 +123,18 @@ void main()
         SkyWeather.w,
         SkyWeather.z,
         SkyWeather.x);
+    float geometryShadow = SampleSunShadow(
+        ShadowMap,
+        ShadowSampler,
+        LightViewProjection,
+        fsin_WorldPosition,
+        normal,
+        lightDirection);
+    float directShadow = cloudShadow * geometryShadow;
     vec3 ambient = albedo * (0.028 + 0.050 * max(lightDirection.y, 0.0)) * (1.0 - metallic * 0.35);
     vec3 color = ambient +
         (diffuse + specular) * sunColor * ndotl *
-        (1.75 * lightStrength) * cloudShadow;
+        (1.75 * lightStrength) * directShadow;
 
     float fogFactor = 1.0 - exp(-FogColorDensity.w * fsin_Distance);
     fogFactor = clamp(fogFactor, 0.0, 0.94);
