@@ -224,6 +224,7 @@ public sealed class PbrModelRenderer : IDisposable
         ResourceSet cameraSet,
         ResourceSet shadowSet,
         Vector3 cameraPosition,
+        CameraFrustum frustum,
         float renderDistance,
         float vegetationDistance,
         float groundClutterDistance)
@@ -259,6 +260,8 @@ public sealed class PbrModelRenderer : IDisposable
 
             var maxDistance = categoryDistance + renderable.Radius;
             if (delta.LengthSquared() > maxDistance * maxDistance)
+                continue;
+            if (!frustum.IntersectsSphere(renderable.Center, renderable.Radius))
                 continue;
 
             commandList.SetVertexBuffer(0, renderable.VertexBuffer);
