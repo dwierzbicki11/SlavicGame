@@ -21,8 +21,8 @@ internal static class SaveSlotRegression
             var service = new SaveSlotService(root);
             var world = WorldGenerator.Generate();
 
-            var originalPosition = new Vector3(11f, 2f, -7f);
-            world.SetPlayerPosition(originalPosition);
+            world.SetPlayerPosition(new Vector3(11f, 2f, -7f));
+            var originalPosition = world.PlayerPosition;
             var first = service.SaveAutosave(world, 60.0);
 
             world.SetPlayerPosition(new Vector3(21f, 2f, -17f));
