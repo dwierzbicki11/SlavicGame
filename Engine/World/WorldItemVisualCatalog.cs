@@ -94,9 +94,9 @@ public static class WorldItemVisualCatalog
             world.Progress.Quests.Get(
                 VerticalSliceBootstrap.ContractQuestId);
 
-        return quest.Phase is
-                   QuestPhase.Active or
-                   QuestPhase.Investigation &&
+        return (quest.Phase is
+                    QuestPhase.Active or
+                    QuestPhase.Investigation) &&
                !world.Progress.HasFlag(
                    VerticalSliceQuestInteractions.KeepsakeCollectedFlag) &&
                !world.Progress.Inventory.Contains(
