@@ -23,10 +23,19 @@ public static class SettingsCatalog
         new(
             "resolution",
             SettingCategory.Display,
-            "ROZDZIELCZOSC",
+            "ROZDZIELCZOSC RENDERU",
             s => s.ResolutionSize.ToString(),
             (s, direction) =>
                 s.Resolution = ResolutionCatalog.Cycle(s.Resolution, direction)),
+        new(
+            "window-resolution",
+            SettingCategory.Display,
+            "ROZDZIELCZOSC OKNA",
+            s => s.WindowResolutionSize.ToString(),
+            (s, direction) =>
+                s.WindowResolution = ResolutionCatalog.Cycle(
+                    s.WindowResolution,
+                    direction)),
         Toggle("vsync", SettingCategory.Display, "VSYNC",
             s => s.VSync, (s, v) => s.VSync = v),
         Toggle("fps", SettingCategory.Display, "LICZNIK FPS",
@@ -131,6 +140,30 @@ public static class SettingsCatalog
             s => TerrainDetailName(s.TerrainDetail),
             (s, direction) =>
                 s.TerrainDetail = CycleEnum(s.TerrainDetail, direction)),
+        new(
+            "model-lod",
+            SettingCategory.Graphics,
+            "LOD MODELI",
+            s => ModelLodName(s.ModelLod),
+            (s, direction) =>
+                s.ModelLod = CycleEnum(s.ModelLod, direction)),
+        new(
+            "upscaler",
+            SettingCategory.Graphics,
+            "UPSCALER",
+            s => s.Upscaler == UpscalerMode.Fsr1 ? "FSR1" : "BILINEAR",
+            (s, direction) =>
+                s.Upscaler = CycleEnum(s.Upscaler, direction)),
+        new(
+            "fsr-sharpness",
+            SettingCategory.Graphics,
+            "FSR1 OSTROSC",
+            s => $"{s.FsrSharpness:0.00}",
+            (s, direction) =>
+                s.FsrSharpness = Math.Clamp(
+                    s.FsrSharpness + direction * 0.05f,
+                    0f,
+                    1f)),
         Toggle("normal-mapping", SettingCategory.Graphics, "NORMAL MAPPING",
             s => s.NormalMapping, (s, v) => s.NormalMapping = v),
         Toggle("specular", SettingCategory.Graphics, "ODBICIA SPECULAR",
@@ -233,6 +266,16 @@ public static class SettingsCatalog
             ShadowDistanceQuality.Far => "180M",
             ShadowDistanceQuality.Ultra => "210M",
             _ => "180M"
+        };
+
+    private static string ModelLodName(ModelLodQuality quality) =>
+        quality switch
+        {
+            ModelLodQuality.Aggressive => "AGRESYWNY",
+            ModelLodQuality.Balanced => "BALANCED",
+            ModelLodQuality.Quality => "QUALITY",
+            ModelLodQuality.Ultra => "ULTRA",
+            _ => "QUALITY"
         };
 
     private static string TerrainDetailName(TerrainDetailQuality quality) =>

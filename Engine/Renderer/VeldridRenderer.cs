@@ -269,6 +269,8 @@ public sealed class VeldridRenderer : IDisposable
         var framebuffer = _resolutionScaler.SceneFramebuffer;
         var width = Math.Max(1u, framebuffer.Width);
         var height = Math.Max(1u, framebuffer.Height);
+        var displayWidth = Math.Max(1u, swapchainFramebuffer.Width);
+        var displayHeight = Math.Max(1u, swapchainFramebuffer.Height);
         var aspect = MathF.Max(0.1f, (float)width / height);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(
             camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
@@ -302,7 +304,7 @@ public sealed class VeldridRenderer : IDisposable
                 BufferUsage.VertexBuffer));
         }
 
-        var screenSize = new Vector4(width, height, 0, 0);
+        var screenSize = new Vector4(displayWidth, displayHeight, 0, 0);
         var celestial = CelestialLighting.Evaluate(world.Time, world.Weather);
         var atmosphereColor = GetAtmosphereColor(world.Time, world.Weather, celestial);
         var fogParameters = new Vector4(
@@ -393,7 +395,8 @@ public sealed class VeldridRenderer : IDisposable
             _terrain.RenderShadow(
                 _commandList,
                 _shadows.TerrainPipeline,
-                _shadows.DepthSet);
+                _shadows.DepthSet,
+                settings.TerrainDetail);
             _pbrModels.RenderShadow(
                 _commandList,
                 _shadows.PbrPipeline,
@@ -401,7 +404,8 @@ public sealed class VeldridRenderer : IDisposable
                 camera.Position,
                 GraphicsQualityCatalog.ShadowDistance(settings.ShadowDistance),
                 GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
-                GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter));
+                GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter),
+                settings.ModelLod);
             _shadows.RenderActors(
                 _commandList,
                 _actorVertexBuffer,
@@ -420,7 +424,8 @@ public sealed class VeldridRenderer : IDisposable
         _terrain.Render(
             _commandList,
             _cameraSet,
-            _shadows.SampleSet);
+            _shadows.SampleSet,
+            settings.TerrainDetail);
 
         _pbrModels.Render(
             _commandList,
@@ -430,7 +435,8 @@ public sealed class VeldridRenderer : IDisposable
             cameraFrustum,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
-            GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter));
+            GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter),
+            settings.ModelLod);
 
         _commandList.SetPipeline(_actorPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
@@ -443,6 +449,12 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.DrawIndexed(_actorIndexCount);
         }
 
+        _resolutionScaler.Present(
+            _commandList,
+            swapchainFramebuffer,
+            settings.Upscaler,
+            settings.FsrSharpness);
+
         if (_hudVertices.Count > 0)
         {
             _commandList.SetPipeline(_hudPipeline);
@@ -453,13 +465,9 @@ public sealed class VeldridRenderer : IDisposable
 
         _menu.Render(
             _commandList,
-            width,
-            height,
+            displayWidth,
+            displayHeight,
             menuView);
-
-        _resolutionScaler.Present(
-            _commandList,
-            swapchainFramebuffer);
 
         _commandList.End();
 

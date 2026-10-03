@@ -214,6 +214,12 @@ for (var i = 0; i < indices.Length; i += 3)
 }
 TerrainMesh.Build(new Terrain(257, 257), out var largeVertices, out var largeIndices);
 Check(largeIndices.Max() == largeVertices.Length - 1, "32-bit terrain indices");
+TerrainMesh.Build(new Terrain(257, 257), 4, out var lowLodVertices, out var lowLodIndices);
+Check(lowLodVertices.Length < largeVertices.Length / 8 &&
+      lowLodIndices.Length < largeIndices.Length / 8,
+    "Low terrain geometry LOD substantially reduces mesh complexity");
+Check(lowLodIndices.Max() == lowLodVertices.Length - 1,
+    "Reduced terrain LOD indices remain valid");
 
 var villageSurface = TerrainSurfaceClassifier.Classify(
     new Vector3(0f, 0f, -85f),

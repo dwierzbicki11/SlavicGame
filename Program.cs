@@ -14,7 +14,9 @@ try
     if (args.Contains("--vsync", StringComparer.Ordinal))
         settings.VSync = true;
 
-    var initialResolution = settings.ResolutionSize;
+    var initialResolution = settings.Fullscreen
+        ? settings.ResolutionSize
+        : settings.WindowResolutionSize;
 
     using var game = new GameEngine(
         new EngineConfig

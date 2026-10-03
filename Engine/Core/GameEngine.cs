@@ -166,17 +166,20 @@ public sealed class GameEngine : IDisposable
     {
         _settings.Normalize();
 
-        var resolution = _settings.ResolutionSize;
+        var renderResolution = _settings.ResolutionSize;
+        var windowResolution = _settings.WindowResolutionSize;
 
         if (_window.IsFullscreen != _settings.Fullscreen)
             _window.SetFullscreen(_settings.Fullscreen);
 
         if (!_settings.Fullscreen)
-            _window.SetWindowedSize(resolution.Width, resolution.Height);
+            _window.SetWindowedSize(
+                windowResolution.Width,
+                windowResolution.Height);
 
         _renderer.SetRenderResolution(
-            resolution.Width,
-            resolution.Height);
+            renderResolution.Width,
+            renderResolution.Height);
         _renderer.SetShadowResolution(
             GraphicsQualityCatalog.ShadowMapSize(_settings.ShadowQuality));
         _renderer.SetShadowDistance(

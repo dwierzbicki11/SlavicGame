@@ -27,14 +27,28 @@ public readonly struct TerrainVertex
 
 public static class TerrainMesh
 {
-    public static void Build(Terrain terrain, out TerrainVertex[] vertices, out uint[] indices)
+    public static void Build(Terrain terrain, out TerrainVertex[] vertices, out uint[] indices) =>
+        Build(terrain, 1, out vertices, out indices);
+
+    public static void Build(
+        Terrain terrain,
+        int gridStep,
+        out TerrainVertex[] vertices,
+        out uint[] indices)
     {
         ArgumentNullException.ThrowIfNull(terrain);
-        vertices = new TerrainVertex[checked(terrain.Width * terrain.Depth)];
+        if (gridStep < 1)
+            throw new ArgumentOutOfRangeException(nameof(gridStep));
 
-        for (var x = 0; x < terrain.Width; x++)
-        for (var z = 0; z < terrain.Depth; z++)
+        var xs = BuildSampleIndices(terrain.Width, gridStep);
+        var zs = BuildSampleIndices(terrain.Depth, gridStep);
+        vertices = new TerrainVertex[checked(xs.Length * zs.Length)];
+
+        for (var xi = 0; xi < xs.Length; xi++)
+        for (var zi = 0; zi < zs.Length; zi++)
         {
+            var x = xs[xi];
+            var z = zs[zi];
             var px = (x - (terrain.Width - 1) * 0.5f) * terrain.CellSize;
             var pz = (z - (terrain.Depth - 1) * 0.5f) * terrain.CellSize;
             var height = terrain.GetHeight(x, z);
@@ -50,20 +64,20 @@ public static class TerrainMesh
             var color = Vector3.Lerp(lowland, meadow, normalizedHeight);
             color = Vector3.Lerp(color, rocky, MathF.Pow(slope, 1.65f) * 0.72f);
 
-            vertices[x * terrain.Depth + z] =
+            vertices[xi * zs.Length + zi] =
                 new TerrainVertex(new Vector3(px, height, pz), color, normal);
         }
 
-        indices = new uint[checked((terrain.Width - 1) * (terrain.Depth - 1) * 6)];
+        indices = new uint[checked((xs.Length - 1) * (zs.Length - 1) * 6)];
         var index = 0;
 
-        for (var x = 0; x < terrain.Width - 1; x++)
-        for (var z = 0; z < terrain.Depth - 1; z++)
+        for (var xi = 0; xi < xs.Length - 1; xi++)
+        for (var zi = 0; zi < zs.Length - 1; zi++)
         {
-            var a = (uint)(x * terrain.Depth + z);
-            var b = (uint)((x + 1) * terrain.Depth + z);
-            var c = (uint)((x + 1) * terrain.Depth + z + 1);
-            var d = (uint)(x * terrain.Depth + z + 1);
+            var a = (uint)(xi * zs.Length + zi);
+            var b = (uint)((xi + 1) * zs.Length + zi);
+            var c = (uint)((xi + 1) * zs.Length + zi + 1);
+            var d = (uint)(xi * zs.Length + zi + 1);
 
             indices[index++] = a;
             indices[index++] = b;
@@ -72,6 +86,18 @@ public static class TerrainMesh
             indices[index++] = c;
             indices[index++] = d;
         }
+    }
+
+    private static int[] BuildSampleIndices(int size, int gridStep)
+    {
+        var samples = new List<int>();
+        for (var value = 0; value < size - 1; value += gridStep)
+            samples.Add(value);
+
+        if (samples.Count == 0 || samples[^1] != size - 1)
+            samples.Add(size - 1);
+
+        return samples.ToArray();
     }
 
     private static Vector3 CalculateNormal(Terrain terrain, int x, int z)
