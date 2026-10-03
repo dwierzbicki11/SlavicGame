@@ -96,6 +96,22 @@ public sealed class GameWindow : IDisposable
         EngineLog.Info($"Fullscreen: {IsFullscreen}.");
     }
 
+    public void SetWindowedSize(int width, int height)
+    {
+        if (IsFullscreen)
+            return;
+
+        width = Math.Clamp(width, 640, 7680);
+        height = Math.Clamp(height, 360, 4320);
+
+        if (_window.Width == width && _window.Height == height)
+            return;
+
+        _window.Width = width;
+        _window.Height = height;
+        EngineLog.Info($"Windowed resolution: {width}x{height}.");
+    }
+
     public void SetMouseCapture(bool enabled)
     {
         _relativeMouseRequested = enabled;
