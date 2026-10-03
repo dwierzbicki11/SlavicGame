@@ -29,6 +29,11 @@ public static class VerticalSliceBootstrap
         }
 
         EnsureMagicTraces(world);
+        if (!world.Progress.HasFlag("starter-loadout-granted"))
+        {
+            world.Progress.Inventory.Add("simple-bandage", 2);
+            world.Progress.SetFlag("starter-loadout-granted");
+        }
         world.Progress.SetFlag("vertical-slice-prepared");
     }
     public static void EnsureMagicTraces(WorldState world)
