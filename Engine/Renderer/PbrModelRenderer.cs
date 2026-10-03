@@ -196,7 +196,8 @@ public sealed class PbrModelRenderer : IDisposable
         float renderDistance,
         float vegetationDistance,
         float groundClutterDistance,
-        ModelLodQuality lodQuality)
+        ModelLodQuality lodQuality,
+        FarVegetationMode farVegetationMode)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_pipeline is null)
@@ -234,9 +235,17 @@ public sealed class PbrModelRenderer : IDisposable
             if (!frustum.IntersectsSphere(renderable.Center, renderable.Radius))
                 continue;
 
+            var distance = MathF.Sqrt(distanceSquared);
+            if (renderable.Kind == RenderableKind.Tree &&
+                farVegetationMode != FarVegetationMode.FullMeshes &&
+                distance >= GraphicsQualityCatalog.VegetationImpostorStart(lodQuality))
+            {
+                continue;
+            }
+
             var geometry = SelectLodGeometry(
                 renderable,
-                MathF.Sqrt(distanceSquared),
+                distance,
                 lodQuality);
 
             commandList.SetVertexBuffer(0, geometry.VertexBuffer);
@@ -265,7 +274,8 @@ public sealed class PbrModelRenderer : IDisposable
         float shadowDistance,
         float vegetationDistance,
         float groundClutterDistance,
-        ModelLodQuality lodQuality)
+        ModelLodQuality lodQuality,
+        FarVegetationMode farVegetationMode)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -298,9 +308,17 @@ public sealed class PbrModelRenderer : IDisposable
             if (distanceSquared > maxDistance * maxDistance)
                 continue;
 
+            var shadowCasterDistance = MathF.Sqrt(distanceSquared);
+            if (renderable.Kind == RenderableKind.Tree &&
+                farVegetationMode != FarVegetationMode.FullMeshes &&
+                shadowCasterDistance >= GraphicsQualityCatalog.VegetationImpostorStart(lodQuality))
+            {
+                continue;
+            }
+
             var geometry = SelectLodGeometry(
                 renderable,
-                MathF.Sqrt(distanceSquared),
+                shadowCasterDistance,
                 lodQuality);
 
             commandList.SetVertexBuffer(0, geometry.VertexBuffer);
@@ -420,7 +438,7 @@ public sealed class PbrModelRenderer : IDisposable
 
         // Vegetation tolerates a faster transition because its silhouette
         // dominates long before small branch detail does.
-        if (renderable.Kind == RenderableKind.Vegetation)
+        if (renderable.Kind is RenderableKind.Tree or RenderableKind.Vegetation)
         {
             lod1Distance *= 0.72f;
             lod2Distance *= 0.72f;
@@ -650,6 +668,9 @@ public sealed class PbrModelRenderer : IDisposable
             "pien_bagienny_"
         };
 
+        if (FarVegetationRenderer.IsTreeAsset(assetPath))
+            return RenderableKind.Tree;
+
         return vegetationPrefixes.Any(prefix =>
             fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             ? RenderableKind.Vegetation
@@ -663,6 +684,7 @@ public sealed class PbrModelRenderer : IDisposable
     private enum RenderableKind
     {
         World,
+        Tree,
         Vegetation,
         GroundClutter
     }
