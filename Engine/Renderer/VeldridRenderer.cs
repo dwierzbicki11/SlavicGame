@@ -42,6 +42,8 @@ public sealed class VeldridRenderer : IDisposable
     private Shader[]? _hudShaders;
     private GlbModel? _playerModel;
     private GlbModel? _enemyModel;
+    private readonly Dictionary<string, GlbModel> _worldItemModels =
+        new(StringComparer.Ordinal);
 
     private bool _initialized;
     private bool _disposed;
@@ -115,6 +117,24 @@ public sealed class VeldridRenderer : IDisposable
         var assetsRoot = Path.Combine(AppContext.BaseDirectory, "assets");
         _playerModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "player_hunter_animated.glb"));
         _enemyModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "swamp_predator_animated.glb"));
+
+        _worldItemModels.Clear();
+        foreach (var assetPath in WorldItemVisualCatalog.Definitions
+                     .Select(definition => definition.AssetPath)
+                     .Distinct(StringComparer.Ordinal))
+        {
+            var itemPath = Path.Combine(
+                assetsRoot,
+                assetPath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(itemPath))
+            {
+                throw new FileNotFoundException(
+                    $"Required dynamic world item asset '{assetPath}' was not found.",
+                    itemPath);
+            }
+
+            _worldItemModels[assetPath] = GlbModel.Load(itemPath);
+        }
 
         _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
@@ -327,6 +347,11 @@ public sealed class VeldridRenderer : IDisposable
             camera.Mode != CameraMode.FirstPerson,
             out var actorVertices,
             out var actorIndices);
+        WorldItemModelMesh.Append(
+            world,
+            _worldItemModels,
+            ref actorVertices,
+            ref actorIndices);
         WaterLandscape.AppendSurface(world.Terrain, (float)animationSeconds, camera.Position,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             ref actorVertices, ref actorIndices);
@@ -1013,6 +1038,7 @@ public sealed class VeldridRenderer : IDisposable
         _actorShaders = null;
         _playerModel = null;
         _enemyModel = null;
+        _worldItemModels.Clear();
         _hudPipeline = null;
         _hudSet = null;
         _hudLayout = null;
