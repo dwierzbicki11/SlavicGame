@@ -31,6 +31,12 @@ public static class WildlifeModelMesh
 
         foreach (var actor in world.Wildlife.Actors)
         {
+            if (world.Progress.HasFlag(
+                    SlavicGame.Engine.Combat.BowCombatRuntime.WildlifeDeadFlag(actor.Id)))
+            {
+                continue;
+            }
+
             var delta = actor.Position - cameraPosition;
             if (delta.LengthSquared() > maxDistanceSquared)
                 continue;
