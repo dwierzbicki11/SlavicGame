@@ -447,6 +447,10 @@ public sealed class VeldridRenderer : IDisposable
             world,
             ref actorVertices,
             ref actorIndices);
+        WildlifeTrackEffectMesh.Append(
+            world,
+            ref actorVertices,
+            ref actorIndices);
         ApparitionEffectMesh.Append(
             world,
             (float)animationSeconds,
@@ -584,6 +588,17 @@ public sealed class VeldridRenderer : IDisposable
                         world.WaterInteraction.HudStatus,
                         18,
                         314,
+                        displayWidth - 36);
+                }
+
+                var wildlifeTrackStatus =
+                    world.WildlifeTracks.HudStatus(world);
+                if (!string.IsNullOrWhiteSpace(wildlifeTrackStatus))
+                {
+                    AddGameplayText(
+                        wildlifeTrackStatus,
+                        18,
+                        338,
                         displayWidth - 36);
                 }
             }

@@ -111,3 +111,48 @@ Te footprinty są tylko transient world feedback:
 - `Reveal Trace` ich nie podświetla.
 
 Durable tracking nadal służy śladom questowym, NPC/creature clues i supernatural traces.
+
+
+## Runtime wildlife hunting tracks
+
+Ambient wildlife ma osobną, nietrwałą warstwę tropów, oddzieloną zarówno od questowego `TrackingState`, jak i od odcisków gracza.
+
+### Gatunki
+Ślady naziemne zostawiają:
+- jeleń — para węższych racic;
+- dzik — większa para racic;
+- wilk — łapa z trzema przednimi odciskami.
+
+Kruki nie zostawiają naziemnych tropów podczas lotu.
+
+### Powstawanie
+Trop jest stemplowany dopiero po przebyciu dystansu właściwego dla gatunku. Podłoże wpływa na czytelność:
+- błoto i mokradło — najwyższa;
+- forest litter — wysoka;
+- ścieżka — średnia;
+- trawa — słaba;
+- skała — praktycznie zerowa;
+- teren zanurzony — brak stempla.
+
+Deszcz może lekko zwiększyć chwilową podatność miękkiego podłoża, ale dużo szybciej postarza już istniejący trop.
+
+### Freshness
+Każdy mark przechodzi:
+`Fresh -> Recent -> Old -> Faded`.
+
+HUD przy podejściu na około 3.2 m pokazuje gatunek i klasę świeżości, bez rysowania trasy/GPS.
+
+### Separation contract
+Wildlife tracks:
+- nie trafiają do `GameProgress.Tracking`;
+- nie tworzą evidence;
+- nie są zapisywane w save;
+- nie mają magic signature;
+- nie są podświetlane przez `Reveal Trace`.
+
+### Performance
+- maksymalnie 180 śladów w runtime;
+- renderer bierze maksymalnie 96 najbliższych;
+- geometry culling powyżej 38 m;
+- proste quady/racice/łapy w istniejącym actor pass;
+- brak tekstur i osobnego render passu.

@@ -434,3 +434,8 @@ Key vertical-slice items now use dynamic GLB visuals instead of invisible intera
 ### Ambient wildlife
 
 R0 forests now contain animated deer, boars, wolves and ravens using a lightweight deterministic territory/flee runtime. Ravens fly and gain altitude when spooked; ground wildlife wanders locally and avoids the player. Wildlife animation is distance-culled before geometry is appended to the shared actor pass.
+
+
+### Wildlife tracking
+
+Ground wildlife now leaves transient species-specific tracks on suitable terrain. Deer and boar stamp hoof marks, wolves stamp paw marks, and nearby HUD feedback reports species plus freshness without drawing a GPS trail. Rain erodes tracks faster, rock and submerged terrain reject them, and these hunting traces remain fully separate from durable quest evidence and magical Reveal Trace signatures.
