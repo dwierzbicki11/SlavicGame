@@ -379,3 +379,8 @@ A winding shallow river runs north–south roughly 220 metres east of spawn. It 
 ### River interaction
 
 Walking through the R0 river now creates movement-driven ripple rings. The rocky channel edges receive animated foam streaks, and a separate procedural SDL ambience fades in as the listener approaches the river without interfering with local TTS playback.
+
+
+### Wading
+
+The R0 river is now gameplay-active: movement slows with real water depth, deep water disables sprint, shallow-water sprint costs extra stamina, soaked clothing dries gradually and temporarily reduces recovery, while movement produces synchronized ripple and splash feedback.

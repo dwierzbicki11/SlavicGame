@@ -241,7 +241,8 @@ public sealed class GameEngine : IDisposable
             _riverAmbience?.Update(
                 _world.PlayerPosition,
                 _time.DeltaSeconds,
-                _frontend.IsPlaying);
+                _frontend.IsPlaying,
+                _world.WaterInteraction.SplashPulse);
 
             var menuView = _frontend.IsPlaying
                 ? null
