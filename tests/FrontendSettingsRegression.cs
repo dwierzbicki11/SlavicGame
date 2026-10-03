@@ -9,7 +9,7 @@ public static class FrontendSettingsRegression
         ArgumentNullException.ThrowIfNull(check);
 
         var definitions = SettingsCatalog.All;
-        check(definitions.Count >= 25,
+        check(definitions.Count >= 28,
             "Frontend exposes the current display, controls and graphics settings");
         check(definitions.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == definitions.Count,
             "Frontend setting identifiers are unique");
@@ -44,6 +44,9 @@ public static class FrontendSettingsRegression
         check(GraphicsQualityCatalog.ShadowDistance(ShadowDistanceQuality.Short) <
               GraphicsQualityCatalog.ShadowDistance(ShadowDistanceQuality.Ultra),
             "Shadow distance maps to increasing shadow coverage");
+        check(GraphicsQualityCatalog.TerrainDetailLevel(TerrainDetailQuality.Low) <
+              GraphicsQualityCatalog.TerrainDetailLevel(TerrainDetailQuality.Ultra),
+            "Terrain detail maps to increasing shader work");
 
         var textureQuality = definitions.Single(item => item.Id == "texture-quality");
         settings.TextureQuality = TextureQuality.High;
@@ -67,8 +70,29 @@ public static class FrontendSettingsRegression
               settings.RenderDistance == RenderDistanceQuality.VeryLow &&
               settings.VegetationDistance == VegetationDistanceQuality.Short &&
               settings.GroundClutter == GroundClutterQuality.Off &&
-              settings.ShadowDistance == ShadowDistanceQuality.Short,
-            "Low-end preset disables the heaviest GPU effects and aggressively reduces visibility work");
+              settings.ShadowDistance == ShadowDistanceQuality.Short &&
+              settings.TerrainDetail == TerrainDetailQuality.Low &&
+              !settings.NormalMapping &&
+              !settings.SpecularHighlights,
+            "Low-end preset disables the heaviest GPU effects and aggressively reduces shader work");
+
+        var terrainDetail = definitions.Single(item => item.Id == "terrain-detail");
+        settings.TerrainDetail = TerrainDetailQuality.High;
+        terrainDetail.Change(settings, -1);
+        check(settings.TerrainDetail == TerrainDetailQuality.Medium,
+            "Frontend terrain detail setting changes terrain shader workload");
+
+        var normalMapping = definitions.Single(item => item.Id == "normal-mapping");
+        settings.NormalMapping = true;
+        normalMapping.Change(settings, 1);
+        check(!settings.NormalMapping,
+            "Frontend can disable normal mapping");
+
+        var specular = definitions.Single(item => item.Id == "specular");
+        settings.SpecularHighlights = true;
+        specular.Change(settings, 1);
+        check(!settings.SpecularHighlights,
+            "Frontend can disable specular highlights");
 
         settings.VolumetricClouds = true;
         var clouds = definitions.Single(item => item.Id == "volumetric-clouds");
