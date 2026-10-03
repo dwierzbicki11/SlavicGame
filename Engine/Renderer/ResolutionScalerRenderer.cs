@@ -22,7 +22,6 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
     private DeviceBuffer? _easuConstants;
     private DeviceBuffer? _rcasConstants;
-    private DeviceBuffer? _presentationParameters;
 
     private ResourceLayout? _bilinearLayout;
     private ResourceLayout? _easuLayout;
@@ -88,10 +87,6 @@ public sealed class ResolutionScalerRenderer : IDisposable
             new ResourceLayoutElementDescription(
                 "SceneSampler",
                 ResourceKind.Sampler,
-                ShaderStages.Fragment),
-            new ResourceLayoutElementDescription(
-                "PresentationParameters",
-                ResourceKind.UniformBuffer,
                 ShaderStages.Fragment)));
 
         _easuLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
@@ -106,10 +101,6 @@ public sealed class ResolutionScalerRenderer : IDisposable
             new ResourceLayoutElementDescription(
                 "SceneSampler",
                 ResourceKind.Sampler,
-                ShaderStages.Fragment),
-            new ResourceLayoutElementDescription(
-                "PresentationParameters",
-                ResourceKind.UniformBuffer,
                 ShaderStages.Fragment)));
 
         _rcasLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
@@ -130,9 +121,6 @@ public sealed class ResolutionScalerRenderer : IDisposable
             64,
             BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _rcasConstants = factory.CreateBuffer(new BufferDescription(
-            16,
-            BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-        _presentationParameters = factory.CreateBuffer(new BufferDescription(
             16,
             BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
@@ -220,21 +208,10 @@ public sealed class ResolutionScalerRenderer : IDisposable
         var source = sourceOverride ?? ResolvedSceneView;
         SetPresentationSource(source);
 
-        if (_presentationParameters is null)
-            throw new InvalidOperationException("Presentation parameters are missing.");
-
-        // This parameter corrects the orientation of the scene source sampled
-        // by the direct-present shader and by EASU. When EASU is followed by
-        // RCAS, RCAS performs one additional final offscreen->swapchain Y
-        // correction in fsr_rcas.frag. Native FSR bypasses EASU/RCAS entirely.
-        //
-        // On the multisample path ResolveTexture already yields
-        // display-oriented scene data on affected drivers/backends.
-        var flipY = _sceneSampleCount == TextureSampleCount.Count1 ? 1f : 0f;
-        commandList.UpdateBuffer(
-            _presentationParameters,
-            0,
-            new System.Numerics.Vector4(flipY, 0f, 0f, 0f));
+        // Vulkan fullscreen passes use one canonical UV orientation. Do not
+        // inject manual Y flips based on MSAA, preset or upscaler state.
+        // Ultra already proved that the unflipped path is the correct one;
+        // all lower presets and FSR now follow the same convention.
 
         if (_graphicsDevice is null ||
             _bilinearPipeline is null ||
@@ -319,8 +296,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
         if (_graphicsDevice is null ||
             _bilinearLayout is null ||
             _easuLayout is null ||
-            _easuConstants is null ||
-            _presentationParameters is null)
+            _easuConstants is null)
         {
             throw new InvalidOperationException("Resolution scaler layouts are not initialized.");
         }
@@ -339,15 +315,13 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _bilinearSet = factory.CreateResourceSet(new ResourceSetDescription(
             _bilinearLayout,
             source,
-            _graphicsDevice.LinearSampler,
-            _presentationParameters));
+            _graphicsDevice.LinearSampler));
 
         _easuSet = factory.CreateResourceSet(new ResourceSetDescription(
             _easuLayout,
             _easuConstants,
             source,
-            _graphicsDevice.LinearSampler,
-            _presentationParameters));
+            _graphicsDevice.LinearSampler));
 
         _presentationSource = source;
     }
@@ -616,7 +590,6 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         _easuConstants?.Dispose();
         _rcasConstants?.Dispose();
-        _presentationParameters?.Dispose();
 
         _sceneFramebuffer?.Dispose();
         _fsrFramebuffer?.Dispose();
@@ -648,7 +621,6 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _rcasLayout = null;
         _easuConstants = null;
         _rcasConstants = null;
-        _presentationParameters = null;
         _sceneFramebuffer = null;
         _fsrFramebuffer = null;
         _resolvedColorView = null;
