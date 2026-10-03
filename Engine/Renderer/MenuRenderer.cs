@@ -230,8 +230,12 @@ public sealed class MenuRenderer : IDisposable
             var rowSpacing = MathF.Min(
                 30f,
                 availableRowsHeight / Math.Max(1, panel.Items.Count));
-            var textScale = rowSpacing < 28f ? 1.48f : 1.75f;
-            var selectionHeight = MathF.Max(22f, rowSpacing - 2f);
+            var textScale = rowSpacing < 22f
+                ? 1.20f
+                : rowSpacing < 28f
+                    ? 1.48f
+                    : 1.75f;
+            var selectionHeight = MathF.Max(16f, rowSpacing - 2f);
             var panelHeight = MathF.Min(
                 height - top - 92f,
                 80f + panel.Items.Count * rowSpacing);
