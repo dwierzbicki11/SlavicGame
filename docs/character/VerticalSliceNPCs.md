@@ -168,3 +168,43 @@ Każdy NPC potrzebuje docelowo:
 - dokładne pochodzenie;
 - VO;
 - finalne dialogi literackie.
+
+
+## Runtime settler model pass
+
+Pierwszy grywalny pass modeli mieszkańców korzysta ze wspólnego animowanego rigu humanoida, ale nie pokazuje już wszystkich NPC jako identycznej postaci.
+
+### Pięć głównych NPC
+Każda rola ma osobny `NpcVisualProfile`:
+- inne proporcje ciała;
+- własną przygaszoną paletę bazową;
+- kolor akcentu;
+- 1–2 dodatki sylwetki;
+- lekko różne tempo animacji.
+
+Dodatki rozpoznawcze:
+- `missing-family` — chusta/szal + mała sakiewka;
+- `crossing-keeper` — kij + zestaw narzędzi;
+- `herbalist` — kaptur/chusta głowy + torba;
+- `community-guard` — włócznia + sakiewka pasa;
+- `shrine-keeper` — kaptur + kij.
+
+Dodatki są generowane jako bardzo lekka geometria w istniejącym actor mesh passie, więc uczestniczą w tym samym depth/shadow path co postacie i nie wymagają osobnych draw calli.
+
+### Ambient population
+Żarnowiec otrzymuje dodatkowo 8 mieszkańców:
+- dwóch rolników;
+- cieślę;
+- garncarza;
+- handlarza;
+- tragarza;
+- starszego mieszkańca;
+- podróżnego.
+
+Mają osobne pozycje dzienne/nocne, role, proporcje, kolory i zestawy dodatków. W obecnym passie są widoczni i animowani, ale nie dostają fałszywego promptu dialogowego, dopóki nie powstanie dla nich właściwy graph rozmowy.
+
+### Animation policy
+Wspólny rig zachowuje istniejące klipy. Aktywności typu patrol, noszenie towaru lub przybycie do wsi korzystają z `Walk`; pozostałe prototypowo z `Idle`. Docelowe animacje pracy nadal pozostają P1.
+
+### Research / art status
+Ten pass jest **F / placeholder production art**, nie rekonstrukcją historycznego ubioru. Finalne stroje, fryzury, biżuteria, obuwie i wyposażenie muszą przejść osobny material-culture research lock przed oznaczeniem jako historycznie/reconstructed based.

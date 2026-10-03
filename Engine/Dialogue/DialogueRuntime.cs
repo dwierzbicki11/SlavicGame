@@ -41,7 +41,7 @@ public sealed class DialogueRuntime
     {
         ArgumentNullException.ThrowIfNull(world);
 
-        var actor = world.NpcWorld.FindNearest(world.PlayerPosition);
+        var actor = world.NpcWorld.FindNearestInteractive(world.PlayerPosition);
         if (actor is null)
             return false;
 
