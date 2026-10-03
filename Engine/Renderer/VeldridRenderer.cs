@@ -395,7 +395,8 @@ public sealed class VeldridRenderer : IDisposable
             _terrain.RenderShadow(
                 _commandList,
                 _shadows.TerrainPipeline,
-                _shadows.DepthSet);
+                _shadows.DepthSet,
+                settings.TerrainDetail);
             _pbrModels.RenderShadow(
                 _commandList,
                 _shadows.PbrPipeline,
@@ -403,7 +404,8 @@ public sealed class VeldridRenderer : IDisposable
                 camera.Position,
                 GraphicsQualityCatalog.ShadowDistance(settings.ShadowDistance),
                 GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
-                GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter));
+                GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter),
+                settings.ModelLod);
             _shadows.RenderActors(
                 _commandList,
                 _actorVertexBuffer,
@@ -422,7 +424,8 @@ public sealed class VeldridRenderer : IDisposable
         _terrain.Render(
             _commandList,
             _cameraSet,
-            _shadows.SampleSet);
+            _shadows.SampleSet,
+            settings.TerrainDetail);
 
         _pbrModels.Render(
             _commandList,
@@ -432,7 +435,8 @@ public sealed class VeldridRenderer : IDisposable
             cameraFrustum,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
-            GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter));
+            GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter),
+            settings.ModelLod);
 
         _commandList.SetPipeline(_actorPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
