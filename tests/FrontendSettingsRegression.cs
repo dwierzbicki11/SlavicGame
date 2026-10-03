@@ -9,7 +9,7 @@ public static class FrontendSettingsRegression
         ArgumentNullException.ThrowIfNull(check);
 
         var definitions = SettingsCatalog.All;
-        check(definitions.Count >= 40,
+        check(definitions.Count >= 41,
             "Frontend exposes the current display, controls, graphics and post-processing settings");
         check(definitions.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == definitions.Count,
             "Frontend setting identifiers are unique");
@@ -95,6 +95,7 @@ public static class FrontendSettingsRegression
               settings.FarVegetation == FarVegetationMode.Impostors &&
               settings.Resolution == RenderResolution.Qhd540 &&
               settings.Upscaler == UpscalerMode.Fsr1 &&
+              settings.FsrQuality == FsrQualityMode.Performance &&
               settings.AntiAliasing == AntiAliasingMode.Fxaa &&
               settings.Msaa == MsaaQuality.Off &&
               settings.Bloom == BloomQuality.Off &&
@@ -119,6 +120,36 @@ public static class FrontendSettingsRegression
         upscaler.Change(settings, 1);
         check(settings.Upscaler == UpscalerMode.Fsr1,
             "Frontend can enable AMD FSR1");
+
+        var fsrQuality = definitions.Single(item => item.Id == "fsr-quality");
+        settings.FsrQuality = FsrQualityMode.Quality;
+        fsrQuality.Change(settings, 1);
+        check(settings.FsrQuality == FsrQualityMode.UltraQuality,
+            "Frontend can change FSR1 quality mode");
+
+        var custom = new ResolutionSize(1152, 648);
+        var fsrPerformance = GraphicsQualityCatalog.FsrRenderResolution(
+            1920,
+            1080,
+            FsrQualityMode.Performance,
+            custom);
+        var fsrQuality1080p = GraphicsQualityCatalog.FsrRenderResolution(
+            1920,
+            1080,
+            FsrQualityMode.Quality,
+            custom);
+        var fsrCustom = GraphicsQualityCatalog.FsrRenderResolution(
+            1920,
+            1080,
+            FsrQualityMode.Custom,
+            custom);
+
+        check(fsrPerformance.Width == 960 && fsrPerformance.Height == 540,
+            "FSR1 Performance maps 1080p output to 960x540 internal rendering");
+        check(fsrQuality1080p.Width == 1280 && fsrQuality1080p.Height == 720,
+            "FSR1 Quality maps 1080p output to 1280x720 internal rendering");
+        check(fsrCustom == custom,
+            "FSR1 Custom preserves manually selected internal resolution");
 
         var sharpness = definitions.Single(item => item.Id == "fsr-sharpness");
         settings.FsrSharpness = 0.5f;
