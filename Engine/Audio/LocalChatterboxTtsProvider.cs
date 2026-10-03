@@ -177,10 +177,16 @@ public sealed class LocalChatterboxTtsProvider : ITextToSpeechProvider, IDisposa
                 speed = request.Direction.Speed
             });
 
-            await _stdin!.WriteLineAsync(message.AsMemory(), cancellationToken).ConfigureAwait(false);
-            await _stdin.FlushAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
 
-            var line = await _stdout!.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            // Once a request is written, always drain exactly one response before
+            // releasing the request lock. Chatterbox inference itself is not
+            // safely cancellable through this line protocol.
+            await _stdin!.WriteLineAsync(message).ConfigureAwait(false);
+            await _stdin.FlushAsync().ConfigureAwait(false);
+
+            var line = await _stdout!.ReadLineAsync().ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(line))
                 throw new InvalidOperationException("Local TTS process closed without a response.");
 
