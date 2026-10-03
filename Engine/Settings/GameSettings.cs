@@ -113,6 +113,37 @@ public enum FarVegetationMode
     FullMeshes
 }
 
+public enum AntiAliasingMode
+{
+    Off,
+    Fxaa
+}
+
+public enum MsaaQuality
+{
+    Off,
+    X2,
+    X4
+}
+
+public enum BloomQuality
+{
+    Off,
+    Low,
+    Medium,
+    High
+}
+
+public enum FrameRateLimit
+{
+    Unlimited,
+    Fps30,
+    Fps45,
+    Fps60,
+    Fps90,
+    Fps120
+}
+
 public readonly record struct ResolutionSize(int Width, int Height)
 {
     public override string ToString() => $"{Width}X{Height}";
@@ -261,6 +292,37 @@ public static class GraphicsQualityCatalog
             ModelLodQuality.Ultra => 240f,
             _ => 130f
         };
+
+    public static int MsaaSamples(MsaaQuality quality) =>
+        quality switch
+        {
+            MsaaQuality.Off => 1,
+            MsaaQuality.X2 => 2,
+            MsaaQuality.X4 => 4,
+            _ => 1
+        };
+
+    public static int BloomTapCount(BloomQuality quality) =>
+        quality switch
+        {
+            BloomQuality.Off => 0,
+            BloomQuality.Low => 4,
+            BloomQuality.Medium => 8,
+            BloomQuality.High => 12,
+            _ => 0
+        };
+
+    public static int FrameRate(FrameRateLimit limit) =>
+        limit switch
+        {
+            FrameRateLimit.Unlimited => 0,
+            FrameRateLimit.Fps30 => 30,
+            FrameRateLimit.Fps45 => 45,
+            FrameRateLimit.Fps60 => 60,
+            FrameRateLimit.Fps90 => 90,
+            FrameRateLimit.Fps120 => 120,
+            _ => 0
+        };
 }
 
 public static class GraphicsPresetCatalog
@@ -298,6 +360,12 @@ public static class GraphicsPresetCatalog
                 settings.FsrSharpness = 0.55f;
                 settings.NormalMapping = false;
                 settings.SpecularHighlights = false;
+                settings.AntiAliasing = AntiAliasingMode.Fxaa;
+                settings.Msaa = MsaaQuality.Off;
+                settings.Bloom = BloomQuality.Off;
+                settings.BloomStrength = 0.35f;
+                settings.Brightness = 1.0f;
+                settings.Gamma = 2.2f;
                 break;
 
             case GraphicsPreset.Balanced:
@@ -319,6 +387,12 @@ public static class GraphicsPresetCatalog
                 settings.FsrSharpness = 0.45f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = false;
+                settings.AntiAliasing = AntiAliasingMode.Fxaa;
+                settings.Msaa = MsaaQuality.Off;
+                settings.Bloom = BloomQuality.Low;
+                settings.BloomStrength = 0.30f;
+                settings.Brightness = 1.0f;
+                settings.Gamma = 2.2f;
                 break;
 
             case GraphicsPreset.High:
@@ -340,6 +414,12 @@ public static class GraphicsPresetCatalog
                 settings.FsrSharpness = 0.35f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = true;
+                settings.AntiAliasing = AntiAliasingMode.Fxaa;
+                settings.Msaa = MsaaQuality.X2;
+                settings.Bloom = BloomQuality.Medium;
+                settings.BloomStrength = 0.35f;
+                settings.Brightness = 1.0f;
+                settings.Gamma = 2.2f;
                 break;
 
             case GraphicsPreset.Ultra:
@@ -361,6 +441,12 @@ public static class GraphicsPresetCatalog
                 settings.FsrSharpness = 0.25f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = true;
+                settings.AntiAliasing = AntiAliasingMode.Fxaa;
+                settings.Msaa = MsaaQuality.X4;
+                settings.Bloom = BloomQuality.High;
+                settings.BloomStrength = 0.42f;
+                settings.Brightness = 1.0f;
+                settings.Gamma = 2.2f;
                 break;
         }
     }
@@ -407,6 +493,12 @@ public static class GraphicsPresetCatalog
             FarVegetation = source.FarVegetation,
             Upscaler = source.Upscaler,
             FsrSharpness = source.FsrSharpness,
+            AntiAliasing = source.AntiAliasing,
+            Msaa = source.Msaa,
+            Bloom = source.Bloom,
+            BloomStrength = source.BloomStrength,
+            Brightness = source.Brightness,
+            Gamma = source.Gamma,
             NormalMapping = source.NormalMapping,
             SpecularHighlights = source.SpecularHighlights,
             Fog = source.Fog,
@@ -434,6 +526,12 @@ public static class GraphicsPresetCatalog
         left.FarVegetation == right.FarVegetation &&
         left.Upscaler == right.Upscaler &&
         MathF.Abs(left.FsrSharpness - right.FsrSharpness) < 0.001f &&
+        left.AntiAliasing == right.AntiAliasing &&
+        left.Msaa == right.Msaa &&
+        left.Bloom == right.Bloom &&
+        MathF.Abs(left.BloomStrength - right.BloomStrength) < 0.001f &&
+        MathF.Abs(left.Brightness - right.Brightness) < 0.001f &&
+        MathF.Abs(left.Gamma - right.Gamma) < 0.001f &&
         left.NormalMapping == right.NormalMapping &&
         left.SpecularHighlights == right.SpecularHighlights &&
         left.Fog == right.Fog &&
@@ -472,6 +570,13 @@ public sealed class GameSettings
     public FarVegetationMode FarVegetation { get; set; } = FarVegetationMode.Impostors;
     public UpscalerMode Upscaler { get; set; } = UpscalerMode.Fsr1;
     public float FsrSharpness { get; set; } = 0.35f;
+    public AntiAliasingMode AntiAliasing { get; set; } = AntiAliasingMode.Fxaa;
+    public MsaaQuality Msaa { get; set; } = MsaaQuality.Off;
+    public BloomQuality Bloom { get; set; } = BloomQuality.Off;
+    public float BloomStrength { get; set; } = 0.35f;
+    public float Brightness { get; set; } = 1.0f;
+    public float Gamma { get; set; } = 2.2f;
+    public FrameRateLimit FpsLimit { get; set; } = FrameRateLimit.Unlimited;
     public bool NormalMapping { get; set; } = true;
     public bool SpecularHighlights { get; set; } = true;
     public bool Fog { get; set; } = true;
@@ -512,6 +617,17 @@ public sealed class GameSettings
             FarVegetation = FarVegetationMode.Impostors;
         if (!Enum.IsDefined(Upscaler))
             Upscaler = UpscalerMode.Fsr1;
+        if (!Enum.IsDefined(AntiAliasing))
+            AntiAliasing = AntiAliasingMode.Fxaa;
+        if (!Enum.IsDefined(Msaa))
+            Msaa = MsaaQuality.Off;
+        if (!Enum.IsDefined(Bloom))
+            Bloom = BloomQuality.Off;
+        if (!Enum.IsDefined(FpsLimit))
+            FpsLimit = FrameRateLimit.Unlimited;
         FsrSharpness = Math.Clamp(FsrSharpness, 0f, 1f);
+        BloomStrength = Math.Clamp(BloomStrength, 0f, 1.5f);
+        Brightness = Math.Clamp(Brightness, 0.5f, 1.5f);
+        Gamma = Math.Clamp(Gamma, 1.6f, 2.8f);
     }
 }
