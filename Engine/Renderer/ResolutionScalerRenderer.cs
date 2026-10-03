@@ -180,7 +180,10 @@ public sealed class ResolutionScalerRenderer : IDisposable
         var outputWidth = Math.Max(1u, swapchainFramebuffer.Width);
         var outputHeight = Math.Max(1u, swapchainFramebuffer.Height);
 
-        if (upscaler == UpscalerMode.Fsr1)
+        if (upscaler == UpscalerMode.Fsr1 &&
+            outputWidth >= _width &&
+            outputHeight >= _height &&
+            (outputWidth > _width || outputHeight > _height))
         {
             EnsureFsrTarget(outputWidth, outputHeight);
             PresentFsr1(
