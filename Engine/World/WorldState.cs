@@ -25,6 +25,7 @@ public sealed class WorldState
     public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
+    public WaterInteractionState WaterInteraction { get; } = new();
     public WorldTime Time { get; } = new();
     public WeatherSystem Weather { get; } = new();
     public PlayerVitals Player { get; } = new();
@@ -167,6 +168,7 @@ public sealed class WorldState
             new NpcScheduleSlot(19, 7, "old-village", "rest"));
 
         SetPlayerPosition(Vector3.Zero);
+        WaterInteraction.Reset(PlayerPosition);
     }
 
     public void Update(double deltaSeconds)
@@ -174,6 +176,7 @@ public sealed class WorldState
         Time.Update(deltaSeconds);
         SetPlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
+        WaterInteraction.Update(this, deltaSeconds);
         SpellLearning.Update(this);
         SpellLearning.RefreshMessage(this);
         QuestInteractions.Update(this);
