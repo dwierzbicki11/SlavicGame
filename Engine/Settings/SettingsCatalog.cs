@@ -113,7 +113,8 @@ public static class SettingsCatalog
                 var next = (currentIndex + Math.Sign(direction)) % presets.Length;
                 if (next < 0) next += presets.Length;
                 GraphicsPresetCatalog.Apply(s, presets[next]);
-            }),
+            },
+            RequiresRestart: true),
         new(
             "texture-quality",
             SettingCategory.Graphics,
@@ -147,7 +148,9 @@ public static class SettingsCatalog
             "shadow-distance",
             SettingCategory.Graphics,
             "ZASIEG CIENI",
-            s => ShadowDistanceName(s.ShadowDistance),
+            s => s.SunShadows
+                ? ShadowDistanceName(s.ShadowDistance)
+                : "NIEAKTYWNE",
             (s, direction) =>
                 s.ShadowDistance = CycleEnum(s.ShadowDistance, direction)),
         new(
@@ -183,14 +186,19 @@ public static class SettingsCatalog
             "fsr-quality",
             SettingCategory.PostProcessing,
             "FSR1 TRYB",
-            s => FsrQualityName(s.FsrQuality),
+            s => s.Upscaler == UpscalerMode.Fsr1
+                ? FsrQualityName(s.FsrQuality)
+                : "NIEAKTYWNE",
             (s, direction) =>
                 s.FsrQuality = CycleEnum(s.FsrQuality, direction)),
         new(
             "fsr-sharpness",
             SettingCategory.PostProcessing,
             "FSR1 OSTROSC",
-            s => $"{s.FsrSharpness:0.00}",
+            s => s.Upscaler == UpscalerMode.Fsr1 &&
+                 s.FsrQuality != FsrQualityMode.Native
+                ? $"{s.FsrSharpness:0.00}"
+                : "NIEAKTYWNE",
             (s, direction) =>
                 s.FsrSharpness = Math.Clamp(
                     s.FsrSharpness + direction * 0.05f,
@@ -222,7 +230,9 @@ public static class SettingsCatalog
             "bloom-strength",
             SettingCategory.PostProcessing,
             "SILA BLOOM",
-            s => $"{s.BloomStrength:0.00}",
+            s => s.Bloom == BloomQuality.Off
+                ? "NIEAKTYWNE"
+                : $"{s.BloomStrength:0.00}",
             (s, direction) =>
                 s.BloomStrength = Math.Clamp(
                     s.BloomStrength + direction * 0.05f,
@@ -267,7 +277,9 @@ public static class SettingsCatalog
             "cloud-quality",
             SettingCategory.Graphics,
             "JAKOSC CHMUR",
-            s => QualityName(s.CloudQuality),
+            s => s.VolumetricClouds
+                ? QualityName(s.CloudQuality)
+                : "NIEAKTYWNE",
             (s, direction) =>
                 s.CloudQuality = CycleEnum(s.CloudQuality, direction)),
         Toggle("cloud-shadows", SettingCategory.Graphics, "CIENIE CHMUR",
@@ -278,7 +290,9 @@ public static class SettingsCatalog
             "shadow-quality",
             SettingCategory.Graphics,
             "JAKOSC CIENI",
-            s => ShadowName(s.ShadowQuality),
+            s => s.SunShadows
+                ? ShadowName(s.ShadowQuality)
+                : "NIEAKTYWNE",
             (s, direction) =>
                 s.ShadowQuality = CycleEnum(s.ShadowQuality, direction)),
         Toggle("fog", SettingCategory.Graphics, "MGLA",
