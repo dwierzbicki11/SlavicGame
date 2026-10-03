@@ -164,7 +164,7 @@ public sealed class FrontendController
         var footer =
             backSelected
                 ? "> POWROT <    ENTER"
-                : "STRZALKI / W S  WYBOR    LEWO PRAWO / ENTER  ZMIANA    ESC  POWROT";
+                : "STRZALKI / W S  WYBOR    LEWO PRAWO / ENTER  ZMIANA    * MSAA PO RESTARCIE    ESC  POWROT";
 
         return new MenuView(
             "USTAWIENIA",
@@ -186,6 +186,7 @@ public sealed class FrontendController
             SettingCategory.Display => "EKRAN",
             SettingCategory.Controls => "STEROWANIE",
             SettingCategory.Graphics => "GRAFIKA",
+            SettingCategory.PostProcessing => "POST FX",
             _ => category.ToString().ToUpperInvariant()
         };
 }
