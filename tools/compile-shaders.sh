@@ -56,6 +56,8 @@ compile_shader "$SRC_DIR/present.vert"      "$OUT_DIR/present.vert.spv"      ver
 compile_shader "$SRC_DIR/present.frag"      "$OUT_DIR/present.frag.spv"      frag
 compile_shader "$SRC_DIR/postprocess.vert"  "$OUT_DIR/postprocess.vert.spv"  vert
 compile_shader "$SRC_DIR/postprocess.frag"  "$OUT_DIR/postprocess.frag.spv"  frag
+compile_shader "$SRC_DIR/bloom.vert"        "$OUT_DIR/bloom.vert.spv"        vert
+compile_shader "$SRC_DIR/bloom.frag"        "$OUT_DIR/bloom.frag.spv"        frag
 compile_shader "$SRC_DIR/fsr_easu.vert"     "$OUT_DIR/fsr_easu.vert.spv"     vert
 compile_shader "$SRC_DIR/fsr_easu.frag"     "$OUT_DIR/fsr_easu.frag.spv"     frag
 compile_shader "$SRC_DIR/fsr_rcas.vert"     "$OUT_DIR/fsr_rcas.vert.spv"     vert
