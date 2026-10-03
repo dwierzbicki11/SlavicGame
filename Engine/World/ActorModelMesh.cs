@@ -36,6 +36,23 @@ public static class ActorModelMesh
                 indexList);
         }
 
+        foreach (var npc in world.NpcWorld.Actors)
+        {
+            var npcTransform =
+                Matrix4x4.CreateRotationY(npc.YawRadians) *
+                Matrix4x4.CreateTranslation(npc.Position);
+
+            Append(
+                playerModel.BuildMesh(
+                    npcTransform,
+                    "Idle",
+                    time + StableAnimationOffset(npc.Id),
+                    sourceIsZUp: true),
+                NpcPresentation.RoleColor(npc.Role),
+                vertexList,
+                indexList);
+        }
+
         foreach (var enemy in world.Enemies)
         {
             if (!enemy.IsAlive)
@@ -62,6 +79,21 @@ public static class ActorModelMesh
 
         vertices = vertexList.ToArray();
         indices = indexList.ToArray();
+    }
+
+    private static float StableAnimationOffset(string id)
+    {
+        unchecked
+        {
+            uint hash = 2166136261;
+            foreach (var ch in id)
+            {
+                hash ^= ch;
+                hash *= 16777619;
+            }
+
+            return (hash % 1000u) / 1000f * 2.5f;
+        }
     }
 
     private static void Append(
