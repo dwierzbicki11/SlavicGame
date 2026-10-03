@@ -4,6 +4,7 @@ using Veldrid;
 using Veldrid.ImageSharp;
 using SlavicGame.Engine.Assets;
 using SlavicGame.Engine.Diagnostics;
+using SlavicGame.Engine.Settings;
 using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Renderer;
@@ -17,6 +18,7 @@ public sealed class PbrModelRenderer : IDisposable
     private readonly List<TextureView> _ownedTextureViews = [];
     private readonly List<DeviceBuffer> _ownedMaterialBuffers = [];
     private readonly List<ResourceSet> _ownedMaterialSets = [];
+    private readonly Sampler?[] _qualitySamplers = new Sampler?[4];
 
     private GraphicsDevice? _graphicsDevice;
     private Pipeline? _pipeline;
@@ -29,6 +31,7 @@ public sealed class PbrModelRenderer : IDisposable
     private TextureView? _flatNormalView;
     private TextureView? _defaultMrView;
     private bool _disposed;
+    private TextureQuality _textureQuality = TextureQuality.High;
     private int _instanceCount;
     private int _uniqueAssetCount;
 
@@ -43,7 +46,8 @@ public sealed class PbrModelRenderer : IDisposable
         ResourceLayout shadowLayout,
         OutputDescription outputDescription,
         WorldState world,
-        string assetsRoot)
+        string assetsRoot,
+        TextureQuality textureQuality)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(graphicsDevice);
@@ -51,6 +55,7 @@ public sealed class PbrModelRenderer : IDisposable
         ArgumentNullException.ThrowIfNull(shadowLayout);
         ArgumentNullException.ThrowIfNull(world);
         ArgumentException.ThrowIfNullOrWhiteSpace(assetsRoot);
+        _textureQuality = textureQuality;
 
         _graphicsDevice = graphicsDevice;
         var factory = graphicsDevice.ResourceFactory;
@@ -90,6 +95,14 @@ public sealed class PbrModelRenderer : IDisposable
 
         CreateFallbackTextures(graphicsDevice, factory);
 
+        for (var qualityIndex = 0; qualityIndex < _qualitySamplers.Length; qualityIndex++)
+        {
+            _qualitySamplers[qualityIndex] = TextureQualityResources.CreateSampler(
+                graphicsDevice,
+                factory,
+                (TextureQuality)qualityIndex);
+        }
+
         _instanceCount = world.Models.Count;
         _uniqueAssetCount = world.Models
             .Select(instance => instance.AssetPath)
@@ -108,12 +121,13 @@ public sealed class PbrModelRenderer : IDisposable
                     path);
 
             var model = GlbModel.Load(path);
-            var materialSets = new ResourceSet[model.Materials.Count];
+            var materialSets = new ResourceSet[model.Materials.Count][];
             for (var materialIndex = 0; materialIndex < model.Materials.Count; materialIndex++)
-                materialSets[materialIndex] = CreateMaterialSet(
+                materialSets[materialIndex] = CreateMaterialSets(
                     graphicsDevice,
                     factory,
-                    model.Materials[materialIndex]);
+                    model.Materials[materialIndex],
+                    textureQuality);
 
             foreach (var chunkGroup in assetGroup.GroupBy(instance => GetChunkKey(instance.Position)))
             {
@@ -233,7 +247,9 @@ public sealed class PbrModelRenderer : IDisposable
 
             foreach (var draw in renderable.Draws)
             {
-                commandList.SetGraphicsResourceSet(1, draw.MaterialSet);
+                commandList.SetGraphicsResourceSet(
+                    1,
+                    draw.MaterialSets[(int)_textureQuality]);
                 commandList.DrawIndexed(
                     draw.IndexCount,
                     instanceCount: 1,
@@ -279,10 +295,11 @@ public sealed class PbrModelRenderer : IDisposable
         }
     }
 
-    private ResourceSet CreateMaterialSet(
+    private ResourceSet[] CreateMaterialSets(
         GraphicsDevice graphicsDevice,
         ResourceFactory factory,
-        GlbMaterialData material)
+        GlbMaterialData material,
+        TextureQuality textureQuality)
     {
         if (_materialLayout is null ||
             _whiteView is null ||
@@ -306,40 +323,72 @@ public sealed class PbrModelRenderer : IDisposable
         _ownedMaterialBuffers.Add(materialBuffer);
 
         var baseColorView = material.BaseColorImage is { Length: > 0 }
-            ? CreateTextureView(graphicsDevice, factory, material.BaseColorImage, srgb: true)
+            ? CreateTextureView(
+                graphicsDevice,
+                factory,
+                material.BaseColorImage,
+                srgb: true,
+                textureQuality)
             : _whiteView;
         var normalView = material.NormalImage is { Length: > 0 }
-            ? CreateTextureView(graphicsDevice, factory, material.NormalImage, srgb: false)
+            ? CreateTextureView(
+                graphicsDevice,
+                factory,
+                material.NormalImage,
+                srgb: false,
+                textureQuality)
             : _flatNormalView;
         var mrView = material.MetallicRoughnessImage is { Length: > 0 }
-            ? CreateTextureView(graphicsDevice, factory, material.MetallicRoughnessImage, srgb: false)
+            ? CreateTextureView(
+                graphicsDevice,
+                factory,
+                material.MetallicRoughnessImage,
+                srgb: false,
+                textureQuality)
             : _defaultMrView;
 
-        var set = factory.CreateResourceSet(new ResourceSetDescription(
-            _materialLayout,
-            materialBuffer,
-            baseColorView,
-            normalView,
-            mrView,
-            graphicsDevice.Aniso4xSampler));
-        _ownedMaterialSets.Add(set);
-        return set;
+        var sets = new ResourceSet[_qualitySamplers.Length];
+        for (var qualityIndex = 0; qualityIndex < sets.Length; qualityIndex++)
+        {
+            var sampler = _qualitySamplers[qualityIndex]
+                ?? throw new InvalidOperationException("Texture quality sampler is missing.");
+            sets[qualityIndex] = factory.CreateResourceSet(new ResourceSetDescription(
+                _materialLayout,
+                materialBuffer,
+                baseColorView,
+                normalView,
+                mrView,
+                sampler));
+            _ownedMaterialSets.Add(sets[qualityIndex]);
+        }
+
+        return sets;
     }
 
     private TextureView CreateTextureView(
         GraphicsDevice graphicsDevice,
         ResourceFactory factory,
         byte[] imageBytes,
-        bool srgb)
+        bool srgb,
+        TextureQuality textureQuality)
     {
         using var stream = new MemoryStream(imageBytes, writable: false);
-        var image = new ImageSharpTexture(stream, mipmap: true, srgb: srgb);
-        var texture = image.CreateDeviceTexture(graphicsDevice, factory);
+        var texture = TextureQualityResources.CreateTexture(
+            graphicsDevice,
+            factory,
+            stream,
+            srgb,
+            textureQuality,
+            out _,
+            out _);
         var view = factory.CreateTextureView(texture);
         _ownedTextures.Add(texture);
         _ownedTextureViews.Add(view);
         return view;
     }
+
+    public void SetTextureQuality(TextureQuality quality) =>
+        _textureQuality = quality;
 
     private void CreateFallbackTextures(GraphicsDevice graphicsDevice, ResourceFactory factory)
     {
@@ -389,6 +438,7 @@ public sealed class PbrModelRenderer : IDisposable
         _renderables.Clear();
 
         foreach (var set in _ownedMaterialSets) set.Dispose();
+        foreach (var sampler in _qualitySamplers) sampler?.Dispose();
         foreach (var buffer in _ownedMaterialBuffers) buffer.Dispose();
         foreach (var view in _ownedTextureViews) view.Dispose();
         foreach (var texture in _ownedTextures) texture.Dispose();
@@ -406,6 +456,7 @@ public sealed class PbrModelRenderer : IDisposable
             foreach (var shader in _shaders) shader.Dispose();
 
         _ownedMaterialSets.Clear();
+        Array.Clear(_qualitySamplers);
         _ownedMaterialBuffers.Clear();
         _ownedTextureViews.Clear();
         _ownedTextures.Clear();
@@ -444,6 +495,6 @@ public sealed class PbrModelRenderer : IDisposable
     private sealed record DrawBatch(
         uint IndexStart,
         uint IndexCount,
-        ResourceSet MaterialSet);
+        ResourceSet[] MaterialSets);
 
 }

@@ -226,9 +226,15 @@ public sealed class MenuRenderer : IDisposable
         {
             var panel = panels[panelIndex];
             var x = left + panelIndex * (panelWidth + gap);
+            var availableRowsHeight = MathF.Max(180f, height - top - 136f);
+            var rowSpacing = MathF.Min(
+                30f,
+                availableRowsHeight / Math.Max(1, panel.Items.Count));
+            var textScale = rowSpacing < 28f ? 1.48f : 1.75f;
+            var selectionHeight = MathF.Max(22f, rowSpacing - 2f);
             var panelHeight = MathF.Min(
                 height - top - 92f,
-                80f + panel.Items.Count * 30f);
+                80f + panel.Items.Count * rowSpacing);
 
             AddQuad(
                 x,
@@ -254,7 +260,7 @@ public sealed class MenuRenderer : IDisposable
             for (var i = 0; i < panel.Items.Count; i++)
             {
                 var item = panel.Items[i];
-                var y = top + 62f + i * 30f;
+                var y = top + 62f + i * rowSpacing;
 
                 if (item.Selected)
                 {
@@ -262,7 +268,7 @@ public sealed class MenuRenderer : IDisposable
                         x + 10f,
                         y - 8f,
                         panelWidth - 20f,
-                        28f,
+                        selectionHeight,
                         new Vector4(0.25f, 0.17f, 0.07f, 0.94f));
                 }
 
@@ -270,7 +276,7 @@ public sealed class MenuRenderer : IDisposable
                     item.Label,
                     x + 16f,
                     y,
-                    1.75f,
+                    textScale,
                     item.Selected
                         ? new Vector4(1f, 0.90f, 0.62f, 1f)
                         : new Vector4(0.77f, 0.74f, 0.65f, 0.95f));
@@ -278,12 +284,12 @@ public sealed class MenuRenderer : IDisposable
                 if (!string.IsNullOrWhiteSpace(item.Value))
                 {
                     var value = item.Value!;
-                    var valueWidth = Measure(value, 1.75f);
+                    var valueWidth = Measure(value, textScale);
                     DrawText(
                         value,
                         x + panelWidth - valueWidth - 16f,
                         y,
-                        1.75f,
+                        textScale,
                         item.Selected
                             ? new Vector4(1f, 0.78f, 0.35f, 1f)
                             : new Vector4(0.64f, 0.62f, 0.56f, 0.95f));

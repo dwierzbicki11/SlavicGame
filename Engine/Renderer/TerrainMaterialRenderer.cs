@@ -1,6 +1,6 @@
 using Veldrid;
-using Veldrid.ImageSharp;
 using SlavicGame.Engine.Diagnostics;
+using SlavicGame.Engine.Settings;
 using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Renderer;
@@ -35,7 +35,9 @@ public sealed class TerrainMaterialRenderer : IDisposable
     private DeviceBuffer? _vertexBuffer;
     private DeviceBuffer? _indexBuffer;
     private ResourceLayout? _materialLayout;
-    private ResourceSet? _materialSet;
+    private readonly ResourceSet?[] _materialSets = new ResourceSet?[4];
+    private readonly Sampler?[] _qualitySamplers = new Sampler?[4];
+    private TextureQuality _textureQuality = TextureQuality.High;
     private Pipeline? _pipeline;
     private Shader[]? _shaders;
     private uint _indexCount;
@@ -47,7 +49,8 @@ public sealed class TerrainMaterialRenderer : IDisposable
         ResourceLayout shadowLayout,
         OutputDescription outputDescription,
         Terrain terrain,
-        string assetsRoot)
+        string assetsRoot,
+        TextureQuality textureQuality)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(graphicsDevice);
@@ -55,6 +58,7 @@ public sealed class TerrainMaterialRenderer : IDisposable
         ArgumentNullException.ThrowIfNull(shadowLayout);
         ArgumentNullException.ThrowIfNull(terrain);
         ArgumentException.ThrowIfNullOrWhiteSpace(assetsRoot);
+        _textureQuality = textureQuality;
 
         var factory = graphicsDevice.ResourceFactory;
         TerrainMesh.Build(terrain, out var baseVertices, out var indices);
@@ -118,40 +122,53 @@ public sealed class TerrainMaterialRenderer : IDisposable
 
         var resources = new List<BindableResource>
         {
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "basecolor", srgb: true),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "normal", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "roughness", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "ao", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "height", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "basecolor", srgb: true),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "normal", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "roughness", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "ao", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "height", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "basecolor", srgb: true),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "normal", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "roughness", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "ao", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "height", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "basecolor", srgb: true),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "normal", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "roughness", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "ao", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "height", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "basecolor", srgb: true),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "normal", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "roughness", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "ao", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "height", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "basecolor", srgb: true),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "normal", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "roughness", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "ao", srgb: false),
-            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "height", srgb: false),
-            graphicsDevice.Aniso4xSampler
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "basecolor", srgb: true, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "normal", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "roughness", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "ao", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_grass", "height", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "basecolor", srgb: true, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "normal", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "roughness", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "ao", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "dirt_path", "height", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "basecolor", srgb: true, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "normal", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "roughness", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "ao", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "forest_litter", "height", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "basecolor", srgb: true, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "normal", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "roughness", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "ao", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "wet_mud", "height", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "basecolor", srgb: true, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "normal", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "roughness", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "ao", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "swamp_ground", "height", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "basecolor", srgb: true, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "normal", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "roughness", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "ao", srgb: false, textureQuality),
+            LoadTexture(graphicsDevice, factory, assetsRoot, "mossy_rock", "height", srgb: false, textureQuality)
         };
-        _materialSet = factory.CreateResourceSet(
-            new ResourceSetDescription(_materialLayout, resources.ToArray()));
+
+        for (var qualityIndex = 0; qualityIndex < _materialSets.Length; qualityIndex++)
+        {
+            var quality = (TextureQuality)qualityIndex;
+            var sampler = TextureQualityResources.CreateSampler(
+                graphicsDevice,
+                factory,
+                quality);
+            _qualitySamplers[qualityIndex] = sampler;
+
+            var bindings = resources
+                .Concat<BindableResource>([sampler])
+                .ToArray();
+            _materialSets[qualityIndex] = factory.CreateResourceSet(
+                new ResourceSetDescription(_materialLayout, bindings));
+        }
 
         _shaders = ShaderLibrary.LoadPair(factory, "terrain");
         var vertexLayout = new VertexLayoutDescription(
@@ -181,7 +198,8 @@ public sealed class TerrainMaterialRenderer : IDisposable
         EngineLog.Info(
             $"Terrain material renderer initialized: {vertices.Length} vertices, " +
             $"{indices.Length / 3} triangles, 6 height-blended PBR surface materials, " +
-            $"30 sampled textures.");
+            $"30 sampled textures, runtime quality={textureQuality}, " +
+            $"max uploaded edge={GraphicsQualityCatalog.TextureMaximumDimension(textureQuality)}.");
     }
 
     public void Render(
@@ -190,8 +208,9 @@ public sealed class TerrainMaterialRenderer : IDisposable
         ResourceSet shadowSet)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        var materialSet = _materialSets[(int)_textureQuality];
         if (_pipeline is null ||
-            _materialSet is null ||
+            materialSet is null ||
             _vertexBuffer is null ||
             _indexBuffer is null)
         {
@@ -200,7 +219,7 @@ public sealed class TerrainMaterialRenderer : IDisposable
 
         commandList.SetPipeline(_pipeline);
         commandList.SetGraphicsResourceSet(0, cameraSet);
-        commandList.SetGraphicsResourceSet(1, _materialSet);
+        commandList.SetGraphicsResourceSet(1, materialSet);
         commandList.SetGraphicsResourceSet(2, shadowSet);
         commandList.SetVertexBuffer(0, _vertexBuffer);
         commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt32);
@@ -229,7 +248,8 @@ public sealed class TerrainMaterialRenderer : IDisposable
         string assetsRoot,
         string material,
         string map,
-        bool srgb)
+        bool srgb,
+        TextureQuality textureQuality)
     {
         var path = Path.Combine(
             assetsRoot,
@@ -244,13 +264,22 @@ public sealed class TerrainMaterialRenderer : IDisposable
                 path);
 
         using var stream = File.OpenRead(path);
-        var image = new ImageSharpTexture(stream, mipmap: true, srgb: srgb);
-        var texture = image.CreateDeviceTexture(graphicsDevice, factory);
+        var texture = TextureQualityResources.CreateTexture(
+            graphicsDevice,
+            factory,
+            stream,
+            srgb,
+            textureQuality,
+            out _,
+            out _);
         var view = factory.CreateTextureView(texture);
         _textures.Add(texture);
         _views.Add(view);
         return view;
     }
+
+    public void SetTextureQuality(TextureQuality quality) =>
+        _textureQuality = quality;
 
     private static ResourceLayoutElementDescription Texture(string name) =>
         new(name, ResourceKind.TextureReadOnly, ShaderStages.Fragment);
@@ -260,7 +289,10 @@ public sealed class TerrainMaterialRenderer : IDisposable
         if (_disposed) return;
         _disposed = true;
 
-        _materialSet?.Dispose();
+        foreach (var set in _materialSets)
+            set?.Dispose();
+        foreach (var sampler in _qualitySamplers)
+            sampler?.Dispose();
         _materialLayout?.Dispose();
         _pipeline?.Dispose();
         _vertexBuffer?.Dispose();
@@ -277,7 +309,8 @@ public sealed class TerrainMaterialRenderer : IDisposable
 
         _views.Clear();
         _textures.Clear();
-        _materialSet = null;
+        Array.Clear(_materialSets);
+        Array.Clear(_qualitySamplers);
         _materialLayout = null;
         _pipeline = null;
         _vertexBuffer = null;

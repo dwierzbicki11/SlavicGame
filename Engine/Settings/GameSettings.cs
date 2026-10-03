@@ -31,6 +31,22 @@ public enum ShadowQuality
     High
 }
 
+public enum TextureQuality
+{
+    Low,
+    Medium,
+    High,
+    Ultra
+}
+
+public enum GraphicsPreset
+{
+    LowEnd,
+    Balanced,
+    High,
+    Ultra
+}
+
 public readonly record struct ResolutionSize(int Width, int Height)
 {
     public override string ToString() => $"{Width}X{Height}";
@@ -84,6 +100,124 @@ public static class GraphicsQualityCatalog
             ShadowQuality.High => 4096,
             _ => 2048
         };
+
+    public static int TextureMaximumDimension(TextureQuality quality) =>
+        quality switch
+        {
+            TextureQuality.Low => 512,
+            TextureQuality.Medium => 1024,
+            TextureQuality.High => 2048,
+            TextureQuality.Ultra => int.MaxValue,
+            _ => 2048
+        };
+}
+
+public static class GraphicsPresetCatalog
+{
+    public static void Apply(GameSettings settings, GraphicsPreset preset)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        settings.Sky = true;
+        settings.Sun = true;
+        settings.Moon = true;
+        settings.Stars = true;
+        settings.Fog = true;
+        settings.TerrainPbr = true;
+        settings.ModelPbr = true;
+
+        switch (preset)
+        {
+            case GraphicsPreset.LowEnd:
+                settings.VolumetricClouds = false;
+                settings.CloudQuality = CloudQuality.Low;
+                settings.CloudShadows = false;
+                settings.SunShadows = false;
+                settings.ShadowQuality = ShadowQuality.Low;
+                settings.TextureQuality = TextureQuality.Low;
+                break;
+
+            case GraphicsPreset.Balanced:
+                settings.VolumetricClouds = true;
+                settings.CloudQuality = CloudQuality.Medium;
+                settings.CloudShadows = false;
+                settings.SunShadows = true;
+                settings.ShadowQuality = ShadowQuality.Low;
+                settings.TextureQuality = TextureQuality.Medium;
+                break;
+
+            case GraphicsPreset.High:
+                settings.VolumetricClouds = true;
+                settings.CloudQuality = CloudQuality.High;
+                settings.CloudShadows = true;
+                settings.SunShadows = true;
+                settings.ShadowQuality = ShadowQuality.Medium;
+                settings.TextureQuality = TextureQuality.High;
+                break;
+
+            case GraphicsPreset.Ultra:
+                settings.VolumetricClouds = true;
+                settings.CloudQuality = CloudQuality.Ultra;
+                settings.CloudShadows = true;
+                settings.SunShadows = true;
+                settings.ShadowQuality = ShadowQuality.High;
+                settings.TextureQuality = TextureQuality.Ultra;
+                break;
+        }
+    }
+
+    public static string DetectName(GameSettings settings)
+    {
+        foreach (var preset in Enum.GetValues<GraphicsPreset>())
+        {
+            var candidate = CloneQualitySettings(settings);
+            Apply(candidate, preset);
+            if (MatchesQualitySettings(settings, candidate))
+                return preset switch
+                {
+                    GraphicsPreset.LowEnd => "LOW-END",
+                    GraphicsPreset.Balanced => "BALANCED",
+                    GraphicsPreset.High => "HIGH",
+                    GraphicsPreset.Ultra => "ULTRA",
+                    _ => "CUSTOM"
+                };
+        }
+
+        return "CUSTOM";
+    }
+
+    private static GameSettings CloneQualitySettings(GameSettings source) =>
+        new()
+        {
+            Sky = source.Sky,
+            Sun = source.Sun,
+            Moon = source.Moon,
+            Stars = source.Stars,
+            VolumetricClouds = source.VolumetricClouds,
+            CloudQuality = source.CloudQuality,
+            CloudShadows = source.CloudShadows,
+            SunShadows = source.SunShadows,
+            ShadowQuality = source.ShadowQuality,
+            TextureQuality = source.TextureQuality,
+            Fog = source.Fog,
+            TerrainPbr = source.TerrainPbr,
+            ModelPbr = source.ModelPbr
+        };
+
+    private static bool MatchesQualitySettings(GameSettings left, GameSettings right) =>
+        left.Sky == right.Sky &&
+        left.Sun == right.Sun &&
+        left.Moon == right.Moon &&
+        left.Stars == right.Stars &&
+        left.VolumetricClouds == right.VolumetricClouds &&
+        left.CloudQuality == right.CloudQuality &&
+        left.CloudShadows == right.CloudShadows &&
+        left.SunShadows == right.SunShadows &&
+        left.ShadowQuality == right.ShadowQuality &&
+        left.TextureQuality == right.TextureQuality &&
+        left.Fog == right.Fog &&
+        left.TerrainPbr == right.TerrainPbr &&
+        left.ModelPbr == right.ModelPbr;
 }
 
 public sealed class GameSettings
@@ -106,6 +240,7 @@ public sealed class GameSettings
     public bool CloudShadows { get; set; } = true;
     public bool SunShadows { get; set; } = true;
     public ShadowQuality ShadowQuality { get; set; } = ShadowQuality.Medium;
+    public TextureQuality TextureQuality { get; set; } = TextureQuality.High;
     public bool Fog { get; set; } = true;
     public bool TerrainPbr { get; set; } = true;
     public bool ModelPbr { get; set; } = true;
@@ -123,5 +258,7 @@ public sealed class GameSettings
             CloudQuality = CloudQuality.High;
         if (!Enum.IsDefined(ShadowQuality))
             ShadowQuality = ShadowQuality.Medium;
+        if (!Enum.IsDefined(TextureQuality))
+            TextureQuality = TextureQuality.High;
     }
 }
