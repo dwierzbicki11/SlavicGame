@@ -15,6 +15,7 @@ public sealed class GameWindow : IDisposable
     private bool _disposed;
     private bool _relativeMouseEnabled;
     private bool _discardMouseDelta;
+    private bool _relativeMouseRequested;
     private readonly HashSet<Key> _keysDown = [];
     private readonly HashSet<Key> _keysPressed = [];
 
@@ -60,7 +61,8 @@ public sealed class GameWindow : IDisposable
 
         if (config.UseMouseWarp)
             Sdl2Native.SDL_SetHint("SDL_MOUSE_RELATIVE_MODE_WARP", "1");
-        SetRelativeMouseMode(true);
+        _relativeMouseRequested = false;
+        SetRelativeMouseMode(false);
         EngineLog.Info($"Input pipeline v3; mouse capture: {(config.UseMouseWarp ? "warp" : "SDL default")}.");
         EngineLog.Info($"Created SDL2 window {Width}x{Height} ({_window.WindowState}).");
     }
@@ -83,19 +85,28 @@ public sealed class GameWindow : IDisposable
 
     public bool ConsumeKeyPress(Key key) => _keysPressed.Remove(key);
 
-    public void ToggleFullscreen()
-    {
-        _window.WindowState = IsFullscreen
-            ? WindowState.Normal
-            : WindowState.BorderlessFullScreen;
+    public void ToggleFullscreen() => SetFullscreen(!IsFullscreen);
 
-        SetRelativeMouseMode(true);
+    public void SetFullscreen(bool enabled)
+    {
+        _window.WindowState = enabled
+            ? WindowState.BorderlessFullScreen
+            : WindowState.Normal;
+
         EngineLog.Info($"Fullscreen: {IsFullscreen}.");
     }
 
+    public void SetMouseCapture(bool enabled)
+    {
+        _relativeMouseRequested = enabled;
+        SetRelativeMouseMode(enabled && _window.Focused);
+    }
+
+    public void Close() => _window.Close();
+
     private void OnFocusGained()
     {
-        SetRelativeMouseMode(true);
+        SetRelativeMouseMode(_relativeMouseRequested);
     }
 
     private void OnFocusLost()
