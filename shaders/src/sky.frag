@@ -1,4 +1,7 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../include/clouds.glsl"
+
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
 
@@ -137,26 +140,6 @@ vec3 RenderMoon(vec3 direction, vec3 moonDirection, float phase)
     return moonBase * mix(0.13, 1.0, litSide) * disc;
 }
 
-float CloudDensity(vec3 direction, float timeSeconds, float wind, float cloudiness)
-{
-    float skyMask = smoothstep(-0.04, 0.22, direction.y);
-    if (skyMask <= 0.0 || cloudiness <= 0.01)
-        return 0.0;
-
-    float perspective = max(direction.y + 0.32, 0.24);
-    vec2 uv = direction.xz / perspective;
-    vec2 windOffset = vec2(0.018, 0.010) *
-        timeSeconds * mix(0.25, 1.55, wind);
-
-    float broad = Fbm(uv * 0.72 + windOffset);
-    float detail = Fbm(uv * 1.85 - windOffset * 1.7 + 21.3);
-    float density = broad * 0.78 + detail * 0.22;
-
-    float threshold = mix(0.80, 0.39, cloudiness);
-    float softness = mix(0.08, 0.18, cloudiness);
-    return smoothstep(threshold, threshold + softness, density) * skyMask;
-}
-
 void main()
 {
     vec3 direction = normalize(fsin_WorldDirection);
@@ -209,29 +192,50 @@ void main()
     color += moon * moonVisibility * 2.5;
     color += vec3(0.34, 0.43, 0.58) * moonHalo * moonVisibility * 0.20;
 
-    float clouds = CloudDensity(direction, timeSeconds, wind, cloudiness);
-    if (clouds > 0.0)
+    vec2 cloudMarch = CloudRaymarch(
+        direction,
+        sunDirection,
+        timeSeconds,
+        wind,
+        cloudiness);
+    float cloudOpacity = cloudMarch.x;
+    if (cloudOpacity > 0.001)
     {
+        float forwardScatter = pow(max(dot(direction, sunDirection), 0.0), 7.0);
+        float silverLining = pow(max(dot(direction, sunDirection), 0.0), 36.0);
         float sunCloudLight =
-            0.24 +
-            max(dot(direction, sunDirection), 0.0) * daylight * 0.76;
+            0.18 +
+            cloudMarch.y * 0.58 +
+            forwardScatter * daylight * 0.24;
+
         vec3 dayCloud = mix(
-            vec3(0.34, 0.37, 0.40),
-            vec3(0.90, 0.90, 0.86),
-            sunCloudLight);
-        vec3 sunsetCloud = SunColorTime.rgb * vec3(0.92, 0.68, 0.52);
+            vec3(0.30, 0.32, 0.35),
+            vec3(0.93, 0.93, 0.89),
+            clamp(sunCloudLight, 0.0, 1.0));
+        vec3 sunsetCloud = SunColorTime.rgb * vec3(0.98, 0.72, 0.54);
         dayCloud = mix(
             dayCloud,
             sunsetCloud,
-            CelestialParameters.z * 0.58);
+            CelestialParameters.z * (0.44 + forwardScatter * 0.24));
 
-        vec3 nightCloud = vec3(0.035, 0.045, 0.065) +
-            vec3(0.08, 0.10, 0.15) * MoonParameters.w;
-        vec3 cloudColor = mix(nightCloud, dayCloud, clamp(daylight * 1.3, 0.0, 1.0));
-        cloudColor *= mix(1.0, 0.52, rain);
+        vec3 nightCloud = vec3(0.028, 0.037, 0.055) +
+            vec3(0.085, 0.105, 0.155) *
+            MoonParameters.w *
+            cloudMarch.y;
+        vec3 cloudColor = mix(
+            nightCloud,
+            dayCloud,
+            clamp(daylight * 1.30, 0.0, 1.0));
 
-        float cloudOpacity = clouds * mix(0.46, 0.90, cloudiness);
-        color = mix(color, cloudColor, cloudOpacity);
+        cloudColor *= mix(1.0, 0.46, rain);
+        cloudColor += SunColorTime.rgb *
+            silverLining *
+            daylight *
+            (1.0 - rain * 0.65) *
+            0.34;
+
+        float weatherOpacity = cloudOpacity * mix(0.62, 1.0, cloudiness);
+        color = mix(color, cloudColor, weatherOpacity);
     }
 
     float horizonHaze = pow(1.0 - abs(clamp(direction.y, -1.0, 1.0)), 5.0);

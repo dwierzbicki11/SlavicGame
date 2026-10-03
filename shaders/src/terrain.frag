@@ -1,4 +1,7 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../include/clouds.glsl"
+
 const float PI = 3.14159265359;
 
 layout(set = 0, binding = 2) uniform AtmosphereBuffer
@@ -6,6 +9,7 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
     vec4 FogColorDensity;
     vec4 Lighting;
     vec4 SunColorTime;
+    vec4 SkyWeather;
 };
 
 layout(set = 1, binding = 0) uniform texture2D GrassBase;
@@ -216,6 +220,12 @@ void main()
     float daylight = max(Lighting.x, 0.02);
 
     vec3 sunColor = SunColorTime.rgb;
+    float cloudShadow = CloudShadowFactor(
+        fsin_WorldPosition,
+        sunDirection,
+        SkyWeather.w,
+        SkyWeather.z,
+        SkyWeather.x);
     float hemisphere = mix(0.18, 0.64, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
 
     float wetness = clamp(weightsB.x * 0.82 + weightsB.y * 0.66, 0.0, 1.0);
@@ -224,7 +234,7 @@ void main()
     float ambientOcclusion = clamp(ao * geometricOcclusion, 0.16, 1.0);
 
     vec3 diffuse = albedo *
-        (hemisphere * 0.34 + ndotl * daylight * sunColor) *
+        (hemisphere * 0.34 + ndotl * daylight * sunColor * cloudShadow) *
         ambientOcclusion;
 
     vec3 viewDirection = normalize(-fsin_WorldPosition);
@@ -235,7 +245,8 @@ void main()
     // Mud and swamp respond to real roughness maps, so wet highlights appear
     // only where the material data says the surface is smooth enough.
     float wetSpecular = wetness * (1.0 - roughness);
-    vec3 color = diffuse + sunColor * specular * wetSpecular * daylight * 0.42;
+    vec3 color = diffuse +
+        sunColor * specular * wetSpecular * daylight * cloudShadow * 0.42;
 
     float density = max(FogColorDensity.w, 0.00001);
     float fogFactor =
