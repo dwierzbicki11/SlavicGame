@@ -58,9 +58,12 @@ void main()
         GraphicsFeatures0.z);
     float directShadow = cloudShadow * geometryShadow;
     float nightFactor = clamp(CelestialParameters.x, 0.0, 1.0);
-    vec3 ambient = fsin_Color * mix(0.26, 0.045, nightFactor);
+    vec3 baseColor = min(fsin_Color, vec3(1.0));
+    vec3 emissive = max(fsin_Color - vec3(1.0), vec3(0.0));
+    vec3 ambient = baseColor * mix(0.26, 0.045, nightFactor);
     vec3 color = ambient +
-        fsin_Color * sunColor * direct * daylight * directShadow * 0.92;
+        baseColor * sunColor * direct * daylight * directShadow * 0.92 +
+        emissive * 0.95;
 
     float density = max(FogColorDensity.w * GraphicsFeatures0.w, 0.00001);
     float fogFactor = 1.0 - exp(-density * fsin_Distance);
