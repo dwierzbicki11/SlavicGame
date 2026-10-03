@@ -67,7 +67,11 @@ public sealed class GameEngine : IDisposable
         }
 
         EngineLog.Info("Starting SlavicGame engine.");
-        _renderer.Initialize(_window, _world, _vsync);
+        _renderer.Initialize(
+            _window,
+            _world,
+            _vsync,
+            _settings.TextureQuality);
         ApplySettings();
         _camera.Follow(_world.PlayerPosition, 0f, _world.Terrain);
         _window.SetMouseCapture(false);
@@ -175,6 +179,7 @@ public sealed class GameEngine : IDisposable
             resolution.Height);
         _renderer.SetShadowResolution(
             GraphicsQualityCatalog.ShadowMapSize(_settings.ShadowQuality));
+        _renderer.SetTextureQuality(_settings.TextureQuality);
         _renderer.SetVSync(_settings.VSync);
 
         _camera.FieldOfView =
