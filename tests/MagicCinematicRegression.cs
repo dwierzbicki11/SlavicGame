@@ -34,7 +34,57 @@ public static class MagicCinematicRegression
               ritualPreparation.Shots.All(shot => shot.Space == CinematicSpace.PlayerRelative),
             "Quest cinematics can use player-relative camera shots");
         check(world.Progress.Tracking.Tracks.Count(t => t.MagicSignature is not null) >= 2, "Playable supernatural traces exist");
-        magic.SelectNext();
+
+        check(SpellLessons.All.Count == 3 &&
+              SpellLessons.All.Select(lesson => lesson.SpellId).Distinct().Count() == 3,
+            "Every playable spell has one learning lesson");
+        check(SpellLessons.All.All(lesson => !SpellLessons.IsLearned(world, lesson.SpellId)),
+            "New game starts with spell knowledge locked");
+        check(!magic.TryStart(world, Vector3.UnitZ) && magic.Message.Contains("NIE ZNASZ", StringComparison.Ordinal),
+            "Unknown spell cannot be cast");
+
+        world.SetPlayerPosition(new Vector3(-85, 0, 55));
+        world.SpellLearning.RefreshMessage(world);
+        check(world.SpellLearning.TryLearnCurrent(world) &&
+              SpellLessons.IsLearned(world, "spell.spark") &&
+              magic.Current.Id == "spell.spark",
+            "Reaching the shrine teaches Spark through the contextual lesson");
+
+        world.SetPlayerPosition(new Vector3(0, 0, -85));
+        world.Player.TakeDamage(35);
+        world.SpellLearning.Update(world);
+        var bandagesBeforeLesson = world.Progress.Inventory.Count("simple-bandage");
+        check(world.SpellLearning.TryLearnCurrent(world) &&
+              SpellLessons.IsLearned(world, "spell.mend") &&
+              world.Progress.Inventory.Count("simple-bandage") == bandagesBeforeLesson - 1,
+            "Mend requires a real wound and consumes one practice bandage");
+
+        world.SetPlayerPosition(new Vector3(-85, 0, 55));
+        check(!world.SpellLearning.TryLearnCurrent(world) &&
+              !SpellLessons.IsLearned(world, "spell.reveal-trace"),
+            "Reveal Trace remains locked without identity and anchor knowledge");
+
+        var learningQuest = world.Progress.Quests.Get(VerticalSliceBootstrap.ContractQuestId);
+        learningQuest.AddEvidence(new EvidenceEntry(
+            "light-over-swamp.keepsake-owner",
+            VerticalSliceBootstrap.ContractQuestId,
+            KnowledgeKind.ConfirmedFact,
+            "Pamiatka nalezala do zaginionego.",
+            "missing-family"));
+        world.Progress.SetFlag(VerticalSliceRituals.AnchorKnowledgeFlag);
+        check(world.SpellLearning.TryLearnCurrent(world) &&
+              SpellLessons.IsLearned(world, "spell.reveal-trace") &&
+              magic.Current.Id == "spell.reveal-trace",
+            "Reveal Trace unlocks only after confirmed identity and anchor knowledge");
+
+        var learnedJson = SaveGameService.Serialize(world);
+        var learnedRestored = WorldGenerator.Generate();
+        SaveGameService.Restore(learnedRestored, learnedJson);
+        check(SpellLessons.All.All(lesson => SpellLessons.IsLearned(learnedRestored, lesson.SpellId)),
+            "Learned spells persist through save and load");
+
+        magic.SelectSpell("spell.spark");
+        magic.SelectNext(world);
         check(!magic.TryStart(world, Vector3.UnitZ) && world.Player.Stamina == 100, "Full-health heal costs nothing");
         world.Player.TakeDamage(40);
         check(magic.TryStart(world, Vector3.UnitZ), "Heal starts");
@@ -65,7 +115,7 @@ public static class MagicCinematicRegression
         magic.Restore(null); world.Player.SetState(100, 0);
         check(!magic.TryStart(world, Vector3.UnitZ), "Insufficient stamina rejects casting");
         world.Player.Restore();
-        magic.SelectNext(); magic.SelectNext();
+        magic.SelectNext(world); magic.SelectNext(world);
         check(magic.TryStart(world, Vector3.UnitZ), "Reveal starts");
         magic.Update(world, 1);
         check(magic.RevealRemaining > 0, "Reveal creates timed visibility window");
