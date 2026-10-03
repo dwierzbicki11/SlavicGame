@@ -48,8 +48,7 @@ float CloudCoverageField(
     vec2 worldXZ,
     float timeSeconds,
     float wind,
-    float cloudiness,
-    int requestedSteps)
+    float cloudiness)
 {
     if (cloudiness <= 0.005)
         return 0.0;
@@ -101,7 +100,8 @@ vec2 CloudRaymarch(
     vec3 sunDirection,
     float timeSeconds,
     float wind,
-    float cloudiness)
+    float cloudiness,
+    int requestedSteps)
 {
     if (rayDirection.y <= 0.015 || cloudiness <= 0.005)
         return vec2(0.0, 1.0);
