@@ -446,3 +446,44 @@ Ciepło:
 - ogranicza ponowne moknięcie od deszczu w bezpośrednim sąsiedztwie.
 
 Ogniska dostają animowane płomienie i ground glow generowane w istniejącym actor pass. Kolory >1.0 są traktowane jako prosty sygnał emissive, dzięki czemu płomień pozostaje czytelny również nocą bez osobnego light passu ani shadow-casting point light.
+
+
+## River current and exposure pass
+
+Rzeka oraz pogoda wpływają teraz na ekspozycję gracza, ale bez survivalowego damage-over-time.
+
+### Current
+- nurt zaczyna działać dopiero w wodzie głębszej niż około 28 cm;
+- siła rośnie nieliniowo wraz z głębokością;
+- w najgłębszym obecnym korycie osiąga około 1.65 m/s;
+- kierunek zawsze pochodzi z `WaterLandscape.FlowDirection(z)`;
+- przesunięcie przechodzi przez zwykłe `SetPlayerPosition`, więc nadal respektuje granice mapy i kolizje.
+
+### Rain, wetness and chill
+- deszcz moczy gracza również poza rzeką;
+- wiatr i intensywność deszczu zwiększają presję wychłodzenia;
+- mokre ubranie i głęboka woda budują `Chill`;
+- wychłodzenie dodatkowo obniża regenerację staminy;
+- nie ma automatycznych obrażeń ani śmierci od temperatury w tym etapie.
+
+### Campfires
+Aktywne źródła ciepła:
+- palenisko w Żarnowcu;
+- obóz myśliwski w lesie.
+
+W zasięgu ogniska:
+- suszenie jest wielokrotnie szybsze;
+- wychłodzenie opada szybciej;
+- deszcz nadal może przeciwdziałać suszeniu, ale heat ma wyraźny efekt.
+
+Ogniska mają lekką animowaną geometrię płomienia i ground glow w istniejącym actor pass. Nie używają osobnego particle systemu, shadow light ani dodatkowego render targetu.
+
+### HUD
+HUD może pokazać:
+- głębokość wody;
+- wetness;
+- wychłodzenie;
+- `DESZCZ`;
+- `PRZY OGNISKU`.
+
+To zamyka podstawowy runtime rzeki: koryto, przepływ wizualny, ripple/foam/audio, brodzenie, nurt, wetness, deszcz, wychłodzenie i suszenie przy ogniu.
