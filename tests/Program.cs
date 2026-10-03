@@ -34,20 +34,73 @@ MagicCinematicRegression.Run(Check);
 VerticalSliceQuestInteractionRegression.Run(Check);
 SwampPredatorEncounterRegression.Run(Check);
 
-// River terrain and water surface must agree; distant water should be culled.
+// River terrain and water must form one sloped channel; animation has to read downstream.
 var riverTerrain = new Terrain(513, 513, 4f);
-var riverPoint = new Vector3(WaterLandscape.CenterX(0f), 0f, 0f);
-Check(riverTerrain.SampleHeight(riverPoint) < WaterLandscape.Level, "river bed below water");
-Check(WaterLandscape.ShapeHeight(0f, 0f, 4f) == 4f, "river preserves spawn terrain");
+var riverZ = 0f;
+var riverCenterX = WaterLandscape.CenterX(riverZ);
+var riverPoint = new Vector3(riverCenterX, 0f, riverZ);
+var riverWaterLevel = WaterLandscape.WaterLevel(riverZ);
+
+Check(riverTerrain.SampleHeight(riverPoint) <= riverWaterLevel - 0.9f,
+    "river center is carved well below its local water surface");
+Check(WaterLandscape.ShapeHeight(
+        riverCenterX,
+        riverZ,
+        2f) <= riverWaterLevel - WaterLandscape.BedDepth + 0.001f,
+    "river profile contains a real central bed");
+Check(WaterLandscape.ShapeHeight(
+        riverCenterX + WaterLandscape.SurfaceHalfWidth(riverZ) + 4f,
+        riverZ,
+        2f) > riverWaterLevel,
+    "dry bank rises above the water instead of being forced underneath it");
+Check(WaterLandscape.ShapeHeight(0f, 0f, 4f) == 4f,
+    "river preserves distant spawn terrain");
+Check(WaterLandscape.WaterLevel(500f) < WaterLandscape.WaterLevel(-500f),
+    "river water level falls in the downstream +Z direction");
+Check(WaterLandscape.FlowDirection(0f).Y > 0.8f,
+    "river flow vector points downstream");
+
 TerrainVertex[] waterVertices = [];
 uint[] waterIndices = [];
-WaterLandscape.AppendSurface(riverTerrain, 0f, riverPoint, 100f, ref waterVertices, ref waterIndices);
-Check(waterVertices.Length > 0 && waterIndices.Length > 0, "near river rendered");
-Check(waterVertices.All(v => v.Position.Y == WaterLandscape.Level), "water surface level");
-Check(waterIndices.All(index => index < waterVertices.Length), "water indices valid");
+WaterLandscape.AppendSurface(
+    riverTerrain,
+    0f,
+    riverPoint,
+    100f,
+    ref waterVertices,
+    ref waterIndices);
+Check(waterVertices.Length > 0 && waterIndices.Length > 0,
+    "near river rendered");
+Check(waterVertices.All(v =>
+        MathF.Abs(v.Position.Y - WaterLandscape.WaterLevel(v.Position.Z)) < 0.05f),
+    "water ribbon follows local downstream level inside the terrain channel");
+Check(waterIndices.All(index => index < waterVertices.Length),
+    "water indices valid");
+
+TerrainVertex[] animatedWaterVertices = [];
+uint[] animatedWaterIndices = [];
+WaterLandscape.AppendSurface(
+    riverTerrain,
+    0.75f,
+    riverPoint,
+    100f,
+    ref animatedWaterVertices,
+    ref animatedWaterIndices);
+Check(animatedWaterVertices.Length == waterVertices.Length &&
+      animatedWaterVertices.Zip(waterVertices).Any(pair =>
+          Vector3.DistanceSquared(pair.First.Position, pair.Second.Position) > 0.000001f ||
+          Vector3.DistanceSquared(pair.First.Color, pair.Second.Color) > 0.000001f),
+    "river surface visibly animates downstream over time");
+
 waterVertices = [];
 waterIndices = [];
-WaterLandscape.AppendSurface(riverTerrain, 0f, new Vector3(-900f, 0f, 0f), 100f, ref waterVertices, ref waterIndices);
+WaterLandscape.AppendSurface(
+    riverTerrain,
+    0f,
+    new Vector3(-900f, 0f, 0f),
+    100f,
+    ref waterVertices,
+    ref waterIndices);
 Check(waterVertices.Length == 0, "distant river culled");
 void Near(float actual, float expected, string name) => Check(MathF.Abs(actual - expected) < 0.0001f, name);
 void Reject(Action action, string name)
