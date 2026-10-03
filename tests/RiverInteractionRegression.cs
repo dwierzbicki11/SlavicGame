@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Audio;
+using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.World;
 
 internal static class RiverInteractionRegression
@@ -27,6 +28,24 @@ internal static class RiverInteractionRegression
 
         check(world.WaterInteraction.MovementIntensity > 0.1f,
             "Moving through the river raises ripple intensity");
+
+        check(world.WaterInteraction.WaterDepth > 0.9f,
+            "River center exposes deep ford water to gameplay");
+        check(world.WaterInteraction.MovementSpeedMultiplier < 0.7f &&
+              !WaterInteractionState.CanSprintAtDepth(
+                  world.WaterInteraction.WaterDepth),
+            "Deep ford substantially slows movement and blocks sprint");
+        check(world.WaterInteraction.Wetness > 0f,
+            "Standing and moving in the river wets the player");
+
+        world.SetPlayerPosition(new Vector3(
+            WaterLandscape.CenterX(z + 2.2f),
+            0f,
+            z + 2.2f));
+        world.WaterInteraction.Update(world, 0.25);
+
+        check(world.WaterInteraction.SplashPulse > 0.4f,
+            "Wading stride produces an explicit splash pulse");
 
         TerrainVertex[] rippleVertices = [];
         uint[] rippleIndices = [];
@@ -57,6 +76,12 @@ internal static class RiverInteractionRegression
               rippleIndices.Length == 0,
             "Leaving the river disables player ripple geometry");
 
+        var wetnessAfterLeaving = world.WaterInteraction.Wetness;
+        world.WaterInteraction.Update(world, 10.0);
+        check(world.WaterInteraction.Wetness < wetnessAfterLeaving &&
+              world.WaterInteraction.Wetness > 0f,
+            "Wet clothing dries gradually instead of clearing instantly");
+
         check(MathF.Abs(RiverAmbienceSynthesizer.DistanceToRiver(
                 new Vector3(WaterLandscape.CenterX(0f), 0f, 0f))) < 0.001f,
             "River ambience distance is zero on the water ribbon");
@@ -80,6 +105,37 @@ internal static class RiverInteractionRegression
 
         check(pcm.Data.Any(value => value != 0),
             "Procedural river ambience contains audible non-silent samples");
+
+        var splashPcm = RiverAmbienceSynthesizer.Generate(
+            0.35f,
+            7,
+            1f).Validate();
+        check(!splashPcm.Data.SequenceEqual(pcm.Data),
+            "Footstep splash pulse changes the generated river PCM");
+
+        var dryVitals = new PlayerVitals();
+        var wetVitals = new PlayerVitals();
+        dryVitals.UpdateStamina(true, 1.0);
+        wetVitals.UpdateStamina(
+            true,
+            1.0,
+            WaterInteractionState.StaminaDrainMultiplierForDepth(0.55f),
+            1f);
+        check(wetVitals.Stamina < dryVitals.Stamina,
+            "Sprinting through shallow water drains more stamina than dry sprinting");
+
+        check(
+            WaterInteractionState.MovementSpeedMultiplierForDepth(0f) == 1f &&
+            WaterInteractionState.MovementSpeedMultiplierForDepth(0.35f) <
+                WaterInteractionState.MovementSpeedMultiplierForDepth(0.08f) &&
+            WaterInteractionState.MovementSpeedMultiplierForDepth(1.2f) <
+                WaterInteractionState.MovementSpeedMultiplierForDepth(0.35f),
+            "Wading movement penalty grows monotonically with water depth");
+
+        check(
+            WaterInteractionState.StaminaRecoveryMultiplier(0f, 0f) == 1f &&
+            WaterInteractionState.StaminaRecoveryMultiplier(0.7f, 1f) < 0.5f,
+            "Deep water plus soaked clothing slows stamina recovery");
 
         TerrainVertex[] waterAtA = [];
         uint[] waterIndicesA = [];
