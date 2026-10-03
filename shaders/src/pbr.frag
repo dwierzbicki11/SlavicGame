@@ -1,4 +1,7 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
+#include "../include/clouds.glsl"
+
 const float PI = 3.14159265359;
 
 layout(set = 0, binding = 2) uniform AtmosphereBuffer
@@ -6,6 +9,7 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
     vec4 FogColorDensity;
     vec4 Lighting;
     vec4 SunColorTime;
+    vec4 SkyWeather;
 };
 
 layout(set = 1, binding = 0) uniform MaterialBuffer
@@ -105,8 +109,16 @@ void main()
 
     float lightStrength = max(Lighting.x, 0.02);
     vec3 sunColor = SunColorTime.rgb;
+    float cloudShadow = CloudShadowFactor(
+        fsin_WorldPosition,
+        lightDirection,
+        SkyWeather.w,
+        SkyWeather.z,
+        SkyWeather.x);
     vec3 ambient = albedo * (0.028 + 0.050 * max(lightDirection.y, 0.0)) * (1.0 - metallic * 0.35);
-    vec3 color = ambient + (diffuse + specular) * sunColor * ndotl * (1.75 * lightStrength);
+    vec3 color = ambient +
+        (diffuse + specular) * sunColor * ndotl *
+        (1.75 * lightStrength) * cloudShadow;
 
     float fogFactor = 1.0 - exp(-FogColorDensity.w * fsin_Distance);
     fogFactor = clamp(fogFactor, 0.0, 0.94);
