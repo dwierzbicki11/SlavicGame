@@ -6,7 +6,7 @@ namespace SlavicGame.Engine.Combat;
 
 public sealed class PlayerMeleeCombat
 {
-    public static AttackDefinition LightAttack { get; } = new(
+    public static AttackDefinition LightAttack { get; } = new AttackDefinition(
         "melee.light",
         Damage: 20f,
         StaminaCost: 12f,
