@@ -414,3 +414,44 @@ Tylko rozpalone ognisko:
 - redukuje wychłodzenie;
 - renderuje flame/glow mesh;
 - używa wartości koloru >1.0 jako lekkiego sygnału emissive w actor shaderze, dzięki czemu płomień pozostaje czytelny nocą bez osobnych point lights.
+
+
+## Runtime wildlife pass
+
+R0 ma pierwszą lekką warstwę żywej fauny opartą o istniejące animowane GLB-y.
+
+### Roster
+- 5 jeleni — Dębowa Knieja i Brzozowe Łęgi;
+- 4 dziki — Dębowa Knieja i Mokry Bór;
+- 3 wilki — Bór Perunowy;
+- 5 kruków — Bór Perunowy, Brzozowe Łęgi, Mokry Bór oraz centralny vertical slice.
+
+Łącznie runtime utrzymuje 17 ambientowych zwierząt.
+
+### Zachowanie
+Zwierzęta nie korzystają z pełnego enemy AI ani navmesha.
+
+Ground wildlife:
+- ma lokalny rewir wokół punktu spawn;
+- porusza się deterministycznie;
+- reaguje na gracza prostym flee;
+- nie opuszcza dowolnie przypisanego rewiru.
+
+Kruki:
+- orbitują nad własnym rewirem;
+- używają klipu Fly;
+- po zbliżeniu gracza przechodzą w Spooked i zwiększają wysokość.
+
+Ten pass nie robi jeszcze polowania, lootowania ani trwałego zabijania dzikiej fauny. To osobny późniejszy lock gameplayowy.
+
+### Render budget
+Fauna korzysta z czterech małych animated GLB:
+- deer;
+- boar;
+- wolf;
+- raven.
+
+Renderer preloaduje je raz. Geometria fauny trafia do istniejącego actor bufferu, ale jest odcinana po dystansie kamery (maksymalnie około 220 m, dodatkowo ograniczana ustawieniem render distance). Zwierzęta poza tym zasięgiem nie budują dynamicznej geometrii w danej klatce.
+
+### Status
+Modele i zachowanie są prototype/F. Obecność gatunków w finalnych regionach może później zostać skorygowana przez research i finalny wildlife roster.
