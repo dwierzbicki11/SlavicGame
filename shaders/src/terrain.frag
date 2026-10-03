@@ -302,8 +302,11 @@ void main()
     float geometricOcclusion = 1.0 - cavity * 0.14 - wetness * 0.06;
     float ambientOcclusion = clamp(ao * geometricOcclusion, 0.16, 1.0);
 
+    float nightFactor = clamp(CelestialParameters.x, 0.0, 1.0);
+    float terrainAmbient = mix(0.34, 0.055, nightFactor);
     vec3 diffuse = albedo *
-        (hemisphere * 0.34 + ndotl * daylight * sunColor * directShadow) *
+        (hemisphere * terrainAmbient +
+         ndotl * daylight * sunColor * directShadow) *
         ambientOcclusion;
 
     vec3 viewDirection = normalize(-fsin_WorldPosition);

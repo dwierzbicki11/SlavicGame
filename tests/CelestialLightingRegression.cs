@@ -64,6 +64,8 @@ internal static class CelestialLightingRegression
             "Night factor rises after sunset");
         check(night.MoonIntensity > 0f,
             "Clear night produces visible moonlight");
+        check(night.MoonIntensity <= 0.18f,
+            "Night moonlight remains subtle enough to require local light sources");
 
         time.SetTimeOfDay(23.0);
         weather.SetCondition(WeatherKind.Storm, true);
