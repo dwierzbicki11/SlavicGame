@@ -26,6 +26,7 @@ public sealed class WorldState
     public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
+    public SwampApparitionRuntime Apparition { get; } = new();
     public NpcWorldRuntime NpcWorld { get; } = new();
     public DialogueRuntime Dialogue { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
@@ -202,6 +203,7 @@ public sealed class WorldState
         SetPlayerPosition(Vector3.Zero);
         NpcWorld.Update(this);
         Dialogue.Close();
+        Apparition.Reset(this);
         WaterInteraction.Reset(PlayerPosition);
         Footprints.Reset(PlayerPosition);
     }
@@ -216,6 +218,7 @@ public sealed class WorldState
         Campfires.Update(this, deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
         Footprints.Update(this, deltaSeconds);
+        Apparition.Update(this, deltaSeconds);
         EnvironmentInteractions.Update(this);
         SpellLearning.Update(this);
         SpellLearning.RefreshMessage(this);
