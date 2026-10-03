@@ -89,6 +89,7 @@ public static class SaveGameService
         world.Progress.DivineRelationships.Restore(snapshot.DivineRelationships ?? []);
         world.Progress.Relationships.Restore(snapshot.Relationships ?? []);
         world.Progress.RestoreFlags(snapshot.WorldFlags ?? []);
+        world.Magic.NormalizeSelection(world);
         world.Progress.Tracking.Restore(snapshot.Tracks ?? []);
         SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.EnsureMagicTraces(world);
         world.Progress.Navigation.Restore(snapshot.Navigation ?? new NavigationSnapshot(null, []));
