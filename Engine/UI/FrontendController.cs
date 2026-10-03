@@ -8,19 +8,13 @@ public enum FrontendAction
 {
     None,
     StartGame,
+    ContinueGame,
     Exit,
     SettingsChanged
 }
 
 public sealed class FrontendController
 {
-    private static readonly string[] MainItems =
-    [
-        "GRAJ",
-        "USTAWIENIA",
-        "WYJSCIE"
-    ];
-
     private static readonly SettingCategory[] SettingsTabs =
     [
         SettingCategory.Display,
@@ -33,6 +27,9 @@ public sealed class FrontendController
     private int _settingsSelection;
     private int _settingsTabIndex;
     private bool _restartRequired;
+    private bool _continueAvailable;
+    private string? _continueSummary;
+    private bool _sessionStarted;
 
     public FrontendScreen Screen { get; private set; } = FrontendScreen.MainMenu;
 
@@ -64,25 +61,36 @@ public sealed class FrontendController
 
         if (Screen == FrontendScreen.MainMenu)
         {
+            var mainItems = BuildMainItems();
+
             if (up)
-                _mainSelection = Wrap(_mainSelection - 1, MainItems.Length);
+                _mainSelection = Wrap(_mainSelection - 1, mainItems.Length);
             if (down)
-                _mainSelection = Wrap(_mainSelection + 1, MainItems.Length);
+                _mainSelection = Wrap(_mainSelection + 1, mainItems.Length);
 
             if (!confirm)
                 return FrontendAction.None;
 
-            switch (_mainSelection)
+            switch (mainItems[_mainSelection])
             {
-                case 0:
+                case "NOWA GRA":
+                case "WZNOW":
+                    _sessionStarted = true;
                     Screen = FrontendScreen.Playing;
                     return FrontendAction.StartGame;
-                case 1:
+
+                case "KONTYNUUJ":
+                    _sessionStarted = true;
+                    Screen = FrontendScreen.Playing;
+                    return FrontendAction.ContinueGame;
+
+                case "USTAWIENIA":
                     Screen = FrontendScreen.Settings;
                     _settingsSelection = 0;
                     _settingsTabIndex = 0;
                     return FrontendAction.None;
-                case 2:
+
+                case "WYJSCIE":
                     return FrontendAction.Exit;
             }
         }
@@ -146,20 +154,42 @@ public sealed class FrontendController
         _mainSelection = 0;
     }
 
+    public void SetContinueInfo(
+        bool available,
+        string? summary = null)
+    {
+        _continueAvailable = available;
+        _continueSummary = available ? summary : null;
+        _mainSelection = 0;
+    }
+
+    public void CancelLoadedSession()
+    {
+        _sessionStarted = false;
+        OpenMainMenu();
+    }
+
     public MenuView BuildView(GameSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
         if (Screen == FrontendScreen.MainMenu)
         {
+            var mainItems = BuildMainItems();
+            var subtitle = _sessionStarted
+                ? "GRA WSTRZYMANA"
+                : !string.IsNullOrWhiteSpace(_continueSummary)
+                    ? _continueSummary!
+                    : "SLOWIANSKI ACTION RPG";
+
             return new MenuView(
                 "SLAVICGAME",
-                "SLOWIANSKI ACTION RPG",
+                subtitle,
                 Array.Empty<MenuTabView>(),
                 [
                     new MenuPanelView(
                         string.Empty,
-                        MainItems
+                        mainItems
                             .Select((label, index) =>
                                 new MenuItemView(
                                     label,
@@ -210,6 +240,34 @@ public sealed class FrontendController
                     items)
             ],
             footer);
+    }
+
+    private string[] BuildMainItems()
+    {
+        if (_sessionStarted)
+        {
+            return
+            [
+                "WZNOW",
+                "USTAWIENIA",
+                "WYJSCIE"
+            ];
+        }
+
+        return _continueAvailable
+            ?
+            [
+                "NOWA GRA",
+                "KONTYNUUJ",
+                "USTAWIENIA",
+                "WYJSCIE"
+            ]
+            :
+            [
+                "NOWA GRA",
+                "USTAWIENIA",
+                "WYJSCIE"
+            ];
     }
 
     private static int Wrap(int value, int count)
