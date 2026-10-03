@@ -20,6 +20,7 @@ public sealed class WorldState
     public IReadOnlyList<WorldModelInstance> Models => _models;
     public Vector3 PlayerPosition { get; private set; } = Vector3.Zero;
     public SlavicGame.Engine.Magic.SpellCasting Magic { get; } = new();
+    public SlavicGame.Engine.Magic.SpellLearningSystem SpellLearning { get; } = new();
     public SlavicGame.Engine.Magic.RitualExecution Rituals { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
     public WorldTime Time { get; } = new();
@@ -145,6 +146,7 @@ public sealed class WorldState
         Time.Update(deltaSeconds);
         SetPlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
+        SpellLearning.Update(this);
         foreach (var enemy in _enemies)
         {
             enemy.Update(this, deltaSeconds);
