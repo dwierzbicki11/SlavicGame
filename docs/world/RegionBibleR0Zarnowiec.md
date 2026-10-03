@@ -334,3 +334,43 @@ Przebyty dystans w wodzie generuje rytmiczne splash pulses. Pulse:
 - ma cooldown, żeby pojedynczy krok nie generował wielu dźwięków na kolejnych frame'ach.
 
 Całość pozostaje bez osobnego particle systemu i bez dodatkowych tekstur VFX.
+
+
+## River current, rain and campfire exposure
+
+### Current
+The river now applies a real downstream drift to the player. Current strength is derived from local water depth:
+- below ~28 cm: no meaningful drift;
+- deeper water ramps non-linearly;
+- near the center bed the current reaches roughly 1.6 m/s.
+
+The drift is applied even with no movement input and still goes through normal world collision/terrain resolution. The wading HUD shows current strength in m/s whenever it becomes noticeable.
+
+### Rain and wetness
+Wetness is no longer only river-driven:
+- `RainIntensity` wets the player while outside the river;
+- stronger rain increases wetness faster;
+- rain strongly suppresses passive drying.
+
+This uses the existing regional weather system and does not add a second weather simulation.
+
+### Chill
+`WaterInteractionState.Chill` is a normalized exposure state driven by:
+- wetness;
+- water depth;
+- rain;
+- wind.
+
+Chill does **not** directly damage health in this pass. It only reduces stamina recovery, so the feature affects traversal without turning the prototype into a survival game.
+
+### Active campfires
+The two existing R0 firepits are now active heat sources:
+- Żarnowiec firepit at the village center;
+- hunter camp firepit in the starting forest.
+
+Heat:
+- accelerates drying by up to roughly 10x near the flame;
+- rapidly removes chill;
+- partially offsets rain wetting at close range.
+
+Both fires receive a tiny animated geometry effect (ground glow + two low-poly flame layers) in the existing actor pass. No particle system, transparency pass, volumetric light or extra render target is used.
