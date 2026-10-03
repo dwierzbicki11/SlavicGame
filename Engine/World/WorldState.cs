@@ -28,6 +28,7 @@ public sealed class WorldState
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();
+    public FootprintTrailState Footprints { get; } = new();
     public WorldTime Time { get; } = new();
     public WeatherSystem Weather { get; } = new();
     public PlayerVitals Player { get; } = new();
@@ -171,6 +172,7 @@ public sealed class WorldState
 
         SetPlayerPosition(Vector3.Zero);
         WaterInteraction.Reset(PlayerPosition);
+        Footprints.Reset(PlayerPosition);
     }
 
     public void Update(double deltaSeconds)
@@ -180,6 +182,7 @@ public sealed class WorldState
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
         Campfires.Update(this, deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
+        Footprints.Update(this, deltaSeconds);
         EnvironmentInteractions.Update(this);
         SpellLearning.Update(this);
         SpellLearning.RefreshMessage(this);
