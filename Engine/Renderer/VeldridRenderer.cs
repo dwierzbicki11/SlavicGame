@@ -683,17 +683,17 @@ public sealed class VeldridRenderer : IDisposable
                 1.0);
 
         var baseColor = time.IsNight
-            ? new Vector3(0.012f, 0.018f, 0.035f)
+            ? new Vector3(0.0035f, 0.0060f, 0.0140f)
             : new Vector3(
                 0.025f + daylight * 0.055f,
                 0.045f + daylight * 0.075f,
                 0.065f + daylight * 0.095f);
 
         var cloudColor = time.IsNight
-            ? new Vector3(0.025f, 0.028f, 0.038f)
+            ? new Vector3(0.007f, 0.009f, 0.014f)
             : new Vector3(0.09f, 0.095f, 0.10f);
         var fogColor = time.IsNight
-            ? new Vector3(0.035f, 0.040f, 0.047f)
+            ? new Vector3(0.010f, 0.012f, 0.016f)
             : new Vector3(0.17f, 0.18f, 0.17f);
 
         var cloudy = Vector3.Lerp(baseColor, cloudColor, weather.Cloudiness * 0.72f);
