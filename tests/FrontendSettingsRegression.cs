@@ -9,7 +9,7 @@ public static class FrontendSettingsRegression
         ArgumentNullException.ThrowIfNull(check);
 
         var definitions = SettingsCatalog.All;
-        check(definitions.Count >= 19,
+        check(definitions.Count >= 21,
             "Frontend exposes the current display, controls and graphics settings");
         check(definitions.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == definitions.Count,
             "Frontend setting identifiers are unique");
@@ -32,6 +32,27 @@ public static class FrontendSettingsRegression
         check(GraphicsQualityCatalog.ShadowMapSize(ShadowQuality.Low) <
               GraphicsQualityCatalog.ShadowMapSize(ShadowQuality.High),
             "Shadow quality maps to increasing shadow-map resolution");
+
+        var textureQuality = definitions.Single(item => item.Id == "texture-quality");
+        settings.TextureQuality = TextureQuality.High;
+        textureQuality.Change(settings, -1);
+        check(settings.TextureQuality == TextureQuality.Medium,
+            "Frontend texture quality setting changes runtime texture policy");
+        check(GraphicsQualityCatalog.TextureMaximumDimension(TextureQuality.Low) <
+              GraphicsQualityCatalog.TextureMaximumDimension(TextureQuality.High),
+            "Lower texture quality reduces maximum uploaded texture dimension");
+
+        var preset = definitions.Single(item => item.Id == "graphics-preset");
+        GraphicsPresetCatalog.Apply(settings, GraphicsPreset.High);
+        preset.Change(settings, -1);
+        check(GraphicsPresetCatalog.DetectName(settings) == "BALANCED",
+            "Frontend graphics preset can step down from High to Balanced");
+        GraphicsPresetCatalog.Apply(settings, GraphicsPreset.LowEnd);
+        check(!settings.VolumetricClouds &&
+              !settings.CloudShadows &&
+              !settings.SunShadows &&
+              settings.TextureQuality == TextureQuality.Low,
+            "Low-end preset disables the heaviest GPU effects and lowers texture quality");
 
         var clouds = definitions.Single(item => item.Id == "volumetric-clouds");
         clouds.Change(settings, 1);
