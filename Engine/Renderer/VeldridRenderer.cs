@@ -330,6 +330,11 @@ public sealed class VeldridRenderer : IDisposable
         WaterLandscape.AppendSurface(world.Terrain, (float)animationSeconds, camera.Position,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             ref actorVertices, ref actorIndices);
+        WaterInteractionMesh.Append(
+            world,
+            (float)animationSeconds,
+            ref actorVertices,
+            ref actorIndices);
         MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
