@@ -54,6 +54,8 @@ public sealed class BowCombatRuntime
     private readonly List<Recoverable> _recoverable = [];
     private readonly List<BowProjectileView> _projectileViews = [];
     private readonly List<RecoverableArrowView> _recoverableViews = [];
+    private readonly Dictionary<string, float> _wildlifeHealth =
+        new(StringComparer.Ordinal);
 
     private long _nextId = 1;
     private float _drawSeconds;
@@ -359,14 +361,13 @@ public sealed class BowCombatRuntime
                 if (hit.TargetId is null)
                     break;
 
-                world.Wildlife.TryApplyDamage(
+                var killed = ApplyWildlifeDamage(
                     world,
                     hit.TargetId,
-                    projectile.Damage,
-                    out var killed);
+                    projectile.Damage);
 
                 Message = killed
-                    ? $"UPOLowANO: {hit.TargetId.ToUpperInvariant()}"
+                    ? $"UPOLOWANO: {hit.TargetId.ToUpperInvariant()}"
                     : $"TRAFIENIE: {hit.TargetId.ToUpperInvariant()}";
                 break;
             }
@@ -454,6 +455,9 @@ public sealed class BowCombatRuntime
 
         foreach (var animal in world.Wildlife.Actors)
         {
+            if (world.Progress.HasFlag(WildlifeDeadFlag(animal.Id)))
+                continue;
+
             var profile =
                 WildlifeCatalog.For(animal.Species);
             var center =
@@ -496,6 +500,44 @@ public sealed class BowCombatRuntime
         }
 
         return bestFraction < float.PositiveInfinity;
+    }
+
+    private bool ApplyWildlifeDamage(
+        WorldState world,
+        string id,
+        float damage)
+    {
+        var actor = world.Wildlife.Actors.FirstOrDefault(item =>
+            string.Equals(item.Id, id, StringComparison.Ordinal));
+
+        if (actor is null)
+            return false;
+
+        var maxHealth = actor.Species switch
+        {
+            WildlifeSpecies.Deer => 45f,
+            WildlifeSpecies.Boar => 70f,
+            WildlifeSpecies.Wolf => 50f,
+            WildlifeSpecies.Raven => 10f,
+            _ => 50f
+        };
+
+        var current = _wildlifeHealth.GetValueOrDefault(id, maxHealth);
+        current = MathF.Max(0f, current - damage);
+        _wildlifeHealth[id] = current;
+
+        if (current > 0f)
+            return false;
+
+        world.Progress.SetFlag(WildlifeDeadFlag(id));
+        _wildlifeHealth.Remove(id);
+        return true;
+    }
+
+    public static string WildlifeDeadFlag(string id)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        return $"wildlife.dead.{id}";
     }
 
     private static bool SegmentSphere(
