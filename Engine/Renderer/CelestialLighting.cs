@@ -85,9 +85,9 @@ public static class CelestialLighting
             nightFactor *
             (1f - weather.Cloudiness * 0.66f) *
             (1f - weather.RainIntensity * 0.22f) *
-            0.36f,
+            0.18f,
             0f,
-            0.36f);
+            0.18f);
 
         return new CelestialLightState(
             sunDirection,
