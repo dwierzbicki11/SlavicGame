@@ -48,7 +48,8 @@ float CloudCoverageField(
     vec2 worldXZ,
     float timeSeconds,
     float wind,
-    float cloudiness)
+    float cloudiness,
+    int requestedSteps)
 {
     if (cloudiness <= 0.005)
         return 0.0;
@@ -107,7 +108,8 @@ vec2 CloudRaymarch(
 
     const float cloudBase = 1450.0;
     const float cloudTop = 3050.0;
-    const int steps = 12;
+    const int maxSteps = 20;
+    int steps = clamp(requestedSteps, 4, maxSteps);
 
     float tNear = cloudBase / rayDirection.y;
     float tFar = cloudTop / rayDirection.y;
@@ -120,8 +122,11 @@ vec2 CloudRaymarch(
     float jitter = CloudHash12(floor(rayDirection.xz * 8192.0));
     float t = tNear + stepLength * jitter;
 
-    for (int i = 0; i < steps; i++)
+    for (int i = 0; i < maxSteps; i++)
     {
+        if (i >= steps)
+            break;
+
         vec3 point = rayDirection * t;
         float density = CloudVolumeDensity(
             point,
