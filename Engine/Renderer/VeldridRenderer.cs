@@ -347,6 +347,10 @@ public sealed class VeldridRenderer : IDisposable
             settings.CloudQuality,
             ref actorVertices,
             ref actorIndices);
+        FootprintEffectMesh.Append(
+            world,
+            ref actorVertices,
+            ref actorIndices);
         MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
