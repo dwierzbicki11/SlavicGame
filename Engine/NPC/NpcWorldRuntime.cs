@@ -9,7 +9,8 @@ public sealed record NpcWorldActor(
     string Activity,
     string LocationId,
     Vector3 Position,
-    float YawRadians);
+    float YawRadians,
+    bool IsMoving);
 
 public static class NpcPresentation
 {
@@ -55,6 +56,8 @@ public static class NpcPresentation
 public sealed class NpcWorldRuntime
 {
     private readonly List<NpcWorldActor> _actors = [];
+    private readonly Dictionary<string, Vector3> _lastPositions =
+        new(StringComparer.Ordinal);
 
     public IReadOnlyList<NpcWorldActor> Actors => _actors;
 
@@ -69,16 +72,70 @@ public sealed class NpcWorldRuntime
             if (slot is null)
                 continue;
 
-            var horizontal = PoseFor(npc.Id, slot.LocationId, slot.Activity);
-            var position = new Vector3(horizontal.X, 0f, horizontal.Y);
-            position.Y = world.Terrain.SampleHeight(position);
+            var fallback =
+                PoseFor(
+                    npc.Id,
+                    slot.LocationId,
+                    slot.Activity);
+            var speaking =
+                world.Dialogue.IsOpen &&
+                string.Equals(
+                    world.Dialogue.SpeakerId,
+                    npc.Id,
+                    StringComparison.Ordinal);
 
-            var yaw = DefaultYaw(npc.Id, slot.LocationId);
-            if (world.Dialogue.IsOpen &&
-                string.Equals(world.Dialogue.SpeakerId, npc.Id, StringComparison.Ordinal))
+            NpcRoutineSample motion;
+            if (speaking &&
+                _lastPositions.TryGetValue(
+                    npc.Id,
+                    out var frozenPosition))
             {
-                yaw = Facing(position, world.PlayerPosition);
+                motion = new NpcRoutineSample(
+                    new Vector2(
+                        frozenPosition.X,
+                        frozenPosition.Z),
+                    Vector2.Zero,
+                    false);
             }
+            else
+            {
+                motion = NpcRoutineMotion.Sample(
+                    npc.Id,
+                    slot.Activity,
+                    fallback,
+                    world.Time.TimeOfDayHours);
+            }
+
+            var horizontal =
+                world.ResolveHorizontalPosition(
+                    motion.Position,
+                    0.42f);
+            var position =
+                new Vector3(
+                    horizontal.X,
+                    0f,
+                    horizontal.Y);
+            position.Y =
+                world.Terrain.SampleHeight(position);
+
+            var yaw =
+                motion.IsMoving &&
+                motion.Forward.LengthSquared() > 0.000001f
+                    ? WorldPlacementOrientation.YawFacing(
+                        horizontal,
+                        horizontal + motion.Forward)
+                    : DefaultYaw(
+                        npc.Id,
+                        slot.LocationId);
+
+            if (speaking)
+            {
+                yaw = Facing(
+                    position,
+                    world.PlayerPosition);
+            }
+
+            _lastPositions[npc.Id] = position;
 
             _actors.Add(new NpcWorldActor(
                 npc.Id,
@@ -86,7 +143,8 @@ public sealed class NpcWorldRuntime
                 slot.Activity,
                 slot.LocationId,
                 position,
-                yaw));
+                yaw,
+                motion.IsMoving && !speaking));
         }
     }
 
