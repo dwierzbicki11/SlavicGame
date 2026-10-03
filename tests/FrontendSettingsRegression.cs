@@ -71,6 +71,9 @@ public static class FrontendSettingsRegression
         check(GraphicsQualityCatalog.CloudRaymarchSteps(CloudQuality.Low) <
               GraphicsQualityCatalog.CloudRaymarchSteps(CloudQuality.Ultra),
             "Cloud quality maps to increasing raymarch work");
+        check(GraphicsQualityCatalog.RainStreakCount(CloudQuality.Low) <
+              GraphicsQualityCatalog.RainStreakCount(CloudQuality.Ultra),
+            "Cloud quality also scales the visible precipitation budget");
         check(GraphicsQualityCatalog.ShadowMapSize(ShadowQuality.Low) <
               GraphicsQualityCatalog.ShadowMapSize(ShadowQuality.High),
             "Shadow quality maps to increasing shadow-map resolution");
