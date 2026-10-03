@@ -40,6 +40,7 @@ public sealed class PbrModelRenderer : IDisposable
     public void Initialize(
         GraphicsDevice graphicsDevice,
         ResourceLayout cameraLayout,
+        ResourceLayout shadowLayout,
         OutputDescription outputDescription,
         WorldState world,
         string assetsRoot)
@@ -47,6 +48,7 @@ public sealed class PbrModelRenderer : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(graphicsDevice);
         ArgumentNullException.ThrowIfNull(cameraLayout);
+        ArgumentNullException.ThrowIfNull(shadowLayout);
         ArgumentNullException.ThrowIfNull(world);
         ArgumentException.ThrowIfNullOrWhiteSpace(assetsRoot);
 
@@ -83,7 +85,7 @@ public sealed class PbrModelRenderer : IDisposable
                 false),
             PrimitiveTopology.TriangleList,
             new ShaderSetDescription(new[] { vertexLayout }, _shaders),
-            new[] { cameraLayout, _materialLayout },
+            new[] { cameraLayout, _materialLayout, shadowLayout },
             outputDescription));
 
         CreateFallbackTextures(graphicsDevice, factory);
@@ -203,7 +205,11 @@ public sealed class PbrModelRenderer : IDisposable
             $"{DrawCallCount} material draws.");
     }
 
-    public void Render(CommandList commandList, ResourceSet cameraSet, Vector3 cameraPosition)
+    public void Render(
+        CommandList commandList,
+        ResourceSet cameraSet,
+        ResourceSet shadowSet,
+        Vector3 cameraPosition)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_pipeline is null)
@@ -211,6 +217,7 @@ public sealed class PbrModelRenderer : IDisposable
 
         commandList.SetPipeline(_pipeline);
         commandList.SetGraphicsResourceSet(0, cameraSet);
+        commandList.SetGraphicsResourceSet(2, shadowSet);
 
         foreach (var renderable in _renderables)
         {
@@ -227,6 +234,41 @@ public sealed class PbrModelRenderer : IDisposable
             foreach (var draw in renderable.Draws)
             {
                 commandList.SetGraphicsResourceSet(1, draw.MaterialSet);
+                commandList.DrawIndexed(
+                    draw.IndexCount,
+                    instanceCount: 1,
+                    indexStart: draw.IndexStart,
+                    vertexOffset: 0,
+                    instanceStart: 0);
+            }
+        }
+    }
+
+    public void RenderShadow(
+        CommandList commandList,
+        Pipeline shadowPipeline,
+        ResourceSet shadowDepthSet,
+        Vector3 focusPosition)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        commandList.SetPipeline(shadowPipeline);
+        commandList.SetGraphicsResourceSet(0, shadowDepthSet);
+
+        foreach (var renderable in _renderables)
+        {
+            var delta = new Vector2(
+                renderable.Center.X - focusPosition.X,
+                renderable.Center.Z - focusPosition.Z);
+            var maxDistance = ShadowMapRenderer.HalfWorldSpan + renderable.Radius;
+            if (delta.LengthSquared() > maxDistance * maxDistance)
+                continue;
+
+            commandList.SetVertexBuffer(0, renderable.VertexBuffer);
+            commandList.SetIndexBuffer(renderable.IndexBuffer, IndexFormat.UInt32);
+
+            foreach (var draw in renderable.Draws)
+            {
                 commandList.DrawIndexed(
                     draw.IndexCount,
                     instanceCount: 1,
