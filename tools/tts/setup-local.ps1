@@ -6,20 +6,20 @@ $ChatterboxVersion = if ($env:CHATTERBOX_VERSION) { $env:CHATTERBOX_VERSION } el
 
 function Resolve-Python {
     if ($env:PYTHON) {
-        return @($env:PYTHON)
+        return [pscustomobject]@{ Exe = $env:PYTHON; Prefix = @() }
     }
 
     if (Get-Command py -ErrorAction SilentlyContinue) {
         foreach ($minor in @("3.13", "3.12", "3.11", "3.10")) {
             & py "-$minor" -c "import sys" 2>$null
             if ($LASTEXITCODE -eq 0) {
-                return @("py", "-$minor")
+                return [pscustomobject]@{ Exe = "py"; Prefix = @("-$minor") }
             }
         }
     }
 
     if (Get-Command python -ErrorAction SilentlyContinue) {
-        return @("python")
+        return [pscustomobject]@{ Exe = "python"; Prefix = @() }
     }
 
     throw "Python 3.10-3.13 was not found."
@@ -27,19 +27,16 @@ function Resolve-Python {
 
 $Python = Resolve-Python
 
-function Invoke-Python([string[]]$Args) {
-    $exe = $Python[0]
-    $prefix = @()
-    if ($Python.Length -gt 1) {
-        $prefix = $Python[1..($Python.Length - 1)]
-    }
-    & $exe @prefix @Args
+function Invoke-SelectedPython {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
+
+    & $Python.Exe @($Python.Prefix) @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "Python command failed."
     }
 }
 
-Invoke-Python @("-c", @"
+Invoke-SelectedPython -c @"
 import sys
 v = sys.version_info
 assert (3, 10) <= v[:2] < (3, 14), (
@@ -47,9 +44,9 @@ assert (3, 10) <= v[:2] < (3, 14), (
     "SlavicGame local TTS supports Python 3.10-3.13."
 )
 print(f"[tts] Using Python {v.major}.{v.minor}.{v.micro}")
-"@)
+"@
 
-$SelectedMinor = (& $Python[0] @($Python[1..($Python.Length - 1)] 2>$null -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')").Trim()
+$SelectedMinor = (& $Python.Exe @($Python.Prefix) -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')").Trim()
 
 $VenvPython = Join-Path $Venv "Scripts/python.exe"
 if (Test-Path $VenvPython) {
@@ -62,7 +59,7 @@ if (Test-Path $VenvPython) {
 
 if (-not (Test-Path $VenvPython)) {
     Write-Host "[tts] Creating virtual environment at $Venv"
-    Invoke-Python @("-m", "venv", $Venv)
+    Invoke-SelectedPython -m venv $Venv
 }
 
 & $VenvPython -m pip install --upgrade pip setuptools wheel
