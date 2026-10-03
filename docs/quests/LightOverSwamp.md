@@ -241,3 +241,53 @@ Herbalist i guard mogą reagować zależnie od dodatkowych stanów.
 - brak preparatu nie blokuje;
 - save w każdej fazie odtwarza właściwe cele;
 - dziennik zachowuje typ każdego dowodu.
+
+
+## Runtime interaction pass
+
+Vertical slice ma teraz grywalną ścieżkę opartą o kontekstowe interakcje `E`.
+
+### Kolejność dostępna w runtime
+
+1. **Żarnowiec / rodzina**
+   - `E` przy rodzinie przyjmuje kontrakt;
+   - quest przechodzi `Offered -> Active`;
+   - zapisywane są `witness-light` i `last-route`.
+
+2. **Przeprawa**
+   - oględziny uszkodzonej kładki zapisują `broken-planks`;
+   - pierwszy ogląd przełącza `Active -> Investigation`.
+
+3. **Mokradło**
+   - osobno bada się `predator-tracks`;
+   - osobno podnosi `missing-person-keepsake`;
+   - nocą 20:00–06:00 można zaobserwować `apparition-response`;
+   - obserwacja dzienna nie zalicza anomalii.
+
+4. **Preparation**
+   - po pamiątce + tropach drapieżnika + obserwacji anomalii quest wchodzi w `Preparation`;
+   - powrót do rodziny z pamiątką dodaje ConfirmedFact `keepsake-owner`;
+   - opiekun kręgu jest dostępny w `old-shrine` zgodnie z harmonogramem dziennym;
+   - rozmowa z nim zapisuje wiedzę o kotwicy, dwa znaki i znajomość rytuału;
+   - zielarka wydaje `ritual-thread` dopiero po poznaniu rytuału.
+
+5. **Encounter**
+   - poprawne rozpoczęcie rytuału przełącza `Preparation -> Encounter`;
+   - sukces rytuału przełącza quest do `Resolved`.
+
+6. **TurnedIn**
+   - powrót do rodziny pozwala oddać kontrakt;
+   - nagroda prototypowa: 40 Money, +8 reputacji `old-village`, +10 Trust u `missing-family`;
+   - `ClaimReward` i world flag blokują duplikację nagrody.
+
+### Persistence
+
+Cały przebieg korzysta z już zapisywanych:
+- quest phase/resolution/evidence;
+- inventory;
+- world flags;
+- money;
+- reputation;
+- relationships.
+
+Nie jest wymagana nowa wersja save.
