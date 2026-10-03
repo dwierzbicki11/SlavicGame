@@ -202,6 +202,16 @@ public static class GraphicsQualityCatalog
             _ => 14
         };
 
+    public static int RainStreakCount(CloudQuality quality) =>
+        quality switch
+        {
+            CloudQuality.Low => 28,
+            CloudQuality.Medium => 52,
+            CloudQuality.High => 84,
+            CloudQuality.Ultra => 120,
+            _ => 84
+        };
+
     public static uint ShadowMapSize(ShadowQuality quality) =>
         quality switch
         {
