@@ -133,3 +133,18 @@ FSR1 nadal ma dwie ścieżki:
 Różnica dotyczy wyłącznie skalowania, nie orientacji obrazu. Żaden pass FSR nie może samodzielnie odwracać osi Y.
 
 Regresje pilnują, że niższe presety rzeczywiście uruchamiają upscale FSR, ale `RequiresFinalRcasYFlip` pozostaje fałszywe. Dodatkowy check CI blokuje ponowne dodanie znanych ręcznych wzorców Y-flipa do shaderów present/EASU/RCAS.
+
+
+## FSR pixel-coordinate convention
+
+The native/Ultra presentation path uses interpolated fullscreen UV coordinates and is known to render with the correct vertical orientation.
+
+The real FSR upscale path must therefore derive its integer output-pixel coordinates from those same fullscreen UVs instead of from `gl_FragCoord`. With Veldrid's Vulkan clip-space normalization, the viewport can be represented with a flipped Y direction; raw fragment coordinates can then disagree with the texture UV convention even though ordinary fullscreen sampling remains correct.
+
+Current rule:
+- `present.frag`: interpolated UV;
+- `fsr_easu.frag`: output pixel derived from `fsin_TexCoord * outputSize`;
+- `fsr_rcas.frag`: output pixel derived from `fsin_TexCoord * textureSize(EasuedColor)`;
+- no FSR pass may use `gl_FragCoord` for the FSR pixel index.
+
+This keeps Low/Balanced/High on the same orientation convention as the working Ultra/Native path while preserving the actual EASU + RCAS upscale pipeline.

@@ -29,12 +29,20 @@ void FsrRcasInputF(inout AF1 r, inout AF1 g, inout AF1 b)
 
 #include "../vendor/amd_fsr1/ffx_fsr1.h"
 
+layout(location = 0) in vec2 fsin_TexCoord;
 layout(location = 0) out vec4 fsout_Color;
 
 void main()
 {
-    AU2 pixel = AU2(gl_FragCoord.xy);
+    ivec2 size = max(
+        textureSize(sampler2D(EasuedColor, EasuedSampler), 0),
+        ivec2(1));
+    vec2 uv = clamp(fsin_TexCoord, vec2(0.0), vec2(0.99999994));
+    ivec2 pixelCoord = min(
+        ivec2(floor(uv * vec2(size))),
+        size - ivec2(1));
+
     AF3 color;
-    FsrRcasF(color.r, color.g, color.b, pixel, Const0);
+    FsrRcasF(color.r, color.g, color.b, AU2(pixelCoord), Const0);
     fsout_Color = vec4(color, 1.0);
 }
