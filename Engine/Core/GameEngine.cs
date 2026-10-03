@@ -4,6 +4,7 @@ using Veldrid;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Input;
 using SlavicGame.Engine.Renderer;
+using SlavicGame.Engine.Save;
 using SlavicGame.Engine.Settings;
 using SlavicGame.Engine.UI;
 using SlavicGame.Engine.Windowing;
@@ -21,6 +22,7 @@ public sealed class GameEngine : IDisposable
     private readonly FrontendController _frontend = new();
     private readonly GameSettings _settings;
     private readonly GameSettingsStore _settingsStore;
+    private readonly SaveSlotService _saveSlots = new();
 
     private bool _initialized;
     private bool _disposed;
@@ -35,6 +37,9 @@ public sealed class GameEngine : IDisposable
     private double _fpsAccumulator;
     private int _fpsFrames;
     private double _displayFps;
+    private double _playTimeSeconds;
+    private double _autosaveSeconds;
+    private const double AutosaveIntervalSeconds = 120.0;
 
     public GameTime Time => _time;
     public GameWindow Window => _window;
@@ -76,6 +81,7 @@ public sealed class GameEngine : IDisposable
         ApplySettings();
         _camera.Follow(_world.PlayerPosition, 0f, _world.Terrain);
         _window.SetMouseCapture(false);
+        RefreshContinueMenu();
         _initialized = true;
         EngineLog.Info("Engine initialization complete.");
     }
@@ -108,6 +114,7 @@ public sealed class GameEngine : IDisposable
             {
                 if (_window.ConsumeKeyPress(Key.Escape))
                 {
+                    TryAutosave("pause");
                     _frontend.OpenMainMenu();
                     _window.SetMouseCapture(false);
                 }
@@ -122,6 +129,13 @@ public sealed class GameEngine : IDisposable
 
                     HandleInput(_time.DeltaSeconds);
                     _world.Update(_time.DeltaSeconds);
+
+                    _playTimeSeconds += _time.DeltaSeconds;
+                    _autosaveSeconds += _time.DeltaSeconds;
+                    if (_autosaveSeconds >= AutosaveIntervalSeconds)
+                    {
+                        TryAutosave("interval");
+                    }
                 }
             }
             else
@@ -132,6 +146,29 @@ public sealed class GameEngine : IDisposable
                     case FrontendAction.StartGame:
                         ApplySettings();
                         _window.SetMouseCapture(true);
+                        break;
+
+                    case FrontendAction.ContinueGame:
+                        if (_saveSlots.TryLoadLatest(_world, out var loaded) &&
+                            loaded is not null)
+                        {
+                            _playTimeSeconds = loaded.Slot.PlayTimeSeconds;
+                            _autosaveSeconds = 0.0;
+                            _camera.Follow(
+                                _world.PlayerPosition,
+                                0f,
+                                _world.Terrain);
+                            ApplySettings();
+                            _window.SetMouseCapture(true);
+                            RefreshContinueMenu();
+                        }
+                        else
+                        {
+                            EngineLog.Warn("No valid autosave could be loaded.");
+                            _frontend.CancelLoadedSession();
+                            RefreshContinueMenu();
+                            _window.SetMouseCapture(false);
+                        }
                         break;
 
                     case FrontendAction.SettingsChanged:
@@ -165,6 +202,45 @@ public sealed class GameEngine : IDisposable
 
             ApplyFrameRateLimit(frameStartTimestamp);
         }
+    }
+
+    private void TryAutosave(string reason)
+    {
+        try
+        {
+            _saveSlots.SaveAutosave(
+                _world,
+                _playTimeSeconds);
+            _autosaveSeconds = 0.0;
+            RefreshContinueMenu();
+            EngineLog.Info($"Autosave completed ({reason}).");
+        }
+        catch (Exception exception)
+        {
+            EngineLog.Warn(
+                $"Autosave failed ({reason}): {exception.Message}");
+        }
+    }
+
+    private void RefreshContinueMenu()
+    {
+        var latest = _saveSlots
+            .ListAutosaves()
+            .FirstOrDefault();
+
+        if (latest is null)
+        {
+            _frontend.SetContinueInfo(false);
+            return;
+        }
+
+        var localTime = latest.SavedAtUtc.ToLocalTime();
+        var playMinutes = (int)Math.Floor(
+            latest.PlayTimeSeconds / 60.0);
+
+        _frontend.SetContinueInfo(
+            true,
+            $"OSTATNI ZAPIS {localTime:dd.MM HH:mm}  CZAS {playMinutes} MIN");
     }
 
     private void ApplyFrameRateLimit(long frameStartTimestamp)
