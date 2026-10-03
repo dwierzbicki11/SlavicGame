@@ -596,6 +596,14 @@ public sealed class VeldridRenderer : IDisposable
             checked((uint)Math.Max(1, height)));
     }
 
+    public void SetShadowResolution(uint mapSize)
+    {
+        if (_graphicsDevice is null)
+            return;
+
+        _shadows.SetMapSize(mapSize);
+    }
+
     public void SetVSync(bool enabled)
     {
         if (_graphicsDevice is null)
