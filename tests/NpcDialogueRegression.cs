@@ -224,6 +224,18 @@ internal static class NpcDialogueRegression
             "Contextual L lesson succeeds when teacher and requirements are real");
 
         world.Dialogue.Close();
+        check(
+            NpcVisualCatalog.AnimationClip("field-work") == "Interact" &&
+            NpcVisualCatalog.AnimationClip("wood-work") == "Interact" &&
+            NpcVisualCatalog.AnimationClip("craft-work") == "Interact" &&
+            NpcVisualCatalog.AnimationClip("market-trade") == "Interact" &&
+            NpcVisualCatalog.AnimationClip("trade-and-prepare") == "Interact" &&
+            NpcVisualCatalog.AnimationClip("maintain-crossing") == "Interact" &&
+            NpcVisualCatalog.AnimationClip("tend-shrine") == "Interact" &&
+            NpcVisualCatalog.AnimationClip("patrol") == "Walk" &&
+            NpcVisualCatalog.AnimationClip("rest") == "Idle",
+            "NPC activity catalog maps work, travel and rest to distinct authored clips");
+
         var ambient = world.NpcWorld.Find("settler-farmer-02")
             ?? throw new Exception("Ambient settler not present");
         world.SetPlayerPosition(ambient.Position);
