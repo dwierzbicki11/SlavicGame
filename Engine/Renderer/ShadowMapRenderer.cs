@@ -8,10 +8,12 @@ namespace SlavicGame.Engine.Renderer;
 
 public sealed class ShadowMapRenderer : IDisposable
 {
-    public const uint MapSize = 2048;
+    public const uint DefaultMapSize = 2048;
     public const float WorldSpan = 420f;
     public const float HalfWorldSpan = WorldSpan * 0.5f;
 
+    private GraphicsDevice? _graphicsDevice;
+    private uint _mapSize = DefaultMapSize;
     private Texture? _depthTexture;
     private TextureView? _depthView;
     private Framebuffer? _framebuffer;
@@ -26,6 +28,8 @@ public sealed class ShadowMapRenderer : IDisposable
     private Pipeline? _actorPipeline;
     private Shader[]? _shaders;
     private bool _disposed;
+
+    public uint MapSize => _mapSize;
 
     public ResourceLayout SampleLayout =>
         _sampleLayout ?? throw new InvalidOperationException("Shadow map renderer is not initialized.");
@@ -50,11 +54,12 @@ public sealed class ShadowMapRenderer : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(graphicsDevice);
 
+        _graphicsDevice = graphicsDevice;
         var factory = graphicsDevice.ResourceFactory;
 
         _depthTexture = factory.CreateTexture(TextureDescription.Texture2D(
-            MapSize,
-            MapSize,
+            _mapSize,
+            _mapSize,
             mipLevels: 1,
             arrayLayers: 1,
             PixelFormat.R32_Float,
@@ -137,7 +142,7 @@ public sealed class ShadowMapRenderer : IDisposable
                     "Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3)));
 
         EngineLog.Info(
-            $"Sun shadow map initialized: {MapSize}x{MapSize}, world span {WorldSpan:0}m.");
+            $"Sun shadow map initialized: {_mapSize}x{_mapSize}, world span {WorldSpan:0}m.");
     }
 
     public Matrix4x4 UpdateLight(
@@ -151,7 +156,10 @@ public sealed class ShadowMapRenderer : IDisposable
         if (_depthMatrixBuffer is null || _sampleMatrixBuffer is null)
             throw new InvalidOperationException("Shadow map renderer is not initialized.");
 
-        var matrix = CalculateLightViewProjection(focusPosition, sunDirection);
+        var matrix = CalculateLightViewProjection(
+            focusPosition,
+            sunDirection,
+            _mapSize);
         commandList.UpdateBuffer(_depthMatrixBuffer, 0, matrix);
         commandList.UpdateBuffer(_sampleMatrixBuffer, 0, matrix);
         return matrix;
@@ -186,9 +194,63 @@ public sealed class ShadowMapRenderer : IDisposable
         commandList.DrawIndexed(indexCount);
     }
 
+    public void SetMapSize(uint mapSize)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        mapSize = Math.Clamp(mapSize, 512u, 4096u);
+        if (_mapSize == mapSize && _depthTexture is not null)
+            return;
+
+        if (_graphicsDevice is null ||
+            _sampleLayout is null ||
+            _sampleMatrixBuffer is null)
+        {
+            _mapSize = mapSize;
+            return;
+        }
+
+        _graphicsDevice.WaitForIdle();
+
+        _sampleSet?.Dispose();
+        _framebuffer?.Dispose();
+        _depthView?.Dispose();
+        _depthTexture?.Dispose();
+
+        var factory = _graphicsDevice.ResourceFactory;
+        _depthTexture = factory.CreateTexture(TextureDescription.Texture2D(
+            mapSize,
+            mapSize,
+            mipLevels: 1,
+            arrayLayers: 1,
+            PixelFormat.R32_Float,
+            TextureUsage.DepthStencil | TextureUsage.Sampled));
+        _depthView = factory.CreateTextureView(_depthTexture);
+        _framebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+            new FramebufferAttachmentDescription(_depthTexture, 0),
+            Array.Empty<FramebufferAttachmentDescription>()));
+        _sampleSet = factory.CreateResourceSet(new ResourceSetDescription(
+            _sampleLayout,
+            _sampleMatrixBuffer,
+            _depthView,
+            _graphicsDevice.PointSampler));
+
+        _mapSize = mapSize;
+        EngineLog.Info($"Sun shadow map resolution changed to {_mapSize}x{_mapSize}.");
+    }
+
     public static Matrix4x4 CalculateLightViewProjection(
         Vector3 focusPosition,
-        Vector3 sunDirection)
+        Vector3 sunDirection) =>
+        CalculateLightViewProjection(
+            focusPosition,
+            sunDirection,
+            DefaultMapSize);
+
+    public static Matrix4x4 CalculateLightViewProjection(
+        Vector3 focusPosition,
+        Vector3 sunDirection,
+        uint mapSize)
     {
         if (!float.IsFinite(focusPosition.X) ||
             !float.IsFinite(focusPosition.Y) ||
@@ -209,7 +271,8 @@ public sealed class ShadowMapRenderer : IDisposable
 
         // Snap the shadow focus to the shadow texel footprint. This greatly
         // reduces shimmering while the camera moves slowly.
-        var texelWorldSize = WorldSpan / MapSize;
+        mapSize = Math.Clamp(mapSize, 512u, 4096u);
+        var texelWorldSize = WorldSpan / mapSize;
         var focus = new Vector3(
             MathF.Round(focusPosition.X / texelWorldSize) * texelWorldSize,
             focusPosition.Y,
@@ -288,5 +351,6 @@ public sealed class ShadowMapRenderer : IDisposable
         _framebuffer = null;
         _depthView = null;
         _depthTexture = null;
+        _graphicsDevice = null;
     }
 }
