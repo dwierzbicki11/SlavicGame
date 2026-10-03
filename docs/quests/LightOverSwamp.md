@@ -291,3 +291,31 @@ Cały przebieg korzysta z już zapisywanych:
 - relationships.
 
 Nie jest wymagana nowa wersja save.
+
+
+## Niezależny stan drapieżnika
+
+`swamp-predator` nie jest zjawą i jego wynik nie jest kasowany przez rytuał.
+
+Encounter zapisuje:
+- `Unseen`;
+- `Observed` — np. po znalezieniu tropów;
+- `Identified` — po bezpośrednim spotkaniu;
+- `Resolved` + typ resolution.
+
+Pierwsza zaimplementowana resolution:
+- `Killed`.
+
+Po zabiciu:
+- world flag `swamp.predator.killed`;
+- ConfirmedFact `light-over-swamp.predator-killed`;
+- martwy przeciwnik i typ resolution są trwałe w save.
+
+Rytualne rozwiązanie zjawy nadal pozwala oddać kontrakt, nawet jeśli predator żyje.
+
+Turn-in:
+- zjawa rozwiązana, predator żyje: 40 Money, +8 village reputation;
+- zjawa rozwiązana, predator zabity: 60 Money, +12 village reputation;
+- Trust rodziny: +10 w obu wariantach.
+
+Dzięki temu dwa źródła zagrożenia pozostają mechanicznie i narracyjnie rozdzielone.
