@@ -9,7 +9,7 @@ public static class FrontendSettingsRegression
         ArgumentNullException.ThrowIfNull(check);
 
         var definitions = SettingsCatalog.All;
-        check(definitions.Count >= 16,
+        check(definitions.Count >= 19,
             "Frontend exposes the current display, controls and graphics settings");
         check(definitions.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == definitions.Count,
             "Frontend setting identifiers are unique");
@@ -18,6 +18,21 @@ public static class FrontendSettingsRegression
             "Frontend has at least one setting in every category");
 
         var settings = new GameSettings();
+        var resolution = definitions.Single(item => item.Id == "resolution");
+        var originalResolution = settings.Resolution;
+        resolution.Change(settings, 1);
+        check(settings.Resolution != originalResolution &&
+              settings.ResolutionSize.Width > 0 &&
+              settings.ResolutionSize.Height > 0,
+            "Frontend resolution setting cycles valid render sizes");
+
+        check(GraphicsQualityCatalog.CloudRaymarchSteps(CloudQuality.Low) <
+              GraphicsQualityCatalog.CloudRaymarchSteps(CloudQuality.Ultra),
+            "Cloud quality maps to increasing raymarch work");
+        check(GraphicsQualityCatalog.ShadowMapSize(ShadowQuality.Low) <
+              GraphicsQualityCatalog.ShadowMapSize(ShadowQuality.High),
+            "Shadow quality maps to increasing shadow-map resolution");
+
         var clouds = definitions.Single(item => item.Id == "volumetric-clouds");
         clouds.Change(settings, 1);
         check(!settings.VolumetricClouds,
