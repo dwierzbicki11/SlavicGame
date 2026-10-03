@@ -4,7 +4,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 ## Próg swobodnej implementacji — stan 2026-10-03
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `design/RegionalContentAssetCatalog.md` rodziny content/assets R0–R6, a `quests/SideQuestCardsR0.md`–`SideQuestCardsR6.md` zamykają implementacyjny first pass 21/21 side-questów. `design/RegionalEncounterRosters.md` zamyka family-level encounter pass R1–R6, a `design/RegionalVendorsServices.md` regionalny service footprint R0–R6. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `design/RegionalContentAssetCatalog.md` rodziny content/assets R0–R6, a `quests/SideQuestCardsR0.md`–`SideQuestCardsR6.md` zamykają implementacyjny first pass 21/21 side-questów. `design/RegionalEncounterRosters.md` zamyka family-level encounter pass R1–R6, `design/RegionalVendorsServices.md` regionalny service footprint R0–R6, a `design/ItemEquipmentRecipeCatalog.md` stabilny full-scope katalog rodzin item/equipment/recipe. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
 
 Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, exact historical-final locators dla konkretnych assetów, konkretne asset manifests i targety performance wymagające pomiarów.
 
@@ -21,13 +21,13 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, e
 | Kultury | world/Cultures.md + world/MacroCultures.md + research/cultures/* | framework v0.1; R0–R5 evidence packages v0.1; exact art/technology locators otwarte per asset |
 | Quest framework | design/QuestDesign.md | v0.1 |
 | Combat | design/CombatDesign.md + MeleeCombat.md + BowCombat.md | v0.1 |
-| Status/equipment/progression | design/StatusEffects.md + EquipmentSystem.md + Progression.md | v0.1; full equipment/item catalog otwarty |
-| Economy/vendors | design/EconomyPass01.md + design/RegionalVendorsServices.md | framework v0.1 + R0–R6 service implementation pass; ceny/restock/signature goods pozostają lockiem |
+| Status/equipment/progression | design/StatusEffects.md + EquipmentSystem.md + Progression.md + ItemEquipmentRecipeCatalog.md | system v0.1 + full-scope stable item/equipment families; final stats/durability/weight otwarte |
+| Economy/vendors | design/EconomyPass01.md + design/RegionalVendorsServices.md + design/ItemEquipmentRecipeCatalog.md | framework + R0–R6 service pass + stock/item families; ceny/restock pozostają lockiem |
 | Tracking | design/TrackingSystem.md | v0.1 |
 | Encounter | design/EncounterDesign.md + design/RegionalEncounterRosters.md + content format | framework v0.1 + R1–R6 family-level implementation pass |
-| Alchemy/magia | alchemy/RecipesV01.md + magic/* | v0.1; full recipe catalog otwarty |
+| Alchemy/magia | alchemy/RecipesV01.md + design/ItemEquipmentRecipeCatalog.md + magic/* | recipe implementation catalog v0.1; warunkowe receptury mają jawne gates; tuning/research otwarte |
 | NPC/dialog | design/NpcDialogueDesign.md + story/ProductionNpcRoster.md + dialogue/* | production roster v0.1; final dialogue/VO otwarte |
-| Inventory | design/InventoryEconomy.md | v0.1 |
+| Inventory | design/InventoryEconomy.md + design/ItemEquipmentRecipeCatalog.md | v0.1 + stable item family catalog |
 | Save/persistence | design/SavePersistence.md | v0.1 |
 | Input/settings | design/ControlsAndInput.md + InputActionMap.md + SettingsMatrix.md | v0.1 |
 | UI/UX | ui/* + design/UXAccessibility.md + SaveSlotUX.md | v0.1 |
@@ -47,7 +47,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, e
 4. finalne targety kontraktów `SQ_R1_02`, `SQ_R2_02`, `SQ_R3_03` i `SQ_R4_02`; appearance/placement istot pozostaje art/data lockiem;
 5. exact historical-final locators per asset, szczególnie costume/ornament/religion-material/naming i regionalne technology/art locki;
 6. konkretne finalne modele/materials/animations/audio/VFX i manifesty poza vertical slice;
-7. pełne item/equipment/recipe catalogs; regionalny service footprint jest już zdefiniowany, ale final prices/restock/signature goods pozostają balance/item/research lockiem;
+7. item/equipment/recipe: final stats/value/weight/durability, drop rates, recipe quantities/craft time, botanika, exact historical assets i culture-specific goods; stabilne families/IDs i regionalne źródła są już zdefiniowane;
 8. encounter: finalne weights, density, cooldown durations, POI placement, combat tuning i rewards; R1–R6 family tables są już zdefiniowane;
 9. measured performance targets, streaming/VFX/shadow/AI budgets i wymagania sprzętowe;
 10. tuning pogody, traversal, ekonomii, AI i encounterów po playtestach;
@@ -59,12 +59,11 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** R0–R6 mają region bibles, 21/21 side-quest cards, family-level encounter coverage oraz jawny regionalny service footprint. Culture/material-culture/bestiary/pantheon research ma jawne production gates. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** R0–R6 mają region bibles, 21/21 side-quest cards, family-level encounter coverage, regionalny service footprint oraz stable full-scope item/equipment/recipe catalog. Culture/material-culture/bestiary/pantheon research ma jawne production gates. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. item/equipment/recipe catalogs dla pełnego scope;
-2. dialogue packages po zamknięciu rosterów;
-3. konkretne asset manifests po art/research lockach;
-4. animation/VFX/audio/streaming/AI budgets;
-5. później balance/playtest/performance locks.
+1. dialogue packages po zamknięciu rosterów;
+2. konkretne asset manifests po art/research lockach;
+3. animation/VFX/audio/streaming/AI budgets;
+4. później balance/playtest/performance locks.
