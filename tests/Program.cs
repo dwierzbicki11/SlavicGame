@@ -84,6 +84,7 @@ Check(catalog.Get(assetId).Path == "Assets/test.glb", "Asset catalog lookup");
 AssetIntegrationRegression.Run(Check);
 PresentationPolicyRegression.Run(Check);
 CelestialLightingRegression.Run(Check);
+FrontendSettingsRegression.Run(Check);
 
 var animation = new AnimationStateMachine();
 animation.Register("idle");
