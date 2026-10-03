@@ -108,3 +108,19 @@ Mgła używana jako mechanika musi zachować czytelność również na niższych
 ## Stan obecny
 
 Renderer jest prototypem. Dokument nie deklaruje gotowości produkcyjnej ani końcowych wymagań sprzętowych.
+
+
+## FSR1 presentation orientation
+
+FSR1 ma dwie różne ścieżki prezentacji:
+
+- **Native** — gdy rozdzielczość wewnętrzna jest równa wyjściowej, EASU/RCAS nie są uruchamiane;
+- **Upscale** — Low/Balanced/High i ustawienia ręczne z mniejszą rozdzielczością przechodzą przez EASU, a następnie RCAS.
+
+W Vulkanie wynik EASU jest kolejnym offscreen render targetem. Ostateczna korekta orientacji Y należy więc do ostatniego przejścia RCAS -> swapchain. `fsr_rcas.frag` wykonuje dokładnie jeden finalny flip Y w rzeczywistej ścieżce skalowania.
+
+Preset Ultra używa `FsrQualityMode.Native`, dlatego nie wchodzi do EASU/RCAS i jego istniejąca poprawna orientacja nie jest zmieniana.
+
+Regresja w `FrontendSettingsRegression` pilnuje, że:
+- Low/Balanced/High uruchamiają rzeczywisty pass FSR i wymagają finalnej korekty;
+- Ultra pozostaje na ścieżce Native bez passu skalowania.
