@@ -11,6 +11,11 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
     vec4 Lighting;
     vec4 SunColorTime;
     vec4 SkyWeather;
+    vec4 MoonParameters;
+    vec4 CelestialParameters;
+    vec4 GraphicsFeatures0;
+    vec4 GraphicsFeatures1;
+    vec4 GraphicsFeatures2;
 };
 
 layout(set = 1, binding = 0) uniform texture2D GrassBase;
@@ -221,26 +226,36 @@ void main()
         SampleScalar(RockAo, worldXZ, rockScale, 5.4) * weightsB.z;
     ao = clamp(ao, 0.18, 1.0);
 
+    float terrainPbr = GraphicsFeatures2.x;
     vec3 baseNormal = normalize(fsin_WorldNormal);
-    vec3 normal = normalize(GroundTangentFrame(baseNormal) * tangentNormal);
+    vec3 detailedNormal = normalize(GroundTangentFrame(baseNormal) * tangentNormal);
+    vec3 normal = normalize(mix(baseNormal, detailedNormal, terrainPbr));
+    roughness = mix(0.82, roughness, terrainPbr);
+    ao = mix(1.0, ao, terrainPbr);
     vec3 sunDirection = normalize(Lighting.yzw);
     float ndotl = max(dot(normal, sunDirection), 0.0);
     float daylight = max(Lighting.x, 0.02);
 
     vec3 sunColor = SunColorTime.rgb;
-    float cloudShadow = CloudShadowFactor(
-        fsin_WorldPosition,
-        sunDirection,
-        SkyWeather.w,
-        SkyWeather.z,
-        SkyWeather.x);
-    float geometryShadow = SampleSunShadow(
-        ShadowMap,
-        ShadowSampler,
-        LightViewProjection,
-        fsin_WorldPosition,
-        normal,
-        sunDirection);
+    float cloudShadow = mix(
+        1.0,
+        CloudShadowFactor(
+            fsin_WorldPosition,
+            sunDirection,
+            SkyWeather.w,
+            SkyWeather.z,
+            SkyWeather.x),
+        GraphicsFeatures0.y);
+    float geometryShadow = mix(
+        1.0,
+        SampleSunShadow(
+            ShadowMap,
+            ShadowSampler,
+            LightViewProjection,
+            fsin_WorldPosition,
+            normal,
+            sunDirection),
+        GraphicsFeatures0.z);
     float directShadow = cloudShadow * geometryShadow;
     float hemisphere = mix(0.18, 0.64, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
 
@@ -264,7 +279,7 @@ void main()
     vec3 color = diffuse +
         sunColor * specular * wetSpecular * daylight * directShadow * 0.42;
 
-    float density = max(FogColorDensity.w, 0.00001);
+    float density = max(FogColorDensity.w * GraphicsFeatures0.w, 0.00001);
     float fogFactor =
         1.0 - exp(-density * fsin_Distance * (1.0 + fsin_Distance * 0.0018));
     fogFactor = clamp(fogFactor, 0.0, 0.95);

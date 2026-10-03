@@ -9,6 +9,11 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
     vec4 Lighting;
     vec4 SunColorTime;
     vec4 SkyWeather;
+    vec4 MoonParameters;
+    vec4 CelestialParameters;
+    vec4 GraphicsFeatures0;
+    vec4 GraphicsFeatures1;
+    vec4 GraphicsFeatures2;
 };
 
 layout(set = 1, binding = 0) uniform ShadowDataBuffer
@@ -32,25 +37,31 @@ void main()
     float daylight = max(Lighting.x, 0.02);
 
     vec3 sunColor = SunColorTime.rgb;
-    float cloudShadow = CloudShadowFactor(
-        fsin_WorldPosition,
-        sunDirection,
-        SkyWeather.w,
-        SkyWeather.z,
-        SkyWeather.x);
-    float geometryShadow = SampleSunShadow(
-        ShadowMap,
-        ShadowSampler,
-        LightViewProjection,
-        fsin_WorldPosition,
-        normal,
-        sunDirection);
+    float cloudShadow = mix(
+        1.0,
+        CloudShadowFactor(
+            fsin_WorldPosition,
+            sunDirection,
+            SkyWeather.w,
+            SkyWeather.z,
+            SkyWeather.x),
+        GraphicsFeatures0.y);
+    float geometryShadow = mix(
+        1.0,
+        SampleSunShadow(
+            ShadowMap,
+            ShadowSampler,
+            LightViewProjection,
+            fsin_WorldPosition,
+            normal,
+            sunDirection),
+        GraphicsFeatures0.z);
     float directShadow = cloudShadow * geometryShadow;
     vec3 ambient = fsin_Color * 0.26;
     vec3 color = ambient +
         fsin_Color * sunColor * direct * daylight * directShadow * 0.92;
 
-    float density = max(FogColorDensity.w, 0.00001);
+    float density = max(FogColorDensity.w * GraphicsFeatures0.w, 0.00001);
     float fogFactor = 1.0 - exp(-density * fsin_Distance);
     fogFactor = clamp(fogFactor, 0.0, 0.94);
     color = mix(color, FogColorDensity.rgb, fogFactor);

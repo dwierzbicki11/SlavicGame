@@ -4,6 +4,8 @@ using Veldrid;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Input;
 using SlavicGame.Engine.Renderer;
+using SlavicGame.Engine.Settings;
+using SlavicGame.Engine.UI;
 using SlavicGame.Engine.Windowing;
 using SlavicGame.Engine.World;
 
@@ -16,6 +18,9 @@ public sealed class GameEngine : IDisposable
     private readonly VeldridRenderer _renderer = new();
     private readonly Camera3D _camera = new() { Mode = CameraMode.FirstPerson };
     private readonly WorldState _world = WorldGenerator.Generate();
+    private readonly FrontendController _frontend = new();
+    private readonly GameSettings _settings;
+    private readonly GameSettingsStore _settingsStore;
 
     private bool _initialized;
     private bool _disposed;
@@ -36,9 +41,16 @@ public sealed class GameEngine : IDisposable
     public VeldridRenderer Renderer => _renderer;
     public WorldState World => _world;
 
-    public GameEngine(EngineConfig config)
+    public GameEngine(
+        EngineConfig config,
+        GameSettings settings,
+        GameSettingsStore settingsStore)
     {
         ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(settingsStore);
+        _settings = settings;
+        _settingsStore = settingsStore;
         _vsync = config.VSync;
         _inputDiagnostics = config.InputDiagnostics;
         _window = new GameWindow(config);
@@ -56,6 +68,9 @@ public sealed class GameEngine : IDisposable
 
         EngineLog.Info("Starting SlavicGame engine.");
         _renderer.Initialize(_window, _world, _vsync);
+        ApplySettings();
+        _camera.Follow(_world.PlayerPosition, 0f, _world.Terrain);
+        _window.SetMouseCapture(false);
         _initialized = true;
         EngineLog.Info("Engine initialization complete.");
     }
@@ -64,9 +79,7 @@ public sealed class GameEngine : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!_initialized)
-        {
             throw new InvalidOperationException("Call Initialize() before Run().");
-        }
 
         var stopwatch = Stopwatch.StartNew();
         var previousSeconds = stopwatch.Elapsed.TotalSeconds;
@@ -76,21 +89,54 @@ public sealed class GameEngine : IDisposable
         {
             _window.PumpEvents();
             if (!_window.Exists) break;
-            if (_window.ConsumeKeyPress(Key.Escape)) break;
 
             var currentSeconds = stopwatch.Elapsed.TotalSeconds;
             var deltaSeconds = currentSeconds - previousSeconds;
             previousSeconds = currentSeconds;
 
-            if (_window.ConsumeKeyPress(Key.F11))
-            {
-                _window.ToggleFullscreen();
-            }
-
             _time.Advance(deltaSeconds);
             UpdateFps(deltaSeconds);
-            HandleInput(_time.DeltaSeconds);
-            _world.Update(_time.DeltaSeconds);
+
+            if (_frontend.IsPlaying)
+            {
+                if (_window.ConsumeKeyPress(Key.Escape))
+                {
+                    _frontend.OpenMainMenu();
+                    _window.SetMouseCapture(false);
+                }
+                else
+                {
+                    if (_window.ConsumeKeyPress(Key.F11))
+                    {
+                        _settings.Fullscreen = !_window.IsFullscreen;
+                        ApplySettings();
+                        _settingsStore.Save(_settings);
+                    }
+
+                    HandleInput(_time.DeltaSeconds);
+                    _world.Update(_time.DeltaSeconds);
+                }
+            }
+            else
+            {
+                var action = _frontend.HandleInput(_window, _settings);
+                switch (action)
+                {
+                    case FrontendAction.StartGame:
+                        ApplySettings();
+                        _window.SetMouseCapture(true);
+                        break;
+
+                    case FrontendAction.SettingsChanged:
+                        ApplySettings();
+                        _settingsStore.Save(_settings);
+                        break;
+
+                    case FrontendAction.Exit:
+                        _window.Close();
+                        continue;
+                }
+            }
 
             if (!loggedFirstFrame)
             {
@@ -98,8 +144,38 @@ public sealed class GameEngine : IDisposable
                 EngineLog.Info("Main loop is running.");
             }
 
-            _renderer.Render(_world, _camera, _displayFps, _time.TotalSeconds);
+            var menuView = _frontend.IsPlaying
+                ? null
+                : _frontend.BuildView(_settings);
+
+            _renderer.Render(
+                _world,
+                _camera,
+                _displayFps,
+                _time.TotalSeconds,
+                _settings,
+                menuView);
         }
+    }
+
+    private void ApplySettings()
+    {
+        _settings.Normalize();
+
+        if (_window.IsFullscreen != _settings.Fullscreen)
+            _window.SetFullscreen(_settings.Fullscreen);
+
+        _renderer.SetVSync(_settings.VSync);
+
+        _camera.FieldOfView =
+            MathF.PI / 180f * _settings.FieldOfViewDegrees;
+        _camera.MouseSensitivity =
+            0.0035f * _settings.MouseSensitivity;
+        _camera.VerticalSensitivity =
+            0.0025f * _settings.MouseSensitivity;
+        _camera.Mode = _settings.Camera == CameraPreference.FirstPerson
+            ? CameraMode.FirstPerson
+            : CameraMode.ThirdPerson;
     }
 
     private void UpdateFps(double deltaSeconds)

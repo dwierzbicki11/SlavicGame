@@ -11,6 +11,11 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
     vec4 Lighting;
     vec4 SunColorTime;
     vec4 SkyWeather;
+    vec4 MoonParameters;
+    vec4 CelestialParameters;
+    vec4 GraphicsFeatures0;
+    vec4 GraphicsFeatures1;
+    vec4 GraphicsFeatures2;
 };
 
 layout(set = 1, binding = 0) uniform MaterialBuffer
@@ -90,14 +95,24 @@ void main()
     vec3 albedo = max(baseSample.rgb * BaseColorFactor.rgb, vec3(0.0));
     float alpha = baseSample.a * BaseColorFactor.a;
 
-    vec3 normal = normalize(fsin_WorldNormal);
+    float modelPbr = GraphicsFeatures2.y;
+    vec3 baseNormal = normalize(fsin_WorldNormal);
+    vec3 normal = baseNormal;
     vec3 sampledNormal = texture(sampler2D(NormalTexture, MaterialSampler), fsin_TexCoord).xyz * 2.0 - 1.0;
     if (length(sampledNormal.xy) > 0.001)
-        normal = normalize(CotangentFrame(normal, fsin_WorldPosition, fsin_TexCoord) * sampledNormal);
+    {
+        vec3 detailedNormal = normalize(
+            CotangentFrame(baseNormal, fsin_WorldPosition, fsin_TexCoord) *
+            sampledNormal);
+        normal = normalize(mix(baseNormal, detailedNormal, modelPbr));
+    }
 
     vec3 mr = texture(sampler2D(MetallicRoughnessTexture, MaterialSampler), fsin_TexCoord).rgb;
-    float metallic = clamp(MaterialFactors.x * mr.b, 0.0, 1.0);
-    float roughness = clamp(MaterialFactors.y * mr.g, 0.06, 1.0);
+    float metallic = clamp(MaterialFactors.x * mr.b, 0.0, 1.0) * modelPbr;
+    float roughness = mix(
+        0.82,
+        clamp(MaterialFactors.y * mr.g, 0.06, 1.0),
+        modelPbr);
 
     vec3 viewDirection = normalize(fsin_CameraPosition - fsin_WorldPosition);
     vec3 lightDirection = normalize(Lighting.yzw);
@@ -117,26 +132,38 @@ void main()
 
     float lightStrength = max(Lighting.x, 0.02);
     vec3 sunColor = SunColorTime.rgb;
-    float cloudShadow = CloudShadowFactor(
-        fsin_WorldPosition,
-        lightDirection,
-        SkyWeather.w,
-        SkyWeather.z,
-        SkyWeather.x);
-    float geometryShadow = SampleSunShadow(
-        ShadowMap,
-        ShadowSampler,
-        LightViewProjection,
-        fsin_WorldPosition,
-        normal,
-        lightDirection);
+    float cloudShadow = mix(
+        1.0,
+        CloudShadowFactor(
+            fsin_WorldPosition,
+            lightDirection,
+            SkyWeather.w,
+            SkyWeather.z,
+            SkyWeather.x),
+        GraphicsFeatures0.y);
+    float geometryShadow = mix(
+        1.0,
+        SampleSunShadow(
+            ShadowMap,
+            ShadowSampler,
+            LightViewProjection,
+            fsin_WorldPosition,
+            normal,
+            lightDirection),
+        GraphicsFeatures0.z);
     float directShadow = cloudShadow * geometryShadow;
     vec3 ambient = albedo * (0.028 + 0.050 * max(lightDirection.y, 0.0)) * (1.0 - metallic * 0.35);
+    vec3 simpleDiffuse = albedo / PI;
+    vec3 directBrdf = mix(
+        simpleDiffuse,
+        diffuse + specular,
+        modelPbr);
     vec3 color = ambient +
-        (diffuse + specular) * sunColor * ndotl *
+        directBrdf * sunColor * ndotl *
         (1.75 * lightStrength) * directShadow;
 
-    float fogFactor = 1.0 - exp(-FogColorDensity.w * fsin_Distance);
+    float fogFactor = 1.0 - exp(
+        -(FogColorDensity.w * GraphicsFeatures0.w) * fsin_Distance);
     fogFactor = clamp(fogFactor, 0.0, 0.94);
     color = mix(color, FogColorDensity.rgb, fogFactor);
 
