@@ -62,6 +62,8 @@ public sealed class NpcWorldRuntime
         new(StringComparer.Ordinal);
     private readonly Dictionary<string, double> _dialogueFreezeStarted =
         new(StringComparer.Ordinal);
+    private readonly Dictionary<string, double> _lastRoutineWorldHours =
+        new(StringComparer.Ordinal);
 
     public IReadOnlyList<NpcWorldActor> Actors => _actors;
 
@@ -100,7 +102,9 @@ public sealed class NpcWorldRuntime
                 if (!_dialogueFreezeStarted.ContainsKey(npc.Id))
                 {
                     _dialogueFreezeStarted[npc.Id] =
-                        world.Time.TimeOfDayHours;
+                        _lastRoutineWorldHours.GetValueOrDefault(
+                            npc.Id,
+                            world.Time.TimeOfDayHours);
                 }
 
                 motion = new NpcRoutineSample(
@@ -129,6 +133,9 @@ public sealed class NpcWorldRuntime
                     fallback,
                     world.Time.TimeOfDayHours -
                     routineOffset);
+
+                _lastRoutineWorldHours[npc.Id] =
+                    world.Time.TimeOfDayHours;
             }
 
             var horizontal =
