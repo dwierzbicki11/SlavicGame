@@ -251,3 +251,20 @@ Still open for P1:
 - apparition-specific audio;
 - more expressive ritual reaction animation;
 - optional cinematic framing and final art polish.
+
+
+## Runtime item-asset status
+
+P0 world visibility is now implemented for four important item/resource states:
+- keepsake;
+- forest resin;
+- marsh herb;
+- ritual thread.
+
+They use tracked GLB geometry, are state-gated, and disappear after acquisition. Starter bandages remain inventory-only because they are granted in the initial loadout rather than placed as a world pickup.
+
+Open for P1:
+- dedicated resin model/material;
+- final keepsake art tied to the missing-person story;
+- inventory icons/tooltips;
+- final ritual-thread material treatment.

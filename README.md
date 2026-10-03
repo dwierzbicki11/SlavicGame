@@ -424,3 +424,8 @@ The five R0 NPC roles now have schedule-driven world positions, visible humanoid
 ### Swamp apparition
 
 The Black Swamp now has a visible nocturnal `ENTITY_MISSING_ECHO_F` apparition. It materializes only during the active quest at night, reacts and approaches when the player carries the missing person's keepsake, relocates into the release ritual, and dissolves after the durable `swamp.apparition-released` outcome. It is a lightweight non-combat actor effect rather than an HP enemy.
+
+
+### Visible world items
+
+Key vertical-slice items now use dynamic GLB visuals instead of invisible interaction points. The missing-person keepsake, forest resin source, marsh-herb bundle and ritual thread appear only while their gameplay state allows them and disappear immediately after collection/receipt without rebuilding static world batches.

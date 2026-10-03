@@ -7,9 +7,12 @@ public sealed class EnvironmentInteractionSystem
 {
     public const string ResinCollectedFlag =
         "resource.forest-resin.first-collected";
+    public const string MarshHerbCollectedFlag =
+        "resource.marsh-herb.first-collected";
 
     private const float InteractionDistance = 3.6f;
     private static readonly Vector3 ResinSpot = new(31f, 0f, 15f);
+    private static readonly Vector3 MarshHerbSpot = new(107f, 0f, 20f);
 
     public InteractionTarget? Current { get; private set; }
     public string Message { get; private set; } = "";
@@ -37,6 +40,18 @@ public sealed class EnvironmentInteractionSystem
             world.Progress.Inventory.Add("forest-resin", 3);
             world.Progress.SetFlag(ResinCollectedFlag);
             Message = "ZDOBYTO: ZYWICA LESNA x3";
+            Current = FindNearest(world);
+            return true;
+        }
+
+        if (Current.Id == "resource.marsh-herb")
+        {
+            if (world.Progress.HasFlag(MarshHerbCollectedFlag))
+                return false;
+
+            world.Progress.Inventory.Add("marsh-herb", 2);
+            world.Progress.SetFlag(MarshHerbCollectedFlag);
+            Message = "ZDOBYTO: ZIOLO BAGIENNE x2";
             Current = FindNearest(world);
             return true;
         }
@@ -76,6 +91,15 @@ public sealed class EnvironmentInteractionSystem
                 Ground(world, ResinSpot),
                 InteractionKind.Take,
                 "E ZBIERZ ZYWICE LESNA"));
+        }
+
+        if (!world.Progress.HasFlag(MarshHerbCollectedFlag))
+        {
+            targets.Add(new InteractionTarget(
+                "resource.marsh-herb",
+                Ground(world, MarshHerbSpot),
+                InteractionKind.Take,
+                "E ZBIERZ ZIOLO BAGIENNE"));
         }
 
         foreach (var fire in CampfireSystem.Fires)

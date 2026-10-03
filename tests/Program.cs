@@ -34,6 +34,7 @@ MagicCinematicRegression.Run(Check);
 VerticalSliceQuestInteractionRegression.Run(Check);
 SwampPredatorEncounterRegression.Run(Check);
 SwampApparitionRegression.Run(Check);
+WorldItemVisualRegression.Run(Check);
 RiverInteractionRegression.Run(Check);
 WeatherVisualRegression.Run(Check);
 CampfireInteractionRegression.Run(Check);
