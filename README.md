@@ -404,3 +404,8 @@ Rain and Storm now render lightweight camera-local rain streaks. Terrain and PBR
 ### Dynamic muddy footprints
 
 Walking across mud, swamp ground and wet river banks now leaves a bounded transient footprint trail with alternating feet. Heavy rain erodes old prints much faster. These physical player traces are visual world feedback only: they do not create quest evidence, are not persisted in saves and are intentionally separate from magical `Reveal Trace` signatures.
+
+
+### NPC dialogue runtime
+
+The five R0 NPC roles now have schedule-driven world positions, visible humanoid placeholders and executable dialogue graphs. Contextual E starts conversation, W/S selects a response and E confirms it. Dialogue choices can be knowledge/item/quest gated and apply real quest/evidence/reputation/relationship/world-state effects. Spell teachers are now actual nearby NPCs: speaking to the correct teacher and staying beside them is required before the contextual L lesson can succeed.
