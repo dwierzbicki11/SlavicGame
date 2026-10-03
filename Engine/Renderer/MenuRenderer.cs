@@ -321,8 +321,12 @@ public sealed class MenuRenderer : IDisposable
                     new Vector4(0.25f, 0.17f, 0.07f, 0.94f));
             }
 
+            var displayLabel = item.RequiresRestart
+                ? item.Label + " *"
+                : item.Label;
+
             DrawText(
-                item.Label,
+                displayLabel,
                 left + 18f,
                 y,
                 textScale,
@@ -518,6 +522,7 @@ public sealed class MenuRenderer : IDisposable
         ['.'] = [0,0,0,0,0,0b00110,0b00110],
         [':'] = [0,0b00110,0b00110,0,0b00110,0b00110,0],
         ['>'] = [0b10000,0b01000,0b00100,0b00010,0b00100,0b01000,0b10000],
-        ['<'] = [0b00001,0b00010,0b00100,0b01000,0b00100,0b00010,0b00001]
+        ['<'] = [0b00001,0b00010,0b00100,0b01000,0b00100,0b00010,0b00001],
+        ['*'] = [0,0b10101,0b01110,0b11111,0b01110,0b10101,0]
     };
 }

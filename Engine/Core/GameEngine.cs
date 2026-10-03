@@ -39,6 +39,8 @@ public sealed class GameEngine : IDisposable
     private double _displayFps;
     private double _playTimeSeconds;
     private double _autosaveSeconds;
+    private bool _settingsReapplyPending;
+    private bool _applyingSettings;
     private const double AutosaveIntervalSeconds = 120.0;
 
     public GameTime Time => _time;
@@ -102,6 +104,12 @@ public sealed class GameEngine : IDisposable
 
             _window.PumpEvents();
             if (!_window.Exists) break;
+
+            if (_settingsReapplyPending && !_applyingSettings)
+            {
+                _settingsReapplyPending = false;
+                ApplySettings();
+            }
 
             var currentSeconds = stopwatch.Elapsed.TotalSeconds;
             var deltaSeconds = currentSeconds - previousSeconds;
@@ -278,57 +286,75 @@ public sealed class GameEngine : IDisposable
 
     private void ApplySettings()
     {
-        _settings.Normalize();
+        if (_applyingSettings)
+            return;
 
-        var manualRenderResolution = _settings.ResolutionSize;
-        var windowResolution = _settings.WindowResolutionSize;
+        _applyingSettings = true;
+        try
+        {
+            _settings.Normalize();
 
-        if (_window.IsFullscreen != _settings.Fullscreen)
-            _window.SetFullscreen(_settings.Fullscreen);
+            var manualRenderResolution = _settings.ResolutionSize;
+            var windowResolution = _settings.WindowResolutionSize;
 
-        if (!_settings.Fullscreen)
-            _window.SetWindowedSize(
-                windowResolution.Width,
-                windowResolution.Height);
+            if (_window.IsFullscreen != _settings.Fullscreen)
+                _window.SetFullscreen(_settings.Fullscreen);
 
-        var outputWidth = Math.Max(1, _window.Width);
-        var outputHeight = Math.Max(1, _window.Height);
+            if (!_settings.Fullscreen)
+            {
+                _window.SetWindowedSize(
+                    windowResolution.Width,
+                    windowResolution.Height);
+            }
 
-        var renderResolution =
-            _settings.Upscaler == UpscalerMode.Fsr1
-                ? GraphicsQualityCatalog.FsrRenderResolution(
-                    outputWidth,
-                    outputHeight,
-                    _settings.FsrQuality,
-                    manualRenderResolution)
-                : manualRenderResolution;
+            // SDL can deliver the real borderless-fullscreen dimensions on a
+            // resize event after WindowState changes. OnWindowResized schedules
+            // a second apply, so FSR/internal resolution is always recomputed
+            // from the final drawable size rather than a stale window size.
+            var outputWidth = Math.Max(1, _window.Width);
+            var outputHeight = Math.Max(1, _window.Height);
 
-        _renderer.SetRenderResolution(
-            renderResolution.Width,
-            renderResolution.Height);
+            var renderResolution =
+                _settings.Upscaler == UpscalerMode.Fsr1
+                    ? GraphicsQualityCatalog.FsrRenderResolution(
+                        outputWidth,
+                        outputHeight,
+                        _settings.FsrQuality,
+                        manualRenderResolution)
+                    : manualRenderResolution;
 
-        EngineLog.Info(
-            $"Display/output={outputWidth}x{outputHeight}, " +
-            $"internal render={renderResolution.Width}x{renderResolution.Height}, " +
-            $"upscaler={_settings.Upscaler}, FSR mode={_settings.FsrQuality}.");
-        _renderer.SetShadowResolution(
-            GraphicsQualityCatalog.ShadowMapSize(_settings.ShadowQuality));
-        _renderer.SetShadowDistance(
-            GraphicsQualityCatalog.ShadowDistance(_settings.ShadowDistance));
-        _renderer.SetTextureQuality(_settings.TextureQuality);
-        _renderer.SetVSync(_settings.VSync);
+            _renderer.SetRenderResolution(
+                renderResolution.Width,
+                renderResolution.Height);
+            _renderer.SetShadowResolution(
+                GraphicsQualityCatalog.ShadowMapSize(_settings.ShadowQuality));
+            _renderer.SetShadowDistance(
+                GraphicsQualityCatalog.ShadowDistance(_settings.ShadowDistance));
+            _renderer.SetTextureQuality(_settings.TextureQuality);
+            _renderer.SetVSync(_settings.VSync);
 
-        _camera.FieldOfView =
-            MathF.PI / 180f * _settings.FieldOfViewDegrees;
-        _camera.FarPlane =
-            GraphicsQualityCatalog.RenderDistance(_settings.RenderDistance) + 50f;
-        _camera.MouseSensitivity =
-            0.0035f * _settings.MouseSensitivity;
-        _camera.VerticalSensitivity =
-            0.0025f * _settings.MouseSensitivity;
-        _camera.Mode = _settings.Camera == CameraPreference.FirstPerson
-            ? CameraMode.FirstPerson
-            : CameraMode.ThirdPerson;
+            _camera.FieldOfView =
+                MathF.PI / 180f * _settings.FieldOfViewDegrees;
+            _camera.FarPlane =
+                GraphicsQualityCatalog.RenderDistance(_settings.RenderDistance) + 50f;
+            _camera.MouseSensitivity =
+                0.0035f * _settings.MouseSensitivity;
+            _camera.VerticalSensitivity =
+                0.0025f * _settings.MouseSensitivity;
+            _camera.Mode = _settings.Camera == CameraPreference.FirstPerson
+                ? CameraMode.FirstPerson
+                : CameraMode.ThirdPerson;
+
+            EngineLog.Info(
+                $"Settings applied: output={outputWidth}x{outputHeight}, " +
+                $"internal={renderResolution.Width}x{renderResolution.Height}, " +
+                $"upscaler={_settings.Upscaler}/{_settings.FsrQuality}, " +
+                $"preset={GraphicsPresetCatalog.DetectName(_settings)}.");
+        }
+        finally
+        {
+            _applyingSettings = false;
+        }
     }
 
     private void UpdateFps(double deltaSeconds)
@@ -389,7 +415,14 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        _renderer.Resize((uint)Math.Max(1, _window.Width), (uint)Math.Max(1, _window.Height));
+        _renderer.Resize(
+            (uint)Math.Max(1, _window.Width),
+            (uint)Math.Max(1, _window.Height));
+
+        // Recompute internal/FSR resolution after SDL/Vulkan has committed the
+        // new drawable size. This is especially important for borderless
+        // fullscreen where the monitor resolution arrives asynchronously.
+        _settingsReapplyPending = true;
     }
 
     public void Dispose()
