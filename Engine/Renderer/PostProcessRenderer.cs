@@ -174,9 +174,6 @@ public sealed class PostProcessRenderer : IDisposable
 
         _width = width;
         _height = height;
-
-        if (_sourceView is not null)
-            RebindSource(_sourceView);
     }
 
     private void RebindSource(TextureView sourceView)
