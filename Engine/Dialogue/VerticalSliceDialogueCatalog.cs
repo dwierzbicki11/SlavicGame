@@ -81,7 +81,7 @@ public static class VerticalSliceDialogueCatalog
                         null,
                         effects:
                         [
-                            QuestPhase(QuestPhase.Active),
+                            SetQuestPhaseEffect(QuestPhase.Active),
                             Flag(VerticalSliceQuestInteractions.ContractAcceptedFlag),
                             Evidence(
                                 "light-over-swamp.witness-light",
@@ -467,7 +467,7 @@ public static class VerticalSliceDialogueCatalog
             flag,
             enabled ? "true" : "false");
 
-    private static DialogueEffect QuestPhase(
+    private static DialogueEffect SetQuestPhaseEffect(
         QuestPhase phase) =>
         new(
             DialogueEffectKind.AdvanceQuest,
