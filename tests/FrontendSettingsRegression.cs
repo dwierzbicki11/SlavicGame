@@ -223,6 +223,11 @@ public static class FrontendSettingsRegression
                 $"{presetValue} uses EASU/RCAS without a manual Vulkan Y inversion");
         }
 
+        check(FsrPresentationPolicy.UsesSinglePassEasuCompatibility(true),
+            "Vulkan FSR uses single-pass EASU compatibility presentation");
+        check(!FsrPresentationPolicy.UsesSinglePassEasuCompatibility(false),
+            "Non-Vulkan backends retain the full EASU plus RCAS path");
+
         var ultraSettings = new GameSettings();
         GraphicsPresetCatalog.Apply(ultraSettings, GraphicsPreset.Ultra);
         var ultraInternal = GraphicsQualityCatalog.FsrRenderResolution(
