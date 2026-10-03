@@ -104,6 +104,9 @@ public sealed class RitualExecution
     public double StepProgress => !IsPerforming
         ? 0
         : Math.Clamp(1.0 - _stepRemaining / StepDurationSeconds, 0.0, 1.0);
+    public double OverallProgress => IsPerforming
+        ? Math.Clamp((_stepIndex + StepProgress) / Sequence.Length, 0.0, 1.0)
+        : CompletionGlowRemaining > 0 ? 1.0 : 0.0;
     public string Message { get; private set; } = "R RYTUAL";
     public RitualStartFailure LastFailure { get; private set; }
 
