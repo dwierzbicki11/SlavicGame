@@ -280,9 +280,67 @@ internal static class AssetIntegrationRegression
             "Static R0 mesh contains GLB world indices beyond terrain");
 
         var enemy = GlbModel.Load(enemyPath);
-        ActorModelMesh.Build(world, player, enemy, 0.35, 0f, true, out var actorVertices, out var actorIndices);
+        ActorModelMesh.Build(
+            world,
+            player,
+            enemy,
+            0.35,
+            0f,
+            true,
+            out var actorVertices,
+            out var actorIndices);
+
         check(actorVertices.Length > 0 && actorIndices.Length > 0,
-            "Animated player and enemy models produce dynamic actor geometry");
+            "Animated player, settlers and enemy models produce dynamic actor geometry");
+
+        var questNpcIds = new[]
+        {
+            "missing-family",
+            "crossing-keeper",
+            "herbalist",
+            "community-guard",
+            "shrine-keeper"
+        };
+        var questProfiles = questNpcIds
+            .Select(id =>
+            {
+                var actor = world.NpcWorld.Find(id)
+                    ?? throw new Exception($"NPC {id} missing from runtime");
+                return NpcVisualCatalog.For(id, actor.Role);
+            })
+            .ToArray();
+
+        check(questProfiles.Select(profile => profile.BodyScale).Distinct().Count() == 5,
+            "Five authored NPCs have distinct body proportions");
+        check(questProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 4,
+            "Authored NPC silhouettes use multiple distinct accessory families");
+
+        var ambientProfiles = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .Select(actor => NpcVisualCatalog.For(actor.Id, actor.Role))
+            .ToArray();
+
+        check(ambientProfiles.Length == 8 &&
+              ambientProfiles.Select(profile => profile.BaseColor).Distinct().Count() >= 6 &&
+              ambientProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 5,
+            "Ambient settlers have varied palettes and silhouette accessories");
+
+        var playerGeometry = player.BuildMesh(
+            Matrix4x4.Identity,
+            "Idle",
+            0.35f,
+            sourceIsZUp: true);
+        var enemyGeometry = enemy.BuildMesh(
+            Matrix4x4.Identity,
+            "Idle",
+            0.35f,
+            sourceIsZUp: true);
+        var baseAnimatedVertexBudget =
+            playerGeometry.Positions.Length * (1 + world.NpcWorld.Actors.Count) +
+            enemyGeometry.Positions.Length;
+
+        check(actorVertices.Length > baseAnimatedVertexBudget,
+            "Settler accessories add visible geometry beyond the shared humanoid rig");
 
         void CheckFacing(string id, Vector2 target)
         {
