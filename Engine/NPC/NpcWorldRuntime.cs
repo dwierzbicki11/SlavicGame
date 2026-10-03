@@ -20,7 +20,25 @@ public static class NpcPresentation
         "herbalist" => "ZIELARKA",
         "community-guard" => "STRAZNIK WSPOLNOTY",
         "shrine-keeper" => "OPIEKUN KREGU",
+        "settler-farmer-01" => "ROLNIK",
+        "settler-farmer-02" => "MIESZKANKA WSI",
+        "settler-woodworker-01" => "CIESLA",
+        "settler-potter-01" => "GARNCARZ",
+        "settler-trader-01" => "HANDLARZ",
+        "settler-carrier-01" => "TRAGARZ",
+        "settler-elder-01" => "STARSZY MIESZKANIEC",
+        "settler-traveler-01" => "PODROZNY",
         _ => id.Replace('-', ' ').ToUpperInvariant()
+    };
+
+    public static bool HasDialogue(string id) => id switch
+    {
+        "missing-family" or
+        "crossing-keeper" or
+        "herbalist" or
+        "community-guard" or
+        "shrine-keeper" => true,
+        _ => false
     };
 
     public static Vector3 RoleColor(NpcRole role) => role switch
@@ -72,13 +90,30 @@ public sealed class NpcWorldRuntime
         }
     }
 
-    public NpcWorldActor? FindNearest(Vector3 position, float maxDistance = 3.8f)
+    public NpcWorldActor? FindNearest(Vector3 position, float maxDistance = 3.8f) =>
+        FindNearestMatching(position, maxDistance, static _ => true);
+
+    public NpcWorldActor? FindNearestInteractive(
+        Vector3 position,
+        float maxDistance = 3.8f) =>
+        FindNearestMatching(
+            position,
+            maxDistance,
+            static actor => NpcPresentation.HasDialogue(actor.Id));
+
+    private NpcWorldActor? FindNearestMatching(
+        Vector3 position,
+        float maxDistance,
+        Func<NpcWorldActor, bool> predicate)
     {
         var bestDistanceSquared = maxDistance * maxDistance;
         NpcWorldActor? best = null;
 
         foreach (var actor in _actors)
         {
+            if (!predicate(actor))
+                continue;
+
             var delta = actor.Position - position;
             delta.Y = 0f;
             var distanceSquared = delta.LengthSquared();
@@ -112,7 +147,7 @@ public sealed class NpcWorldRuntime
 
     public string HudPrompt(Vector3 playerPosition)
     {
-        var actor = FindNearest(playerPosition);
+        var actor = FindNearestInteractive(playerPosition);
         return actor is null
             ? ""
             : $"E POROZMAWIAJ: {NpcPresentation.DisplayName(actor.Id)}";
@@ -138,6 +173,30 @@ public sealed class NpcWorldRuntime
 
             ("shrine-keeper", "old-shrine", _) => new(-82f, 58f),
             ("shrine-keeper", "old-village", _) => new(-17f, -82f),
+
+            ("settler-farmer-01", "old-village", "go-to-fields") => new(-25f, -70f),
+            ("settler-farmer-01", "old-village", _) => new(-20f, -92f),
+
+            ("settler-farmer-02", "old-village", "field-work") => new(-30f, -76f),
+            ("settler-farmer-02", "old-village", _) => new(-24f, -98f),
+
+            ("settler-woodworker-01", "old-village", "wood-work") => new(15f, -97f),
+            ("settler-woodworker-01", "old-village", _) => new(20f, -101f),
+
+            ("settler-potter-01", "old-village", "craft-work") => new(-7f, -74f),
+            ("settler-potter-01", "old-village", _) => new(-13f, -90f),
+
+            ("settler-trader-01", "old-village", "market-trade") => new(3f, -75f),
+            ("settler-trader-01", "old-village", _) => new(8f, -88f),
+
+            ("settler-carrier-01", "old-village", "carry-goods") => new(11f, -82f),
+            ("settler-carrier-01", "old-village", _) => new(15f, -95f),
+
+            ("settler-elder-01", "old-village", "village-square") => new(-3f, -84f),
+            ("settler-elder-01", "old-village", _) => new(-12f, -86f),
+
+            ("settler-traveler-01", "old-village", "arrive-and-trade") => new(2f, -109f),
+            ("settler-traveler-01", "old-village", _) => new(18f, -76f),
 
             _ => LocationCenter(locationId)
         };
