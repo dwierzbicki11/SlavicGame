@@ -20,7 +20,9 @@ public sealed class GameWindow : IDisposable
     private readonly HashSet<Key> _keysPressed = [];
     private uint _mouseButtonsDown;
     private uint _mouseButtonsPressed;
+    private uint _mouseButtonsReleased;
     private const uint LeftMouseMask = 1u;
+    private const uint RightMouseMask = 4u;
 
     public Sdl2Window NativeWindow => _window;
     public bool Exists => _window.Exists;
@@ -74,6 +76,7 @@ public sealed class GameWindow : IDisposable
     {
         _keysPressed.Clear();
         _mouseButtonsPressed = 0u;
+        _mouseButtonsReleased = 0u;
         _window.PumpEvents();
         if (!_window.Exists) return;
 
@@ -91,12 +94,27 @@ public sealed class GameWindow : IDisposable
 
     public bool ConsumeKeyPress(Key key) => _keysPressed.Remove(key);
 
+    public bool IsLeftMouseDown =>
+        (_mouseButtonsDown & LeftMouseMask) != 0u;
+
+    public bool IsRightMouseDown =>
+        (_mouseButtonsDown & RightMouseMask) != 0u;
+
     public bool ConsumeLeftMousePress()
     {
         if ((_mouseButtonsPressed & LeftMouseMask) == 0u)
             return false;
 
         _mouseButtonsPressed &= ~LeftMouseMask;
+        return true;
+    }
+
+    public bool ConsumeLeftMouseRelease()
+    {
+        if ((_mouseButtonsReleased & LeftMouseMask) == 0u)
+            return false;
+
+        _mouseButtonsReleased &= ~LeftMouseMask;
         return true;
     }
 
@@ -146,12 +164,14 @@ public sealed class GameWindow : IDisposable
         _keysPressed.Clear();
         _mouseButtonsDown = 0u;
         _mouseButtonsPressed = 0u;
+        _mouseButtonsReleased = 0u;
         SetRelativeMouseMode(false);
     }
 
     private void UpdateMouseButtons(uint buttons)
     {
         _mouseButtonsPressed |= buttons & ~_mouseButtonsDown;
+        _mouseButtonsReleased |= _mouseButtonsDown & ~buttons;
         _mouseButtonsDown = buttons;
     }
 
