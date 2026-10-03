@@ -246,3 +246,34 @@ To nadal system bez navmesha i bez fizyki crowd:
 - brak osobnych pathfinding workerów.
 
 Docelowy system nawigacji może później zastąpić tylko sampler tras bez zmiany kontraktu harmonogramu NPC.
+
+
+## Multi-model settler pass
+
+Populacja nie używa już `player_hunter_animated.glb` jako wspólnej bazy dla wszystkich NPC.
+
+Runtime preloaduje pięć dedykowanych humanoidów:
+- `npc_villager_a_animated.glb`;
+- `npc_villager_b_animated.glb`;
+- `npc_elder_animated.glb`;
+- `npc_hunter_animated.glb`;
+- `npc_merchant_animated.glb`.
+
+Przypisanie modeli jest trwałe per NPC i rola. Przykładowo:
+- rodzina zaginionego -> villager B;
+- opiekun przeprawy -> hunter;
+- zielarka -> villager A;
+- strażnik -> hunter;
+- opiekun kręgu -> elder;
+- handlarz/podróżny -> merchant;
+- starszy mieszkaniec -> elder;
+- rolnicy/rzemieślnicy są rozdzieleni między villager A/B/hunter.
+
+Kolorystyka, proporcje i lekkie akcesoria z poprzedniego passa pozostają nakładane na wybrany model bazowy. Dzięki temu różnorodność wynika teraz z:
+1. innej geometrii GLB;
+2. skali/proporcji;
+3. palety;
+4. akcesoriów;
+5. przesuniętej fazy i prędkości animacji.
+
+Wszystkie pięć baz nadal trafia do jednego dynamicznego actor mesh/bufferu, więc nie dokładamy osobnego draw calla na każdego mieszkańca.
