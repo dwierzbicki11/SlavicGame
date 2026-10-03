@@ -6,7 +6,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `research/bestiary/ResearchCardIndex.md` research ownerów, `design/RegionalContentAssetCatalog.md` rodziny content/assets R0–R6, a `quests/SideQuestCatalog.md` zamyka planistyczny scope side-content dla wszystkich regionów. `quests/SideQuestCardsR0.md`–`SideQuestCardsR6.md` zamykają implementacyjny first pass wszystkich 21 planowanych slotów R0–R6. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
 
-Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, finalne culture/material locators, konkretne asset manifests i targety performance wymagające pomiarów.
+Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, exact historical-final locators dla konkretnych assetów, konkretne asset manifests i targety performance wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
@@ -18,7 +18,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, f
 | Regiony | world/RegionBibleIndex.md + R0–R6 bibles | 7/7 production bibles v0.1 |
 | Panteon/religia | pantheon/* + research/pantheon/* | critical source-policy PASS v0.1; dalsze pełne lektury/locators mogą pogłębiać research, ale nie blokują implementacji |
 | Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md | scope 1.0 v0.1; południca source-strength/region-fit PASS v0.2; forest-guardian identity CLOSED/F |
-| Kultury | world/Cultures.md + world/MacroCultures.md + research/cultures/* | framework v0.1; R0–R5 evidence packages v0.1; production locators/art locks otwarte |
+| Kultury | world/Cultures.md + world/MacroCultures.md + research/cultures/* | framework v0.1; R0–R5 evidence packages v0.1; exact art/technology locators otwarte per asset |
 | Quest framework | design/QuestDesign.md | v0.1 |
 | Vertical slice quest | quests/LightOverSwamp*.md | pełny pakiet v0.1 |
 | Combat | design/CombatDesign.md + MeleeCombat.md + BowCombat.md | v0.1 |
@@ -37,7 +37,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, f
 | Architektura/rendering | design/EngineArchitecture.md + technical/RenderingAndPlatform.md | v0.1 |
 | Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md | v0.1; pomiary performance otwarte |
 | Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md | first pass |
-| Material culture research | research/material-culture/* + research/cultures/CULT_R0_ZARNOWIEC.md–CULT_R5_AREL.md | R0 baseline + R1–R4 differential mappings + osobny R5 comparative basis v0.1; final locators/art locks niepełne |
+| Material culture research | research/material-culture/* + research/cultures/CULT_R0_ZARNOWIEC.md–CULT_R5_AREL.md | family-level production research PASS v0.1; L0–L3 ledger definiuje kiedy konkretny asset może być `historical-final`; exact locators nadal per asset |
 | Asset list vertical slice | design/VerticalSliceAssetList.md | v0.1 |
 | Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + region bibles | R0–R6 planning catalog v0.1; finalne manifesty/art lock otwarte |
 
@@ -47,10 +47,10 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, f
 2. finalne dialogi, VO i lokalizacja;
 3. finalne personalia/łączenie slotów NPC, appearance i killability windows;
 4. bestiariusz: forest-guardian ma identity lock CLOSED/F, a południca source-strength/region-fit PASS; dla obu finalne appearance/placement pozostają art/data lockiem; nadal otwarte są finalne targety kontraktów `SQ_R1_02`, `SQ_R2_02`, `SQ_R3_03` i `SQ_R4_02`;
-5. R0–R5 mają culture evidence packages v0.1, ale finalne locatory oraz costume/ornament/religion-material/naming i regionalne technology/art locki nadal są jawnie otwarte; R3 dodatkowo ma maritime/fishing/salvage/language/legal locki, R4 mining/geology/transport/craft locki, a R5 transport/dwelling/costume/old-site/economy/naming/religion locki;
+5. R0–R5 mają culture evidence packages v0.1, a material culture ma family-level production PASS z locator grades L0–L3. Konkretne modele mogą dostać status `historical-final` dopiero po locatorze adekwatnym do ich claimu; szczególnie otwarte są costume/ornament/religion-material/naming oraz regionalne technology/art locki, R3 maritime/fishing/salvage/language/legal, R4 mining/geology/transport/craft, R5 transport/dwelling/costume/old-site/economy/naming/religion;
 6. panteon ma zamknięty krytyczny source-policy lock H/R/F/U i regionalności; dalsze pełne krytyczne wydania/locators mogą doprecyzować twierdzenia, lecz nie blokują implementacji;
 7. konkretne finalne modele/materials/animations/audio/VFX i manifesty poza vertical slice;
-8. dalsze creature assignments, encounter/POI placement oraz decyzje o scaleniu side-quest slotów po playtestach;
+8. regional encounter/vendor/item catalogs, dalsze creature assignments, encounter/POI placement oraz decyzje o scaleniu side-quest slotów po playtestach;
 9. measured performance targets, streaming/VFX/shadow/AI budgets i wymagania sprzętowe;
 10. tuning pogody, traversal, ekonomii, AI i encounterów po playtestach;
 11. nazwy robocze F oraz elementy research/art/playtest/performance lock.
@@ -61,11 +61,12 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0–R6 mają implementacyjny first pass wszystkich 21 side-questów. Culture research ma stabilne IDs/source policy, a R0–R5 mają evidence packages v0.1. Południca ma source-strength/region-fit PASS v0.2. Forest-guardian ma zamknięty identity lock jako świadome F. Panteon ma krytyczny source-policy PASS: implementacja rozróżnia świadectwo, rekonstrukcję i fikcję oraz nie unifikuje automatycznie regionalnych kultów. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0–R6 mają implementacyjny first pass wszystkich 21 side-questów. Culture research ma stabilne IDs/source policy, a R0–R5 mają evidence packages v0.1. Material culture ma teraz jawny family-level production PASS i locator grades L0–L3, więc implementacja modularnych rodzin assetów nie czeka na fałszywą „pełną rekonstrukcję”; exact historical-final claim pozostaje blokowany per asset, gdy locator jest zbyt słaby. Południca ma source-strength/region-fit PASS v0.2. Forest-guardian ma zamknięty identity lock jako świadome F. Panteon ma krytyczny source-policy PASS. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. finalne material-culture locators / production asset research lock;
-2. regional encounter/vendor/item catalogs;
-3. konkretne asset manifests po art/research lockach;
-4. później balance/playtest/performance locks.
+1. regional encounter rosters/tables poza R0;
+2. regional vendors/services final pass;
+3. item/equipment/recipe catalogs dla pełnego scope;
+4. konkretne asset manifests po art/research lockach;
+5. później balance/playtest/performance locks.
