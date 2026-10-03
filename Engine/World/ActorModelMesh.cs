@@ -43,7 +43,9 @@ public static class ActorModelMesh
                 Matrix4x4.CreateScale(profile.BodyScale) *
                 Matrix4x4.CreateRotationY(npc.YawRadians) *
                 Matrix4x4.CreateTranslation(npc.Position);
-            var clip = NpcVisualCatalog.AnimationClip(npc.Activity);
+            var clip = npc.IsMoving
+                ? "Walk"
+                : "Idle";
             var animationTime =
                 (time + StableAnimationOffset(npc.Id)) *
                 profile.AnimationSpeed;
