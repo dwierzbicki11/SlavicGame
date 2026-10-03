@@ -57,7 +57,8 @@ void main()
             sunDirection),
         GraphicsFeatures0.z);
     float directShadow = cloudShadow * geometryShadow;
-    vec3 ambient = fsin_Color * 0.26;
+    float nightFactor = clamp(CelestialParameters.x, 0.0, 1.0);
+    vec3 ambient = fsin_Color * mix(0.26, 0.045, nightFactor);
     vec3 color = ambient +
         fsin_Color * sunColor * direct * daylight * directShadow * 0.92;
 
