@@ -16,6 +16,7 @@ public sealed class PostProcessRenderer : IDisposable
     private Pipeline? _pipeline;
     private Shader[]? _shaders;
     private TextureView? _sourceView;
+    private TextureView? _bloomView;
     private uint _width;
     private uint _height;
     private bool _disposed;
@@ -54,12 +55,16 @@ public sealed class PostProcessRenderer : IDisposable
             new ResourceLayoutElementDescription(
                 "SceneSampler",
                 ResourceKind.Sampler,
+                ShaderStages.Fragment),
+            new ResourceLayoutElementDescription(
+                "BloomColor",
+                ResourceKind.TextureReadOnly,
                 ShaderStages.Fragment)));
 
         _shaders = ShaderLibrary.LoadPair(factory, "postprocess");
 
         RecreateTarget(width, height, sceneOutput.ColorAttachments[0].Format);
-        RebindSource(sourceView);
+        RebindSources(sourceView, sourceView);
 
         _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
@@ -78,19 +83,26 @@ public sealed class PostProcessRenderer : IDisposable
             _framebuffer!.OutputDescription));
     }
 
-    public void SetSource(
+    public void SetSources(
         TextureView sourceView,
+        TextureView bloomView,
         uint width,
         uint height,
         PixelFormat colorFormat)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(sourceView);
+        ArgumentNullException.ThrowIfNull(bloomView);
 
         if (_width != width || _height != height)
             RecreateTarget(width, height, colorFormat);
 
-        RebindSource(sourceView);
+        if (!ReferenceEquals(_sourceView, sourceView) ||
+            !ReferenceEquals(_bloomView, bloomView) ||
+            _set is null)
+        {
+            RebindSources(sourceView, bloomView);
+        }
     }
 
     public bool IsNeeded(GameSettings settings)
@@ -123,7 +135,7 @@ public sealed class PostProcessRenderer : IDisposable
             1f / Math.Max(1u, _width),
             1f / Math.Max(1u, _height),
             settings.AntiAliasing == AntiAliasingMode.Fxaa ? 1f : 0f,
-            GraphicsQualityCatalog.BloomTapCount(settings.Bloom));
+            0f);
 
         var controls = new Vector4(
             settings.BloomStrength,
@@ -176,7 +188,7 @@ public sealed class PostProcessRenderer : IDisposable
         _height = height;
     }
 
-    private void RebindSource(TextureView sourceView)
+    private void RebindSources(TextureView sourceView, TextureView bloomView)
     {
         if (_graphicsDevice is null ||
             _layout is null ||
@@ -191,8 +203,10 @@ public sealed class PostProcessRenderer : IDisposable
                 _layout,
                 _paramsBuffer,
                 sourceView,
-                _graphicsDevice.LinearSampler));
+                _graphicsDevice.LinearSampler,
+                bloomView));
         _sourceView = sourceView;
+        _bloomView = bloomView;
     }
 
     public void Dispose()
@@ -221,6 +235,7 @@ public sealed class PostProcessRenderer : IDisposable
         _targetTexture = null;
         _shaders = null;
         _sourceView = null;
+        _bloomView = null;
         _graphicsDevice = null;
     }
 }
