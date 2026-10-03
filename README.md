@@ -434,3 +434,7 @@ Key vertical-slice items now use dynamic GLB visuals instead of invisible intera
 ### Ambient wildlife
 
 R0 forests now contain animated deer, boars, wolves and ravens using a lightweight deterministic territory/flee runtime. Ravens fly and gain altitude when spooked; ground wildlife wanders locally and avoids the player. Wildlife animation is distance-culled before geometry is appended to the shared actor pass.
+
+### Bow hunting
+
+The vertical slice now includes a physical projectile bow. Hold RMB to aim, hold LMB to draw and release LMB to fire. Arrow speed and damage scale with draw time, gravity affects the flight path, targets are hit by segment collision, terrain arrows can be recovered with E, and wildlife kills persist through world flags. Aiming uses the existing R0 bow/arrow models and a lightweight reticle while projectiles remain consolidated in the actor render path.
