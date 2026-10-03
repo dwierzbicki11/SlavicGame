@@ -1,74 +1,117 @@
-# Emotional TTS — first runtime integration
+# Emotional TTS — free local runtime
 
-SlavicGame can synthesize cinematic narration and magic incantations at runtime with emotional acting direction.
+SlavicGame uses a local open-source TTS path for cinematic narration, magic incantations and future NPC dialogue. The game does not require a paid speech API.
 
-## Provider
+## Backend
 
-The first provider uses the OpenAI `/v1/audio/speech` endpoint with `gpt-4o-mini-tts`.
+The runtime backend is **Chatterbox Multilingual** by Resemble AI.
 
-No API key is stored in the repository. TTS is automatically enabled only when `OPENAI_API_KEY` is present. Set `SLAVICGAME_TTS=0` to force-disable it.
+Reasons for this choice:
+- open-source / MIT;
+- Polish language support;
+- local inference after model download;
+- multilingual zero-shot voice cloning;
+- controllable expression strength through `exaggeration`;
+- suitable for reusable character voice references.
 
-Optional environment variables:
+No OpenAI API key, ElevenLabs key or other paid TTS credential is read by the game.
 
-- `SLAVICGAME_TTS_MODEL` — default: `gpt-4o-mini-tts`;
-- `SLAVICGAME_TTS_VOICE` — default: `cedar`.
+## Install
 
-Example Linux launch:
+The helper environment is deliberately separate from the C# runtime.
+
+Linux:
 
 ```bash
-export OPENAI_API_KEY="..."
-export SLAVICGAME_TTS_VOICE="cedar"
+sudo apt install python3.11 python3.11-venv
+./tools/tts/setup-local.sh
 dotnet run -c Release
 ```
 
-Do not commit API keys or put them in settings.json.
+Windows PowerShell:
 
-## Emotional direction
+```powershell
+./tools/tts/setup-local.ps1
+dotnet run -c Release
+```
 
-Voice lines carry `VoiceDirection` with:
+The setup creates `.venv-tts` and installs `chatterbox-tts`. On the first synthesized line, Chatterbox downloads its open model files into the normal local model cache. After the files are present, synthesis itself does not require a paid service.
 
-- emotion;
+Use `SLAVICGAME_TTS=0` to force-disable speech.
+
+Optional overrides:
+- `SLAVICGAME_TTS_PYTHON` — full path to the Python executable;
+- `SLAVICGAME_TTS_DEVICE` — `auto`, `cpu`, `cuda` or `mps`;
+- `SLAVICGAME_TTS_REFERENCE_DIR` — voice reference directory;
+- `SLAVICGAME_TTS_CACHE_DIR` — generated PCM cache;
+- `SLAVICGAME_TTS_SCRIPT` — sidecar path.
+
+## Runtime architecture
+
+C# starts one persistent local Python sidecar on the first requested line. The model is loaded once and subsequent requests reuse it.
+
+Protocol:
+1. C# sends one JSON request per line;
+2. the Python process synthesizes Polish speech locally;
+3. output is normalized to PCM16 mono 24 kHz;
+4. the generated line is stored in a persistent local cache;
+5. C# reads the PCM and queues it through SDL2.
+
+The frame loop never waits synchronously for synthesis. A newer requested voice line cancels playback of an older pending line.
+
+No generated voice cache is committed to Git.
+
+## Emotion model
+
+Game content continues to use:
+- emotion category;
 - intensity 0..1;
-- speaking speed;
-- optional actor/persona direction.
+- speed metadata;
+- optional persona;
+- optional stable voice ID.
 
-Supported game-level emotions:
+The local adapter maps intensity to Chatterbox `exaggeration` and `cfg_weight`. Strong fear, anger, urgency and mystical delivery receive more expression; calm and whisper use lower exaggeration.
 
-- neutral;
-- calm;
-- warm;
-- uneasy;
-- fearful;
-- angry;
-- sad;
-- whisper;
-- solemn;
-- mystical;
-- urgent.
+Chatterbox's expression control changes intensity, but categorical acting such as "fear" versus "anger" is most reliable when the game also supplies an emotion-matched reference clip.
 
-The provider turns these values into acting instructions that explicitly request natural Polish, believable pauses, breath and emphasis, and forbid robotic/navigation-style delivery.
+## Character and emotion reference clips
+
+Optional references live in:
+
+```text
+assets/voice/reference/
+```
+
+For voice `hunter` with emotion `fearful`, the resolver tries:
+
+1. `hunter_fearful.wav`
+2. `hunter.wav`
+3. `fearful.wav`
+4. `default.wav`
+5. Chatterbox built-in voice
+
+This means one actor/reference voice can be reused for many lines, while selected emotional reference clips can make key scenes more convincing.
+
+Use only recordings that the project has permission to use.
 
 ## Current hooks
 
-- every current cinematic shot has explicit emotional direction;
-- every magic incantation is spoken with a ritual/mystical direction;
-- `DialogueNode` already accepts optional `VoiceDirection` for future playable NPC conversations.
+- all current cinematic shots carry explicit emotional direction;
+- magic incantations use a mystical/ritual direction;
+- `DialogueNode` supports per-line `VoiceDirection` for future playable NPC conversations;
+- repeated identical lines persist in the local generated-audio cache.
 
-## Playback
+## Performance
 
-The API returns PCM16 mono at 24 kHz. The game queues it directly through SDL2, keeping the path cross-platform and avoiding a Windows-only audio library.
+A GPU is optional but greatly improves first-generation latency. CPU inference is supported by the architecture but can be slow, especially on the first line after launch.
 
-Synthesis is asynchronous and does not block the frame loop. Starting a newer voice line cancels the older pending request and clears queued speech.
-
-Repeated identical lines are cached in memory for the current game session, which avoids repeated API calls for frequently cast spells.
+For a game build with many fixed lines, the preferred production workflow is to pre-generate/cache dialogue during development. Runtime generation remains useful for prototyping and dynamic content.
 
 ## Production follow-ups
 
-Before final voice production:
-
-1. assign stable character voice IDs/personas;
-2. add a persistent on-disk cache or pre-generation pipeline;
-3. expose Voice volume and TTS enable/disable in Settings;
-4. tune Polish pronunciation of fictional names and magic words;
-5. author per-dialogue emotions instead of relying on neutral fallback;
-6. consider recorded actor VO for critical scenes while retaining TTS for prototyping/dynamic content.
+1. assign stable voice IDs to important NPCs;
+2. prepare legally usable neutral/emotional reference clips;
+3. add a build-time voice-pack pre-generation command;
+4. expose Voice volume and TTS on/off in game Settings;
+5. tune fictional names and magic-word pronunciation;
+6. keep recorded actor VO possible for major scenes without changing dialogue APIs.
