@@ -44,6 +44,8 @@ public sealed class VeldridRenderer : IDisposable
     private GlbModel? _enemyModel;
     private readonly Dictionary<string, GlbModel> _npcModels =
         new(StringComparer.Ordinal);
+    private readonly Dictionary<string, GlbModel> _wildlifeModels =
+        new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _worldItemModels =
         new(StringComparer.Ordinal);
 
@@ -146,6 +148,41 @@ public sealed class VeldridRenderer : IDisposable
             }
 
             _npcModels[modelFile] = model;
+        }
+
+        _wildlifeModels.Clear();
+        foreach (var modelFile in world.Wildlife.Actors
+                     .Select(actor => WildlifeVisualCatalog.ModelFile(actor.Species))
+                     .Distinct(StringComparer.Ordinal))
+        {
+            var wildlifePath = Path.Combine(
+                assetsRoot,
+                "models",
+                "animated",
+                modelFile);
+            if (!File.Exists(wildlifePath))
+            {
+                throw new FileNotFoundException(
+                    $"Required wildlife model '{modelFile}' was not found.",
+                    wildlifePath);
+            }
+
+            var model = GlbModel.Load(wildlifePath);
+            if (modelFile == "raven_animated.glb")
+            {
+                if (!model.AnimationNames.Contains("Fly"))
+                    throw new InvalidDataException(
+                        $"Wildlife model '{modelFile}' must contain Fly.");
+            }
+            else if (!model.AnimationNames.Contains("Idle") ||
+                     !model.AnimationNames.Contains("Walk") ||
+                     !model.AnimationNames.Contains("Run"))
+            {
+                throw new InvalidDataException(
+                    $"Wildlife model '{modelFile}' must contain Idle, Walk and Run.");
+            }
+
+            _wildlifeModels[modelFile] = model;
         }
 
         _worldItemModels.Clear();
@@ -322,7 +359,8 @@ public sealed class VeldridRenderer : IDisposable
             $"collision obstacles={world.Obstacles.Count}.");
         EngineLog.Info(
             $"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, " +
-            $"NPC models={_npcModels.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
+            $"NPC models={_npcModels.Count}, wildlife models={_wildlifeModels.Count}, " +
+            $"enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
 
@@ -374,6 +412,7 @@ public sealed class VeldridRenderer : IDisposable
             world,
             _playerModel,
             _npcModels,
+            _wildlifeModels,
             _enemyModel,
             animationSeconds,
             camera.Yaw,
