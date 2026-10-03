@@ -35,7 +35,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
 
 ### P3 — content production
-- [ ] side-quest production cards per region; R0–R2 i R4 gotowe (`quests/SideQuestCardsR0.md`, `SideQuestCardsR1.md`, `SideQuestCardsR2.md`, `SideQuestCardsR4.md`), następny R3;
+- [ ] side-quest production cards per region; R0–R4 gotowe (`quests/SideQuestCardsR0.md`, `SideQuestCardsR1.md`, `SideQuestCardsR2.md`, `SideQuestCardsR3.md`, `SideQuestCardsR4.md`), następny R5;
 - [ ] regional encounter rosters/tables poza R0;
 - [ ] regional vendors/services final pass;
 - [ ] item/equipment/recipe catalogs dla pełnego scope;
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-Najbliższy niezablokowany pakiet: **side-quest production cards R3** dla `SQ_R3_01`–`SQ_R3_03`. `SQ_R3_03` zachowuje jawny water-creature research/content lock, a szczegóły jednostek, rybołówstwa, salvage i material culture pozostają research lockiem. Następnie R5 i R6; culture research packages pozostają kolejnym dużym P2.
+Najbliższy niezablokowany pakiet: **side-quest production cards R5** dla `SQ_R5_01`–`SQ_R5_03`. Cały R5 zachowuje jawny culture research lock: appearance, ornament, praktyki, normy, mobilność i nazewnictwo nie mogą być wymyślane przez analogię do „stepu”. Następnie R6; culture research packages pozostają kolejnym dużym P2.
