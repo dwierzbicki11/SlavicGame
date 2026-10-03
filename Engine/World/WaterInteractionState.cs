@@ -46,6 +46,10 @@ public sealed class WaterInteractionState
         if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0d)
             return;
 
+        SplashPulse = MathF.Max(
+            0f,
+            SplashPulse - 3.6f * (float)deltaSeconds);
+
         var position = world.PlayerPosition;
         WaterDepth = DepthAt(world, position);
         IsInWater = WaterDepth > 0.03f;
@@ -107,10 +111,6 @@ public sealed class WaterInteractionState
                 Wetness -
                 DryingRatePerSecond * (float)deltaSeconds);
         }
-
-        SplashPulse = MathF.Max(
-            0f,
-            SplashPulse - 3.6f * (float)deltaSeconds);
 
         if (!IsInWater && MovementIntensity < 0.01f)
             MovementIntensity = 0f;
