@@ -414,3 +414,47 @@ Tylko rozpalone ognisko:
 - redukuje wychłodzenie;
 - renderuje flame/glow mesh;
 - używa wartości koloru >1.0 jako lekkiego sygnału emissive w actor shaderze, dzięki czemu płomień pozostaje czytelny nocą bez osobnych point lights.
+
+
+## Ambient wildlife runtime pass
+
+R0 otrzymuje pierwszą lekką, niequestową populację fauny opartą na istniejących animowanych GLB-ach.
+
+### Roster
+Stała populacja prototypowa:
+- 3 jelenie;
+- 2 dziki;
+- 2 wilki;
+- 4 kruki.
+
+Modele:
+- `deer_animated.glb`;
+- `boar_animated.glb`;
+- `wolf_animated.glb`;
+- `raven_animated.glb`.
+
+### Zachowanie
+Zwierzęta naziemne:
+- mają deterministyczny home range;
+- wędrują bez navmesha po krótkich trajektoriach;
+- wykorzystują istniejący obstacle resolve;
+- nie wchodzą do rdzenia Żarnowca;
+- po zbliżeniu gracza przechodzą na `Run` i uciekają.
+
+Wilki w tym passie są ambientowe i ostrożne — nie są jeszcze osobnym combat encounterem.
+
+Kruki:
+- krążą nad terenem;
+- utrzymują wysokość względem lokalnej rzeźby;
+- używają klipu `Fly`.
+
+### Performance
+System jest celowo mały:
+- 11 aktorów;
+- brak navmesha;
+- brak crowd physics;
+- brak persistence pozycji ambient wildlife;
+- render wildlife jest odcinany przed budową dynamicznego mesha powyżej 150 m od gracza;
+- cztery GLB-y są ładowane raz i współdzielone przez wszystkie instancje gatunku.
+
+To jest gameplay/world-life layer, nie finalny ecosystem simulation.
