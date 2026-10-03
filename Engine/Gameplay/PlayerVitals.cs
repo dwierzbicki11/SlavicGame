@@ -16,12 +16,21 @@ public sealed class PlayerVitals
     public bool IsAlive => Health > 0f;
     public bool CanSprint => IsAlive && Stamina > 0.1f;
 
+    public bool TrySpendStamina(float amount)
+    {
+        ValidateAmount(amount);
+        if (!IsAlive || Stamina < amount)
+            return false;
+
+        Stamina -= amount;
+        _recoveryDelayRemaining = StaminaRecoveryDelaySeconds;
+        return true;
+    }
+
     public void UpdateStamina(bool sprinting, double deltaSeconds)
     {
         if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0)
-        {
             return;
-        }
 
         if (sprinting && CanSprint)
         {
@@ -39,11 +48,7 @@ public sealed class PlayerVitals
         }
 
         if (recoverySeconds > 0.0)
-        {
-            Stamina = MathF.Min(
-                MaxStamina,
-                Stamina + StaminaRecoveryPerSecond * (float)recoverySeconds);
-        }
+            Stamina = MathF.Min(MaxStamina, Stamina + StaminaRecoveryPerSecond * (float)recoverySeconds);
     }
 
     public void TakeDamage(float amount)
@@ -58,19 +63,13 @@ public sealed class PlayerVitals
         Health = MathF.Min(MaxHealth, Health + amount);
     }
 
-    public void Restore()
-    {
-        SetState(MaxHealth, MaxStamina);
-    }
+    public void Restore() => SetState(MaxHealth, MaxStamina);
 
     public void SetState(float health, float stamina)
     {
         if (!float.IsFinite(health) || !float.IsFinite(stamina) ||
-            health < 0f || health > MaxHealth ||
-            stamina < 0f || stamina > MaxStamina)
-        {
+            health < 0f || health > MaxHealth || stamina < 0f || stamina > MaxStamina)
             throw new ArgumentOutOfRangeException(nameof(health));
-        }
 
         Health = health;
         Stamina = stamina;
@@ -80,8 +79,6 @@ public sealed class PlayerVitals
     private static void ValidateAmount(float amount)
     {
         if (!float.IsFinite(amount) || amount < 0f)
-        {
             throw new ArgumentOutOfRangeException(nameof(amount));
-        }
     }
 }
