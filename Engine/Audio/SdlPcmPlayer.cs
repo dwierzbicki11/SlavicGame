@@ -122,7 +122,7 @@ public sealed class SdlPcmPlayer : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         audio.Validate();
         if (audio.SampleRate != 24000 || audio.Channels != 1 || audio.BitsPerSample != 16)
-            throw new NotSupportedException("SDL TTS player expects PCM16 mono at 24 kHz.");
+            throw new NotSupportedException("SDL PCM player expects PCM16 mono at 24 kHz.");
 
         Clear();
         var handle = GCHandle.Alloc(audio.Data, GCHandleType.Pinned);
