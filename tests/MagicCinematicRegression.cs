@@ -9,14 +9,25 @@ public static class MagicCinematicRegression
     {
         var world = WorldGenerator.Generate();
         var magic = world.Magic;
+        check(MagicLanguage.Words.Count == 6 && MagicLanguage.Words.Select(word => word.Id).Distinct().Count() == 6,
+            "Incantation lexicon has six unique fictional words");
+        check(SpellCasting.Spells.All(spell => spell.Phrase.Words.Count == 2 && spell.Incantation == spell.Phrase.Text),
+            "Playable spells use structured two-word incantations");
+        check(CinematicCatalog.All.Count == 8 && CinematicCatalog.All.Select(scene => scene.Id).Distinct().Count() == 8,
+            "Eight unique cinematic definitions are runtime-ready");
+        check(CinematicCatalog.TryGet("ritual-preparation", out var ritualPreparation) &&
+              ritualPreparation.Shots.All(shot => shot.Space == CinematicSpace.PlayerRelative),
+            "Quest cinematics can use player-relative camera shots");
         check(world.Progress.Tracking.Tracks.Count(t => t.MagicSignature is not null) >= 2, "Playable supernatural traces exist");
         magic.SelectNext();
         check(!magic.TryStart(world, Vector3.UnitZ) && world.Player.Stamina == 100, "Full-health heal costs nothing");
         world.Player.TakeDamage(40);
         check(magic.TryStart(world, Vector3.UnitZ), "Heal starts");
+        check(magic.Message == "ZIVA", "Incantation begins with its first spoken word");
         check(world.Player.Stamina == 65 && world.Player.Health == 60, "Cost paid once before cast resolves");
         check(!magic.TryStart(world, Vector3.UnitZ), "Casting cannot stack");
         magic.Update(world, 0.5);
+        check(magic.Message == "ZIVA DAR" && magic.CastingProgress > 0.5, "Incantation reveals the next word during windup");
         check(world.Player.Health == 60, "Windup does not heal early");
         magic.Update(world, 0.5);
         check(world.Player.Health == 85 && !magic.IsCasting, "Completed incantation heals");
@@ -85,5 +96,19 @@ public static class MagicCinematicRegression
         check(!scenes.IsPlaying && world.Progress.HasFlag("cinematic.seen.shrine"), "Large delta completes every shot safely");
         SaveGameService.Restore(restored, SaveGameService.Serialize(world));
         check(!restored.Cinematics.TryStart(restored, CinematicPlayer.Arrival), "Seen state survives save/load");
+
+        var relativeWorld = WorldGenerator.Generate();
+        foreach (var livingEnemy in relativeWorld.Enemies)
+            livingEnemy.TakeDamage(10000);
+        relativeWorld.SetPlayerPosition(new Vector3(40, 0, -40));
+        check(relativeWorld.Cinematics.TryStartById(relativeWorld, "ritual-preparation"),
+            "Catalog cinematic starts by stable ID");
+        relativeWorld.Cinematics.Update(relativeWorld, 0.25);
+        check(relativeWorld.Cinematics.ActiveId == "ritual-preparation" &&
+              MathF.Abs(relativeWorld.Cinematics.CameraPosition.X - 40) < 12 &&
+              MathF.Abs(relativeWorld.Cinematics.CameraPosition.Z + 40) < 12 &&
+              relativeWorld.Cinematics.CameraPosition.Y >
+                  relativeWorld.Terrain.SampleHeight(relativeWorld.Cinematics.CameraPosition),
+            "Player-relative cinematic camera follows the captured player anchor");
     }
 }
