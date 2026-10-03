@@ -9,6 +9,7 @@ layout(location = 2) in vec3 Normal;
 layout(location = 0) out vec3 fsin_Color;
 layout(location = 1) out vec3 fsin_Normal;
 layout(location = 2) out float fsin_Distance;
+layout(location = 3) out vec3 fsin_WorldPosition;
 
 void main()
 {
@@ -17,4 +18,5 @@ void main()
     fsin_Color = Color;
     fsin_Normal = normalize(Normal);
     fsin_Distance = length(viewPosition.xyz);
+    fsin_WorldPosition = Position;
 }
