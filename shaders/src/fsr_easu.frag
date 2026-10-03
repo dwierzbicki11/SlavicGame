@@ -16,35 +16,22 @@ layout(set = 0, binding = 0) uniform FsrEasuConstants
 
 layout(set = 0, binding = 1) uniform texture2D SceneColor;
 layout(set = 0, binding = 2) uniform sampler SceneSampler;
-layout(set = 0, binding = 3) uniform PresentationParameters
-{
-    vec4 Params;
-};
 
 #define FSR_EASU_F 1
 
 AF4 FsrEasuRF(AF2 p)
 {
-    AF2 uv = AF2(
-        p.x,
-        mix(p.y, AF1_(1.0) - p.y, Params.x));
-    return textureGather(sampler2D(SceneColor, SceneSampler), uv, 0);
+    return textureGather(sampler2D(SceneColor, SceneSampler), p, 0);
 }
 
 AF4 FsrEasuGF(AF2 p)
 {
-    AF2 uv = AF2(
-        p.x,
-        mix(p.y, AF1_(1.0) - p.y, Params.x));
-    return textureGather(sampler2D(SceneColor, SceneSampler), uv, 1);
+    return textureGather(sampler2D(SceneColor, SceneSampler), p, 1);
 }
 
 AF4 FsrEasuBF(AF2 p)
 {
-    AF2 uv = AF2(
-        p.x,
-        mix(p.y, AF1_(1.0) - p.y, Params.x));
-    return textureGather(sampler2D(SceneColor, SceneSampler), uv, 2);
+    return textureGather(sampler2D(SceneColor, SceneSampler), p, 2);
 }
 
 #include "../vendor/amd_fsr1/ffx_fsr1.h"
