@@ -106,6 +106,13 @@ public enum UpscalerMode
     Fsr1
 }
 
+public enum FarVegetationMode
+{
+    Off,
+    Impostors,
+    FullMeshes
+}
+
 public readonly record struct ResolutionSize(int Width, int Height)
 {
     public override string ToString() => $"{Width}X{Height}";
@@ -244,6 +251,16 @@ public static class GraphicsQualityCatalog
             ModelLodQuality.Ultra => (90f, 280f),
             _ => (55f, 160f)
         };
+
+    public static float VegetationImpostorStart(ModelLodQuality quality) =>
+        quality switch
+        {
+            ModelLodQuality.Aggressive => 38f,
+            ModelLodQuality.Balanced => 72f,
+            ModelLodQuality.Quality => 130f,
+            ModelLodQuality.Ultra => 240f,
+            _ => 130f
+        };
 }
 
 public static class GraphicsPresetCatalog
@@ -263,6 +280,7 @@ public static class GraphicsPresetCatalog
         switch (preset)
         {
             case GraphicsPreset.LowEnd:
+                settings.Resolution = RenderResolution.Qhd540;
                 settings.VolumetricClouds = false;
                 settings.CloudQuality = CloudQuality.Low;
                 settings.CloudShadows = false;
@@ -275,6 +293,7 @@ public static class GraphicsPresetCatalog
                 settings.ShadowDistance = ShadowDistanceQuality.Short;
                 settings.TerrainDetail = TerrainDetailQuality.Low;
                 settings.ModelLod = ModelLodQuality.Aggressive;
+                settings.FarVegetation = FarVegetationMode.Impostors;
                 settings.Upscaler = UpscalerMode.Fsr1;
                 settings.FsrSharpness = 0.55f;
                 settings.NormalMapping = false;
@@ -282,6 +301,7 @@ public static class GraphicsPresetCatalog
                 break;
 
             case GraphicsPreset.Balanced:
+                settings.Resolution = RenderResolution.Hd720;
                 settings.VolumetricClouds = true;
                 settings.CloudQuality = CloudQuality.Medium;
                 settings.CloudShadows = false;
@@ -294,6 +314,7 @@ public static class GraphicsPresetCatalog
                 settings.ShadowDistance = ShadowDistanceQuality.Medium;
                 settings.TerrainDetail = TerrainDetailQuality.Medium;
                 settings.ModelLod = ModelLodQuality.Balanced;
+                settings.FarVegetation = FarVegetationMode.Impostors;
                 settings.Upscaler = UpscalerMode.Fsr1;
                 settings.FsrSharpness = 0.45f;
                 settings.NormalMapping = true;
@@ -301,6 +322,7 @@ public static class GraphicsPresetCatalog
                 break;
 
             case GraphicsPreset.High:
+                settings.Resolution = RenderResolution.Hd900;
                 settings.VolumetricClouds = true;
                 settings.CloudQuality = CloudQuality.High;
                 settings.CloudShadows = true;
@@ -313,6 +335,7 @@ public static class GraphicsPresetCatalog
                 settings.ShadowDistance = ShadowDistanceQuality.Far;
                 settings.TerrainDetail = TerrainDetailQuality.High;
                 settings.ModelLod = ModelLodQuality.Quality;
+                settings.FarVegetation = FarVegetationMode.Impostors;
                 settings.Upscaler = UpscalerMode.Fsr1;
                 settings.FsrSharpness = 0.35f;
                 settings.NormalMapping = true;
@@ -320,6 +343,7 @@ public static class GraphicsPresetCatalog
                 break;
 
             case GraphicsPreset.Ultra:
+                settings.Resolution = RenderResolution.FullHd1080;
                 settings.VolumetricClouds = true;
                 settings.CloudQuality = CloudQuality.Ultra;
                 settings.CloudShadows = true;
@@ -332,6 +356,7 @@ public static class GraphicsPresetCatalog
                 settings.ShadowDistance = ShadowDistanceQuality.Ultra;
                 settings.TerrainDetail = TerrainDetailQuality.Ultra;
                 settings.ModelLod = ModelLodQuality.Ultra;
+                settings.FarVegetation = FarVegetationMode.FullMeshes;
                 settings.Upscaler = UpscalerMode.Fsr1;
                 settings.FsrSharpness = 0.25f;
                 settings.NormalMapping = true;
@@ -379,6 +404,7 @@ public static class GraphicsPresetCatalog
             ShadowDistance = source.ShadowDistance,
             TerrainDetail = source.TerrainDetail,
             ModelLod = source.ModelLod,
+            FarVegetation = source.FarVegetation,
             Upscaler = source.Upscaler,
             FsrSharpness = source.FsrSharpness,
             NormalMapping = source.NormalMapping,
@@ -405,6 +431,7 @@ public static class GraphicsPresetCatalog
         left.ShadowDistance == right.ShadowDistance &&
         left.TerrainDetail == right.TerrainDetail &&
         left.ModelLod == right.ModelLod &&
+        left.FarVegetation == right.FarVegetation &&
         left.Upscaler == right.Upscaler &&
         MathF.Abs(left.FsrSharpness - right.FsrSharpness) < 0.001f &&
         left.NormalMapping == right.NormalMapping &&
@@ -442,6 +469,7 @@ public sealed class GameSettings
     public ShadowDistanceQuality ShadowDistance { get; set; } = ShadowDistanceQuality.Far;
     public TerrainDetailQuality TerrainDetail { get; set; } = TerrainDetailQuality.High;
     public ModelLodQuality ModelLod { get; set; } = ModelLodQuality.Quality;
+    public FarVegetationMode FarVegetation { get; set; } = FarVegetationMode.Impostors;
     public UpscalerMode Upscaler { get; set; } = UpscalerMode.Fsr1;
     public float FsrSharpness { get; set; } = 0.35f;
     public bool NormalMapping { get; set; } = true;
@@ -480,6 +508,8 @@ public sealed class GameSettings
             TerrainDetail = TerrainDetailQuality.High;
         if (!Enum.IsDefined(ModelLod))
             ModelLod = ModelLodQuality.Quality;
+        if (!Enum.IsDefined(FarVegetation))
+            FarVegetation = FarVegetationMode.Impostors;
         if (!Enum.IsDefined(Upscaler))
             Upscaler = UpscalerMode.Fsr1;
         FsrSharpness = Math.Clamp(FsrSharpness, 0f, 1f);
