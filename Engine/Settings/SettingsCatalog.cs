@@ -23,10 +23,19 @@ public static class SettingsCatalog
         new(
             "resolution",
             SettingCategory.Display,
-            "ROZDZIELCZOSC",
+            "ROZDZIELCZOSC RENDERU",
             s => s.ResolutionSize.ToString(),
             (s, direction) =>
                 s.Resolution = ResolutionCatalog.Cycle(s.Resolution, direction)),
+        new(
+            "window-resolution",
+            SettingCategory.Display,
+            "ROZDZIELCZOSC OKNA",
+            s => s.WindowResolutionSize.ToString(),
+            (s, direction) =>
+                s.WindowResolution = ResolutionCatalog.Cycle(
+                    s.WindowResolution,
+                    direction)),
         Toggle("vsync", SettingCategory.Display, "VSYNC",
             s => s.VSync, (s, v) => s.VSync = v),
         Toggle("fps", SettingCategory.Display, "LICZNIK FPS",
