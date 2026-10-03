@@ -4,6 +4,8 @@ using Veldrid.StartupUtilities;
 using SlavicGame.Engine.Assets;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Windowing;
+using SlavicGame.Engine.Settings;
+using SlavicGame.Engine.UI;
 using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Renderer;
@@ -14,6 +16,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly SkyRenderer _sky = new();
     private readonly ShadowMapRenderer _shadows = new();
     private readonly TerrainMaterialRenderer _terrain = new();
+    private readonly MenuRenderer _menu = new();
     private readonly PbrModelRenderer _pbrModels = new();
 
     private GraphicsDevice? _graphicsDevice;
@@ -96,7 +99,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-        _atmosphereBuffer = factory.CreateBuffer(new BufferDescription(96, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        _atmosphereBuffer = factory.CreateBuffer(new BufferDescription(144, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
         _actorVertexCapacity = 64;
         _actorIndexCapacity = 128;
@@ -181,6 +184,10 @@ public sealed class VeldridRenderer : IDisposable
 
         _hudShaders = ShaderLibrary.LoadPair(factory, "hud");
 
+        _menu.Initialize(
+            _graphicsDevice,
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription);
+
         var hudVertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
             new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float4));
@@ -208,7 +215,13 @@ public sealed class VeldridRenderer : IDisposable
         EngineLog.Info("HUD renderer initialized.");
     }
 
-    public void Render(WorldState world, Camera3D camera, double fps, double animationSeconds)
+    public void Render(
+        WorldState world,
+        Camera3D camera,
+        double fps,
+        double animationSeconds,
+        GameSettings settings,
+        MenuView? menuView)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!_initialized || _graphicsDevice is null ||
@@ -258,7 +271,9 @@ public sealed class VeldridRenderer : IDisposable
         BuildHud(
             (float)Math.Max(0, fps),
             world.Player.Health / world.Player.MaxHealth,
-            world.Player.Stamina / world.Player.MaxStamina);
+            world.Player.Stamina / world.Player.MaxStamina,
+            settings.ShowFps,
+            menuView is null);
         if (_hudVertices.Count > _hudVertexCapacity)
         {
             _hudVertexCapacity = (uint)Math.Max(_hudVertices.Count, _hudVertexCapacity * 2);
@@ -298,6 +313,21 @@ public sealed class VeldridRenderer : IDisposable
             celestial.LunarPhase,
             celestial.TwilightFactor,
             0f);
+        var graphicsFeatures0 = new Vector4(
+            settings.VolumetricClouds ? 1f : 0f,
+            settings.CloudShadows ? 1f : 0f,
+            settings.SunShadows ? 1f : 0f,
+            settings.Fog ? 1f : 0f);
+        var graphicsFeatures1 = new Vector4(
+            settings.Sun ? 1f : 0f,
+            settings.Moon ? 1f : 0f,
+            settings.Stars ? 1f : 0f,
+            settings.Sky ? 1f : 0f);
+        var graphicsFeatures2 = new Vector4(
+            settings.TerrainPbr ? 1f : 0f,
+            settings.ModelPbr ? 1f : 0f,
+            1f,
+            0f);
 
         _commandList.Begin();
         _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
@@ -308,6 +338,9 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.UpdateBuffer(_atmosphereBuffer, 48, skyWeather);
         _commandList.UpdateBuffer(_atmosphereBuffer, 64, moonParameters);
         _commandList.UpdateBuffer(_atmosphereBuffer, 80, celestialParameters);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 96, graphicsFeatures0);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 112, graphicsFeatures1);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 128, graphicsFeatures2);
         _commandList.UpdateBuffer(_hudScreenBuffer, 0, screenSize);
         if (actorVertices.Length > 0)
         {
@@ -326,6 +359,7 @@ public sealed class VeldridRenderer : IDisposable
         _shadows.BeginDepthPass(_commandList);
 
         var shadowEnabled =
+            settings.SunShadows &&
             celestial.SunIntensity > 0.02f &&
             celestial.SunDirection.Y > 0.02f;
 
@@ -385,6 +419,12 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.Draw((uint)_hudVertices.Count);
         }
 
+        _menu.Render(
+            _commandList,
+            width,
+            height,
+            menuView);
+
         _commandList.End();
 
         _graphicsDevice.SubmitCommands(_commandList);
@@ -419,9 +459,17 @@ public sealed class VeldridRenderer : IDisposable
         }
     }
 
-    private void BuildHud(float fps, float healthRatio, float staminaRatio)
+    private void BuildHud(
+        float fps,
+        float healthRatio,
+        float staminaRatio,
+        bool showFps,
+        bool showGameplayHud)
     {
         _hudVertices.Clear();
+
+        if (!showGameplayHud)
+            return;
 
         var text = $"FPS {Math.Clamp((int)MathF.Round(fps), 0, 9999)}";
         const float x = 18f;
@@ -430,6 +478,7 @@ public sealed class VeldridRenderer : IDisposable
         const float gap = 2f;
 
         var cursor = x;
+        if (showFps)
         foreach (var character in text)
         {
             if (!Glyphs.TryGetValue(character, out var glyph))
@@ -525,6 +574,15 @@ public sealed class VeldridRenderer : IDisposable
         return new RgbaFloat(final.X, final.Y, final.Z, 1f);
     }
 
+    public void SetVSync(bool enabled)
+    {
+        if (_graphicsDevice is null)
+            return;
+
+        PresentationPolicy.Apply(enabled);
+        _graphicsDevice.SyncToVerticalBlank = enabled;
+    }
+
     public void Resize(uint width, uint height)
     {
         if (_graphicsDevice is null || width == 0 || height == 0)
@@ -548,6 +606,7 @@ public sealed class VeldridRenderer : IDisposable
         _graphicsDevice.WaitForIdle();
 
         _sky.Dispose();
+        _menu.Dispose();
         _shadows.Dispose();
         _terrain.Dispose();
         _pbrModels.Dispose();
