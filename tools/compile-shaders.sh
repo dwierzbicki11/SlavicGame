@@ -58,5 +58,7 @@ compile_shader "$SRC_DIR/fsr_easu.vert"     "$OUT_DIR/fsr_easu.vert.spv"     ver
 compile_shader "$SRC_DIR/fsr_easu.frag"     "$OUT_DIR/fsr_easu.frag.spv"     frag
 compile_shader "$SRC_DIR/fsr_rcas.vert"     "$OUT_DIR/fsr_rcas.vert.spv"     vert
 compile_shader "$SRC_DIR/fsr_rcas.frag"     "$OUT_DIR/fsr_rcas.frag.spv"     frag
+compile_shader "$SRC_DIR/vegetation_impostor.vert" "$OUT_DIR/vegetation_impostor.vert.spv" vert
+compile_shader "$SRC_DIR/vegetation_impostor.frag" "$OUT_DIR/vegetation_impostor.frag.spv" frag
 
 echo "[shader] Gotowe. SPIR-V: $OUT_DIR"
