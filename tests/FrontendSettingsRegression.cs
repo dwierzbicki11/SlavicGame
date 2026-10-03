@@ -54,6 +54,7 @@ public static class FrontendSettingsRegression
               settings.TextureQuality == TextureQuality.Low,
             "Low-end preset disables the heaviest GPU effects and lowers texture quality");
 
+        settings.VolumetricClouds = true;
         var clouds = definitions.Single(item => item.Id == "volumetric-clouds");
         clouds.Change(settings, 1);
         check(!settings.VolumetricClouds,
