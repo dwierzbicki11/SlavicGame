@@ -414,3 +414,8 @@ The five R0 NPC roles now have schedule-driven world positions, visible humanoid
 ### Settler population
 
 Żarnowiec now renders five distinct authored NPC silhouettes plus eight ambient settlers on the shared humanoid rig. Role-specific proportions, muted palettes and lightweight shawl/hood/satchel/basket/tool/staff/spear accessories make the population readable without extra actor draw calls. Ambient settlers remain non-interactive until authored dialogue exists.
+
+
+### Living NPC routines
+
+Żarnowiec's visible settlers now follow deterministic local work and patrol routes instead of remaining fixed at schedule anchors. The guard patrols the village, workers move around their work areas, the carrier crosses between storage and market, the traveler enters from the gate, and shrine/crossing keepers move around their duties. Dialogue freezes only the active speaker and turns them toward the player.

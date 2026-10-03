@@ -31,13 +31,49 @@ internal static class NpcDialogueRegression
                 .Count() == ambientSettlers.Length,
             "Ambient settlers occupy distinct daytime poses instead of overlapping");
 
+        var guardAt10 = world.NpcWorld.Find("community-guard")
+            ?? throw new Exception("Community guard not present");
+        var guardPositionAt10 = guardAt10.Position;
+
+        world.Time.SetTimeOfDay(10.12);
+        world.NpcWorld.Update(world);
+        var guardAt1012 = world.NpcWorld.Find("community-guard")
+            ?? throw new Exception("Community guard not present after route update");
+
+        check(guardAt10.IsMoving &&
+              guardAt1012.IsMoving &&
+              Vector3.Distance(
+                  guardPositionAt10,
+                  guardAt1012.Position) > 0.25f,
+            "Guard patrol advances through the village as world time changes");
+
+        var travelerAt1012 = world.NpcWorld.Find("settler-traveler-01")
+            ?? throw new Exception("Traveler not present");
+        world.Time.SetTimeOfDay(10.22);
+        world.NpcWorld.Update(world);
+        var travelerAt1022 = world.NpcWorld.Find("settler-traveler-01")
+            ?? throw new Exception("Traveler not present after route update");
+
+        check(travelerAt1012.IsMoving &&
+              travelerAt1022.IsMoving &&
+              Vector3.Distance(
+                  travelerAt1012.Position,
+                  travelerAt1022.Position) > 0.25f,
+            "Traveler visibly advances from the gate toward the market");
+
+        world.Time.SetTimeOfDay(10);
+        world.NpcWorld.Update(world);
+
         var shrineKeeperDay = world.NpcWorld.Find("shrine-keeper");
         check(shrineKeeperDay is not null &&
               shrineKeeperDay.LocationId == "old-shrine" &&
-              Vector3.Distance(
-                  shrineKeeperDay.Position,
-                  new Vector3(-82f, shrineKeeperDay.Position.Y, 58f)) < 0.1f,
-            "Shrine keeper follows daytime shrine schedule");
+              shrineKeeperDay.IsMoving &&
+              Vector2.Distance(
+                  new Vector2(
+                      shrineKeeperDay.Position.X,
+                      shrineKeeperDay.Position.Z),
+                  new Vector2(-85f, 55f)) < 10f,
+            "Shrine keeper follows a daytime tending route around the shrine");
 
         world.Time.SetTimeOfDay(22);
         world.NpcWorld.Update(world);
@@ -58,6 +94,20 @@ internal static class NpcDialogueRegression
               world.Dialogue.IsOpen &&
               world.Dialogue.SpeakerId == "missing-family",
             "E-range NPC can start an executable dialogue session");
+
+        var familyDialoguePosition =
+            world.NpcWorld.Find("missing-family")!.Position;
+        world.Time.SetTimeOfDay(10.10);
+        world.NpcWorld.Update(world);
+        var familyWhileTalking =
+            world.NpcWorld.Find("missing-family")
+            ?? throw new Exception("Missing family NPC disappeared during dialogue");
+
+        check(!familyWhileTalking.IsMoving &&
+              Vector3.Distance(
+                  familyDialoguePosition,
+                  familyWhileTalking.Position) < 0.001f,
+            "Dialogue freezes the speaker in place while other routines continue");
 
         check(world.Dialogue.AvailableChoices(world).Any(choice =>
                 choice.Id == "mf.accept"),
@@ -81,6 +131,15 @@ internal static class NpcDialogueRegression
         quest.SetPhase(QuestPhase.Investigation);
 
         world.NpcWorld.Update(world);
+        var familyAfterDialogue =
+            world.NpcWorld.Find("missing-family")
+            ?? throw new Exception("Missing family NPC disappeared after dialogue");
+
+        check(Vector3.Distance(
+                  familyDialoguePosition,
+                  familyAfterDialogue.Position) < 0.05f,
+            "Speaker resumes routine from the dialogue position without teleporting");
+
         check(world.Dialogue.Start(world, "missing-family") &&
               world.Dialogue.CurrentNode?.Id == "mf.keepsake",
             "Keepsake changes the family's dialogue start state");

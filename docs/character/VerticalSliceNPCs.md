@@ -208,3 +208,41 @@ Wspólny rig zachowuje istniejące klipy. Aktywności typu patrol, noszenie towa
 
 ### Research / art status
 Ten pass jest **F / placeholder production art**, nie rekonstrukcją historycznego ubioru. Finalne stroje, fryzury, biżuteria, obuwie i wyposażenie muszą przejść osobny material-culture research lock przed oznaczeniem jako historycznie/reconstructed based.
+
+
+## Runtime local routines pass
+
+NPC nie stoją już wyłącznie w jednym punkcie harmonogramu.
+
+`NpcRoutineMotion` daje deterministyczne lokalne trasy dla aktywności dziennych:
+- `community-guard` — obchód obwodu Żarnowca;
+- `missing-family` — krótka trasa szukania po wsi;
+- `crossing-keeper` — obejście przeprawy;
+- `herbalist` — ruch między stanowiskiem a miejscem przygotowań;
+- `shrine-keeper` — obchodzenie Kamiennego Kręgu;
+- rolnicy — dojście do pola i lokalne ścieżki pracy;
+- cieśla/garncarz/handlarz — krótkie pętle stanowisk pracy;
+- tragarz — droga magazyn/targ;
+- starszy mieszkaniec — spacer po placu;
+- podróżny — wejście od bramy do targu.
+
+### Locomotion
+Runtime aktora ma pole `IsMoving`. Gdy trasa przesuwa NPC, renderer wybiera klip `Walk`; przy postoju używany jest `Idle`.
+
+### Dialogue freeze
+Jeśli gracz rozpocznie rozmowę:
+- rozmówca zachowuje ostatnią pozycję;
+- `IsMoving=false`;
+- obraca się do gracza;
+- po zamknięciu dialogu wraca do normalnej rutyny.
+
+Pozostali mieszkańcy kontynuują swoje trasy.
+
+### Budżet
+To nadal system bez navmesha i bez fizyki crowd:
+- ręcznie dobrane krótkie ścieżki;
+- deterministyczna interpolacja;
+- proste resolve względem istniejących obstacle;
+- brak osobnych pathfinding workerów.
+
+Docelowy system nawigacji może później zastąpić tylko sampler tras bez zmiany kontraktu harmonogramu NPC.
