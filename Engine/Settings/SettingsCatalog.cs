@@ -171,6 +171,13 @@ public static class SettingsCatalog
             (s, direction) =>
                 s.Upscaler = CycleEnum(s.Upscaler, direction)),
         new(
+            "fsr-quality",
+            SettingCategory.PostProcessing,
+            "FSR1 TRYB",
+            s => FsrQualityName(s.FsrQuality),
+            (s, direction) =>
+                s.FsrQuality = CycleEnum(s.FsrQuality, direction)),
+        new(
             "fsr-sharpness",
             SettingCategory.PostProcessing,
             "FSR1 OSTROSC",
@@ -283,6 +290,18 @@ public static class SettingsCatalog
         if (next < 0) next += values.Length;
         return values[next];
     }
+
+    private static string FsrQualityName(FsrQualityMode quality) =>
+        quality switch
+        {
+            FsrQualityMode.Quality => "QUALITY",
+            FsrQualityMode.UltraQuality => "ULTRA QUALITY",
+            FsrQualityMode.Balanced => "BALANCED",
+            FsrQualityMode.Performance => "PERFORMANCE",
+            FsrQualityMode.Native => "NATIVE",
+            FsrQualityMode.Custom => "CUSTOM",
+            _ => "QUALITY"
+        };
 
     private static string FrameLimitName(FrameRateLimit limit) =>
         limit switch
