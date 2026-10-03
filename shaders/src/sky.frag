@@ -163,6 +163,7 @@ void main()
     float timeSeconds = SkyWeather.w;
     float nightFactor = clamp(CelestialParameters.x, 0.0, 1.0);
     float lunarPhase = clamp(CelestialParameters.y, 0.0, 1.0);
+    float lightning = clamp(CelestialParameters.w, 0.0, 1.0);
 
     vec3 color = AtmosphericBase(direction, sunDirection, daylight, nightFactor);
 
@@ -250,6 +251,8 @@ void main()
         float weatherOpacity = cloudOpacity * mix(0.62, 1.0, cloudiness);
         color = mix(color, cloudColor, weatherOpacity);
     }
+
+    color += vec3(0.52, 0.64, 0.92) * lightning * 1.35;
 
     float horizonHaze = pow(1.0 - abs(clamp(direction.y, -1.0, 1.0)), 5.0);
     float hazeStrength = GraphicsFeatures0.w *
