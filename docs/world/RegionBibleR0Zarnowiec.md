@@ -415,3 +415,34 @@ Dwa istniejące paleniska są teraz aktywnymi źródłami ciepła:
 - deszcz jest częściowo kompensowany przez ciepło.
 
 `CampfireEffectMesh` dodaje lekkie, animowane płomienie oraz ground glow do istniejącego actor passu. Nie ma osobnego particle systemu, shadow-castera ani dodatkowego render targetu.
+
+
+## River current and exposure pass
+
+Rzeka i pogoda wpływają teraz na pozycję oraz krótkoterminową kondycję gracza.
+
+### Current
+`WaterInteractionState.CurrentVelocityAt` wykorzystuje rzeczywisty kierunek `WaterLandscape.FlowDirection`.
+- poniżej około 28 cm nurt nie przesuwa gracza;
+- wraz z głębokością siła rośnie nieliniowo;
+- w najgłębszej części obecnego brodu osiąga około 1.5–1.65 m/s;
+- znoszenie jest stosowane również bez inputu, więc stanie w głębokim nurcie nie jest statyczne.
+
+### Rain, wetness and chill
+- deszcz moczy gracza również poza rzeką;
+- wiatr i deszcz zwiększają presję wychłodzenia;
+- mokre ubranie + głęboka woda budują `Chill`;
+- wychłodzenie nie zadaje jeszcze obrażeń, ale obniża regenerację staminy;
+- jest to celowo lekki stan eksploracyjny, nie pełna symulacja temperatury ciała.
+
+### Campfire heat
+Dwa istniejące paleniska są aktywnymi źródłami ciepła:
+- Żarnowiec: `village-firepit`;
+- obóz myśliwski: `forest-hunter-firepit`.
+
+Ciepło:
+- przyspiesza schnięcie nawet około 10x przy samym palenisku;
+- szybko redukuje `Chill`;
+- ogranicza ponowne moknięcie od deszczu w bezpośrednim sąsiedztwie.
+
+Ogniska dostają animowane płomienie i ground glow generowane w istniejącym actor pass. Kolory >1.0 są traktowane jako prosty sygnał emissive, dzięki czemu płomień pozostaje czytelny również nocą bez osobnego light passu ani shadow-casting point light.
