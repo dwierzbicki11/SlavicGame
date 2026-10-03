@@ -2,11 +2,11 @@
 
 Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfikację, a co nadal wymaga rozwinięcia?**
 
-## Próg swobodnej implementacji — stan 2026-10-03
+## Próg swobodnej implementacji — stan 2026-10-04
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `design/RegionalContentAssetCatalog.md` rodziny content/assets R0–R6, a `quests/SideQuestCardsR0.md`–`SideQuestCardsR6.md` zamykają implementacyjny first pass 21/21 side-questów. `design/RegionalEncounterRosters.md` zamyka family-level encounter pass R1–R6, `design/RegionalVendorsServices.md` regionalny service footprint R0–R6, `design/ItemEquipmentRecipeCatalog.md` stabilny full-scope katalog rodzin item/equipment/recipe, a `dialogue/FullGameDialoguePackages.md` kontrakt pakietów dialogowych R0–R6/campaign. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. `design/ProductionAssetManifests.md` dodaje konkretne stabilne rekordy integracyjne assetów R0–R6 i shared bez udawania finalnego art/research/performance locku. Implementacja systemów, content pipeline i integracja placeholderów nie musi czekać na dalsze dopisywanie fabuły.
 
-Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line writing/VO/lokalizacja, exact historical-final locators dla konkretnych assetów, konkretne asset manifests i targety performance wymagające pomiarów.
+Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line writing/VO/lokalizacja, exact historical-final locators i formy, final art IDs/warianty oraz targety performance wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
@@ -37,18 +37,18 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 | Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md | v0.1; pomiary performance otwarte |
 | Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md | first pass |
 | Material culture research | research/material-culture/* + research/cultures/CULT_R0_ZARNOWIEC.md–CULT_R5_AREL.md | family-level production research PASS v0.1; L0–L3 ledger; exact locators per asset |
-| Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + region bibles | R0–R6 planning catalog v0.1; finalne manifesty/art lock otwarte |
+| Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + design/ProductionAssetManifests.md | R0–R6 planning + concrete stable manifest records v0.1; final forms/IDs/art/performance lock otwarte |
 
 ## Jawne otwarte decyzje
 
 1. finalne liczby balansu: damage, economy, drop rates, reputation, evidence thresholds;
-2. finalne line writing, VO, casting i lokalizacja; logika/gates/persistence/fail-forward pakietów dialogowych są już zdefiniowane;
+2. finalne line writing, VO, casting i lokalizacja;
 3. finalne personalia/łączenie slotów NPC, appearance i killability windows;
-4. finalne targety kontraktów `SQ_R1_02`, `SQ_R2_02`, `SQ_R3_03` i `SQ_R4_02`; appearance/placement istot pozostaje art/data lockiem;
+4. finalne targety kontraktów wybranych side-questów oraz appearance/placement istot;
 5. exact historical-final locators per asset, szczególnie costume/ornament/religion-material/naming i regionalne technology/art locki;
-6. konkretne finalne modele/materials/animations/audio/VFX i manifesty poza vertical slice;
-7. item/equipment/recipe: final stats/value/weight/durability, drop rates, recipe quantities/craft time, botanika, exact historical assets i culture-specific goods; stabilne families/IDs i regionalne źródła są już zdefiniowane;
-8. encounter: finalne weights, density, cooldown durations, POI placement, combat tuning i rewards; R1–R6 family tables są już zdefiniowane;
+6. finalne modele/materials/textures, warianty, konkretne animation/audio/VFX records i art IDs; stabilne rodziny/integration IDs są już w `ProductionAssetManifests.md`;
+7. item/equipment/recipe: final stats/value/weight/durability, drop rates, recipe quantities/craft time, botanika i culture-specific goods;
+8. encounter: finalne weights, density, cooldown durations, POI placement, combat tuning i rewards;
 9. measured performance targets, streaming/VFX/shadow/AI budgets i wymagania sprzętowe;
 10. tuning pogody, traversal, ekonomii, AI i encounterów po playtestach;
 11. nazwy robocze F oraz elementy research/art/playtest/performance lock.
@@ -59,11 +59,11 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** R0–R6 mają region bibles, 21/21 side-quest cards, family-level encounter coverage, regionalny service footprint, stable full-scope item/equipment/recipe catalog i dialogue package contract. Culture/material-culture/bestiary/pantheon research ma jawne production gates. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** R0–R6 mają bibles, quest/content/system coverage oraz konkretne production asset manifest records. Research-sensitive szczegóły pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. konkretne asset manifests dla rodzin z wystarczającym art/research lockiem;
-2. animation/VFX/audio budgets;
-3. streaming/memory/AI budgets;
-4. później balance/playtest/performance locks.
+1. animation/VFX/audio budget contract i concrete record policy;
+2. streaming/memory budgets;
+3. AI/encounter density budgets;
+4. później balance/playtest/performance locks i measured release evidence.

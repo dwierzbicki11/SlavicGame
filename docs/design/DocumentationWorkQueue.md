@@ -36,14 +36,14 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ### P3 — content production
 - [x] side-quest production cards per region; R0–R6, 21/21 slotów;
-- [x] regional encounter rosters/tables poza R0 (`design/RegionalEncounterRosters.md`): R1–R6 family-level implementation pass, persistence/filters/QA; final weights, density i placement pozostają playtest/data lockiem;
-- [x] regional vendors/services final pass (`design/RegionalVendorsServices.md`): R0–R6 service footprint, stable IDs, stock profiles, persistence/fail-forward; final prices/restock/signature goods pozostają balance/item/research lockiem;
-- [x] item/equipment/recipe catalogs dla pełnego scope (`design/ItemEquipmentRecipeCatalog.md`): stable families/IDs, equipment mapping, recipe gates, regional source matrix, persistence/QA; final tuning i exact historical assets pozostają lockiem;
-- [x] dialogue packages implementation contract (`dialogue/FullGameDialoguePackages.md`): R0–R6 + campaign families, stable IDs, knowledge gates, persistence/fail-forward/localization/VO separation; final line writing/VO pozostają content lockiem.
+- [x] regional encounter rosters/tables poza R0 (`design/RegionalEncounterRosters.md`);
+- [x] regional vendors/services final pass (`design/RegionalVendorsServices.md`);
+- [x] item/equipment/recipe catalogs dla pełnego scope (`design/ItemEquipmentRecipeCatalog.md`);
+- [x] dialogue packages implementation contract (`dialogue/FullGameDialoguePackages.md`).
 
 ### P4 — asset i budget lock
 - [x] asset families per region z reuse/LOD/variant strategy na poziomie planowania;
-- [ ] konkretne asset manifests/model/material/animation/audio/VFX records po art/research lockach;
+- [x] konkretne production asset manifests / stable integration records R0–R6 (`design/ProductionAssetManifests.md`); exact historical-final forms i final art IDs pozostają jawnie research/art lockiem;
 - [ ] animation/VFX/audio budgets;
 - [ ] streaming i memory budgets;
 - [ ] AI/encounter density budgets;
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P3 mają implementation-level pass dla wymaganych rosterów, questów, encounterów, usług, item/equipment/recipe i dialog package contract. Następny najmniejszy niezablokowany pakiet to **P4: konkretne asset manifests dla rodzin, które mają wystarczający research/art lock**, bez wymyślania finalnych assetów historycznych tam, gdzie locator nadal jest za słaby. Następnie budżety animation/VFX/audio oraz streaming/memory/AI.
+P1–P3 mają implementation-level pass, a P4 ma już konkretny manifest rodzin i stabilnych punktów integracji assetów R0–R6 bez zgadywania historycznych detali. Następny najmniejszy niezablokowany pakiet to **P4: animation/VFX/audio budget contract**, definiujący klasy kosztu, reuse, priorytety i pomiar zamiast wymyślonych liczbowych limitów. Potem streaming/memory oraz AI/encounter density budgets.
