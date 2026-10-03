@@ -15,7 +15,7 @@ Ten indeks łączy `bestiary/ProductionBestiaryRoster.md` z materiałem badawczy
 |---|---|---|---|
 | `CREATURE_SWAMP_PREDATOR_F` | brak — świadoma fikcja | F | ecology/art lock, bez historyzacji |
 | `ENTITY_MISSING_ECHO_F` | brak — central lore/fikcja | F | quest/evidence presentation |
-| `ENTITY_FOREST_GUARDIAN_F` | `ForestSpirit.md`, `RegionalForestFiguresPL.md` | partial | zachować ID `F`; finalna historyczna tożsamość tylko po osobnym identity locku |
+| `ENTITY_FOREST_GUARDIAN_F` | `ForestGuardianIdentityLock.md`, `ForestSpirit.md`, `RegionalForestFiguresPL.md` | **F / identity-locked** | identity lock CLOSED: zachować ID `F`; nie nazywać leszym/boginką/dziwożoną bez nowego evidence review |
 | `ENTITY_WATER_ACTOR` | `WaterSpirit.md`, `TopielecWaterSpiritPL.md` | ready na poziomie rodziny motywów | karta regionalna musi wskazać konkretną interpretację; nie sklejać automatycznie wodnika i topielca |
 | `ENTITY_NOON_PHENOMENON` | `Poludnica.md` | ready v0.2 na poziomie rdzenia encounteru | source-strength i R4/R5 region-fit zamknięte; finalne appearance/placement nadal data/art lock |
 | `ENTITY_NIGHT_PRESSURE` | `Zmora.md` | ready na poziomie motywu | finalna karta encounteru określa lokalną interpretację |
@@ -30,13 +30,13 @@ Ten indeks łączy `bestiary/ProductionBestiaryRoster.md` z materiałem badawczy
 | rusałka | `Rusalka.md` | candidate; brak obietnicy 1.0 |
 | boginka/mamuna | `BoginkaMamuna.md` | candidate; rozdzielić warianty przed użyciem |
 | topielec jako osobny byt | `TopielecWaterSpiritPL.md` | candidate; nie wynika automatycznie z `ENTITY_WATER_ACTOR` |
-| regionalne figury leśne | `RegionalForestFiguresPL.md` | candidate/identity evidence dla R2 |
+| regionalne figury leśne | `RegionalForestFiguresPL.md` | candidate/identity evidence dla R2; guardian lock zakończony jako F |
 
 `BestiarySources.md`, `BestiarySources02.md` i `BestiaryPass02Summary.md` pozostają indeksami/proweniencją researchu, a nie kartami istot. `VerticalSliceFit.md` jest dokumentem doboru contentu, nie źródłem folklorystycznym.
 
 ## Braki do domknięcia
 
-1. **Forest guardian:** osobny identity-lock pass. Jeśli źródła nie uzasadnią jednej konkretnej tożsamości dla R2, `ENTITY_FOREST_GUARDIAN_F` pozostaje świadomie fikcyjnym guardianem i nie jest to błąd dokumentacji.
+1. **Forest guardian: CLOSED / F.** `ForestGuardianIdentityLock.md` potwierdza świadomie fikcyjną tożsamość. Brak jednej historycznej nazwy nie blokuje implementacji.
 2. **Ogniki/błędne światła:** utworzyć kartę zjawiska dopiero, gdy konkretny quest/region awansuje je do finalnego scope; obecnie nie są wymaganym slotem rosteru 1.0.
 3. Każdy nowy kandydat musi najpierw dostać wpis tutaj i decyzję scope, zanim powstanie kosztowny model/VFX/VO.
 
@@ -46,4 +46,4 @@ Karta finalna musi jawnie oddzielać: (a) co mówi źródło, (b) region i okres
 
 ## Konsekwencje dla implementacji
 
-Source-strength południcy nie blokuje już implementacji jej rdzenia encounteru (`time-of-day + cultivated field + telegraph + avoidance`). Pozostałe braki nie blokują wspólnego creature/encounter state model, persistence, evidence ani AI frameworku. Blokują wyłącznie finalne nazwy, art direction, weakness tables lub regionalną interpretację tych slotów, których dotyczą.
+Source-strength południcy i identity lock forest-guardian nie blokują już implementacji ich rdzeni encounterów. Pozostałe braki nie blokują wspólnego creature/encounter state model, persistence, evidence ani AI frameworku. Blokują wyłącznie finalne nazwy, art direction, weakness tables lub regionalną interpretację tych slotów, których dotyczą.
