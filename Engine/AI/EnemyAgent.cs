@@ -1,4 +1,5 @@
 using System.Numerics;
+using SlavicGame.Engine.Combat;
 using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.AI;
@@ -19,7 +20,7 @@ public sealed record EnemySnapshot(
     float Health,
     EnemyState State);
 
-public sealed class EnemyAgent
+public sealed class EnemyAgent : IDamageReceiver
 {
     private const float PatrolDistance = 4f;
     private const float DetectionRange = 14f;
@@ -176,6 +177,16 @@ public sealed class EnemyAgent
         State = Health <= 0f ? EnemyState.Dead : snapshot.State;
         _alertRemaining = 0;
         _attackCooldown = State == EnemyState.Attack ? AttackIntervalSeconds : 0;
+    }
+
+    public void ApplyDamage(float amount, DamageType damageType)
+    {
+        if (!Enum.IsDefined(damageType))
+        {
+            throw new ArgumentOutOfRangeException(nameof(damageType));
+        }
+
+        TakeDamage(amount);
     }
 
     public void TakeDamage(float amount)
