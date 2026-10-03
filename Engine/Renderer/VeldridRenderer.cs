@@ -391,7 +391,10 @@ public sealed class VeldridRenderer : IDisposable
                 _commandList,
                 _shadows.PbrPipeline,
                 _shadows.DepthSet,
-                camera.Position);
+                camera.Position,
+                GraphicsQualityCatalog.ShadowDistance(settings.ShadowDistance),
+                GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
+                GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter));
             _shadows.RenderActors(
                 _commandList,
                 _actorVertexBuffer,
@@ -416,7 +419,10 @@ public sealed class VeldridRenderer : IDisposable
             _commandList,
             _cameraSet,
             _shadows.SampleSet,
-            camera.Position);
+            camera.Position,
+            GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
+            GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
+            GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter));
 
         _commandList.SetPipeline(_actorPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
@@ -621,6 +627,14 @@ public sealed class VeldridRenderer : IDisposable
             return;
 
         _shadows.SetMapSize(mapSize);
+    }
+
+    public void SetShadowDistance(float distance)
+    {
+        if (_graphicsDevice is null)
+            return;
+
+        _shadows.SetWorldSpan(Math.Max(40f, distance) * 2f);
     }
 
     public void SetVSync(bool enabled)

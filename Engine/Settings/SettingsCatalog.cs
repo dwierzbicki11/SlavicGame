@@ -96,6 +96,34 @@ public static class SettingsCatalog
             s => TextureName(s.TextureQuality),
             (s, direction) =>
                 s.TextureQuality = CycleEnum(s.TextureQuality, direction)),
+        new(
+            "render-distance",
+            SettingCategory.Graphics,
+            "ZASIEG SWIATA",
+            s => DistanceName(s.RenderDistance),
+            (s, direction) =>
+                s.RenderDistance = CycleEnum(s.RenderDistance, direction)),
+        new(
+            "vegetation-distance",
+            SettingCategory.Graphics,
+            "ZASIEG ROSLINNOSCI",
+            s => VegetationDistanceName(s.VegetationDistance),
+            (s, direction) =>
+                s.VegetationDistance = CycleEnum(s.VegetationDistance, direction)),
+        new(
+            "ground-clutter",
+            SettingCategory.Graphics,
+            "DROBNA ROSLINNOSC",
+            s => GroundClutterName(s.GroundClutter),
+            (s, direction) =>
+                s.GroundClutter = CycleEnum(s.GroundClutter, direction)),
+        new(
+            "shadow-distance",
+            SettingCategory.Graphics,
+            "ZASIEG CIENI",
+            s => ShadowDistanceName(s.ShadowDistance),
+            (s, direction) =>
+                s.ShadowDistance = CycleEnum(s.ShadowDistance, direction)),
         Toggle("sky", SettingCategory.Graphics, "NIEBO",
             s => s.Sky, (s, v) => s.Sky = v),
         Toggle("sun", SettingCategory.Graphics, "SLONCE",
@@ -152,6 +180,48 @@ public static class SettingsCatalog
             CloudQuality.High => "WYSOKA",
             CloudQuality.Ultra => "ULTRA",
             _ => "WYSOKA"
+        };
+
+    private static string DistanceName(RenderDistanceQuality quality) =>
+        quality switch
+        {
+            RenderDistanceQuality.VeryLow => "180M",
+            RenderDistanceQuality.Low => "300M",
+            RenderDistanceQuality.Medium => "450M",
+            RenderDistanceQuality.High => "650M",
+            RenderDistanceQuality.Ultra => "900M",
+            _ => "650M"
+        };
+
+    private static string VegetationDistanceName(VegetationDistanceQuality quality) =>
+        quality switch
+        {
+            VegetationDistanceQuality.Off => "WYL",
+            VegetationDistanceQuality.Short => "90M",
+            VegetationDistanceQuality.Medium => "180M",
+            VegetationDistanceQuality.Far => "320M",
+            VegetationDistanceQuality.Ultra => "520M",
+            _ => "320M"
+        };
+
+    private static string GroundClutterName(GroundClutterQuality quality) =>
+        quality switch
+        {
+            GroundClutterQuality.Off => "WYL",
+            GroundClutterQuality.Low => "30M",
+            GroundClutterQuality.Medium => "70M",
+            GroundClutterQuality.High => "140M",
+            _ => "70M"
+        };
+
+    private static string ShadowDistanceName(ShadowDistanceQuality quality) =>
+        quality switch
+        {
+            ShadowDistanceQuality.Short => "70M",
+            ShadowDistanceQuality.Medium => "120M",
+            ShadowDistanceQuality.Far => "180M",
+            ShadowDistanceQuality.Ultra => "210M",
+            _ => "180M"
         };
 
     private static string TextureName(TextureQuality quality) =>

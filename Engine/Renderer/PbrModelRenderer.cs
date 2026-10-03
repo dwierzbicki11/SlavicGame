@@ -12,7 +12,6 @@ namespace SlavicGame.Engine.Renderer;
 public sealed class PbrModelRenderer : IDisposable
 {
     private const float ChunkSize = 192f;
-    private const float MaxRenderDistance = 650f;
     private readonly List<Renderable> _renderables = [];
     private readonly List<Texture> _ownedTextures = [];
     private readonly List<TextureView> _ownedTextureViews = [];
@@ -205,6 +204,7 @@ public sealed class PbrModelRenderer : IDisposable
 
                 _renderables.Add(new Renderable(
                     $"{assetGroup.Key}@{chunkGroup.Key.X},{chunkGroup.Key.Z}",
+                    ClassifyAsset(assetGroup.Key),
                     center,
                     radius,
                     vertexBuffer,
@@ -223,11 +223,18 @@ public sealed class PbrModelRenderer : IDisposable
         CommandList commandList,
         ResourceSet cameraSet,
         ResourceSet shadowSet,
-        Vector3 cameraPosition)
+        Vector3 cameraPosition,
+        float renderDistance,
+        float vegetationDistance,
+        float groundClutterDistance)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_pipeline is null)
             throw new InvalidOperationException("PBR model renderer has not been initialized.");
+
+        renderDistance = Math.Max(0f, renderDistance);
+        vegetationDistance = Math.Max(0f, vegetationDistance);
+        groundClutterDistance = Math.Max(0f, groundClutterDistance);
 
         commandList.SetPipeline(_pipeline);
         commandList.SetGraphicsResourceSet(0, cameraSet);
@@ -238,7 +245,19 @@ public sealed class PbrModelRenderer : IDisposable
             var delta = new Vector2(
                 renderable.Center.X - cameraPosition.X,
                 renderable.Center.Z - cameraPosition.Z);
-            var maxDistance = MaxRenderDistance + renderable.Radius;
+            var categoryDistance = renderable.Kind switch
+            {
+                RenderableKind.GroundClutter =>
+                    Math.Min(renderDistance, groundClutterDistance),
+                RenderableKind.Vegetation =>
+                    Math.Min(renderDistance, vegetationDistance),
+                _ => renderDistance
+            };
+
+            if (categoryDistance <= 0f)
+                continue;
+
+            var maxDistance = categoryDistance + renderable.Radius;
             if (delta.LengthSquared() > maxDistance * maxDistance)
                 continue;
 
@@ -264,9 +283,16 @@ public sealed class PbrModelRenderer : IDisposable
         CommandList commandList,
         Pipeline shadowPipeline,
         ResourceSet shadowDepthSet,
-        Vector3 focusPosition)
+        Vector3 focusPosition,
+        float shadowDistance,
+        float vegetationDistance,
+        float groundClutterDistance)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+
+        shadowDistance = Math.Max(0f, shadowDistance);
+        vegetationDistance = Math.Max(0f, vegetationDistance);
+        groundClutterDistance = Math.Max(0f, groundClutterDistance);
 
         commandList.SetPipeline(shadowPipeline);
         commandList.SetGraphicsResourceSet(0, shadowDepthSet);
@@ -276,7 +302,19 @@ public sealed class PbrModelRenderer : IDisposable
             var delta = new Vector2(
                 renderable.Center.X - focusPosition.X,
                 renderable.Center.Z - focusPosition.Z);
-            var maxDistance = ShadowMapRenderer.HalfWorldSpan + renderable.Radius;
+            var categoryDistance = renderable.Kind switch
+            {
+                RenderableKind.GroundClutter =>
+                    Math.Min(shadowDistance, groundClutterDistance),
+                RenderableKind.Vegetation =>
+                    Math.Min(shadowDistance, vegetationDistance),
+                _ => shadowDistance
+            };
+
+            if (categoryDistance <= 0f)
+                continue;
+
+            var maxDistance = categoryDistance + renderable.Radius;
             if (delta.LengthSquared() > maxDistance * maxDistance)
                 continue;
 
@@ -480,12 +518,51 @@ public sealed class PbrModelRenderer : IDisposable
         }
     }
 
+    private static RenderableKind ClassifyAsset(string assetPath)
+    {
+        if (assetPath.Contains(
+                "ground_clutter/",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return RenderableKind.GroundClutter;
+        }
+
+        var fileName = Path.GetFileNameWithoutExtension(assetPath);
+        var vegetationPrefixes = new[]
+        {
+            "dab_",
+            "dab_stary_",
+            "brzoza_",
+            "sosna_",
+            "olsza_",
+            "krzak_",
+            "paproc_",
+            "korzenie_",
+            "grzyby_",
+            "trzciny_",
+            "pien_bagienny_"
+        };
+
+        return vegetationPrefixes.Any(prefix =>
+            fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            ? RenderableKind.Vegetation
+            : RenderableKind.World;
+    }
+
     private static (int X, int Z) GetChunkKey(Vector3 position) =>
         ((int)MathF.Floor(position.X / ChunkSize),
          (int)MathF.Floor(position.Z / ChunkSize));
 
+    private enum RenderableKind
+    {
+        World,
+        Vegetation,
+        GroundClutter
+    }
+
     private sealed record Renderable(
         string Id,
+        RenderableKind Kind,
         Vector3 Center,
         float Radius,
         DeviceBuffer VertexBuffer,
