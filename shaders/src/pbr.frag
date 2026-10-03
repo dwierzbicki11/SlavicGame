@@ -89,7 +89,6 @@ vec3 FresnelSchlick(float cosTheta, vec3 f0)
     return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-
 void main()
 {
     vec4 baseSample = texture(sampler2D(BaseColorTexture, MaterialSampler), fsin_TexCoord);
@@ -111,10 +110,9 @@ void main()
             fsin_TexCoord).xyz * 2.0 - 1.0;
         if (length(sampledNormal.xy) > 0.001)
         {
-            vec3 detailedNormal = normalize(
+            normal = normalize(
                 CotangentFrame(baseNormal, fsin_WorldPosition, fsin_TexCoord) *
                 sampledNormal);
-            normal = detailedNormal;
         }
     }
 
@@ -155,25 +153,33 @@ void main()
 
     float lightStrength = max(Lighting.x, 0.02);
     vec3 sunColor = SunColorTime.rgb;
-    float cloudShadow = mix(
-        1.0,
-        CloudShadowFactor(
+
+    // These feature flags are frame-uniform. Do not evaluate expensive cloud
+    // noise or shadow-map PCF when the corresponding option is disabled.
+    // mix(1.0, expensiveCall(), 0.0) still evaluates expensiveCall() in GLSL.
+    float cloudShadow = 1.0;
+    if (GraphicsFeatures0.y > 0.5)
+    {
+        cloudShadow = CloudShadowFactor(
             fsin_WorldPosition,
             lightDirection,
             SkyWeather.w,
             SkyWeather.z,
-            SkyWeather.x),
-        GraphicsFeatures0.y);
-    float geometryShadow = mix(
-        1.0,
-        SampleSunShadow(
+            SkyWeather.x);
+    }
+
+    float geometryShadow = 1.0;
+    if (GraphicsFeatures0.z > 0.5)
+    {
+        geometryShadow = SampleSunShadow(
             ShadowMap,
             ShadowSampler,
             LightViewProjection,
             fsin_WorldPosition,
             normal,
-            lightDirection),
-        GraphicsFeatures0.z);
+            lightDirection);
+    }
+
     float directShadow = cloudShadow * geometryShadow;
     float nightFactor = clamp(CelestialParameters.x, 0.0, 1.0);
     float ambientStrength = mix(
