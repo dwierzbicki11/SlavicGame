@@ -95,7 +95,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-        _atmosphereBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        _atmosphereBuffer = factory.CreateBuffer(new BufferDescription(96, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
         _actorVertexCapacity = 64;
         _actorIndexCapacity = 128;
@@ -277,12 +277,32 @@ public sealed class VeldridRenderer : IDisposable
             celestial.SunDirection.X,
             celestial.SunDirection.Y,
             celestial.SunDirection.Z);
+        var sunColorTime = new Vector4(
+            celestial.SunColor,
+            (float)(world.Time.TimeOfDayHours / 24.0));
+        var skyWeather = new Vector4(
+            world.Weather.Cloudiness,
+            world.Weather.RainIntensity,
+            world.Weather.WindIntensity,
+            (float)animationSeconds);
+        var moonParameters = new Vector4(
+            celestial.MoonDirection,
+            celestial.MoonIntensity);
+        var celestialParameters = new Vector4(
+            celestial.NightFactor,
+            celestial.LunarPhase,
+            celestial.TwilightFactor,
+            0f);
 
         _commandList.Begin();
         _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
         _commandList.UpdateBuffer(_viewBuffer, 0, view);
         _commandList.UpdateBuffer(_atmosphereBuffer, 0, fogParameters);
         _commandList.UpdateBuffer(_atmosphereBuffer, 16, lightingParameters);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 32, sunColorTime);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 48, skyWeather);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 64, moonParameters);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 80, celestialParameters);
         _commandList.UpdateBuffer(_hudScreenBuffer, 0, screenSize);
         if (actorVertices.Length > 0)
         {
