@@ -33,6 +33,7 @@ void Check(bool condition, string name)
 MagicCinematicRegression.Run(Check);
 VerticalSliceQuestInteractionRegression.Run(Check);
 SwampPredatorEncounterRegression.Run(Check);
+SwampApparitionRegression.Run(Check);
 RiverInteractionRegression.Run(Check);
 WeatherVisualRegression.Run(Check);
 CampfireInteractionRegression.Run(Check);
