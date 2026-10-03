@@ -28,7 +28,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ### P2 — research packages
 - [x] culture research framework: stabilne `CULT_*` IDs, H/R/F/U oraz source/evidence policy (`research/cultures/CultureResearchFramework.md`);
-- [ ] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5); **R0 i R1 evidence packages v0.1 gotowe**, R2–R5 pozostają;
+- [ ] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5); **R0–R2 evidence packages v0.1 gotowe**, R3–R5 pozostają;
 - [ ] domknięcie krytycznych źródeł panteonu;
 - [ ] research lock material culture dla produkcyjnych assetów;
 - [ ] source-strength/region-fit pass południcy;
@@ -69,4 +69,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-`CULT_R0_ZARNOWIEC` i `CULT_R1_NADBORZE` mają evidence packages v0.1. R1 zapisuje tylko różnice względem R0 i jawnie pozostawia fortification/rivercraft/mill/admin/religion/naming locki. Następny pakiet: **`CULT_R2_WIELKI_BOR`** — skupić się na osadnictwie skrajnym/leśnym, użytkowaniu zasobów i region-fit; nie mieszać material-culture research z nierozstrzygniętym identity lockiem `forest-guardian`. Następnie R3–R4. `CULT_R5_AREL` wymaga osobnej, jawnie dobranej bazy badawczej spoza inspiracji słowiańskiej. Nie wypełniać braków stereotypową analogią. Równolegle można domykać małe, jednoznaczne bestiary source/identity locki, jeśli research daje wystarczającą podstawę.
+`CULT_R0_ZARNOWIEC`, `CULT_R1_NADBORZE` i `CULT_R2_WIELKI_BOR` mają evidence packages v0.1. R2 rozdziela gameplayowy motyw gospodarki leśnej od twierdzeń historycznych, blokuje stereotypizację „ludzi natury” i nie rozstrzyga identity `forest-guardian`. Następny pakiet: **`CULT_R3_PRZYMORZE`** — porty/przystanie, rybołówstwo, handel, salvage i wielojęzyczność; należy oddzielić fiction polityczno-handlową od danych o jednostkach, narzędziach i praktykach. Następnie R4. `CULT_R5_AREL` wymaga osobnej, jawnie dobranej bazy badawczej spoza inspiracji słowiańskiej. Nie wypełniać braków stereotypową analogią. Równolegle można domykać małe, jednoznaczne bestiary source/identity locki, jeśli research daje wystarczającą podstawę.
