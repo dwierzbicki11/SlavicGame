@@ -27,7 +27,8 @@
     <Compile Include="../Engine/Relationships/*.cs" Link="Relationships/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Save/*.cs" Link="Save/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Scene/*.cs" Link="Scene/%(Filename)%(Extension)" />
-    <Compile Include="../Engine/UI/*.cs" Link="UI/%(Filename)%(Extension)" />
+    <Compile Include="../Engine/UI/GameUiState.cs" Link="UI/GameUiState.cs" />
+    <Compile Include="../Engine/Settings/*.cs" Link="Settings/%(Filename)%(Extension)" />
     <Compile Include="../Engine/World/*.cs" Link="World/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Core/GameTime.cs" Link="GameTime.cs" />
     <Compile Include="../Engine/Diagnostics/*.cs" Link="Diagnostics/%(Filename)%(Extension)" />
