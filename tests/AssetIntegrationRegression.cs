@@ -303,8 +303,9 @@ internal static class AssetIntegrationRegression
                     $"NPC model asset exists: {file}");
                 var model = GlbModel.Load(path);
                 check(model.AnimationNames.Contains("Idle") &&
-                      model.AnimationNames.Contains("Walk"),
-                    $"NPC model {file} contains Idle and Walk clips");
+                      model.AnimationNames.Contains("Walk") &&
+                      model.AnimationNames.Contains("Interact"),
+                    $"NPC model {file} contains Idle, Walk and Interact clips");
                 return model;
             },
             StringComparer.Ordinal);
