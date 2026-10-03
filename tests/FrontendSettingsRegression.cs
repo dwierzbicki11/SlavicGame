@@ -193,6 +193,54 @@ public static class FrontendSettingsRegression
         check(fsrCustom == custom,
             "FSR1 Custom preserves manually selected internal resolution");
 
+        foreach (var presetValue in new[]
+                 {
+                     GraphicsPreset.LowEnd,
+                     GraphicsPreset.Balanced,
+                     GraphicsPreset.High
+                 })
+        {
+            var presetSettings = new GameSettings();
+            GraphicsPresetCatalog.Apply(presetSettings, presetValue);
+            var internalSize = GraphicsQualityCatalog.FsrRenderResolution(
+                1920,
+                1080,
+                presetSettings.FsrQuality,
+                presetSettings.ResolutionSize);
+
+            check(FsrPresentationPolicy.UsesUpscalePass(
+                    presetSettings.Upscaler,
+                    (uint)internalSize.Width,
+                    (uint)internalSize.Height,
+                    1920,
+                    1080) &&
+                  FsrPresentationPolicy.RequiresFinalRcasYFlip(
+                    presetSettings.Upscaler,
+                    (uint)internalSize.Width,
+                    (uint)internalSize.Height,
+                    1920,
+                    1080),
+                $"{presetValue} uses the real EASU/RCAS path with final Y correction");
+        }
+
+        var ultraSettings = new GameSettings();
+        GraphicsPresetCatalog.Apply(ultraSettings, GraphicsPreset.Ultra);
+        var ultraInternal = GraphicsQualityCatalog.FsrRenderResolution(
+            1920,
+            1080,
+            ultraSettings.FsrQuality,
+            ultraSettings.ResolutionSize);
+        check(ultraSettings.FsrQuality == FsrQualityMode.Native &&
+              ultraInternal.Width == 1920 &&
+              ultraInternal.Height == 1080 &&
+              !FsrPresentationPolicy.UsesUpscalePass(
+                  ultraSettings.Upscaler,
+                  (uint)ultraInternal.Width,
+                  (uint)ultraInternal.Height,
+                  1920,
+                  1080),
+            "Ultra stays on the already-correct native presentation path");
+
         var sharpness = definitions.Single(item => item.Id == "fsr-sharpness");
         settings.FsrSharpness = 0.5f;
         sharpness.Change(settings, 1);
