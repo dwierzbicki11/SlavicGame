@@ -18,6 +18,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly TerrainMaterialRenderer _terrain = new();
     private readonly MenuRenderer _menu = new();
     private readonly ResolutionScalerRenderer _resolutionScaler = new();
+    private readonly BloomRenderer _bloom = new();
     private readonly PostProcessRenderer _postProcess = new();
     private readonly PbrModelRenderer _pbrModels = new();
     private readonly FarVegetationRenderer _farVegetation = new();
@@ -154,12 +155,25 @@ public sealed class VeldridRenderer : IDisposable
         var sceneOutput =
             _resolutionScaler.SceneFramebuffer.OutputDescription;
 
+        _bloom.Initialize(
+            _graphicsDevice,
+            sceneOutput,
+            _resolutionScaler.ResolvedSceneView,
+            _resolutionScaler.Width,
+            _resolutionScaler.Height);
+
         _postProcess.Initialize(
             _graphicsDevice,
             sceneOutput,
             _resolutionScaler.ResolvedSceneView,
             _resolutionScaler.Width,
             _resolutionScaler.Height);
+        _postProcess.SetSources(
+            _resolutionScaler.ResolvedSceneView,
+            _bloom.OutputView,
+            _resolutionScaler.Width,
+            _resolutionScaler.Height,
+            sceneOutput.ColorAttachments[0].Format);
 
         _sky.Initialize(
             factory,
@@ -494,8 +508,27 @@ public sealed class VeldridRenderer : IDisposable
 
         _resolutionScaler.ResolveScene(_commandList);
 
-        TextureView presentationSource =
-            _resolutionScaler.ResolvedSceneView;
+        var resolvedScene = _resolutionScaler.ResolvedSceneView;
+        var bloomView = resolvedScene;
+
+        if (settings.Bloom != BloomQuality.Off)
+        {
+            bloomView = _bloom.Render(
+                _commandList,
+                settings.Bloom,
+                threshold: 0.72f);
+        }
+
+        var sceneOutputDescription =
+            _resolutionScaler.SceneFramebuffer.OutputDescription;
+        _postProcess.SetSources(
+            resolvedScene,
+            bloomView,
+            _resolutionScaler.Width,
+            _resolutionScaler.Height,
+            sceneOutputDescription.ColorAttachments[0].Format);
+
+        TextureView presentationSource = resolvedScene;
         if (_postProcess.IsNeeded(settings))
         {
             presentationSource = _postProcess.Render(
@@ -693,8 +726,14 @@ public sealed class VeldridRenderer : IDisposable
 
         var sceneOutput =
             _resolutionScaler.SceneFramebuffer.OutputDescription;
-        _postProcess.SetSource(
+        _bloom.SetSource(
             _resolutionScaler.ResolvedSceneView,
+            _resolutionScaler.Width,
+            _resolutionScaler.Height,
+            BloomQuality.Medium);
+        _postProcess.SetSources(
+            _resolutionScaler.ResolvedSceneView,
+            _bloom.OutputView,
             _resolutionScaler.Width,
             _resolutionScaler.Height,
             sceneOutput.ColorAttachments[0].Format);
@@ -750,6 +789,7 @@ public sealed class VeldridRenderer : IDisposable
         _sky.Dispose();
         _menu.Dispose();
         _postProcess.Dispose();
+        _bloom.Dispose();
         _resolutionScaler.Dispose();
         _shadows.Dispose();
         _terrain.Dispose();
