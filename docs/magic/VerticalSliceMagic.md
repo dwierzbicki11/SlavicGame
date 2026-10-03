@@ -196,3 +196,61 @@ Runtime rytuału ma lekki proceduralny efekt geometryczny bez dodatkowych tekstu
 - sukces zostawia krótki około 2-sekundowy błysk/pełny krąg, który następnie znika.
 
 Budżet jest celowo mały i regresje pilnują, aby aktywny efekt pozostawał poniżej 512 dodatkowych wierzchołków. To pierwszy pass pod słabsze iGPU; finalne VFX mogą później zastąpić lub rozszerzyć ten mesh zależnie od benchmarków.
+
+
+## Nauka czarów — runtime progression
+
+Czary nie są już automatycznie dostępne od początku. Wiedza jest trwałym stanem świata zapisywanym jako flagi `magic.spell.*.learned`.
+
+Sterowanie:
+- `L` — spróbuj nauczyć się dostępnego czaru w bieżącym miejscu;
+- `Q` — zmienia tylko pomiędzy już poznanymi czarami;
+- `F` — nie pozwala rzucić niepoznanego czaru.
+
+HUD nie pokazuje inkantacji ani kosztu czaru przed jego poznaniem.
+
+### spell.spark — ISKRA / ZAR VEK
+
+Źródło lekcji: `shrine-keeper`  
+Miejsce: `old-shrine` / Kamienny Krąg
+
+Wymagania:
+- dotrzeć do Kamiennego Kręgu;
+- kontrakt `light-over-swamp` musi być co najmniej w stanie `Offered`.
+
+To jest pierwszy kontrolowany trening i nie zużywa przedmiotu.
+
+### spell.mend — SZEPT ŻYCIA / ZIVA DAR
+
+Źródło lekcji: `herbalist`  
+Miejsce: `old-village` / Żarnowiec
+
+Wymagania:
+- znać `spell.spark`;
+- wcześniej realnie spaść do 70% zdrowia lub niżej;
+- posiadać `simple-bandage`.
+
+Koszt nauki:
+- 1 × `simple-bandage` jako materiał praktyczny.
+
+Nowa gra dostaje dwa startowe bandaże zgodnie z założeniem ekwipunku startowego vertical slice.
+
+### spell.reveal-trace — ODSŁONIĘCIE ŚLADU / VEDA NAW
+
+Źródło lekcji: `shrine-keeper`  
+Miejsce: `old-shrine`
+
+Wymagania:
+- znać `spell.spark`;
+- posiadać potwierdzony dowód `light-over-swamp.keepsake-owner`;
+- znać związek kotwicy ze zjawą: `light-over-swamp.anchor-link-known`.
+
+Lekcja nie zużywa przedmiotu. Ma być nagrodą za poprawne połączenie wiedzy śledczej, nie za farmienie zasobów.
+
+## Persistence i fail-forward
+
+- poznane czary są zapisywane przez istniejące world flags;
+- save/load zachowuje wiedzę;
+- po load wybrany czar jest normalizowany do faktycznie poznanego;
+- brak spełnionego warunku nie zużywa żadnego materiału;
+- wymagania są data-driven przez `SpellLessonDefinition` i `SpellLessonRequirement`, więc kolejne czary mogą wymagać przedmiotów, reputacji, dowodów, wcześniejszych czarów lub etapów questa.

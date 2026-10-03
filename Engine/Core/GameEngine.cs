@@ -414,7 +414,10 @@ public sealed class GameEngine : IDisposable
     private void HandleInput(double deltaSeconds)
     {
         if (_window.ConsumeKeyPress(Key.Q) && !_world.Rituals.IsPerforming)
-            _world.Magic.SelectNext();
+            _world.Magic.SelectNext(_world);
+
+        if (_window.ConsumeKeyPress(Key.L) && !_world.Rituals.IsPerforming && !_world.Magic.IsCasting)
+            _world.SpellLearning.TryLearnCurrent(_world);
 
         if (_window.ConsumeKeyPress(Key.F) && !_world.Rituals.IsPerforming)
         {

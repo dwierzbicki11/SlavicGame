@@ -50,14 +50,57 @@ public sealed class SpellCasting
     private float _healthAtStart;
     private double _castingDuration;
 
-    public void SelectNext()
+    public void SelectNext(WorldState world)
     {
-        if (!IsCasting) Selected = (Selected + 1) % Spells.Count;
+        ArgumentNullException.ThrowIfNull(world);
+        if (IsCasting) return;
+
+        for (var offset = 1; offset <= Spells.Count; offset++)
+        {
+            var candidate = (Selected + offset) % Spells.Count;
+            if (SpellLessons.IsLearned(world, Spells[candidate].Id))
+            {
+                Selected = candidate;
+                Message = $"WYBRANO: {Current.Name}";
+                return;
+            }
+        }
+
+        Message = "NIE ZNASZ JESZCZE ZADNEGO CZARU / L NAUKA";
+    }
+
+    public bool SelectSpell(string spellId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(spellId);
+        var index = Spells.ToList().FindIndex(spell => string.Equals(spell.Id, spellId, StringComparison.Ordinal));
+        if (index < 0) return false;
+        Selected = index;
+        return true;
+    }
+
+    public void NormalizeSelection(WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        if (SpellLessons.IsLearned(world, Current.Id)) return;
+
+        for (var i = 0; i < Spells.Count; i++)
+            if (SpellLessons.IsLearned(world, Spells[i].Id))
+            {
+                Selected = i;
+                return;
+            }
+
+        Selected = 0;
     }
 
     public bool TryStart(WorldState world, Vector3 direction)
     {
         if (!world.Player.IsAlive || world.Cinematics.IsPlaying || world.Rituals.IsPerforming || IsCasting) return false;
+        if (!SpellLessons.IsLearned(world, Current.Id))
+        {
+            Message = $"NIE ZNASZ: {Current.Name} / L NAUKA";
+            return false;
+        }
         if (Cooldown > 0) { Message = "CZAR SIE ODNAWIA"; return false; }
         if (!float.IsFinite(direction.X) || !float.IsFinite(direction.Y) || !float.IsFinite(direction.Z) ||
             direction.LengthSquared() < 0.001f) return false;
