@@ -18,6 +18,10 @@ public static class MagicCinematicRegression
             "Eight unique cinematic definitions are runtime-ready");
         check(CinematicCatalog.All.SelectMany(scene => scene.Shots).All(shot => shot.Voice is not null),
             "Every cinematic shot has explicit emotional voice direction");
+        check(VoiceUsage.ParseScope(null) == VoiceUsageScope.SpellsOnly &&
+              VoiceUsage.ParseScope("spells") == VoiceUsageScope.SpellsOnly &&
+              VoiceUsage.ParseScope("all") == VoiceUsageScope.All,
+            "Local TTS defaults to protagonist spells and requires explicit all scope for cinematics");
         var calmStyle = ChatterboxProsody.FromDirection(new VoiceDirection(VoiceEmotion.Calm, 0.4f, 1f));
         var fearfulStyle = ChatterboxProsody.FromDirection(new VoiceDirection(VoiceEmotion.Fearful, 0.8f, 1f));
         check(calmStyle.EmotionKey == "calm" && fearfulStyle.EmotionKey == "fearful" &&
