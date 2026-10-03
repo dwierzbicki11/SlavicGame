@@ -33,6 +33,7 @@ public sealed class WorldState
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();
     public FootprintTrailState Footprints { get; } = new();
+    public WildlifeSystem Wildlife { get; } = new();
     public WorldTime Time { get; } = new();
     public WeatherSystem Weather { get; } = new();
     public PlayerVitals Player { get; } = new();
@@ -204,6 +205,7 @@ public sealed class WorldState
         NpcWorld.Update(this);
         Dialogue.Close();
         Apparition.Reset(this);
+        Wildlife.Initialize(this);
         WaterInteraction.Reset(PlayerPosition);
         Footprints.Reset(PlayerPosition);
     }
@@ -218,6 +220,7 @@ public sealed class WorldState
         Campfires.Update(this, deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
         Footprints.Update(this, deltaSeconds);
+        Wildlife.Update(this, deltaSeconds);
         Apparition.Update(this, deltaSeconds);
         EnvironmentInteractions.Update(this);
         SpellLearning.Update(this);
