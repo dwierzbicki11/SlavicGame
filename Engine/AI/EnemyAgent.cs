@@ -25,6 +25,7 @@ public sealed class EnemyAgent : IDamageReceiver
     private const float PatrolDistance = 4f;
     private const float DetectionRange = 14f;
     private const float DisengageRange = 22f;
+    private const float ProvokedDisengageRange = 30f;
     private const float MaxLeashDistance = 24f;
     private const float AttackRange = 1.45f;
     private const float AttackExitRange = 1.9f;
@@ -37,6 +38,7 @@ public sealed class EnemyAgent : IDamageReceiver
     private float _patrolSign = 1f;
     private double _alertRemaining;
     private double _attackCooldown;
+    private bool _provokedByDamage;
 
     public string Id { get; }
     public Vector3 HomePosition { get; }
@@ -79,6 +81,7 @@ public sealed class EnemyAgent : IDamageReceiver
 
         var playerDistance = HorizontalDistance(Position, world.PlayerPosition);
         var homeDistance = HorizontalDistance(Position, HomePosition);
+        var disengageRange = _provokedByDamage ? ProvokedDisengageRange : DisengageRange;
 
         switch (State)
         {
@@ -95,9 +98,10 @@ public sealed class EnemyAgent : IDamageReceiver
                 break;
 
             case EnemyState.Alert:
-                if (!world.Player.IsAlive || playerDistance > DisengageRange)
+                if (!world.Player.IsAlive || playerDistance > disengageRange)
                 {
                     State = EnemyState.Return;
+                    _provokedByDamage = false;
                     break;
                 }
 
@@ -110,10 +114,11 @@ public sealed class EnemyAgent : IDamageReceiver
 
             case EnemyState.Chase:
                 if (!world.Player.IsAlive ||
-                    playerDistance > DisengageRange ||
+                    playerDistance > disengageRange ||
                     homeDistance > MaxLeashDistance)
                 {
                     State = EnemyState.Return;
+                    _provokedByDamage = false;
                 }
                 else if (playerDistance <= AttackRange)
                 {
@@ -127,10 +132,11 @@ public sealed class EnemyAgent : IDamageReceiver
 
             case EnemyState.Attack:
                 if (!world.Player.IsAlive ||
-                    playerDistance > DisengageRange ||
+                    playerDistance > disengageRange ||
                     homeDistance > MaxLeashDistance)
                 {
                     State = EnemyState.Return;
+                    _provokedByDamage = false;
                 }
                 else if (playerDistance > AttackExitRange)
                 {
@@ -148,6 +154,7 @@ public sealed class EnemyAgent : IDamageReceiver
                 {
                     Position = HomePosition;
                     State = EnemyState.Patrol;
+                    _provokedByDamage = false;
                 }
                 else
                 {
@@ -177,6 +184,7 @@ public sealed class EnemyAgent : IDamageReceiver
         State = Health <= 0f ? EnemyState.Dead : snapshot.State;
         _alertRemaining = 0;
         _attackCooldown = State == EnemyState.Attack ? AttackIntervalSeconds : 0;
+        _provokedByDamage = false;
     }
 
     public void ApplyDamage(float amount, DamageType damageType)
@@ -206,11 +214,13 @@ public sealed class EnemyAgent : IDamageReceiver
         {
             State = EnemyState.Dead;
             _alertRemaining = 0;
+            _provokedByDamage = false;
             return;
         }
 
         State = EnemyState.Alert;
         _alertRemaining = AlertSeconds;
+        _provokedByDamage = true;
     }
 
     private void Patrol(WorldState world, double deltaSeconds)
