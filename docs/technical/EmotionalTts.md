@@ -24,7 +24,7 @@ Linux:
 
 ```bash
 sudo apt install python3.11 python3.11-venv
-./tools/tts/setup-local.sh
+bash tools/tts/setup-local.sh
 dotnet run -c Release
 ```
 
