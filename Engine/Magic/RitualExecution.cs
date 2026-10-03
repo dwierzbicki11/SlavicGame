@@ -128,7 +128,7 @@ public sealed class RitualExecution
         var definition = VerticalSliceRituals.ReleaseBoundEcho;
         var progress = world.Progress;
         var inventory = progress.Inventory;
-        var quest = progress.Quests.Get(Gameplay.VerticalSliceBootstrap.ContractQuestId);
+        var quest = progress.Quests.Get(SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.ContractQuestId);
 
         if (!world.Player.IsAlive || world.Magic.IsCasting || world.Cinematics.IsPlaying || IsPerforming)
             return RitualStartResult.Reject(RitualStartFailure.PlayerUnavailable, "RYTUAL TERAZ NIEDOSTEPNY");
@@ -247,7 +247,7 @@ public sealed class RitualExecution
         world.Progress.SetFlag(VerticalSliceRituals.ReleasedFlag);
         world.Progress.SetFlag("magic.ritual.release-bound-echo.completed");
 
-        var quest = world.Progress.Quests.Get(Gameplay.VerticalSliceBootstrap.ContractQuestId);
+        var quest = world.Progress.Quests.Get(SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.ContractQuestId);
         if (quest.Resolution == QuestResolution.None)
             quest.Resolve(QuestResolution.RitualClosure);
 
