@@ -277,3 +277,29 @@ Rzeka nie używa już jednej lewitującej płaszczyzny na stałej wysokości.
 Woda jest generowana jako 5-kolumnowy ribbon co 4 m. Dwa przesuwające się downstream pasma fazy zmieniają kolor i dają niewielkie przemieszczenie wysokości, więc przepływ jest widoczny bez kosztownych odbić/SSR.
 
 Oba brzegi dostają deterministyczny pas `riverbank_rocky_r0_01.glb`. Te modele używają short-range cullingu, dzięki czemu wizualne koryto nie obciąża mocno słabszych iGPU.
+
+
+## River interaction pass
+
+Po przebudowie koryta rzeka ma również lekką warstwę interakcji i ambience.
+
+### Player ripples
+- `WaterInteractionState` wykrywa, czy gracz stoi wewnątrz rzeczywistego wet ribbonu i czy grunt jest pod lokalnym poziomem wody;
+- intensywność zależy od poziomej prędkości gracza;
+- `WaterInteractionMesh` rysuje maksymalnie trzy rozszerzające się ringi po 24 segmenty;
+- poza wodą geometria ripple nie jest generowana.
+
+### Foam
+Przy obu krawędziach nurtu generowane są krótkie, animowane smugi piany w odstępie 32 m, zbliżonym do rocky-bank dressing. To daje wizualne wiry przy przeszkodach bez cząsteczek, przezroczystości, SSR ani osobnego compute passu.
+
+### Procedural ambience
+`RiverAmbienceSynthesizer` generuje PCM16 mono 24 kHz z filtrowanego szumu i słabych składowych tonalnych. Głośność maleje płynnie do zera do około 78 m od tafli.
+
+Playback rzeki korzysta z osobnego `SdlPcmPlayer`, niezależnego od TTS, więc ambience nie czyści kolejki głosu zaklęć. Jeśli dodatkowe urządzenie SDL nie może zostać otwarte, ambience wyłącza się łagodnie bez blokowania gry.
+
+### Low-end budget
+- brak systemu particle dla wody;
+- brak reflection/refraction render target;
+- ripple istnieją tylko w wodzie;
+- foam to kilka quadów w pobliżu kamienistych brzegów;
+- audio jest proceduralne, bez streamowania dużych assetów.
