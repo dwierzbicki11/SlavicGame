@@ -8,10 +8,12 @@ public sealed class ResolutionScalerRenderer : IDisposable
 {
     private GraphicsDevice? _graphicsDevice;
     private PixelFormat _colorFormat;
+    private TextureSampleCount _sceneSampleCount = TextureSampleCount.Count1;
 
     private Texture? _colorTexture;
+    private Texture? _resolvedColorTexture;
     private Texture? _depthTexture;
-    private TextureView? _colorView;
+    private TextureView? _resolvedColorView;
     private Framebuffer? _sceneFramebuffer;
 
     private Texture? _fsrTexture;
@@ -28,6 +30,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
     private ResourceSet? _bilinearSet;
     private ResourceSet? _easuSet;
     private ResourceSet? _rcasSet;
+    private TextureView? _presentationSource;
 
     private Pipeline? _bilinearPipeline;
     private Pipeline? _easuPipeline;
@@ -47,14 +50,20 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _sceneFramebuffer ??
         throw new InvalidOperationException("Resolution scaler is not initialized.");
 
+    public TextureView ResolvedSceneView =>
+        _resolvedColorView ??
+        throw new InvalidOperationException("Resolution scaler is not initialized.");
+
     public uint Width => _width;
     public uint Height => _height;
+    public TextureSampleCount SceneSampleCount => _sceneSampleCount;
 
     public void Initialize(
         GraphicsDevice graphicsDevice,
         OutputDescription swapchainOutput,
         uint width,
-        uint height)
+        uint height,
+        MsaaQuality msaa)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(graphicsDevice);
@@ -64,6 +73,10 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         _graphicsDevice = graphicsDevice;
         _colorFormat = swapchainOutput.ColorAttachments[0].Format;
+        _sceneSampleCount = SelectSupportedSampleCount(
+            graphicsDevice,
+            GraphicsQualityCatalog.MsaaSamples(msaa));
+
         var factory = graphicsDevice.ResourceFactory;
 
         _bilinearLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
@@ -135,6 +148,12 @@ public sealed class ResolutionScalerRenderer : IDisposable
             _rcasShaders,
             _rcasLayout,
             swapchainOutput);
+
+        SetPresentationSource(ResolvedSceneView);
+
+        EngineLog.Info(
+            $"Scene MSAA: requested={GraphicsQualityCatalog.MsaaSamples(msaa)}x, " +
+            $"active={(int)_sceneSampleCount}x.");
     }
 
     public void SetResolution(uint width, uint height)
@@ -156,19 +175,38 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         _graphicsDevice.WaitForIdle();
         RecreateSceneTarget(width, height);
+        SetPresentationSource(ResolvedSceneView);
 
         EngineLog.Info($"Internal render resolution: {_width}x{_height}.");
+    }
+
+    public void ResolveScene(CommandList commandList)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(commandList);
+
+        if (_sceneSampleCount == TextureSampleCount.Count1)
+            return;
+
+        if (_colorTexture is null || _resolvedColorTexture is null)
+            throw new InvalidOperationException("MSAA resolve resources are missing.");
+
+        commandList.ResolveTexture(_colorTexture, _resolvedColorTexture);
     }
 
     public void Present(
         CommandList commandList,
         Framebuffer swapchainFramebuffer,
         UpscalerMode upscaler,
-        float fsrSharpness)
+        float fsrSharpness,
+        TextureView? sourceOverride = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(commandList);
         ArgumentNullException.ThrowIfNull(swapchainFramebuffer);
+
+        var source = sourceOverride ?? ResolvedSceneView;
+        SetPresentationSource(source);
 
         if (_graphicsDevice is null ||
             _bilinearPipeline is null ||
@@ -246,7 +284,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
         commandList.Draw(3);
     }
 
-    private void RecreateSceneTarget(uint width, uint height)
+    private void SetPresentationSource(TextureView source)
     {
         if (_graphicsDevice is null ||
             _bilinearLayout is null ||
@@ -256,14 +294,55 @@ public sealed class ResolutionScalerRenderer : IDisposable
             throw new InvalidOperationException("Resolution scaler layouts are not initialized.");
         }
 
+        if (ReferenceEquals(_presentationSource, source) &&
+            _bilinearSet is not null &&
+            _easuSet is not null)
+        {
+            return;
+        }
+
+        _bilinearSet?.Dispose();
+        _easuSet?.Dispose();
+
+        var factory = _graphicsDevice.ResourceFactory;
+        _bilinearSet = factory.CreateResourceSet(new ResourceSetDescription(
+            _bilinearLayout,
+            source,
+            _graphicsDevice.LinearSampler));
+
+        _easuSet = factory.CreateResourceSet(new ResourceSetDescription(
+            _easuLayout,
+            _easuConstants,
+            source,
+            _graphicsDevice.LinearSampler));
+
+        _presentationSource = source;
+    }
+
+    private void RecreateSceneTarget(uint width, uint height)
+    {
+        if (_graphicsDevice is null)
+            throw new InvalidOperationException("Resolution scaler is not initialized.");
+
         var factory = _graphicsDevice.ResourceFactory;
 
         _bilinearSet?.Dispose();
         _easuSet?.Dispose();
+        _bilinearSet = null;
+        _easuSet = null;
+        _presentationSource = null;
+
         _sceneFramebuffer?.Dispose();
-        _colorView?.Dispose();
+        _resolvedColorView?.Dispose();
+        if (_resolvedColorTexture is not null &&
+            !ReferenceEquals(_resolvedColorTexture, _colorTexture))
+        {
+            _resolvedColorTexture.Dispose();
+        }
         _depthTexture?.Dispose();
         _colorTexture?.Dispose();
+
+        var multisampled = _sceneSampleCount != TextureSampleCount.Count1;
 
         _colorTexture = factory.CreateTexture(TextureDescription.Texture2D(
             width,
@@ -271,7 +350,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
             mipLevels: 1,
             arrayLayers: 1,
             _colorFormat,
-            TextureUsage.RenderTarget | TextureUsage.Sampled));
+            TextureUsage.RenderTarget,
+            _sceneSampleCount));
 
         _depthTexture = factory.CreateTexture(TextureDescription.Texture2D(
             width,
@@ -279,23 +359,37 @@ public sealed class ResolutionScalerRenderer : IDisposable
             mipLevels: 1,
             arrayLayers: 1,
             PixelFormat.R32_Float,
-            TextureUsage.DepthStencil));
+            TextureUsage.DepthStencil,
+            _sceneSampleCount));
 
-        _colorView = factory.CreateTextureView(_colorTexture);
+        if (multisampled)
+        {
+            _resolvedColorTexture = factory.CreateTexture(TextureDescription.Texture2D(
+                width,
+                height,
+                mipLevels: 1,
+                arrayLayers: 1,
+                _colorFormat,
+                TextureUsage.RenderTarget | TextureUsage.Sampled));
+        }
+        else
+        {
+            // Single-sample target is directly sampleable after the scene pass.
+            _colorTexture.Dispose();
+            _colorTexture = factory.CreateTexture(TextureDescription.Texture2D(
+                width,
+                height,
+                mipLevels: 1,
+                arrayLayers: 1,
+                _colorFormat,
+                TextureUsage.RenderTarget | TextureUsage.Sampled));
+            _resolvedColorTexture = _colorTexture;
+        }
+
+        _resolvedColorView = factory.CreateTextureView(_resolvedColorTexture);
         _sceneFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
             new FramebufferAttachmentDescription(_depthTexture, 0),
             [new FramebufferAttachmentDescription(_colorTexture, 0)]));
-
-        _bilinearSet = factory.CreateResourceSet(new ResourceSetDescription(
-            _bilinearLayout,
-            _colorView,
-            _graphicsDevice.LinearSampler));
-
-        _easuSet = factory.CreateResourceSet(new ResourceSetDescription(
-            _easuLayout,
-            _easuConstants,
-            _colorView,
-            _graphicsDevice.LinearSampler));
 
         _width = width;
         _height = height;
@@ -354,6 +448,42 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         _outputWidth = width;
         _outputHeight = height;
+    }
+
+    private TextureSampleCount SelectSupportedSampleCount(
+        GraphicsDevice graphicsDevice,
+        int requested)
+    {
+        graphicsDevice.GetPixelFormatSupport(
+            _colorFormat,
+            TextureType.Texture2D,
+            TextureUsage.RenderTarget,
+            out var colorSupport);
+        graphicsDevice.GetPixelFormatSupport(
+            PixelFormat.R32_Float,
+            TextureType.Texture2D,
+            TextureUsage.DepthStencil,
+            out var depthSupport);
+
+        foreach (var candidate in Candidates(requested))
+        {
+            if (colorSupport.IsSampleCountSupported(candidate) &&
+                depthSupport.IsSampleCountSupported(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return TextureSampleCount.Count1;
+    }
+
+    private static IEnumerable<TextureSampleCount> Candidates(int requested)
+    {
+        if (requested >= 4)
+            yield return TextureSampleCount.Count4;
+        if (requested >= 2)
+            yield return TextureSampleCount.Count2;
+        yield return TextureSampleCount.Count1;
     }
 
     private static Pipeline CreateFullscreenPipeline(
@@ -423,8 +553,6 @@ public sealed class ResolutionScalerRenderer : IDisposable
     {
         sharpness = Math.Clamp(sharpness, 0f, 1f);
 
-        // AMD RCAS expresses sharpness in stops: 0 = strongest.
-        // Keep our UI intuitive: 0 = subtle, 1 = strongest.
         var stops = 4f * (1f - sharpness);
         var linear = MathF.Pow(2f, -stops);
 
@@ -458,9 +586,16 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         _sceneFramebuffer?.Dispose();
         _fsrFramebuffer?.Dispose();
-        _colorView?.Dispose();
+        _resolvedColorView?.Dispose();
         _fsrView?.Dispose();
         _depthTexture?.Dispose();
+
+        if (_resolvedColorTexture is not null &&
+            !ReferenceEquals(_resolvedColorTexture, _colorTexture))
+        {
+            _resolvedColorTexture.Dispose();
+        }
+
         _colorTexture?.Dispose();
         _fsrTexture?.Dispose();
 
@@ -481,11 +616,13 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _rcasConstants = null;
         _sceneFramebuffer = null;
         _fsrFramebuffer = null;
-        _colorView = null;
+        _resolvedColorView = null;
         _fsrView = null;
         _depthTexture = null;
         _colorTexture = null;
+        _resolvedColorTexture = null;
         _fsrTexture = null;
+        _presentationSource = null;
         _bilinearShaders = null;
         _easuShaders = null;
         _rcasShaders = null;

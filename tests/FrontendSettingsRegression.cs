@@ -9,8 +9,8 @@ public static class FrontendSettingsRegression
         ArgumentNullException.ThrowIfNull(check);
 
         var definitions = SettingsCatalog.All;
-        check(definitions.Count >= 33,
-            "Frontend exposes the current display, controls and graphics settings");
+        check(definitions.Count >= 40,
+            "Frontend exposes the current display, controls, graphics and post-processing settings");
         check(definitions.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == definitions.Count,
             "Frontend setting identifiers are unique");
         check(Enum.GetValues<SettingCategory>().All(category =>
@@ -95,6 +95,9 @@ public static class FrontendSettingsRegression
               settings.FarVegetation == FarVegetationMode.Impostors &&
               settings.Resolution == RenderResolution.Qhd540 &&
               settings.Upscaler == UpscalerMode.Fsr1 &&
+              settings.AntiAliasing == AntiAliasingMode.Fxaa &&
+              settings.Msaa == MsaaQuality.Off &&
+              settings.Bloom == BloomQuality.Off &&
               !settings.NormalMapping &&
               !settings.SpecularHighlights,
             "Low-end preset disables the heaviest GPU effects and aggressively reduces shader work");
@@ -126,6 +129,45 @@ public static class FrontendSettingsRegression
         var lowResolution = ResolutionCatalog.Get(RenderResolution.Qhd540);
         check(lowResolution.Width == 960 && lowResolution.Height == 540,
             "Low internal resolution is available for FSR performance mode");
+
+        var antiAliasing = definitions.Single(item => item.Id == "anti-aliasing");
+        settings.AntiAliasing = AntiAliasingMode.Off;
+        antiAliasing.Change(settings, 1);
+        check(settings.AntiAliasing == AntiAliasingMode.Fxaa,
+            "Frontend can enable FXAA");
+
+        var msaa = definitions.Single(item => item.Id == "msaa");
+        settings.Msaa = MsaaQuality.Off;
+        msaa.Change(settings, 1);
+        check(settings.Msaa == MsaaQuality.X2 &&
+              GraphicsQualityCatalog.MsaaSamples(settings.Msaa) == 2,
+            "Frontend can select 2x MSAA");
+
+        var bloom = definitions.Single(item => item.Id == "bloom");
+        settings.Bloom = BloomQuality.Off;
+        bloom.Change(settings, 1);
+        check(settings.Bloom == BloomQuality.Low &&
+              GraphicsQualityCatalog.BloomTapCount(settings.Bloom) > 0,
+            "Frontend can enable bloom quality");
+
+        var brightness = definitions.Single(item => item.Id == "brightness");
+        settings.Brightness = 1f;
+        brightness.Change(settings, 1);
+        check(settings.Brightness > 1f,
+            "Frontend brightness adjustment changes post-process exposure");
+
+        var gamma = definitions.Single(item => item.Id == "gamma");
+        settings.Gamma = 2.2f;
+        gamma.Change(settings, -1);
+        check(settings.Gamma < 2.2f,
+            "Frontend gamma adjustment changes display gamma");
+
+        var fpsLimit = definitions.Single(item => item.Id == "fps-limit");
+        settings.FpsLimit = FrameRateLimit.Unlimited;
+        fpsLimit.Change(settings, 1);
+        check(settings.FpsLimit == FrameRateLimit.Fps30 &&
+              GraphicsQualityCatalog.FrameRate(settings.FpsLimit) == 30,
+            "Frontend can select an FPS limit");
 
         var terrainDetail = definitions.Single(item => item.Id == "terrain-detail");
         settings.TerrainDetail = TerrainDetailQuality.High;

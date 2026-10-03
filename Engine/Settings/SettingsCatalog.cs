@@ -4,7 +4,8 @@ public enum SettingCategory
 {
     Display,
     Controls,
-    Graphics
+    Graphics,
+    PostProcessing
 }
 
 public sealed record SettingDefinition(
@@ -40,6 +41,13 @@ public static class SettingsCatalog
             s => s.VSync, (s, v) => s.VSync = v),
         Toggle("fps", SettingCategory.Display, "LICZNIK FPS",
             s => s.ShowFps, (s, v) => s.ShowFps = v),
+        new(
+            "fps-limit",
+            SettingCategory.Display,
+            "LIMIT FPS",
+            s => FrameLimitName(s.FpsLimit),
+            (s, direction) =>
+                s.FpsLimit = CycleEnum(s.FpsLimit, direction)),
 
         new(
             "fov",
@@ -154,16 +162,17 @@ public static class SettingsCatalog
             s => FarVegetationName(s.FarVegetation),
             (s, direction) =>
                 s.FarVegetation = CycleEnum(s.FarVegetation, direction)),
+
         new(
             "upscaler",
-            SettingCategory.Graphics,
+            SettingCategory.PostProcessing,
             "UPSCALER",
             s => s.Upscaler == UpscalerMode.Fsr1 ? "FSR1" : "BILINEAR",
             (s, direction) =>
                 s.Upscaler = CycleEnum(s.Upscaler, direction)),
         new(
             "fsr-sharpness",
-            SettingCategory.Graphics,
+            SettingCategory.PostProcessing,
             "FSR1 OSTROSC",
             s => $"{s.FsrSharpness:0.00}",
             (s, direction) =>
@@ -171,6 +180,58 @@ public static class SettingsCatalog
                     s.FsrSharpness + direction * 0.05f,
                     0f,
                     1f)),
+        new(
+            "anti-aliasing",
+            SettingCategory.PostProcessing,
+            "ANTYALIASING",
+            s => s.AntiAliasing == AntiAliasingMode.Fxaa ? "FXAA" : "WYL",
+            (s, direction) =>
+                s.AntiAliasing = CycleEnum(s.AntiAliasing, direction)),
+        new(
+            "msaa",
+            SettingCategory.PostProcessing,
+            "MSAA",
+            s => MsaaName(s.Msaa),
+            (s, direction) =>
+                s.Msaa = CycleEnum(s.Msaa, direction)),
+        new(
+            "bloom",
+            SettingCategory.PostProcessing,
+            "BLOOM",
+            s => BloomName(s.Bloom),
+            (s, direction) =>
+                s.Bloom = CycleEnum(s.Bloom, direction)),
+        new(
+            "bloom-strength",
+            SettingCategory.PostProcessing,
+            "SILA BLOOM",
+            s => $"{s.BloomStrength:0.00}",
+            (s, direction) =>
+                s.BloomStrength = Math.Clamp(
+                    s.BloomStrength + direction * 0.05f,
+                    0f,
+                    1.5f)),
+        new(
+            "brightness",
+            SettingCategory.PostProcessing,
+            "JASNOSC",
+            s => $"{s.Brightness:0.00}",
+            (s, direction) =>
+                s.Brightness = Math.Clamp(
+                    s.Brightness + direction * 0.05f,
+                    0.5f,
+                    1.5f)),
+        new(
+            "gamma",
+            SettingCategory.PostProcessing,
+            "GAMMA",
+            s => $"{s.Gamma:0.00}",
+            (s, direction) =>
+                s.Gamma = Math.Clamp(
+                    s.Gamma + direction * 0.05f,
+                    1.6f,
+                    2.8f)),
+
         Toggle("normal-mapping", SettingCategory.Graphics, "NORMAL MAPPING",
             s => s.NormalMapping, (s, v) => s.NormalMapping = v),
         Toggle("specular", SettingCategory.Graphics, "ODBICIA SPECULAR",
@@ -222,6 +283,37 @@ public static class SettingsCatalog
         if (next < 0) next += values.Length;
         return values[next];
     }
+
+    private static string FrameLimitName(FrameRateLimit limit) =>
+        limit switch
+        {
+            FrameRateLimit.Unlimited => "BEZ LIMITU",
+            FrameRateLimit.Fps30 => "30",
+            FrameRateLimit.Fps45 => "45",
+            FrameRateLimit.Fps60 => "60",
+            FrameRateLimit.Fps90 => "90",
+            FrameRateLimit.Fps120 => "120",
+            _ => "BEZ LIMITU"
+        };
+
+    private static string MsaaName(MsaaQuality quality) =>
+        quality switch
+        {
+            MsaaQuality.Off => "WYL",
+            MsaaQuality.X2 => "2X*",
+            MsaaQuality.X4 => "4X*",
+            _ => "WYL"
+        };
+
+    private static string BloomName(BloomQuality quality) =>
+        quality switch
+        {
+            BloomQuality.Off => "WYL",
+            BloomQuality.Low => "NISKI",
+            BloomQuality.Medium => "SREDNI",
+            BloomQuality.High => "WYSOKI",
+            _ => "WYL"
+        };
 
     private static string QualityName(CloudQuality quality) =>
         quality switch

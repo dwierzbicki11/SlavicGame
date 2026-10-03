@@ -18,6 +18,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly TerrainMaterialRenderer _terrain = new();
     private readonly MenuRenderer _menu = new();
     private readonly ResolutionScalerRenderer _resolutionScaler = new();
+    private readonly PostProcessRenderer _postProcess = new();
     private readonly PbrModelRenderer _pbrModels = new();
     private readonly FarVegetationRenderer _farVegetation = new();
 
@@ -55,7 +56,8 @@ public sealed class VeldridRenderer : IDisposable
         GameWindow window,
         WorldState world,
         bool vsync,
-        TextureQuality textureQuality)
+        TextureQuality textureQuality,
+        MsaaQuality msaaQuality)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_initialized) return;
@@ -63,7 +65,12 @@ public sealed class VeldridRenderer : IDisposable
         ArgumentNullException.ThrowIfNull(world);
         try
         {
-            InitializeResources(window, world, vsync, textureQuality);
+            InitializeResources(
+                window,
+                world,
+                vsync,
+                textureQuality,
+                msaaQuality);
             _initialized = true;
         }
         catch
@@ -77,7 +84,8 @@ public sealed class VeldridRenderer : IDisposable
         GameWindow window,
         WorldState world,
         bool vsync,
-        TextureQuality textureQuality)
+        TextureQuality textureQuality,
+        MsaaQuality msaaQuality)
     {
         PresentationPolicy.Apply(vsync);
 
@@ -134,18 +142,35 @@ public sealed class VeldridRenderer : IDisposable
             _viewBuffer,
             _atmosphereBuffer));
 
+        _shadows.Initialize(_graphicsDevice);
+
+        _resolutionScaler.Initialize(
+            _graphicsDevice,
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
+            _graphicsDevice.SwapchainFramebuffer.Width,
+            _graphicsDevice.SwapchainFramebuffer.Height,
+            msaaQuality);
+
+        var sceneOutput =
+            _resolutionScaler.SceneFramebuffer.OutputDescription;
+
+        _postProcess.Initialize(
+            _graphicsDevice,
+            sceneOutput,
+            _resolutionScaler.ResolvedSceneView,
+            _resolutionScaler.Width,
+            _resolutionScaler.Height);
+
         _sky.Initialize(
             factory,
             _cameraLayout,
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription);
-
-        _shadows.Initialize(_graphicsDevice);
+            sceneOutput);
 
         _terrain.Initialize(
             _graphicsDevice,
             _cameraLayout,
             _shadows.SampleLayout,
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
+            sceneOutput,
             world.Terrain,
             assetsRoot,
             textureQuality);
@@ -154,7 +179,7 @@ public sealed class VeldridRenderer : IDisposable
             _graphicsDevice,
             _cameraLayout,
             _shadows.SampleLayout,
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
+            sceneOutput,
             world,
             assetsRoot,
             textureQuality);
@@ -162,7 +187,7 @@ public sealed class VeldridRenderer : IDisposable
         _farVegetation.Initialize(
             _graphicsDevice,
             _cameraLayout,
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
+            sceneOutput,
             world,
             assetsRoot);
 
@@ -185,7 +210,7 @@ public sealed class VeldridRenderer : IDisposable
             PrimitiveTopology.TriangleList,
             new ShaderSetDescription(new[] { vertexLayout }, _actorShaders),
             new[] { _cameraLayout, _shadows.SampleLayout },
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription));
+            sceneOutput));
 
         _hudScreenBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _hudVertexCapacity = 4096;
@@ -206,12 +231,6 @@ public sealed class VeldridRenderer : IDisposable
         _menu.Initialize(
             _graphicsDevice,
             _graphicsDevice.SwapchainFramebuffer.OutputDescription);
-
-        _resolutionScaler.Initialize(
-            _graphicsDevice,
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
-            _graphicsDevice.SwapchainFramebuffer.Width,
-            _graphicsDevice.SwapchainFramebuffer.Height);
 
         var hudVertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
@@ -473,11 +492,23 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.DrawIndexed(_actorIndexCount);
         }
 
+        _resolutionScaler.ResolveScene(_commandList);
+
+        TextureView presentationSource =
+            _resolutionScaler.ResolvedSceneView;
+        if (_postProcess.IsNeeded(settings))
+        {
+            presentationSource = _postProcess.Render(
+                _commandList,
+                settings);
+        }
+
         _resolutionScaler.Present(
             _commandList,
             swapchainFramebuffer,
             settings.Upscaler,
-            settings.FsrSharpness);
+            settings.FsrSharpness,
+            presentationSource);
 
         if (_hudVertices.Count > 0)
         {
@@ -659,6 +690,14 @@ public sealed class VeldridRenderer : IDisposable
         _resolutionScaler.SetResolution(
             checked((uint)Math.Max(1, width)),
             checked((uint)Math.Max(1, height)));
+
+        var sceneOutput =
+            _resolutionScaler.SceneFramebuffer.OutputDescription;
+        _postProcess.SetSource(
+            _resolutionScaler.ResolvedSceneView,
+            _resolutionScaler.Width,
+            _resolutionScaler.Height,
+            sceneOutput.ColorAttachments[0].Format);
     }
 
     public void SetShadowResolution(uint mapSize)
@@ -710,6 +749,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _sky.Dispose();
         _menu.Dispose();
+        _postProcess.Dispose();
         _resolutionScaler.Dispose();
         _shadows.Dispose();
         _terrain.Dispose();

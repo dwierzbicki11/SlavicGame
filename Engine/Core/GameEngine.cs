@@ -71,7 +71,8 @@ public sealed class GameEngine : IDisposable
             _window,
             _world,
             _vsync,
-            _settings.TextureQuality);
+            _settings.TextureQuality,
+            _settings.Msaa);
         ApplySettings();
         _camera.Follow(_world.PlayerPosition, 0f, _world.Terrain);
         _window.SetMouseCapture(false);
@@ -91,6 +92,8 @@ public sealed class GameEngine : IDisposable
 
         while (_window.Exists)
         {
+            var frameStartTimestamp = Stopwatch.GetTimestamp();
+
             _window.PumpEvents();
             if (!_window.Exists) break;
 
@@ -159,6 +162,41 @@ public sealed class GameEngine : IDisposable
                 _time.TotalSeconds,
                 _settings,
                 menuView);
+
+            ApplyFrameRateLimit(frameStartTimestamp);
+        }
+    }
+
+    private void ApplyFrameRateLimit(long frameStartTimestamp)
+    {
+        var targetFps =
+            GraphicsQualityCatalog.FrameRate(_settings.FpsLimit);
+        if (targetFps <= 0 || _settings.VSync)
+            return;
+
+        var targetSeconds = 1.0 / targetFps;
+
+        while (true)
+        {
+            var elapsedSeconds =
+                (Stopwatch.GetTimestamp() - frameStartTimestamp) /
+                (double)Stopwatch.Frequency;
+            var remaining = targetSeconds - elapsedSeconds;
+
+            if (remaining <= 0)
+                break;
+
+            if (remaining > 0.0025)
+            {
+                Thread.Sleep(
+                    Math.Max(
+                        0,
+                        (int)((remaining - 0.0015) * 1000.0)));
+            }
+            else
+            {
+                Thread.SpinWait(64);
+            }
         }
     }
 
