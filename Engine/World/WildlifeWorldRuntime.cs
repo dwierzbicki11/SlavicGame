@@ -137,6 +137,7 @@ public sealed class WildlifeWorldRuntime
     {
         public WildlifeSpawnDefinition Spawn { get; } = spawn;
         public Vector3 Position;
+        public Vector2 LastForward = Vector2.UnitY;
     }
 
     private readonly Dictionary<string, State> _states =
@@ -309,8 +310,13 @@ public sealed class WildlifeWorldRuntime
             (spooked ? profile.FleeSpeed : profile.WanderSpeed) *
             deltaSeconds;
         var distance = delta.Length();
+        var direction = delta / distance;
         state.Position +=
-            delta / distance * MathF.Min(distance, maxStep);
+            direction * MathF.Min(distance, maxStep);
+
+        var horizontal = new Vector2(direction.X, direction.Z);
+        if (horizontal.LengthSquared() > 0.000001f)
+            state.LastForward = Vector2.Normalize(horizontal);
     }
 
     private static void MoveGround(
@@ -329,8 +335,9 @@ public sealed class WildlifeWorldRuntime
             return;
 
         var distance = delta.Length();
+        var direction = Vector2.Normalize(delta);
         var step =
-            Vector2.Normalize(delta) *
+            direction *
             MathF.Min(distance, speed * deltaSeconds);
 
         var resolved =
@@ -338,14 +345,14 @@ public sealed class WildlifeWorldRuntime
                 position2 + step,
                 bodyRadius);
 
-        state.Position = new Vector3(
+        state.LastForward = direction;
+
+        var position = new Vector3(
             resolved.X,
             0f,
             resolved.Y);
-        state.Position = state.Position with
-        {
-            Y = world.Terrain.SampleHeight(state.Position)
-        };
+        position.Y = world.Terrain.SampleHeight(position);
+        state.Position = position;
     }
 
     private void RebuildActors(WorldState world)
@@ -378,16 +385,7 @@ public sealed class WildlifeWorldRuntime
                     WildlifeBehavior.Wander
             };
 
-            var forward = spawn.Species == WildlifeSpecies.Raven
-                ? new Vector2(
-                    -MathF.Sin(
-                        spawn.Phase * MathF.Tau +
-                        (float)_elapsedSeconds * 0.42f),
-                    MathF.Cos(
-                        spawn.Phase * MathF.Tau +
-                        (float)_elapsedSeconds * 0.42f))
-                : DirectionForGround(state);
-
+            var forward = state.LastForward;
             var yaw =
                 forward.LengthSquared() > 0.000001f
                     ? WorldPlacementOrientation.YawFacing(
@@ -405,16 +403,4 @@ public sealed class WildlifeWorldRuntime
         }
     }
 
-    private static Vector2 DirectionForGround(State state)
-    {
-        var spawn = state.Spawn;
-        var position =
-            new Vector2(state.Position.X, state.Position.Z);
-        var direction = spawn.Home - position;
-
-        if (direction.LengthSquared() < 0.000001f)
-            return Vector2.UnitY;
-
-        return Vector2.Normalize(direction);
-    }
 }
