@@ -148,3 +148,20 @@ Current rule:
 - no FSR pass may use `gl_FragCoord` for the FSR pixel index.
 
 This keeps Low/Balanced/High on the same orientation convention as the working Ultra/Native path while preserving the actual EASU + RCAS upscale pipeline.
+
+
+## Vulkan FSR single-pass compatibility
+
+Some Vulkan drivers may still expose an inverted clip-space Y convention even when
+`PreferStandardClipSpaceYDirection = true` is requested. Veldrid exposes the actual
+runtime state through `GraphicsDevice.IsClipSpaceYInverted` and the texture-origin
+state through `GraphicsDevice.IsUvOriginTopLeft`.
+
+To keep presentation orientation stable on Vulkan, SlavicGame now uses:
+- Native/Ultra: unchanged direct presentation path;
+- FSR upscale on Vulkan: EASU renders directly to the swapchain;
+- RCAS is skipped on Vulkan compatibility presentation;
+- non-Vulkan backends retain the existing EASU -> RCAS path.
+
+This removes the extra fullscreen offscreen->swapchain pass from the Vulkan FSR path.
+The render log prints the actual clip-space/UV state reported by the active driver.

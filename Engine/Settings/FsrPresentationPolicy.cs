@@ -13,9 +13,12 @@ public static class FsrPresentationPolicy
         outputHeight >= inputHeight &&
         (outputWidth > inputWidth || outputHeight > inputHeight);
 
-    // Vulkan render targets and swapchain presentation use the same canonical
-    // fullscreen UV orientation in SlavicGame. FSR must not add an extra Y
-    // inversion in EASU or RCAS.
+    // Vulkan compatibility path: EASU renders directly to the swapchain.
+    // This avoids the second fullscreen offscreen->swapchain pass (RCAS),
+    // which can invert presentation on drivers where clip-space Y differs
+    // from the requested standard convention.
+    public static bool UsesSinglePassEasuCompatibility(bool isVulkan) => isVulkan;
+
     public static bool RequiresFinalRcasYFlip(
         UpscalerMode upscaler,
         uint inputWidth,

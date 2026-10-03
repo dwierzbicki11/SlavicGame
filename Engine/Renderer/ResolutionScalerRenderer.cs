@@ -34,6 +34,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
     private Pipeline? _bilinearPipeline;
     private Pipeline? _easuPipeline;
+    private Pipeline? _easuSwapchainPipeline;
     private Pipeline? _rcasPipeline;
 
     private Shader[]? _bilinearShaders;
@@ -41,6 +42,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
     private Shader[]? _rcasShaders;
 
     private bool _disposed;
+    private bool _singlePassEasuCompatibility;
     private uint _width;
     private uint _height;
     private uint _outputWidth;
@@ -76,6 +78,9 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _sceneSampleCount = SelectSupportedSampleCount(
             graphicsDevice,
             GraphicsQualityCatalog.MsaaSamples(msaa));
+        _singlePassEasuCompatibility =
+            FsrPresentationPolicy.UsesSinglePassEasuCompatibility(
+                graphicsDevice.BackendType == GraphicsBackend.Vulkan);
 
         var factory = graphicsDevice.ResourceFactory;
 
@@ -143,6 +148,12 @@ public sealed class ResolutionScalerRenderer : IDisposable
             _easuLayout,
             _fsrFramebuffer!.OutputDescription);
 
+        _easuSwapchainPipeline = CreateFullscreenPipeline(
+            factory,
+            _easuShaders,
+            _easuLayout,
+            swapchainOutput);
+
         _rcasPipeline = CreateFullscreenPipeline(
             factory,
             _rcasShaders,
@@ -154,6 +165,11 @@ public sealed class ResolutionScalerRenderer : IDisposable
         EngineLog.Info(
             $"Scene MSAA: requested={GraphicsQualityCatalog.MsaaSamples(msaa)}x, " +
             $"active={(int)_sceneSampleCount}x.");
+
+        EngineLog.Info(
+            $"Vulkan clip/UV state: clipYInverted={graphicsDevice.IsClipSpaceYInverted}, " +
+            $"uvOriginTopLeft={graphicsDevice.IsUvOriginTopLeft}, " +
+            $"FSR single-pass EASU={_singlePassEasuCompatibility}.");
     }
 
     public void SetResolution(uint width, uint height)
@@ -230,7 +246,9 @@ public sealed class ResolutionScalerRenderer : IDisposable
                 outputWidth,
                 outputHeight))
         {
-            EnsureFsrTarget(outputWidth, outputHeight);
+            if (!_singlePassEasuCompatibility)
+                EnsureFsrTarget(outputWidth, outputHeight);
+
             PresentFsr1(
                 commandList,
                 swapchainFramebuffer,
@@ -255,15 +273,10 @@ public sealed class ResolutionScalerRenderer : IDisposable
         uint outputHeight,
         float sharpness)
     {
-        if (_easuPipeline is null ||
-            _easuSet is null ||
-            _rcasPipeline is null ||
-            _rcasSet is null ||
-            _fsrFramebuffer is null ||
-            _easuConstants is null ||
-            _rcasConstants is null)
+        if (_easuSet is null ||
+            _easuConstants is null)
         {
-            throw new InvalidOperationException("FSR1 resources are not initialized.");
+            throw new InvalidOperationException("FSR1 EASU resources are not initialized.");
         }
 
         var easu = BuildEasuConstants(
@@ -271,9 +284,32 @@ public sealed class ResolutionScalerRenderer : IDisposable
             _height,
             outputWidth,
             outputHeight);
-        var rcas = BuildRcasConstants(sharpness);
-
         commandList.UpdateBuffer(_easuConstants, 0, easu);
+
+        if (_singlePassEasuCompatibility)
+        {
+            if (_easuSwapchainPipeline is null)
+                throw new InvalidOperationException("FSR1 direct EASU pipeline is not initialized.");
+
+            commandList.SetFramebuffer(swapchainFramebuffer);
+            commandList.SetFullViewports();
+            commandList.SetFullScissorRects();
+            commandList.SetPipeline(_easuSwapchainPipeline);
+            commandList.SetGraphicsResourceSet(0, _easuSet);
+            commandList.Draw(3);
+            return;
+        }
+
+        if (_easuPipeline is null ||
+            _rcasPipeline is null ||
+            _rcasSet is null ||
+            _fsrFramebuffer is null ||
+            _rcasConstants is null)
+        {
+            throw new InvalidOperationException("FSR1 RCAS resources are not initialized.");
+        }
+
+        var rcas = BuildRcasConstants(sharpness);
         commandList.UpdateBuffer(_rcasConstants, 0, rcas);
 
         commandList.SetFramebuffer(_fsrFramebuffer);
@@ -583,6 +619,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         _bilinearPipeline?.Dispose();
         _easuPipeline?.Dispose();
+        _easuSwapchainPipeline?.Dispose();
         _rcasPipeline?.Dispose();
 
         _bilinearSet?.Dispose();
@@ -617,6 +654,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         _bilinearPipeline = null;
         _easuPipeline = null;
+        _easuSwapchainPipeline = null;
         _rcasPipeline = null;
         _bilinearSet = null;
         _easuSet = null;
