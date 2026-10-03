@@ -20,13 +20,6 @@ AF4 FsrRcasLoadF(ASU2 p)
 {
     ivec2 size = textureSize(sampler2D(EasuedColor, EasuedSampler), 0);
     ivec2 q = clamp(ivec2(p), ivec2(0), size - ivec2(1));
-
-    // EASU renders into another offscreen texture. RCAS is the pass that
-    // finally presents that texture to the swapchain, so this last
-    // offscreen->swapchain transition needs one vertical correction.
-    //
-    // Native FSR never enters the EASU/RCAS path, so Ultra remains unchanged.
-    q.y = size.y - 1 - q.y;
     return texelFetch(sampler2D(EasuedColor, EasuedSampler), q, 0);
 }
 
