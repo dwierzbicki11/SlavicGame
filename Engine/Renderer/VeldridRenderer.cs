@@ -19,6 +19,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly MenuRenderer _menu = new();
     private readonly ResolutionScalerRenderer _resolutionScaler = new();
     private readonly PbrModelRenderer _pbrModels = new();
+    private readonly FarVegetationRenderer _farVegetation = new();
 
     private GraphicsDevice? _graphicsDevice;
     private CommandList? _commandList;
@@ -158,6 +159,13 @@ public sealed class VeldridRenderer : IDisposable
             assetsRoot,
             textureQuality);
 
+        _farVegetation.Initialize(
+            _graphicsDevice,
+            _cameraLayout,
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
+            world,
+            assetsRoot);
+
         _actorShaders = ShaderLibrary.LoadPair(factory, "actor");
 
         var vertexLayout = new VertexLayoutDescription(
@@ -227,6 +235,7 @@ public sealed class VeldridRenderer : IDisposable
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
         EngineLog.Info($"Terrain materials + PBR world initialized; PBR world instances={_pbrModels.InstanceCount}, " +
             $"unique assets={_pbrModels.UniqueAssetCount}, spatial batches={_pbrModels.RenderableCount}, " +
+            $"far-tree proxies={_farVegetation.TreeCount}/{_farVegetation.BatchCount} batches, " +
             $"collision obstacles={world.Obstacles.Count}.");
         EngineLog.Info($"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
@@ -405,7 +414,8 @@ public sealed class VeldridRenderer : IDisposable
                 GraphicsQualityCatalog.ShadowDistance(settings.ShadowDistance),
                 GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
                 GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter),
-                settings.ModelLod);
+                settings.ModelLod,
+                settings.FarVegetation);
             _shadows.RenderActors(
                 _commandList,
                 _actorVertexBuffer,
@@ -436,7 +446,21 @@ public sealed class VeldridRenderer : IDisposable
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
             GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter),
-            settings.ModelLod);
+            settings.ModelLod,
+            settings.FarVegetation);
+
+        if (settings.FarVegetation == FarVegetationMode.Impostors)
+        {
+            _farVegetation.Render(
+                _commandList,
+                _cameraSet,
+                camera.Position,
+                cameraFrustum,
+                GraphicsQualityCatalog.VegetationImpostorStart(settings.ModelLod),
+                Math.Min(
+                    GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
+                    GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance)));
+        }
 
         _commandList.SetPipeline(_actorPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
@@ -690,6 +714,7 @@ public sealed class VeldridRenderer : IDisposable
         _shadows.Dispose();
         _terrain.Dispose();
         _pbrModels.Dispose();
+        _farVegetation.Dispose();
 
         _hudPipeline?.Dispose();
         _hudSet?.Dispose();
