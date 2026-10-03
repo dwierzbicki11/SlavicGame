@@ -148,17 +148,12 @@ internal static class FootprintTrailRegression
             var point = new Vector3(x, 0f, z);
             point.Y = world.Terrain.SampleHeight(point);
 
-            var weights =
-                TerrainSurfaceClassifier.Classify(
-                    point,
-                    Vector3.UnitY);
             var trackability =
-                FootprintTrailState.Trackability(
-                    weights,
-                    0f,
-                    0f);
+                FootprintTrailState.TrackabilityAt(
+                    world,
+                    point);
 
-            if (trackability >= 0.35f)
+            if (trackability >= 0.30f)
                 return point;
         }
 
