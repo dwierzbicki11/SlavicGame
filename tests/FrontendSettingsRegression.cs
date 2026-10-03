@@ -68,6 +68,8 @@ public static class FrontendSettingsRegression
             "Aggressive LOD switches trees to impostors earlier");
 
         var textureQuality = definitions.Single(item => item.Id == "texture-quality");
+        check(textureQuality.RequiresRestart,
+            "Texture quality warns that full GPU texture reload requires restart");
         settings.TextureQuality = TextureQuality.High;
         textureQuality.Change(settings, -1);
         check(settings.TextureQuality == TextureQuality.Medium,
@@ -168,6 +170,8 @@ public static class FrontendSettingsRegression
             "Frontend can enable FXAA");
 
         var msaa = definitions.Single(item => item.Id == "msaa");
+        check(msaa.RequiresRestart,
+            "MSAA warns that framebuffer recreation requires restart");
         settings.Msaa = MsaaQuality.Off;
         msaa.Change(settings, 1);
         check(settings.Msaa == MsaaQuality.X2 &&
