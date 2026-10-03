@@ -17,6 +17,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly ShadowMapRenderer _shadows = new();
     private readonly TerrainMaterialRenderer _terrain = new();
     private readonly MenuRenderer _menu = new();
+    private readonly ResolutionScalerRenderer _resolutionScaler = new();
     private readonly PbrModelRenderer _pbrModels = new();
 
     private GraphicsDevice? _graphicsDevice;
@@ -188,6 +189,12 @@ public sealed class VeldridRenderer : IDisposable
             _graphicsDevice,
             _graphicsDevice.SwapchainFramebuffer.OutputDescription);
 
+        _resolutionScaler.Initialize(
+            _graphicsDevice,
+            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
+            _graphicsDevice.SwapchainFramebuffer.Width,
+            _graphicsDevice.SwapchainFramebuffer.Height);
+
         var hudVertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
             new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float4));
@@ -243,12 +250,13 @@ public sealed class VeldridRenderer : IDisposable
             throw new InvalidOperationException("Renderer has not been initialized.");
         }
 
-        var framebuffer = _graphicsDevice.SwapchainFramebuffer;
-        if (framebuffer is null)
+        var swapchainFramebuffer = _graphicsDevice.SwapchainFramebuffer;
+        if (swapchainFramebuffer is null)
         {
             return;
         }
 
+        var framebuffer = _resolutionScaler.SceneFramebuffer;
         var width = Math.Max(1u, framebuffer.Width);
         var height = Math.Max(1u, framebuffer.Height);
         var aspect = MathF.Max(0.1f, (float)width / height);
@@ -326,7 +334,7 @@ public sealed class VeldridRenderer : IDisposable
         var graphicsFeatures2 = new Vector4(
             settings.TerrainPbr ? 1f : 0f,
             settings.ModelPbr ? 1f : 0f,
-            1f,
+            GraphicsQualityCatalog.CloudRaymarchSteps(settings.CloudQuality),
             0f);
 
         _commandList.Begin();
@@ -424,6 +432,10 @@ public sealed class VeldridRenderer : IDisposable
             width,
             height,
             menuView);
+
+        _resolutionScaler.Present(
+            _commandList,
+            swapchainFramebuffer);
 
         _commandList.End();
 
@@ -574,6 +586,24 @@ public sealed class VeldridRenderer : IDisposable
         return new RgbaFloat(final.X, final.Y, final.Z, 1f);
     }
 
+    public void SetRenderResolution(int width, int height)
+    {
+        if (_graphicsDevice is null)
+            return;
+
+        _resolutionScaler.SetResolution(
+            checked((uint)Math.Max(1, width)),
+            checked((uint)Math.Max(1, height)));
+    }
+
+    public void SetShadowResolution(uint mapSize)
+    {
+        if (_graphicsDevice is null)
+            return;
+
+        _shadows.SetMapSize(mapSize);
+    }
+
     public void SetVSync(bool enabled)
     {
         if (_graphicsDevice is null)
@@ -607,6 +637,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _sky.Dispose();
         _menu.Dispose();
+        _resolutionScaler.Dispose();
         _shadows.Dispose();
         _terrain.Dispose();
         _pbrModels.Dispose();

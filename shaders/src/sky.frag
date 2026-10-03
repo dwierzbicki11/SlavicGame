@@ -209,7 +209,8 @@ void main()
         sunDirection,
         timeSeconds,
         wind,
-        cloudiness * GraphicsFeatures0.x);
+        cloudiness * GraphicsFeatures0.x,
+        int(GraphicsFeatures2.z + 0.5));
     float cloudOpacity = cloudMarch.x;
     if (cloudOpacity > 0.001)
     {

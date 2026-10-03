@@ -14,12 +14,14 @@ try
     if (args.Contains("--vsync", StringComparer.Ordinal))
         settings.VSync = true;
 
+    var initialResolution = settings.ResolutionSize;
+
     using var game = new GameEngine(
         new EngineConfig
         {
             WindowTitle = "SlavicGame",
-            Width = 1280,
-            Height = 720,
+            Width = initialResolution.Width,
+            Height = initialResolution.Height,
             VSync = settings.VSync,
             Fullscreen = settings.Fullscreen,
             UseMouseWarp = args.Contains("--mouse-warp", StringComparer.Ordinal),

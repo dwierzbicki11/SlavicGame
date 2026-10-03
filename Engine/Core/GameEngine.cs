@@ -162,9 +162,19 @@ public sealed class GameEngine : IDisposable
     {
         _settings.Normalize();
 
+        var resolution = _settings.ResolutionSize;
+
         if (_window.IsFullscreen != _settings.Fullscreen)
             _window.SetFullscreen(_settings.Fullscreen);
 
+        if (!_settings.Fullscreen)
+            _window.SetWindowedSize(resolution.Width, resolution.Height);
+
+        _renderer.SetRenderResolution(
+            resolution.Width,
+            resolution.Height);
+        _renderer.SetShadowResolution(
+            GraphicsQualityCatalog.ShadowMapSize(_settings.ShadowQuality));
         _renderer.SetVSync(_settings.VSync);
 
         _camera.FieldOfView =
