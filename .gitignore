@@ -15,3 +15,6 @@ TestResults/
 
 # Generated Vulkan shader binaries
 shaders/bin/*.spv
+
+# Local TTS environment
+.venv-tts/
