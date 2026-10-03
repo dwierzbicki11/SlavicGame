@@ -5,6 +5,7 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
 {
     vec4 FogColorDensity;
     vec4 Lighting;
+    vec4 SunColorTime;
 };
 
 layout(set = 1, binding = 0) uniform texture2D GrassBase;
@@ -130,11 +131,6 @@ mat3 GroundTangentFrame(vec3 n)
     return mat3(tangent, bitangent, n);
 }
 
-vec3 SunColor(vec3 sunDirection)
-{
-    float horizon = 1.0 - smoothstep(0.08, 0.48, max(sunDirection.y, 0.0));
-    return mix(vec3(1.0, 0.95, 0.86), vec3(1.0, 0.47, 0.20), horizon * 0.82);
-}
 
 void main()
 {
@@ -219,7 +215,7 @@ void main()
     float ndotl = max(dot(normal, sunDirection), 0.0);
     float daylight = max(Lighting.x, 0.02);
 
-    vec3 sunColor = SunColor(sunDirection);
+    vec3 sunColor = SunColorTime.rgb;
     float hemisphere = mix(0.18, 0.64, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
 
     float wetness = clamp(weightsB.x * 0.82 + weightsB.y * 0.66, 0.0, 1.0);
