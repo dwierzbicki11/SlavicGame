@@ -17,6 +17,9 @@ public static class CampfireEffectMesh
 
         foreach (var fire in CampfireSystem.Fires)
         {
+            if (!world.Campfires.IsLit(world, fire.Id))
+                continue;
+
             var center = new Vector3(
                 fire.Position.X,
                 0f,
