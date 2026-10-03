@@ -27,7 +27,9 @@ internal static class EnemyProvokedChaseRegression
         if (enemy.State != EnemyState.Chase || Vector3.Distance(enemy.Position, world.PlayerPosition) >= Vector3.Distance(before, world.PlayerPosition))
             throw new InvalidOperationException("A provoked enemy did not pursue the player after entering Chase.");
 
-        world.SetPlayerPosition(new Vector3(31f, 0f, 0f));
+        // Measure disengage from the enemy's current position, not its spawn point: the
+        // preceding chase step has already moved it toward the player.
+        world.SetPlayerPosition(enemy.Position + new Vector3(31f, 0f, 0f));
         enemy.Update(world, 0.1);
         if (enemy.State != EnemyState.Return)
             throw new InvalidOperationException("Provoked chase ignored its extended disengage boundary.");
