@@ -98,11 +98,15 @@ void main()
 
     color *= brightness;
 
-    // Existing scene shaders output display-gamma color. Gamma=2.2 therefore
-    // leaves it unchanged, while lower/higher values provide user adjustment.
-    color = pow(
-        max(color, vec3(0.0)),
-        vec3(2.2 / gamma));
+    // Scene shaders already emit display-gamma color. The default gamma 2.2
+    // is therefore an identity transform; avoid an expensive per-pixel pow()
+    // on the common/default path, which matters on bandwidth/ALU-limited iGPUs.
+    if (abs(gamma - 2.2) > 0.001)
+    {
+        color = pow(
+            max(color, vec3(0.0)),
+            vec3(2.2 / gamma));
+    }
 
     fsout_Color = vec4(color, 1.0);
 }
