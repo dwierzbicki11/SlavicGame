@@ -22,6 +22,7 @@ public sealed class WorldState
     public SlavicGame.Engine.Magic.SpellCasting Magic { get; } = new();
     public SlavicGame.Engine.Magic.SpellLearningSystem SpellLearning { get; } = new();
     public SlavicGame.Engine.Magic.RitualExecution Rituals { get; } = new();
+    public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
     public WorldTime Time { get; } = new();
@@ -154,6 +155,8 @@ public sealed class WorldState
         {
             enemy.Update(this, deltaSeconds);
         }
+
+        SwampPredatorEncounter.Update(this);
     }
 
     public void SetPlayerPosition(Vector3 position)
