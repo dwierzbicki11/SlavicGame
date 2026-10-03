@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Magic;
+using SlavicGame.Engine.Audio;
 using SlavicGame.Engine.Save;
 using SlavicGame.Engine.World;
 
@@ -15,6 +16,13 @@ public static class MagicCinematicRegression
             "Playable spells use structured two-word incantations");
         check(CinematicCatalog.All.Count == 8 && CinematicCatalog.All.Select(scene => scene.Id).Distinct().Count() == 8,
             "Eight unique cinematic definitions are runtime-ready");
+        check(CinematicCatalog.All.SelectMany(scene => scene.Shots).All(shot => shot.Voice is not null),
+            "Every cinematic shot has explicit emotional voice direction");
+        var fearfulPrompt = VoiceDirectionPrompts.Build(new VoiceDirection(VoiceEmotion.Fearful, 0.8f, 1f));
+        check(fearfulPrompt.Contains("natural Polish", StringComparison.Ordinal) &&
+              fearfulPrompt.Contains("fearful", StringComparison.OrdinalIgnoreCase) &&
+              fearfulPrompt.Contains("never like a navigation system", StringComparison.Ordinal),
+            "TTS prompt requests natural emotional delivery instead of robotic narration");
         check(CinematicCatalog.TryGet("ritual-preparation", out var ritualPreparation) &&
               ritualPreparation.Shots.All(shot => shot.Space == CinematicSpace.PlayerRelative),
             "Quest cinematics can use player-relative camera shots");

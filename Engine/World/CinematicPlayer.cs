@@ -1,4 +1,5 @@
 using System.Numerics;
+using SlavicGame.Engine.Audio;
 
 namespace SlavicGame.Engine.World;
 
@@ -14,13 +15,13 @@ public sealed record CinematicShot(
     Vector3 Focus,
     double Seconds,
     string Subtitle,
-    CinematicSpace Space = CinematicSpace.World);
+    CinematicSpace Space = CinematicSpace.World,
+    VoiceDirection? Voice = null);
 
 public sealed record CinematicDefinition(string Id, IReadOnlyList<CinematicShot> Shots);
 
 public sealed class CinematicPlayer
 {
-    // Compatibility aliases for the first two scenes. New quest code should use CinematicCatalog.
     public static CinematicDefinition Arrival => CinematicCatalog.Arrival;
     public static CinematicDefinition Shrine => CinematicCatalog.Shrine;
 
@@ -31,7 +32,9 @@ public sealed class CinematicPlayer
 
     public bool IsPlaying => _active is not null;
     public string? ActiveId => _active?.Id;
-    public string Subtitle => _active?.Shots[_shot].Subtitle ?? "";
+    public int ShotIndex => IsPlaying ? _shot : -1;
+    public CinematicShot? CurrentShot => IsPlaying ? _active!.Shots[_shot] : null;
+    public string Subtitle => CurrentShot?.Subtitle ?? "";
     public Vector3 CameraPosition { get; private set; }
     public Vector3 CameraTarget { get; private set; }
 

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Numerics;
 using Veldrid;
 using SlavicGame.Engine.Diagnostics;
+using SlavicGame.Engine.Audio;
 using SlavicGame.Engine.Input;
 using SlavicGame.Engine.Renderer;
 using SlavicGame.Engine.Save;
@@ -23,6 +24,7 @@ public sealed class GameEngine : IDisposable
     private readonly GameSettings _settings;
     private readonly GameSettingsStore _settingsStore;
     private readonly SaveSlotService _saveSlots = new();
+    private VoiceOverService? _voice;
 
     private bool _initialized;
     private bool _disposed;
@@ -41,6 +43,8 @@ public sealed class GameEngine : IDisposable
     private double _autosaveSeconds;
     private bool _settingsReapplyPending;
     private bool _applyingSettings;
+    private string? _voicedCinematicId;
+    private int _voicedCinematicShot = -1;
     private const double AutosaveIntervalSeconds = 120.0;
 
     public GameTime Time => _time;
@@ -74,6 +78,7 @@ public sealed class GameEngine : IDisposable
         }
 
         EngineLog.Info("Starting SlavicGame engine.");
+        _voice ??= VoiceOverService.CreateFromEnvironment();
         _renderer.Initialize(
             _window,
             _world,
@@ -217,6 +222,8 @@ public sealed class GameEngine : IDisposable
                 loggedFirstFrame = true;
                 EngineLog.Info("Main loop is running.");
             }
+
+            SyncCinematicVoice();
 
             var menuView = _frontend.IsPlaying
                 ? null
@@ -400,7 +407,21 @@ public sealed class GameEngine : IDisposable
     private void HandleInput(double deltaSeconds)
     {
         if (_window.ConsumeKeyPress(Key.Q)) _world.Magic.SelectNext();
-        if (_window.ConsumeKeyPress(Key.F)) _world.Magic.TryStart(_world, _camera.GetLookDirection());
+        if (_window.ConsumeKeyPress(Key.F))
+        {
+            var spell = _world.Magic.Current;
+            if (_world.Magic.TryStart(_world, _camera.GetLookDirection()))
+            {
+                _voice?.Speak(new VoiceRequest(
+                    $"magic.{spell.Id}",
+                    spell.Incantation,
+                    new VoiceDirection(
+                        VoiceEmotion.Mystical,
+                        0.82f,
+                        0.9f,
+                        "low ritual delivery; deliberate fictional words; controlled power")));
+            }
+        }
         if (_window.ConsumeKeyPress(Key.C))
         {
             _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
@@ -416,6 +437,45 @@ public sealed class GameEngine : IDisposable
             _window.MouseDelta);
         PlayerController.Update(_world, _camera, input, deltaSeconds);
         if (_inputDiagnostics) LogInput(input, deltaSeconds);
+    }
+
+    private void SyncCinematicVoice()
+    {
+        if (_voice is null)
+            return;
+
+        var cinematics = _world.Cinematics;
+        if (!cinematics.IsPlaying)
+        {
+            if (_voicedCinematicId is not null)
+            {
+                _voice.Stop();
+                _voicedCinematicId = null;
+                _voicedCinematicShot = -1;
+            }
+            return;
+        }
+
+        var activeId = cinematics.ActiveId;
+        var shot = cinematics.CurrentShot;
+        if (activeId is null || shot is null)
+            return;
+
+        if (_voicedCinematicId == activeId &&
+            _voicedCinematicShot == cinematics.ShotIndex)
+            return;
+
+        _voicedCinematicId = activeId;
+        _voicedCinematicShot = cinematics.ShotIndex;
+
+        _voice.Speak(new VoiceRequest(
+            $"cinematic.{activeId}.{cinematics.ShotIndex}",
+            shot.Subtitle,
+            shot.Voice ?? new VoiceDirection(
+                VoiceEmotion.Solemn,
+                0.5f,
+                0.95f,
+                "cinematic narration; natural human delivery")));
     }
 
     private void LogInput(PlayerInput input, double deltaSeconds)
@@ -459,7 +519,14 @@ public sealed class GameEngine : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        try { _renderer.Dispose(); }
-        finally { _window.Dispose(); }
+        try
+        {
+            _voice?.Dispose();
+            _renderer.Dispose();
+        }
+        finally
+        {
+            _window.Dispose();
+        }
     }
 }
