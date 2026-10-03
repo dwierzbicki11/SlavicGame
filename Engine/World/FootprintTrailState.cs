@@ -75,13 +75,13 @@ public sealed class FootprintTrailState
                 groundPosition,
                 Vector3.UnitY);
 
-            var trackability = Trackability(
-                weights,
-                world.WaterInteraction.Wetness,
-                world.Weather.RainIntensity);
+            var trackability = TrackabilityAt(
+                world,
+                groundPosition,
+                weights);
 
             if (!world.WaterInteraction.IsInWater &&
-                trackability >= 0.26f)
+                trackability >= 0.24f)
             {
                 AddFootprint(
                     world,
@@ -93,6 +93,43 @@ public sealed class FootprintTrailState
         }
 
         _previousPosition = position;
+    }
+
+    public static float TrackabilityAt(
+        WorldState world,
+        Vector3 position,
+        TerrainSurfaceWeights? preclassified = null)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+
+        var weights = preclassified ??
+            TerrainSurfaceClassifier.Classify(
+                position,
+                Vector3.UnitY);
+
+        var trackability = Trackability(
+            weights,
+            world.WaterInteraction.Wetness,
+            world.Weather.RainIntensity);
+
+        // The terrain material normalization can dilute Mud with Grass/Path at
+        // the river shoulder even though that strip is intentionally wet.
+        // Preserve the semantic river-bank signal so footprints reliably appear
+        // on the visible muddy edge without making generic grass trackable.
+        var bankDistance = MathF.Abs(
+            WaterLandscape.BankDistance(
+                new Vector2(position.X, position.Z)));
+        var bankBoost =
+            1f -
+            Math.Clamp(bankDistance / 7f, 0f, 1f);
+
+        trackability += bankBoost * 0.28f;
+
+        // No stamped sole geometry on submerged terrain.
+        if (WaterInteractionState.DepthAt(world, position) > 0.03f)
+            return 0f;
+
+        return Math.Clamp(trackability, 0f, 1f);
     }
 
     public static float Trackability(
