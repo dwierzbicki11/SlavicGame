@@ -16,8 +16,20 @@ internal static class NpcDialogueRegression
         world.Time.SetTimeOfDay(10);
         world.NpcWorld.Update(world);
 
-        check(world.NpcWorld.Actors.Count == 5,
-            "All five vertical-slice NPC roles exist in the daytime world");
+        check(world.NpcWorld.Actors.Count == 13,
+            "Five authored NPCs plus eight ambient settlers exist in the daytime world");
+
+        var ambientSettlers = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .ToArray();
+
+        check(ambientSettlers.Length == 8,
+            "R0 village population includes eight ambient settlers");
+        check(ambientSettlers
+                .Select(actor => new Vector2(actor.Position.X, actor.Position.Z))
+                .Distinct()
+                .Count() == ambientSettlers.Length,
+            "Ambient settlers occupy distinct daytime poses instead of overlapping");
 
         var shrineKeeperDay = world.NpcWorld.Find("shrine-keeper");
         check(shrineKeeperDay is not null &&
@@ -153,6 +165,17 @@ internal static class NpcDialogueRegression
             "Contextual L lesson succeeds when teacher and requirements are real");
 
         world.Dialogue.Close();
+        var ambient = world.NpcWorld.Find("settler-farmer-02")
+            ?? throw new Exception("Ambient settler not present");
+        world.SetPlayerPosition(ambient.Position);
+        world.NpcWorld.Update(world);
+
+        check(!NpcPresentation.HasDialogue(ambient.Id) &&
+              string.IsNullOrWhiteSpace(
+                  world.NpcWorld.HudPrompt(world.PlayerPosition)) &&
+              !world.Dialogue.TryStartNearest(world),
+            "Ambient settlers do not expose fake dialogue prompts before authored graphs exist");
+
         world.SetPlayerPosition(Vector3.Zero);
         world.NpcWorld.Update(world);
         check(!world.Dialogue.TryStartNearest(world),
