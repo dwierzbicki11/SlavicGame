@@ -156,6 +156,10 @@ public sealed class GameEngine : IDisposable
                     if (!_world.Cinematics.IsPlaying)
                     {
                         _world.Update(_time.DeltaSeconds);
+                        _world.Melee.Update(
+                            _world,
+                            _camera.GetMoveForward(),
+                            _time.DeltaSeconds);
                         _world.Magic.Update(_world, _time.DeltaSeconds);
                         _world.Rituals.Update(_world, _time.DeltaSeconds);
 
@@ -438,6 +442,9 @@ public sealed class GameEngine : IDisposable
 
         if (_window.ConsumeKeyPress(Key.R) && !_world.Rituals.IsPerforming)
             _world.Rituals.TryStart(_world);
+
+        if (_window.ConsumeLeftMousePress())
+            _world.Melee.TryStart(_world);
 
         if (_window.ConsumeKeyPress(Key.C) && !_world.Rituals.IsPerforming)
         {

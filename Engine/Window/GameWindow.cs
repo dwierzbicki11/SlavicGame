@@ -18,6 +18,9 @@ public sealed class GameWindow : IDisposable
     private bool _relativeMouseRequested;
     private readonly HashSet<Key> _keysDown = [];
     private readonly HashSet<Key> _keysPressed = [];
+    private uint _mouseButtonsDown;
+    private uint _mouseButtonsPressed;
+    private const uint LeftMouseMask = 1u;
 
     public Sdl2Window NativeWindow => _window;
     public bool Exists => _window.Exists;
@@ -70,20 +73,32 @@ public sealed class GameWindow : IDisposable
     public void PumpEvents()
     {
         _keysPressed.Clear();
+        _mouseButtonsPressed = 0u;
         _window.PumpEvents();
         if (!_window.Exists) return;
 
         // Sample both sources once per frame without double-counting their motion.
         EventMouseDelta = _window.MouseDelta;
-        PolledMouseDelta = _relativeMouseEnabled ? Sdl2NativeCompat.GetRelativeMouseDelta() : Vector2.Zero;
+        var relativeSample = Sdl2NativeCompat.GetRelativeMouseSample();
+        PolledMouseDelta = _relativeMouseEnabled ? relativeSample.Delta : Vector2.Zero;
         var delta = MouseMotion.Select(EventMouseDelta, PolledMouseDelta);
         MouseDelta = _window.Focused && !_discardMouseDelta ? delta : Vector2.Zero;
+        UpdateMouseButtons(relativeSample.Buttons);
         _discardMouseDelta = false;
     }
 
     public bool IsKeyDown(Key key) => _keysDown.Contains(key);
 
     public bool ConsumeKeyPress(Key key) => _keysPressed.Remove(key);
+
+    public bool ConsumeLeftMousePress()
+    {
+        if ((_mouseButtonsPressed & LeftMouseMask) == 0u)
+            return false;
+
+        _mouseButtonsPressed &= ~LeftMouseMask;
+        return true;
+    }
 
     public void ToggleFullscreen() => SetFullscreen(!IsFullscreen);
 
@@ -129,7 +144,15 @@ public sealed class GameWindow : IDisposable
     {
         _keysDown.Clear();
         _keysPressed.Clear();
+        _mouseButtonsDown = 0u;
+        _mouseButtonsPressed = 0u;
         SetRelativeMouseMode(false);
+    }
+
+    private void UpdateMouseButtons(uint buttons)
+    {
+        _mouseButtonsPressed |= buttons & ~_mouseButtonsDown;
+        _mouseButtonsDown = buttons;
     }
 
     private void SetRelativeMouseMode(bool enabled)
@@ -214,11 +237,11 @@ public sealed class GameWindow : IDisposable
             return SetMode(enabled ? 1 : 0);
         }
 
-        public static Vector2 GetRelativeMouseDelta()
+        public static (Vector2 Delta, uint Buttons) GetRelativeMouseSample()
         {
-            if (GetState is null) return Vector2.Zero;
-            GetState(out var x, out var y);
-            return new Vector2(x, y);
+            if (GetState is null) return (Vector2.Zero, 0u);
+            var buttons = GetState(out var x, out var y);
+            return (new Vector2(x, y), buttons);
         }
     }
 }

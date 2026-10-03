@@ -121,3 +121,32 @@ Wymagane:
 - brak staminy blokuje start, nie ruch;
 - dodge nie przechodzi przez static obstacle;
 - dead enemy nie dostaje kolejnych reakcji gameplay.
+
+
+## Runtime pass — swamp predator
+
+Pierwsza grywalna walka wręcz jest spięta z `swamp-predator`.
+
+Sterowanie:
+- **LPM** — light attack.
+
+Parametry prototypu:
+- damage: 20 Physical;
+- stamina: 12;
+- range: 2.1 m;
+- front half-angle: 52°;
+- windup: 0.18 s;
+- active window: 0.12 s;
+- recovery: 0.32 s;
+- jeden target może zostać trafiony maksymalnie raz na attack instance.
+
+Resolver wykonuje krótkie kroki czasowe do 30 ms, dzięki czemu active window nie znika przy pojedynczym dłuższym frame spike.
+
+`swamp-predator`:
+- 60 HP;
+- trzy pełne lekkie trafienia zabijają w obecnym prototypowym balansie;
+- śmierć ustawia encounter jako `Resolved / Killed`;
+- wynik przechodzi przez save/load;
+- HUD pokazuje HP dopiero po `Identified`.
+
+To nadal balans prototypowy, nie finalny lock.

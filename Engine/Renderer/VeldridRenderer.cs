@@ -367,6 +367,28 @@ public sealed class VeldridRenderer : IDisposable
                 AddGameplayText(world.Rituals.Message, 18, 218, displayWidth - 36);
                 if (!string.IsNullOrWhiteSpace(world.QuestInteractions.HudText))
                     AddGameplayText(world.QuestInteractions.HudText, 18, 242, displayWidth - 36);
+
+                AddGameplayText(world.Melee.Message, 18, 266, displayWidth - 36);
+
+                var predatorEncounter = world.Progress.Encounters.Get(
+                    SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+                var predator = world.Enemies.FirstOrDefault(enemy =>
+                    string.Equals(
+                        enemy.Id,
+                        SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id,
+                        StringComparison.Ordinal));
+
+                if (predator is not null &&
+                    predatorEncounter.Awareness >= SlavicGame.Engine.Gameplay.EncounterAwareness.Identified)
+                {
+                    AddGameplayText(
+                        predator.IsAlive
+                            ? $"DRAPIEZNIK HP {predator.Health:0}/{predator.MaxHealth:0}"
+                            : "DRAPIEZNIK POKONANY",
+                        18,
+                        290,
+                        displayWidth - 36);
+                }
             }
         }
         if (_hudVertices.Count > _hudVertexCapacity)

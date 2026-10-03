@@ -23,6 +23,7 @@ public sealed record GameSaveSnapshot(
     EnemySaveEntry[] Enemies)
 {
     public SlavicGame.Engine.Magic.MagicSnapshot? Magic { get; init; }
+    public SlavicGame.Engine.Gameplay.EncounterSnapshot[]? Encounters { get; init; }
 }
 
 public static class SaveGameService
@@ -51,7 +52,11 @@ public static class SaveGameService
                 return new EnemySaveEntry(snapshot.Id,
                     new SavedVector3(snapshot.Position.X, snapshot.Position.Y, snapshot.Position.Z),
                     snapshot.Health, snapshot.State);
-            }).ToArray()) { Magic = world.Magic.Capture() };
+            }).ToArray())
+        {
+            Magic = world.Magic.Capture(),
+            Encounters = world.Progress.Encounters.Capture()
+        };
     }
 
     public static string Serialize(WorldState world, bool indented = false) =>
@@ -89,6 +94,7 @@ public static class SaveGameService
         world.Progress.DivineRelationships.Restore(snapshot.DivineRelationships ?? []);
         world.Progress.Relationships.Restore(snapshot.Relationships ?? []);
         world.Progress.RestoreFlags(snapshot.WorldFlags ?? []);
+        world.Progress.Encounters.Restore(snapshot.Encounters ?? []);
         world.Magic.NormalizeSelection(world);
         world.Progress.Tracking.Restore(snapshot.Tracks ?? []);
         SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.EnsureMagicTraces(world);
@@ -105,5 +111,7 @@ public static class SaveGameService
                 new System.Numerics.Vector3(savedEnemy.Position.X, savedEnemy.Position.Y, savedEnemy.Position.Z),
                 savedEnemy.Health, savedEnemy.State));
         }
+
+        SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Synchronize(world);
     }
 }
