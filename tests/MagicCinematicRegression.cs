@@ -1,7 +1,9 @@
 using System.Numerics;
 using SlavicGame.Engine.Magic;
+using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.Audio;
 using SlavicGame.Engine.Save;
+using SlavicGame.Engine.Quest;
 using SlavicGame.Engine.World;
 
 public static class MagicCinematicRegression
