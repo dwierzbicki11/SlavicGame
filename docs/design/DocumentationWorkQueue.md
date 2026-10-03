@@ -31,7 +31,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5) na poziomie evidence package v0.1; R5 ma osobną wieloźródłową bazę porównawczą i jawne locki zamiast stereotypowej analogii;
 - [ ] domknięcie krytycznych źródeł panteonu;
 - [ ] research lock material culture dla produkcyjnych assetów;
-- [ ] source-strength/region-fit pass południcy;
+- [x] source-strength/region-fit pass południcy (`research/bestiary/Poludnica.md` v0.2): rozdzielone H/R/F/U, R4 nie jest signature fit, R5 tylko warunkowo na faktycznych polach;
 - [ ] identity lock `forest-guardian` albo jawne pozostawienie F;
 - [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
 
@@ -69,4 +69,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-`CULT_R0_ZARNOWIEC`–`CULT_R5_AREL` mają evidence packages v0.1. Arel nie jest kopią jednego realnego ludu: pakiet rozdziela fikcyjne decyzje R5 od wieloźródłowych ograniczeń porównawczych i pozostawia finalny transport, dwellings, costume, old-sites, economy, naming i religion za jawnymi lockami z wymaganiem locatorów. Następny najmniejszy niezablokowany pakiet P2: **source-strength/region-fit pass południcy**, a następnie **identity lock `forest-guardian`**. Krytyczne źródła panteonu i finalne material-culture locators pozostają większymi pakietami research.
+Culture evidence packages R0–R5 oraz source-strength/region-fit południcy są zamknięte na poziomie potrzebnym do implementacji. Następny najmniejszy niezablokowany pakiet P2: **identity lock `forest-guardian`**. Jeżeli źródła nie uzasadnią jednej konkretnej historycznej tożsamości dla R2, poprawnym wynikiem jest jawne utrzymanie `ENTITY_FOREST_GUARDIAN_F` jako świadomej fikcji zamiast fałszywej pewności. Następnie przechodzimy do krytycznych źródeł panteonu i finalnych material-culture locators.

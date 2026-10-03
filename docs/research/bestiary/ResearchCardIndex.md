@@ -17,7 +17,7 @@ Ten indeks łączy `bestiary/ProductionBestiaryRoster.md` z materiałem badawczy
 | `ENTITY_MISSING_ECHO_F` | brak — central lore/fikcja | F | quest/evidence presentation |
 | `ENTITY_FOREST_GUARDIAN_F` | `ForestSpirit.md`, `RegionalForestFiguresPL.md` | partial | zachować ID `F`; finalna historyczna tożsamość tylko po osobnym identity locku |
 | `ENTITY_WATER_ACTOR` | `WaterSpirit.md`, `TopielecWaterSpiritPL.md` | ready na poziomie rodziny motywów | karta regionalna musi wskazać konkretną interpretację; nie sklejać automatycznie wodnika i topielca |
-| `ENTITY_NOON_PHENOMENON` | `Poludnica.md` | partial | karta istnieje, ale przed finalnym modelem/weakness table potrzebny jest source-strength i regional-fit pass |
+| `ENTITY_NOON_PHENOMENON` | `Poludnica.md` | ready v0.2 na poziomie rdzenia encounteru | source-strength i R4/R5 region-fit zamknięte; finalne appearance/placement nadal data/art lock |
 | `ENTITY_NIGHT_PRESSURE` | `Zmora.md` | ready na poziomie motywu | finalna karta encounteru określa lokalną interpretację |
 | `ENTITY_REVENANT_FAMILY` | `Strzygon.md`, `Upior.md` | ready na poziomie rodziny | nie utożsamiać terminów bez uzasadnienia regionalnego |
 | `ENTITY_FOREST_MISDIRECTION` | `ForestSpirit.md`, `RegionalForestFiguresPL.md` | ready jako szeroki motyw, partial dla nazwy | mechanika może być implementowana bez finalnej nazwy folklorystycznej |
@@ -36,10 +36,9 @@ Ten indeks łączy `bestiary/ProductionBestiaryRoster.md` z materiałem badawczy
 
 ## Braki do domknięcia
 
-1. **Południca:** wykonać source-strength pass w `Poludnica.md`: rozdzielić attestację, późniejszy folklor i decyzję adaptacyjną; następnie określić fit R4/R5.
-2. **Forest guardian:** osobny identity-lock pass. Jeśli źródła nie uzasadnią jednej konkretnej tożsamości dla R2, `ENTITY_FOREST_GUARDIAN_F` pozostaje świadomie fikcyjnym guardianem i nie jest to błąd dokumentacji.
-3. **Ogniki/błędne światła:** utworzyć kartę zjawiska dopiero, gdy konkretny quest/region awansuje je do finalnego scope; obecnie nie są wymaganym slotem rosteru 1.0.
-4. Każdy nowy kandydat musi najpierw dostać wpis tutaj i decyzję scope, zanim powstanie kosztowny model/VFX/VO.
+1. **Forest guardian:** osobny identity-lock pass. Jeśli źródła nie uzasadnią jednej konkretnej tożsamości dla R2, `ENTITY_FOREST_GUARDIAN_F` pozostaje świadomie fikcyjnym guardianem i nie jest to błąd dokumentacji.
+2. **Ogniki/błędne światła:** utworzyć kartę zjawiska dopiero, gdy konkretny quest/region awansuje je do finalnego scope; obecnie nie są wymaganym slotem rosteru 1.0.
+3. Każdy nowy kandydat musi najpierw dostać wpis tutaj i decyzję scope, zanim powstanie kosztowny model/VFX/VO.
 
 ## Kryterium research-ready dla finalnej istoty
 
@@ -47,4 +46,4 @@ Karta finalna musi jawnie oddzielać: (a) co mówi źródło, (b) region i okres
 
 ## Konsekwencje dla implementacji
 
-Braki powyżej nie blokują wspólnego creature/encounter state model, persistence, evidence ani AI frameworku. Blokują wyłącznie finalne nazwy, art direction, weakness tables lub regionalną interpretację tych slotów, których dotyczą.
+Source-strength południcy nie blokuje już implementacji jej rdzenia encounteru (`time-of-day + cultivated field + telegraph + avoidance`). Pozostałe braki nie blokują wspólnego creature/encounter state model, persistence, evidence ani AI frameworku. Blokują wyłącznie finalne nazwy, art direction, weakness tables lub regionalną interpretację tych slotów, których dotyczą.
