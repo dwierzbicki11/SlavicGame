@@ -10,6 +10,7 @@ public sealed class RiverAmbienceService : IDisposable
     private int _segmentIndex;
     private bool _disposed;
     private bool _playing;
+    private double _splashCooldownSeconds;
 
     private RiverAmbienceService(SdlPcmPlayer? player)
     {
@@ -34,7 +35,11 @@ public sealed class RiverAmbienceService : IDisposable
         }
     }
 
-    public void Update(Vector3 listener, double deltaSeconds, bool enabled)
+    public void Update(
+        Vector3 listener,
+        double deltaSeconds,
+        bool enabled,
+        float splashIntensity = 0f)
     {
         if (_disposed || _player is null)
             return;
@@ -55,16 +60,32 @@ public sealed class RiverAmbienceService : IDisposable
             return;
         }
 
-        _refreshSeconds -= Math.Max(0d, deltaSeconds);
-        if (_playing && _refreshSeconds > 0d)
+        var safeDelta = Math.Max(0d, deltaSeconds);
+        _refreshSeconds -= safeDelta;
+        _splashCooldownSeconds -= safeDelta;
+
+        var splashTriggered =
+            splashIntensity >= 0.45f &&
+            _splashCooldownSeconds <= 0d;
+
+        if (_playing &&
+            _refreshSeconds > 0d &&
+            !splashTriggered)
+        {
             return;
+        }
 
         var audio = RiverAmbienceSynthesizer.Generate(
             targetVolume,
-            _segmentIndex++);
+            _segmentIndex++,
+            splashTriggered ? splashIntensity : 0f);
         _player.Play(audio);
         _playing = true;
-        _refreshSeconds = RiverAmbienceSynthesizer.SegmentSeconds - 0.08;
+        _refreshSeconds =
+            RiverAmbienceSynthesizer.SegmentSeconds - 0.08;
+
+        if (splashTriggered)
+            _splashCooldownSeconds = 0.22d;
     }
 
     public void Stop()
@@ -75,6 +96,7 @@ public sealed class RiverAmbienceService : IDisposable
         _player.Clear();
         _playing = false;
         _refreshSeconds = 0d;
+        _splashCooldownSeconds = 0d;
     }
 
     public void Dispose()
