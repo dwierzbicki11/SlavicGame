@@ -1,3 +1,5 @@
+using SlavicGame.Engine.Audio;
+
 namespace SlavicGame.Engine.Dialogue;
 
 public enum DialogueRequirementKind
@@ -43,7 +45,8 @@ public sealed record DialogueNode(
     string Id,
     string SpeakerId,
     string Text,
-    DialogueChoice[] Choices);
+    DialogueChoice[] Choices,
+    VoiceDirection? Voice = null);
 
 public sealed class DialogueGraph
 {
