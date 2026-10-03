@@ -9,7 +9,7 @@ public static class FrontendSettingsRegression
         ArgumentNullException.ThrowIfNull(check);
 
         var definitions = SettingsCatalog.All;
-        check(definitions.Count >= 31,
+        check(definitions.Count >= 32,
             "Frontend exposes the current display, controls and graphics settings");
         check(definitions.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == definitions.Count,
             "Frontend setting identifiers are unique");
@@ -25,6 +25,14 @@ public static class FrontendSettingsRegression
               settings.ResolutionSize.Width > 0 &&
               settings.ResolutionSize.Height > 0,
             "Frontend resolution setting cycles valid render sizes");
+
+        var windowResolution = definitions.Single(item => item.Id == "window-resolution");
+        var originalWindowResolution = settings.WindowResolution;
+        windowResolution.Change(settings, 1);
+        check(settings.WindowResolution != originalWindowResolution &&
+              settings.WindowResolutionSize.Width > 0 &&
+              settings.WindowResolutionSize.Height > 0,
+            "Frontend window resolution is independent from internal render resolution");
 
         check(GraphicsQualityCatalog.CloudRaymarchSteps(CloudQuality.Low) <
               GraphicsQualityCatalog.CloudRaymarchSteps(CloudQuality.Ultra),
