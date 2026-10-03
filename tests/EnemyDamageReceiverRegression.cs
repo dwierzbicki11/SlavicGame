@@ -22,10 +22,13 @@ internal static class EnemyDamageReceiverRegression
         var first = DamageApplication.ApplyMeleeHit(attack, enemy.Id, receiver);
         if (first.Damage != 24f || first.DamageType != DamageType.Physical || first.Killed)
             throw new InvalidOperationException("Enemy did not receive typed melee damage through IDamageReceiver.");
-        if (enemy.Health != enemy.MaxHealth - 24f || enemy.State == EnemyState.Dead)
-            throw new InvalidOperationException("Enemy health/state did not reflect non-lethal melee damage.");
+        if (enemy.Health != enemy.MaxHealth - 24f || enemy.State != EnemyState.Alert)
+            throw new InvalidOperationException("A living enemy did not enter Alert after non-lethal melee damage.");
 
         DamageApplication.ApplyMeleeHit(attack, enemy.Id, receiver);
+        if (enemy.State != EnemyState.Alert)
+            throw new InvalidOperationException("Repeated non-lethal damage did not preserve the enemy alert reaction.");
+
         var lethal = DamageApplication.ApplyMeleeHit(attack, enemy.Id, receiver);
         if (!lethal.Killed || enemy.IsAlive || enemy.Health != 0f || enemy.State != EnemyState.Dead)
             throw new InvalidOperationException("Lethal melee damage did not transition EnemyAgent to Dead.");
