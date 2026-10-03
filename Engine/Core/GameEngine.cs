@@ -139,7 +139,8 @@ public sealed class GameEngine : IDisposable
                     else
                         _camera.ResumeFollow(_world.PlayerPosition, _world.Terrain);
                 }
-                else if (_window.ConsumeKeyPress(Key.Escape))
+                else if (!_world.Dialogue.IsOpen &&
+                         _window.ConsumeKeyPress(Key.Escape))
                 {
                     TryAutosave("pause");
                     _frontend.OpenMainMenu();
@@ -425,6 +426,29 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
+        if (_world.Dialogue.IsOpen)
+        {
+            if (_window.ConsumeKeyPress(Key.Escape))
+            {
+                _world.Dialogue.Close();
+            }
+            else
+            {
+                if (_window.ConsumeKeyPress(Key.W))
+                    _world.Dialogue.MoveSelection(_world, -1);
+                if (_window.ConsumeKeyPress(Key.S))
+                    _world.Dialogue.MoveSelection(_world, 1);
+                if (_window.ConsumeKeyPress(Key.E))
+                    _world.Dialogue.Confirm(_world);
+            }
+
+            _camera.Follow(
+                _world.PlayerPosition,
+                (float)deltaSeconds,
+                _world.Terrain);
+            return;
+        }
+
         if (_window.ConsumeKeyPress(Key.Q) && !_world.Rituals.IsPerforming)
             _world.Magic.SelectNext(_world);
 
@@ -438,11 +462,16 @@ public sealed class GameEngine : IDisposable
         {
             var questResult =
                 _world.QuestInteractions.TryInteract(_world);
-            if (questResult ==
-                SlavicGame.Engine.Gameplay.QuestInteractionResult.None)
-            {
-                _world.EnvironmentInteractions.TryInteract(_world);
-            }
+
+            var handled =
+                questResult !=
+                SlavicGame.Engine.Gameplay.QuestInteractionResult.None;
+
+            if (!handled)
+                handled = _world.EnvironmentInteractions.TryInteract(_world);
+
+            if (!handled)
+                _world.Dialogue.TryStartNearest(_world);
         }
 
         if (_window.ConsumeKeyPress(Key.F) && !_world.Rituals.IsPerforming)
