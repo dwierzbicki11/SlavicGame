@@ -214,13 +214,13 @@ public static class FrontendSettingsRegression
                     (uint)internalSize.Height,
                     1920,
                     1080) &&
-                  FsrPresentationPolicy.RequiresFinalRcasYFlip(
+                  !FsrPresentationPolicy.RequiresFinalRcasYFlip(
                     presetSettings.Upscaler,
                     (uint)internalSize.Width,
                     (uint)internalSize.Height,
                     1920,
                     1080),
-                $"{presetValue} uses the real EASU/RCAS path with final Y correction");
+                $"{presetValue} uses EASU/RCAS without a manual Vulkan Y inversion");
         }
 
         var ultraSettings = new GameSettings();

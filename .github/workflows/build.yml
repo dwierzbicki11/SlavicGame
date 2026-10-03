@@ -34,6 +34,9 @@ jobs:
             $errors | ForEach-Object { Write-Error $_.Message }
             exit 1
           }
+      - name: Validate Vulkan fullscreen orientation
+        if: runner.os == 'Linux'
+        run: bash tools/check-render-orientation.sh
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '11.0.x'

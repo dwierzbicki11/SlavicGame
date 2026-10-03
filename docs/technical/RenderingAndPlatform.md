@@ -110,17 +110,26 @@ Mgła używana jako mechanika musi zachować czytelność również na niższych
 Renderer jest prototypem. Dokument nie deklaruje gotowości produkcyjnej ani końcowych wymagań sprzętowych.
 
 
-## FSR1 presentation orientation
+## Vulkan fullscreen orientation
 
-FSR1 ma dwie różne ścieżki prezentacji:
+Renderer używa jednej kanonicznej orientacji UV dla wszystkich fullscreen passów Vulkan.
 
-- **Native** — gdy rozdzielczość wewnętrzna jest równa wyjściowej, EASU/RCAS nie są uruchamiane;
-- **Upscale** — Low/Balanced/High i ustawienia ręczne z mniejszą rozdzielczością przechodzą przez EASU, a następnie RCAS.
+Zasada:
 
-W Vulkanie wynik EASU jest kolejnym offscreen render targetem. Ostateczna korekta orientacji Y należy więc do ostatniego przejścia RCAS -> swapchain. `fsr_rcas.frag` wykonuje dokładnie jeden finalny flip Y w rzeczywistej ścieżce skalowania.
+- scene/resolved scene — bez ręcznego Y-flipa;
+- bloom — bez ręcznego Y-flipa;
+- postprocess/FXAA — bez ręcznego Y-flipa;
+- FSR1 EASU — bez ręcznego Y-flipa;
+- FSR1 RCAS — bez ręcznego Y-flipa;
+- final present — bez ręcznego Y-flipa.
 
-Preset Ultra używa `FsrQualityMode.Native`, dlatego nie wchodzi do EASU/RCAS i jego istniejąca poprawna orientacja nie jest zmieniana.
+Źródłem wcześniejszego błędu było uzależnianie orientacji od MSAA/presetu oraz dodatkowe odwracanie obrazu wewnątrz FSR. Ultra działało poprawnie, ponieważ jego ścieżka Native + MSAA omijała część tych wyjątków. Teraz Low/Balanced/High/Ultra oraz ręczne rozdzielczości korzystają z tej samej orientacji tekstur.
 
-Regresja w `FrontendSettingsRegression` pilnuje, że:
-- Low/Balanced/High uruchamiają rzeczywisty pass FSR i wymagają finalnej korekty;
-- Ultra pozostaje na ścieżce Native bez passu skalowania.
+FSR1 nadal ma dwie ścieżki:
+
+- **Native** — brak EASU/RCAS, gdy rozdzielczość wejściowa = wyjściowej;
+- **Upscale** — EASU -> RCAS dla mniejszej rozdzielczości wewnętrznej.
+
+Różnica dotyczy wyłącznie skalowania, nie orientacji obrazu. Żaden pass FSR nie może samodzielnie odwracać osi Y.
+
+Regresje pilnują, że niższe presety rzeczywiście uruchamiają upscale FSR, ale `RequiresFinalRcasYFlip` pozostaje fałszywe. Dodatkowy check CI blokuje ponowne dodanie znanych ręcznych wzorców Y-flipa do shaderów present/EASU/RCAS.
