@@ -419,3 +419,8 @@ The five R0 NPC roles now have schedule-driven world positions, visible humanoid
 ### Living NPC routines
 
 Żarnowiec's visible settlers now follow deterministic local work and patrol routes instead of remaining fixed at schedule anchors. The guard patrols the village, workers move around their work areas, the carrier crosses between storage and market, the traveler enters from the gate, and shrine/crossing keepers move around their duties. Dialogue freezes only the active speaker and turns them toward the player.
+
+
+### Swamp apparition
+
+The Black Swamp now has a visible nocturnal `ENTITY_MISSING_ECHO_F` apparition. It materializes only during the active quest at night, reacts and approaches when the player carries the missing person's keepsake, relocates into the release ritual, and dissolves after the durable `swamp.apparition-released` outcome. It is a lightweight non-combat actor effect rather than an HP enemy.
