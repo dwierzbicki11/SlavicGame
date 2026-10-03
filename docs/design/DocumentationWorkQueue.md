@@ -32,7 +32,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [ ] domknięcie krytycznych źródeł panteonu;
 - [ ] research lock material culture dla produkcyjnych assetów;
 - [x] source-strength/region-fit pass południcy (`research/bestiary/Poludnica.md` v0.2): rozdzielone H/R/F/U, R4 nie jest signature fit, R5 tylko warunkowo na faktycznych polach;
-- [ ] identity lock `forest-guardian` albo jawne pozostawienie F;
+- [x] identity lock `forest-guardian`: CLOSED/F (`research/bestiary/ForestGuardianIdentityLock.md`); świadoma fikcja zamiast wymuszonej etykiety folklorystycznej;
 - [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
 
 ### P3 — content production
@@ -69,4 +69,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-Culture evidence packages R0–R5 oraz source-strength/region-fit południcy są zamknięte na poziomie potrzebnym do implementacji. Następny najmniejszy niezablokowany pakiet P2: **identity lock `forest-guardian`**. Jeżeli źródła nie uzasadnią jednej konkretnej historycznej tożsamości dla R2, poprawnym wynikiem jest jawne utrzymanie `ENTITY_FOREST_GUARDIAN_F` jako świadomej fikcji zamiast fałszywej pewności. Następnie przechodzimy do krytycznych źródeł panteonu i finalnych material-culture locators.
+Culture evidence packages R0–R5, source-strength/region-fit południcy i identity lock `forest-guardian` są zamknięte na poziomie potrzebnym do implementacji. Następny najmniejszy niezablokowany pakiet P2: **domknięcie krytycznych źródeł panteonu**. Potem finalne material-culture locators; równolegle P3 może przejść do regionalnych encounter rosters/tables poza R0.
