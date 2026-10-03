@@ -412,4 +412,5 @@ Tylko rozpalone ognisko:
 - generuje ciepło;
 - przyspiesza suszenie;
 - redukuje wychłodzenie;
-- renderuje flame/glow mesh.
+- renderuje flame/glow mesh;
+- używa wartości koloru >1.0 jako lekkiego sygnału emissive w actor shaderze, dzięki czemu płomień pozostaje czytelny nocą bez osobnych point lights.
