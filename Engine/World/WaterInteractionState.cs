@@ -39,7 +39,11 @@ public sealed class WaterInteractionState
 
             if (IsInWater)
             {
-                return $"WODA {WaterDepth * 100f:0} CM / MOKRY {Wetness * 100f:0}%{chillText}";
+                var currentSpeed = CurrentSpeedForDepth(WaterDepth);
+                var currentText = currentSpeed >= 0.12f
+                    ? $" / NURT {currentSpeed:0.0} M/S"
+                    : "";
+                return $"WODA {WaterDepth * 100f:0} CM / MOKRY {Wetness * 100f:0}%{currentText}{chillText}";
             }
 
             if (HeatExposure >= 0.08f && (Wetness >= 0.03f || Chill >= 0.03f))
