@@ -9,7 +9,7 @@ public static class FrontendSettingsRegression
         ArgumentNullException.ThrowIfNull(check);
 
         var definitions = SettingsCatalog.All;
-        check(definitions.Count >= 32,
+        check(definitions.Count >= 33,
             "Frontend exposes the current display, controls and graphics settings");
         check(definitions.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == definitions.Count,
             "Frontend setting identifiers are unique");
@@ -63,6 +63,9 @@ public static class FrontendSettingsRegression
         check(aggressiveLod.Lod1 < ultraLod.Lod1 &&
               aggressiveLod.Lod2 < ultraLod.Lod2,
             "Aggressive model LOD switches earlier than Ultra");
+        check(GraphicsQualityCatalog.VegetationImpostorStart(ModelLodQuality.Aggressive) <
+              GraphicsQualityCatalog.VegetationImpostorStart(ModelLodQuality.Ultra),
+            "Aggressive LOD switches trees to impostors earlier");
 
         var textureQuality = definitions.Single(item => item.Id == "texture-quality");
         settings.TextureQuality = TextureQuality.High;
@@ -89,6 +92,8 @@ public static class FrontendSettingsRegression
               settings.ShadowDistance == ShadowDistanceQuality.Short &&
               settings.TerrainDetail == TerrainDetailQuality.Low &&
               settings.ModelLod == ModelLodQuality.Aggressive &&
+              settings.FarVegetation == FarVegetationMode.Impostors &&
+              settings.Resolution == RenderResolution.Qhd540 &&
               settings.Upscaler == UpscalerMode.Fsr1 &&
               !settings.NormalMapping &&
               !settings.SpecularHighlights,
@@ -99,6 +104,12 @@ public static class FrontendSettingsRegression
         lod.Change(settings, -1);
         check(settings.ModelLod == ModelLodQuality.Balanced,
             "Frontend model LOD setting changes distance thresholds");
+
+        var farVegetation = definitions.Single(item => item.Id == "far-vegetation");
+        settings.FarVegetation = FarVegetationMode.FullMeshes;
+        farVegetation.Change(settings, -1);
+        check(settings.FarVegetation == FarVegetationMode.Impostors,
+            "Frontend can switch far trees from full meshes to impostors");
 
         var upscaler = definitions.Single(item => item.Id == "upscaler");
         settings.Upscaler = UpscalerMode.Bilinear;
