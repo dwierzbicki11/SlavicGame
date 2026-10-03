@@ -21,8 +21,17 @@ public sealed class FrontendController
         "WYJSCIE"
     ];
 
+    private static readonly SettingCategory[] SettingsTabs =
+    [
+        SettingCategory.Display,
+        SettingCategory.Graphics,
+        SettingCategory.PostProcessing,
+        SettingCategory.Controls
+    ];
+
     private int _mainSelection;
     private int _settingsSelection;
+    private int _settingsTabIndex;
 
     public FrontendScreen Screen { get; private set; } = FrontendScreen.MainMenu;
 
@@ -70,6 +79,7 @@ public sealed class FrontendController
                 case 1:
                     Screen = FrontendScreen.Settings;
                     _settingsSelection = 0;
+                    _settingsTabIndex = 0;
                     return FrontendAction.None;
                 case 2:
                     return FrontendAction.Exit;
@@ -78,20 +88,33 @@ public sealed class FrontendController
 
         if (Screen == FrontendScreen.Settings)
         {
-            var count = SettingsCatalog.All.Count + 1;
-
             if (window.ConsumeKeyPress(Key.Escape))
             {
                 Screen = FrontendScreen.MainMenu;
                 return FrontendAction.None;
             }
 
+            if (window.ConsumeKeyPress(Key.Tab))
+            {
+                _settingsTabIndex = Wrap(
+                    _settingsTabIndex + 1,
+                    SettingsTabs.Length);
+                _settingsSelection = 0;
+                return FrontendAction.None;
+            }
+
+            var category = SettingsTabs[_settingsTabIndex];
+            var definitions = SettingsCatalog.All
+                .Where(item => item.Category == category)
+                .ToArray();
+            var count = definitions.Length + 1;
+
             if (up)
                 _settingsSelection = Wrap(_settingsSelection - 1, count);
             if (down)
                 _settingsSelection = Wrap(_settingsSelection + 1, count);
 
-            if (_settingsSelection == SettingsCatalog.All.Count)
+            if (_settingsSelection == definitions.Length)
             {
                 if (confirm)
                 {
@@ -105,7 +128,7 @@ public sealed class FrontendController
             if (left || right || confirm)
             {
                 var direction = left ? -1 : 1;
-                SettingsCatalog.All[_settingsSelection].Change(settings, direction);
+                definitions[_settingsSelection].Change(settings, direction);
                 settings.Normalize();
                 return FrontendAction.SettingsChanged;
             }
@@ -129,6 +152,7 @@ public sealed class FrontendController
             return new MenuView(
                 "SLAVICGAME",
                 "SLOWIANSKI ACTION RPG",
+                Array.Empty<MenuTabView>(),
                 [
                     new MenuPanelView(
                         string.Empty,
@@ -143,34 +167,41 @@ public sealed class FrontendController
                 "STRZALKI / W S  -  ENTER");
         }
 
-        var panels = Enum.GetValues<SettingCategory>()
-            .Select(category =>
-            {
-                var indexed = SettingsCatalog.All
-                    .Select((definition, index) => (definition, index))
-                    .Where(entry => entry.definition.Category == category)
-                    .Select(entry =>
-                        new MenuItemView(
-                            entry.definition.Label,
-                            entry.definition.ValueText(settings),
-                            entry.index == _settingsSelection))
-                    .ToArray();
-
-                return new MenuPanelView(CategoryName(category), indexed);
-            })
+        var activeCategory = SettingsTabs[_settingsTabIndex];
+        var definitions = SettingsCatalog.All
+            .Where(item => item.Category == activeCategory)
             .ToArray();
 
-        var backSelected = _settingsSelection == SettingsCatalog.All.Count;
-        var footer =
-            backSelected
-                ? "> POWROT <    ENTER"
-                : "STRZALKI / W S  WYBOR    LEWO PRAWO / ENTER  ZMIANA    * MSAA PO RESTARCIE    ESC  POWROT";
+        var items = definitions
+            .Select((definition, index) =>
+                new MenuItemView(
+                    definition.Label,
+                    definition.ValueText(settings),
+                    index == _settingsSelection))
+            .ToList();
+
+        items.Add(new MenuItemView(
+            "POWROT",
+            null,
+            _settingsSelection == definitions.Length));
+
+        var tabs = SettingsTabs
+            .Select((category, index) =>
+                new MenuTabView(
+                    CategoryName(category),
+                    index == _settingsTabIndex))
+            .ToArray();
 
         return new MenuView(
             "USTAWIENIA",
-            "KAZDA NOWA OPCJA GRAFIKI TRAFIA DO TEGO PANELU",
-            panels,
-            footer);
+            "TAB  ZMIANA ZAKLADKI",
+            tabs,
+            [
+                new MenuPanelView(
+                    CategoryName(activeCategory),
+                    items)
+            ],
+            "TAB  ZAKLADKA    STRZALKI / W S  WYBOR    LEWO PRAWO / ENTER  ZMIANA    ESC  POWROT");
     }
 
     private static int Wrap(int value, int count)
@@ -186,7 +217,7 @@ public sealed class FrontendController
             SettingCategory.Display => "EKRAN",
             SettingCategory.Controls => "STEROWANIE",
             SettingCategory.Graphics => "GRAFIKA",
-            SettingCategory.PostProcessing => "POST FX",
+            SettingCategory.PostProcessing => "EFEKTY",
             _ => category.ToString().ToUpperInvariant()
         };
 }
