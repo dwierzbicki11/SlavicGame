@@ -186,6 +186,8 @@ public sealed class GameEngine : IDisposable
 
         _camera.FieldOfView =
             MathF.PI / 180f * _settings.FieldOfViewDegrees;
+        _camera.FarPlane =
+            GraphicsQualityCatalog.RenderDistance(_settings.RenderDistance) + 50f;
         _camera.MouseSensitivity =
             0.0035f * _settings.MouseSensitivity;
         _camera.VerticalSensitivity =

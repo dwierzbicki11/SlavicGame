@@ -16,6 +16,7 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
     vec4 GraphicsFeatures0;
     vec4 GraphicsFeatures1;
     vec4 GraphicsFeatures2;
+    vec4 GraphicsFeatures3;
 };
 
 layout(set = 1, binding = 0) uniform MaterialBuffer
@@ -96,23 +97,35 @@ void main()
     float alpha = baseSample.a * BaseColorFactor.a;
 
     float modelPbr = GraphicsFeatures2.y;
+    float normalMapping = GraphicsFeatures3.x;
+    float specularEnabled = GraphicsFeatures3.y;
+
     vec3 baseNormal = normalize(fsin_WorldNormal);
     vec3 normal = baseNormal;
-    vec3 sampledNormal = texture(sampler2D(NormalTexture, MaterialSampler), fsin_TexCoord).xyz * 2.0 - 1.0;
-    if (length(sampledNormal.xy) > 0.001)
+    if (modelPbr > 0.5 && normalMapping > 0.5)
     {
-        vec3 detailedNormal = normalize(
-            CotangentFrame(baseNormal, fsin_WorldPosition, fsin_TexCoord) *
-            sampledNormal);
-        normal = normalize(mix(baseNormal, detailedNormal, modelPbr));
+        vec3 sampledNormal = texture(
+            sampler2D(NormalTexture, MaterialSampler),
+            fsin_TexCoord).xyz * 2.0 - 1.0;
+        if (length(sampledNormal.xy) > 0.001)
+        {
+            vec3 detailedNormal = normalize(
+                CotangentFrame(baseNormal, fsin_WorldPosition, fsin_TexCoord) *
+                sampledNormal);
+            normal = detailedNormal;
+        }
     }
 
-    vec3 mr = texture(sampler2D(MetallicRoughnessTexture, MaterialSampler), fsin_TexCoord).rgb;
-    float metallic = clamp(MaterialFactors.x * mr.b, 0.0, 1.0) * modelPbr;
-    float roughness = mix(
-        0.82,
-        clamp(MaterialFactors.y * mr.g, 0.06, 1.0),
-        modelPbr);
+    float metallic = 0.0;
+    float roughness = 0.82;
+    if (modelPbr > 0.5 && specularEnabled > 0.5)
+    {
+        vec3 mr = texture(
+            sampler2D(MetallicRoughnessTexture, MaterialSampler),
+            fsin_TexCoord).rgb;
+        metallic = clamp(MaterialFactors.x * mr.b, 0.0, 1.0);
+        roughness = clamp(MaterialFactors.y * mr.g, 0.06, 1.0);
+    }
 
     vec3 viewDirection = normalize(fsin_CameraPosition - fsin_WorldPosition);
     vec3 lightDirection = normalize(Lighting.yzw);
@@ -121,14 +134,18 @@ void main()
     float ndotl = max(dot(normal, lightDirection), 0.0);
     float ndotv = max(dot(normal, viewDirection), 0.0);
 
-    vec3 f0 = mix(vec3(0.04), albedo, metallic);
-    vec3 f = FresnelSchlick(max(dot(halfway, viewDirection), 0.0), f0);
-    float d = DistributionGGX(normal, halfway, roughness);
-    float g = GeometrySmith(normal, viewDirection, lightDirection, roughness);
-
-    vec3 specular = (d * g * f) / max(4.0 * ndotv * ndotl, 0.001);
-    vec3 kd = (vec3(1.0) - f) * (1.0 - metallic);
-    vec3 diffuse = kd * albedo / PI;
+    vec3 specular = vec3(0.0);
+    vec3 diffuse = albedo / PI;
+    if (modelPbr > 0.5 && specularEnabled > 0.5)
+    {
+        vec3 f0 = mix(vec3(0.04), albedo, metallic);
+        vec3 f = FresnelSchlick(max(dot(halfway, viewDirection), 0.0), f0);
+        float d = DistributionGGX(normal, halfway, roughness);
+        float g = GeometrySmith(normal, viewDirection, lightDirection, roughness);
+        specular = (d * g * f) / max(4.0 * ndotv * ndotl, 0.001);
+        vec3 kd = (vec3(1.0) - f) * (1.0 - metallic);
+        diffuse = kd * albedo / PI;
+    }
 
     float lightStrength = max(Lighting.x, 0.02);
     vec3 sunColor = SunColorTime.rgb;
@@ -154,10 +171,11 @@ void main()
     float directShadow = cloudShadow * geometryShadow;
     vec3 ambient = albedo * (0.028 + 0.050 * max(lightDirection.y, 0.0)) * (1.0 - metallic * 0.35);
     vec3 simpleDiffuse = albedo / PI;
+    float fullPbr = modelPbr * specularEnabled;
     vec3 directBrdf = mix(
         simpleDiffuse,
         diffuse + specular,
-        modelPbr);
+        fullPbr);
     vec3 color = ambient +
         directBrdf * sunColor * ndotl *
         (1.75 * lightStrength) * directShadow;

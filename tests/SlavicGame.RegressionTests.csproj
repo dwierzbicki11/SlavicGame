@@ -33,6 +33,7 @@
     <Compile Include="../Engine/Core/GameTime.cs" Link="GameTime.cs" />
     <Compile Include="../Engine/Diagnostics/*.cs" Link="Diagnostics/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Renderer/Camera3D.cs" Link="Camera3D.cs" />
+    <Compile Include="../Engine/Renderer/CameraFrustum.cs" Link="CameraFrustum.cs" />
     <Compile Include="../Engine/Renderer/CelestialLighting.cs" Link="CelestialLighting.cs" />
     <Compile Include="../Engine/Renderer/PresentationPolicy.cs" Link="PresentationPolicy.cs" />
     <Content Include="../assets/models/**/*.glb"
