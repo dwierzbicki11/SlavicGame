@@ -106,6 +106,16 @@ public enum UpscalerMode
     Fsr1
 }
 
+public enum FsrQualityMode
+{
+    Quality,
+    UltraQuality,
+    Balanced,
+    Performance,
+    Native,
+    Custom
+}
+
 public enum FarVegetationMode
 {
     Off,
@@ -293,6 +303,39 @@ public static class GraphicsQualityCatalog
             _ => 130f
         };
 
+    public static ResolutionSize FsrRenderResolution(
+        int outputWidth,
+        int outputHeight,
+        FsrQualityMode quality,
+        ResolutionSize customResolution)
+    {
+        outputWidth = Math.Max(1, outputWidth);
+        outputHeight = Math.Max(1, outputHeight);
+
+        if (quality == FsrQualityMode.Custom)
+            return customResolution;
+
+        var divisor = quality switch
+        {
+            FsrQualityMode.Native => 1.0f,
+            FsrQualityMode.UltraQuality => 1.3f,
+            FsrQualityMode.Quality => 1.5f,
+            FsrQualityMode.Balanced => 1.7f,
+            FsrQualityMode.Performance => 2.0f,
+            _ => 1.5f
+        };
+
+        static int RoundTo8(float value, int minimum)
+        {
+            var rounded = (int)MathF.Round(value / 8f) * 8;
+            return Math.Max(minimum, rounded);
+        }
+
+        return new ResolutionSize(
+            RoundTo8(outputWidth / divisor, 640),
+            RoundTo8(outputHeight / divisor, 360));
+    }
+
     public static int MsaaSamples(MsaaQuality quality) =>
         quality switch
         {
@@ -357,6 +400,7 @@ public static class GraphicsPresetCatalog
                 settings.ModelLod = ModelLodQuality.Aggressive;
                 settings.FarVegetation = FarVegetationMode.Impostors;
                 settings.Upscaler = UpscalerMode.Fsr1;
+                settings.FsrQuality = FsrQualityMode.Performance;
                 settings.FsrSharpness = 0.55f;
                 settings.NormalMapping = false;
                 settings.SpecularHighlights = false;
@@ -384,6 +428,7 @@ public static class GraphicsPresetCatalog
                 settings.ModelLod = ModelLodQuality.Balanced;
                 settings.FarVegetation = FarVegetationMode.Impostors;
                 settings.Upscaler = UpscalerMode.Fsr1;
+                settings.FsrQuality = FsrQualityMode.Quality;
                 settings.FsrSharpness = 0.45f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = false;
@@ -411,6 +456,7 @@ public static class GraphicsPresetCatalog
                 settings.ModelLod = ModelLodQuality.Quality;
                 settings.FarVegetation = FarVegetationMode.Impostors;
                 settings.Upscaler = UpscalerMode.Fsr1;
+                settings.FsrQuality = FsrQualityMode.UltraQuality;
                 settings.FsrSharpness = 0.35f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = true;
@@ -438,6 +484,7 @@ public static class GraphicsPresetCatalog
                 settings.ModelLod = ModelLodQuality.Ultra;
                 settings.FarVegetation = FarVegetationMode.FullMeshes;
                 settings.Upscaler = UpscalerMode.Fsr1;
+                settings.FsrQuality = FsrQualityMode.Native;
                 settings.FsrSharpness = 0.25f;
                 settings.NormalMapping = true;
                 settings.SpecularHighlights = true;
@@ -492,6 +539,7 @@ public static class GraphicsPresetCatalog
             ModelLod = source.ModelLod,
             FarVegetation = source.FarVegetation,
             Upscaler = source.Upscaler,
+            FsrQuality = source.FsrQuality,
             FsrSharpness = source.FsrSharpness,
             AntiAliasing = source.AntiAliasing,
             Msaa = source.Msaa,
@@ -525,6 +573,7 @@ public static class GraphicsPresetCatalog
         left.ModelLod == right.ModelLod &&
         left.FarVegetation == right.FarVegetation &&
         left.Upscaler == right.Upscaler &&
+        left.FsrQuality == right.FsrQuality &&
         MathF.Abs(left.FsrSharpness - right.FsrSharpness) < 0.001f &&
         left.AntiAliasing == right.AntiAliasing &&
         left.Msaa == right.Msaa &&
@@ -569,6 +618,7 @@ public sealed class GameSettings
     public ModelLodQuality ModelLod { get; set; } = ModelLodQuality.Quality;
     public FarVegetationMode FarVegetation { get; set; } = FarVegetationMode.Impostors;
     public UpscalerMode Upscaler { get; set; } = UpscalerMode.Fsr1;
+    public FsrQualityMode FsrQuality { get; set; } = FsrQualityMode.Quality;
     public float FsrSharpness { get; set; } = 0.35f;
     public AntiAliasingMode AntiAliasing { get; set; } = AntiAliasingMode.Fxaa;
     public MsaaQuality Msaa { get; set; } = MsaaQuality.Off;
@@ -617,6 +667,8 @@ public sealed class GameSettings
             FarVegetation = FarVegetationMode.Impostors;
         if (!Enum.IsDefined(Upscaler))
             Upscaler = UpscalerMode.Fsr1;
+        if (!Enum.IsDefined(FsrQuality))
+            FsrQuality = FsrQualityMode.Quality;
         if (!Enum.IsDefined(AntiAliasing))
             AntiAliasing = AntiAliasingMode.Fxaa;
         if (!Enum.IsDefined(Msaa))
