@@ -431,6 +431,11 @@ public sealed class GameEngine : IDisposable
     {
         if (_world.Dialogue.IsOpen)
         {
+            _world.Bow.SetAiming(_world, false);
+            _camera.FieldOfView =
+                MathF.PI / 180f *
+                _settings.FieldOfViewDegrees;
+
             if (_window.ConsumeKeyPress(Key.Escape))
             {
                 _world.Dialogue.Close();
