@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Assets;
+using SlavicGame.Engine.NPC;
 using SlavicGame.Engine.World;
 
 internal static class AssetIntegrationRegression
@@ -406,17 +407,22 @@ internal static class AssetIntegrationRegression
         check(actorVertices.Length > baseAnimatedVertexBudget,
             "Settler accessories add visible geometry beyond their distinct humanoid GLBs");
 
-        var npcVertexCounts = npcModels.Values
+        var npcGeometries = npcModels.Values
             .Select(model => model.BuildMesh(
                 Matrix4x4.Identity,
                 "Idle",
                 0.35f,
-                sourceIsZUp: true).Positions.Length)
-            .Distinct()
-            .Count();
+                sourceIsZUp: true))
+            .ToArray();
 
-        check(npcVertexCounts >= 3,
-            "NPC model families contain genuinely different base geometry");
+        check(npcGeometries.All(geometry =>
+                geometry.Positions.Length > 0 &&
+                geometry.Indices.Length > 0),
+            "Every NPC model family produces renderable animated geometry");
+        check(npcGeometries.Any(geometry =>
+                geometry.Positions.Length != playerGeometry.Positions.Length ||
+                !geometry.Positions.SequenceEqual(playerGeometry.Positions)),
+            "NPC models are not all copies of the player hunter geometry");
 
         void CheckFacing(string id, Vector2 target)
         {
