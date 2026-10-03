@@ -413,7 +413,7 @@ The five R0 NPC roles now have schedule-driven world positions, visible humanoid
 
 ### Settler population
 
-Żarnowiec now renders five distinct authored NPC silhouettes plus eight ambient settlers on the shared humanoid rig. Role-specific proportions, muted palettes and lightweight shawl/hood/satchel/basket/tool/staff/spear accessories make the population readable without extra actor draw calls. Ambient settlers remain non-interactive until authored dialogue exists.
+Żarnowiec now renders five authored NPC roles plus eight ambient settlers using five distinct animated humanoid GLB families (`villager A/B`, `hunter`, `merchant`, `elder`) instead of cloning the player hunter mesh. Role-specific proportions, muted palettes and lightweight shawl/hood/satchel/basket/tool/staff/spear accessories add another silhouette layer without extra actor draw calls. The five base NPC models are loaded once and shared across all residents. Ambient settlers remain non-interactive until authored dialogue exists.
 
 
 ### Living NPC routines
