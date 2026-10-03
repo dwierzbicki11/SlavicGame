@@ -7,6 +7,7 @@ public sealed class VoiceOverService : IDisposable
     private readonly ITextToSpeechProvider? _provider;
     private readonly SdlPcmPlayer? _player;
     private readonly object _gate = new();
+    private readonly Dictionary<string, PcmAudio> _memoryCache = new(StringComparer.Ordinal);
     private CancellationTokenSource? _requestCancellation;
     private int _generation;
     private bool _disposed;
@@ -88,7 +89,18 @@ public sealed class VoiceOverService : IDisposable
     {
         try
         {
-            var audio = await _provider!.SynthesizeAsync(request, cancellationToken).ConfigureAwait(false);
+            var cacheKey = CacheKey(request);
+            PcmAudio? audio;
+            lock (_gate)
+                _memoryCache.TryGetValue(cacheKey, out audio);
+
+            if (audio is null)
+            {
+                audio = await _provider!.SynthesizeAsync(request, cancellationToken).ConfigureAwait(false);
+                lock (_gate)
+                    _memoryCache[cacheKey] = audio;
+            }
+
             lock (_gate)
             {
                 if (_disposed || generation != _generation || cancellationToken.IsCancellationRequested)
@@ -104,6 +116,16 @@ public sealed class VoiceOverService : IDisposable
             EngineLog.Warn($"TTS '{request.Id}' failed: {exception.Message}");
         }
     }
+
+    private static string CacheKey(VoiceRequest request) =>
+        string.Join("|",
+            request.Id,
+            request.Text,
+            request.Direction.Emotion,
+            request.Direction.Intensity.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+            request.Direction.Speed.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+            request.Direction.Persona ?? "",
+            request.Voice ?? "");
 
     public void Dispose()
     {
