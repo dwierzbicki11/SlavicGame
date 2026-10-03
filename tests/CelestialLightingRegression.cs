@@ -65,6 +65,7 @@ internal static class CelestialLightingRegression
         check(night.MoonIntensity > 0f,
             "Clear night produces visible moonlight");
 
+        time.SetTimeOfDay(23.0);
         weather.SetCondition(WeatherKind.Storm, true);
         var stormNight = CelestialLighting.Evaluate(time, weather);
         check(stormNight.MoonIntensity < night.MoonIntensity,
