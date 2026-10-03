@@ -394,3 +394,8 @@ Deep river water now physically drifts the player downstream. Rain can keep the 
 ### River current and exposure
 
 Deeper river sections now push the player downstream. Rain keeps clothing wet, wind and wetness can build a light chill state that reduces stamina recovery, while animated village/forest campfires act as real heat sources that accelerate drying and warming.
+
+
+### Current and exposure
+
+Deep river water now physically drifts the player downstream. Rain can soak the player away from the river, wet/windy exposure builds a light chill state that reduces stamina recovery, and the village plus hunter-camp firepits now provide visible animated heat sources that accelerate drying and warming.
