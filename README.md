@@ -384,3 +384,8 @@ Walking through the R0 river now creates movement-driven ripple rings. The rocky
 ### Wading
 
 The R0 river is now gameplay-active: movement slows with real water depth, deep water disables sprint, shallow-water sprint costs extra stamina, soaked clothing dries gradually and temporarily reduces recovery, while movement produces synchronized ripple and splash feedback.
+
+
+### Environmental exposure
+
+Deep river water now physically drifts the player downstream. Rain can keep the player wet away from water, wet/windy exposure builds a non-damaging chill state that reduces stamina recovery, and two animated campfires provide visible heat sources that rapidly dry and warm the player.

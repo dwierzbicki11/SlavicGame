@@ -7,6 +7,7 @@ public sealed class WaterInteractionState
     private const float SplashStrideMeters = 1.15f;
     private const float WettingRatePerSecond = 1.65f;
     private const float DryingRatePerSecond = 1f / 95f;
+    private const float RainWettingRatePerSecond = 0.035f;
 
     private Vector3 _previousPosition;
     private bool _hasPrevious;
@@ -16,6 +17,9 @@ public sealed class WaterInteractionState
     public float WaterDepth { get; private set; }
     public float MovementIntensity { get; private set; }
     public float Wetness { get; private set; }
+    public float Chill { get; private set; }
+    public float HeatExposure { get; private set; }
+    public float RainExposure { get; private set; }
     public float SplashPulse { get; private set; }
     public Vector3 SurfacePosition { get; private set; }
 
@@ -29,13 +33,31 @@ public sealed class WaterInteractionState
     {
         get
         {
+            var chillText = Chill >= 0.08f
+                ? $" / WYCHLODZENIE {Chill * 100f:0}%"
+                : "";
+
             if (IsInWater)
             {
-                return $"WODA {WaterDepth * 100f:0} CM / MOKRY {Wetness * 100f:0}%";
+                var currentSpeed = CurrentSpeedForDepth(WaterDepth);
+                var currentText = currentSpeed >= 0.12f
+                    ? $" / NURT {currentSpeed:0.0} M/S"
+                    : "";
+                return $"WODA {WaterDepth * 100f:0} CM / MOKRY {Wetness * 100f:0}%{currentText}{chillText}";
             }
 
-            return Wetness >= 0.08f
-                ? $"MOKRY {Wetness * 100f:0}%"
+            if (HeatExposure >= 0.08f && (Wetness >= 0.03f || Chill >= 0.03f))
+            {
+                return $"PRZY OGNISKU / MOKRY {Wetness * 100f:0}%{chillText}";
+            }
+
+            if (RainExposure >= 0.10f)
+            {
+                return $"DESZCZ / MOKRY {Wetness * 100f:0}%{chillText}";
+            }
+
+            return Wetness >= 0.08f || Chill >= 0.08f
+                ? $"MOKRY {Wetness * 100f:0}%{chillText}"
                 : "";
         }
     }
@@ -51,6 +73,9 @@ public sealed class WaterInteractionState
             SplashPulse - 3.6f * (float)deltaSeconds);
 
         var position = world.PlayerPosition;
+        HeatExposure = CampfireSystem.HeatAt(position);
+        RainExposure = Math.Clamp(world.Weather.RainIntensity, 0f, 1f);
+
         WaterDepth = DepthAt(world, position);
         IsInWater = WaterDepth > 0.03f;
 
@@ -106,11 +131,25 @@ public sealed class WaterInteractionState
         else
         {
             _distanceSinceSplash = 0f;
-            Wetness = MathF.Max(
+
+            var rainWetting =
+                RainWettingRatePerSecond *
+                RainExposure *
+                (1f - HeatExposure * 0.75f);
+
+            var drying =
+                DryingRatePerSecond *
+                (1f + HeatExposure * 9f) *
+                (1f - RainExposure * 0.88f);
+
+            Wetness = Math.Clamp(
+                Wetness +
+                (rainWetting - drying) * (float)deltaSeconds,
                 0f,
-                Wetness -
-                DryingRatePerSecond * (float)deltaSeconds);
+                1f);
         }
+
+        UpdateChill(world, deltaSeconds);
 
         if (!IsInWater && MovementIntensity < 0.01f)
             MovementIntensity = 0f;
@@ -127,6 +166,9 @@ public sealed class WaterInteractionState
         WaterDepth = 0f;
         MovementIntensity = 0f;
         Wetness = 0f;
+        Chill = 0f;
+        HeatExposure = 0f;
+        RainExposure = 0f;
         SplashPulse = 0f;
         IsInWater = false;
         SurfacePosition = position;
@@ -187,17 +229,84 @@ public sealed class WaterInteractionState
 
     public static float StaminaRecoveryMultiplier(
         float depth,
-        float wetness)
+        float wetness,
+        float chill = 0f)
     {
         var depthPenalty =
             Math.Clamp(depth / 0.75f, 0f, 1f) * 0.45f;
         var wetPenalty =
             Math.Clamp(wetness, 0f, 1f) * 0.15f;
+        var chillPenalty =
+            Math.Clamp(chill, 0f, 1f) * 0.22f;
 
         return Math.Clamp(
-            1f - depthPenalty - wetPenalty,
-            0.35f,
+            1f - depthPenalty - wetPenalty - chillPenalty,
+            0.25f,
             1f);
+    }
+
+    public static float CurrentSpeedForDepth(float depth)
+    {
+        depth = MathF.Max(0f, depth);
+        if (depth <= 0.28f)
+            return 0f;
+
+        var normalized =
+            Math.Clamp((depth - 0.28f) / 1.02f, 0f, 1f);
+        return normalized * normalized * 1.65f;
+    }
+
+    public static Vector3 CurrentVelocityAt(
+        WorldState world,
+        Vector3 position)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+
+        var depth = DepthAt(world, position);
+        var speed = CurrentSpeedForDepth(depth);
+        if (speed <= 0f)
+            return Vector3.Zero;
+
+        var flow = WaterLandscape.FlowDirection(position.Z);
+        return new Vector3(
+            flow.X * speed,
+            0f,
+            flow.Y * speed);
+    }
+
+    private void UpdateChill(
+        WorldState world,
+        double deltaSeconds)
+    {
+        var depthFactor =
+            Math.Clamp(WaterDepth / 0.75f, 0f, 1f);
+        var weatherPressure =
+            RainExposure * 0.42f +
+            Math.Clamp(world.Weather.WindIntensity, 0f, 1f) * 0.16f;
+
+        var target =
+            Wetness * (0.30f + weatherPressure) +
+            depthFactor * 0.24f -
+            HeatExposure * 1.15f;
+
+        target = Math.Clamp(target, 0f, 1f);
+
+        var response =
+            target > Chill
+                ? 0.018f
+                : HeatExposure > 0.05f
+                    ? 0.20f
+                    : 0.035f;
+
+        var blend =
+            1f - MathF.Exp(
+                -response *
+                (float)Math.Max(0d, deltaSeconds));
+
+        Chill += (target - Chill) * blend;
+
+        if (Chill < 0.002f)
+            Chill = 0f;
     }
 
     private static float Lerp(float a, float b, float t) =>

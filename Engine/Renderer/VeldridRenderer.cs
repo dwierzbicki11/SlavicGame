@@ -335,6 +335,11 @@ public sealed class VeldridRenderer : IDisposable
             (float)animationSeconds,
             ref actorVertices,
             ref actorIndices);
+        CampfireEffectMesh.Append(
+            world,
+            (float)animationSeconds,
+            ref actorVertices,
+            ref actorIndices);
         MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;

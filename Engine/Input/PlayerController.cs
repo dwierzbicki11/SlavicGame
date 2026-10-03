@@ -46,13 +46,30 @@ public static class PlayerController
                 move * speed * (float)deltaSeconds);
         }
 
+        var currentVelocity =
+            WaterInteractionState.CurrentVelocityAt(
+                world,
+                world.PlayerPosition);
+        if (currentVelocity.LengthSquared() > 0.000001f)
+        {
+            world.SetPlayerPosition(
+                world.PlayerPosition +
+                currentVelocity * (float)deltaSeconds);
+        }
+
+        var finalWaterDepth =
+            WaterInteractionState.DepthAt(
+                world,
+                world.PlayerPosition);
+
         world.Player.UpdateStamina(
             sprinting,
             deltaSeconds,
-            WaterInteractionState.StaminaDrainMultiplierForDepth(waterDepth),
+            WaterInteractionState.StaminaDrainMultiplierForDepth(finalWaterDepth),
             WaterInteractionState.StaminaRecoveryMultiplier(
-                waterDepth,
-                world.WaterInteraction.Wetness));
+                finalWaterDepth,
+                world.WaterInteraction.Wetness,
+                world.WaterInteraction.Chill));
         camera.Follow(world.PlayerPosition, (float)deltaSeconds, world.Terrain);
     }
 }
