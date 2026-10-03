@@ -35,7 +35,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
 
 ### P3 — content production
-- [ ] side-quest production cards per region; R0 i R1 gotowe (`quests/SideQuestCardsR0.md`, `quests/SideQuestCardsR1.md`), następny R2;
+- [ ] side-quest production cards per region; R0–R2 gotowe (`quests/SideQuestCardsR0.md`, `SideQuestCardsR1.md`, `SideQuestCardsR2.md`), następny R4;
 - [ ] regional encounter rosters/tables poza R0;
 - [ ] regional vendors/services final pass;
 - [ ] item/equipment/recipe catalogs dla pełnego scope;
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-Najbliższy niezablokowany pakiet: **side-quest production cards R2** dla `SQ_R2_01`–`SQ_R2_03`. `forest-guardian` pozostaje research/identity lockiem: karta nie może uczynić go historycznym/folklorystycznym faktem bez zamknięcia tego locku. Następnie R4 zgodnie z kolejnością `SideQuestCatalog.md`. Culture research packages pozostają kolejnym dużym P2.
+Najbliższy niezablokowany pakiet: **side-quest production cards R4** dla `SQ_R4_01`–`SQ_R4_03`. `SQ_R4_02` zachowuje jawny creature/anomaly content lock, a szczegóły górnictwa i obróbki materiałów pozostają material-culture research lockiem. Następnie R3 zgodnie z kolejnością `SideQuestCatalog.md`. Culture research packages pozostają kolejnym dużym P2.
