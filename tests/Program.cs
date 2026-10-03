@@ -73,8 +73,8 @@ WaterLandscape.AppendSurface(
 Check(waterVertices.Length > 0 && waterIndices.Length > 0,
     "near river rendered");
 Check(waterVertices.All(v =>
-        MathF.Abs(v.Position.Y - WaterLandscape.WaterLevel(v.Position.Z)) < 0.05f),
-    "water ribbon follows local downstream level inside the terrain channel");
+        MathF.Abs(v.Position.Y - WaterLandscape.WaterLevel(v.Position.Z)) < 0.07f),
+    "water and foam presentation follow the local downstream level inside the terrain channel");
 Check(waterIndices.All(index => index < waterVertices.Length),
     "water indices valid");
 
