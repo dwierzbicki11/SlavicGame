@@ -20,12 +20,19 @@ No OpenAI API key, ElevenLabs key or other paid TTS credential is read by the ga
 
 The helper environment is deliberately separate from the C# runtime.
 
-Linux:
+Linux / Linux Mint / Ubuntu (Python 3.10–3.13, w tym 3.12.3):
 
 ```bash
-sudo apt install python3.11 python3.11-venv
+python3 --version
+sudo apt install python3-venv
 bash tools/tts/setup-local.sh
 dotnet run -c Release
+```
+
+Jeżeli dystrybucja rozdziela pakiet `venv` według wersji, dla Pythona 3.12 użyj:
+
+```bash
+sudo apt install python3.12-venv
 ```
 
 Windows PowerShell:
@@ -35,7 +42,11 @@ Windows PowerShell:
 dotnet run -c Release
 ```
 
-The setup creates `.venv-tts` and installs `chatterbox-tts`. On the first synthesized line, Chatterbox downloads its open model files into the normal local model cache. After the files are present, synthesis itself does not require a paid service.
+The setup creates `.venv-tts`, installs pinned `chatterbox-tts==0.1.7`, and validates imports for NumPy, Torch, Torchaudio and Chatterbox before reporting success. Python 3.10–3.13 is accepted; Python 3.12.3 is supported by this setup.
+
+If `.venv-tts` was created with another Python minor version, the setup recreates it instead of mixing incompatible site-packages.
+
+On the first synthesized line, Chatterbox downloads its open model files into the normal local model cache. After the files are present, synthesis itself does not require a paid service.
 
 Use `SLAVICGAME_TTS=0` to force-disable speech.
 
@@ -121,3 +132,25 @@ For a game build with many fixed lines, the preferred production workflow is to 
 4. expose Voice volume and TTS on/off in game Settings;
 5. tune fictional names and magic-word pronunciation;
 6. keep recorded actor VO possible for major scenes without changing dialogue APIs.
+
+
+## Troubleshooting local startup
+
+Po poprawnej instalacji końcówka `setup-local.sh` powinna wypisać m.in.:
+
+```text
+[tts] Python:      3.12.3
+[tts] Chatterbox:  0.1.7
+[tts] Import test: OK
+```
+
+Przy starcie pierwszej generacji log gry pokazuje również wersje Chatterbox/Python/Torch i wybrane urządzenie.
+
+Jeżeli istnieje stare lub uszkodzone środowisko, można je bezpiecznie przebudować:
+
+```bash
+rm -rf .venv-tts
+bash tools/tts/setup-local.sh
+```
+
+TTS jest domyślnie używany dla zaklęć protagonisty. Sam start gry nie musi od razu uruchomić modelu — model jest ładowany przy pierwszej wypowiadanej kwestii/zaklęciu.

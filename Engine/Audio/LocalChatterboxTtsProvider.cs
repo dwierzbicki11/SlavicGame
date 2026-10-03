@@ -260,8 +260,19 @@ public sealed class LocalChatterboxTtsProvider : ITextToSpeechProvider, IDisposa
                 throw new InvalidOperationException($"Local Chatterbox TTS failed: {error}");
             }
 
+            var device = ready.RootElement.GetProperty("device").GetString();
+            var python = ready.RootElement.TryGetProperty("python", out var pythonNode)
+                ? pythonNode.GetString()
+                : "unknown";
+            var chatterbox = ready.RootElement.TryGetProperty("chatterbox", out var chatterboxNode)
+                ? chatterboxNode.GetString()
+                : "unknown";
+            var torch = ready.RootElement.TryGetProperty("torch", out var torchNode)
+                ? torchNode.GetString()
+                : "unknown";
+
             EngineLog.Info(
-                $"Free local TTS ready: Chatterbox Multilingual on {ready.RootElement.GetProperty("device").GetString()}.");
+                $"Free local TTS ready: Chatterbox={chatterbox}, Python={python}, Torch={torch}, device={device}.");
         }
         finally
         {

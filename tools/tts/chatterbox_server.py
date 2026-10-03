@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import sys
+from importlib.metadata import version as package_version
 from pathlib import Path
 
 import numpy as np
@@ -91,7 +92,10 @@ def main():
         "ready": True,
         "device": device,
         "sample_rate": 24000,
-        "backend": "chatterbox-multilingual-v3"
+        "backend": "chatterbox-multilingual-v3",
+        "python": sys.version.split()[0],
+        "chatterbox": package_version("chatterbox-tts"),
+        "torch": torch.__version__
     }), flush=True)
 
     for raw in sys.stdin:
