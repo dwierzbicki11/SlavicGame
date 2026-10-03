@@ -83,6 +83,7 @@ public static class MagicCinematicRegression
         check(SpellLessons.All.All(lesson => SpellLessons.IsLearned(learnedRestored, lesson.SpellId)),
             "Learned spells persist through save and load");
 
+        world.Player.Restore();
         magic.SelectSpell("spell.spark");
         magic.SelectNext(world);
         check(!magic.TryStart(world, Vector3.UnitZ) && world.Player.Stamina == 100, "Full-health heal costs nothing");
