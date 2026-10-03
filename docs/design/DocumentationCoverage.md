@@ -6,7 +6,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `research/bestiary/ResearchCardIndex.md` research ownerów, `design/RegionalContentAssetCatalog.md` rodziny content/assets R0–R6, a `quests/SideQuestCatalog.md` zamyka planistyczny scope side-content dla wszystkich regionów. `quests/SideQuestCardsR0.md`–`SideQuestCardsR6.md` zamykają implementacyjny first pass wszystkich 21 planowanych slotów R0–R6. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
 
-Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, source-strength/identity locki, pozostałe culture packages, konkretne asset manifests i targety performance wymagające pomiarów.
+Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, source-strength/identity locki, ostatni culture package R5, konkretne asset manifests i targety performance wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
@@ -18,7 +18,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 | Regiony | world/RegionBibleIndex.md + R0–R6 bibles | 7/7 production bibles v0.1 |
 | Panteon/religia | pantheon/* + research/pantheon/* | first pass; krytyczne źródła nadal rozwijane |
 | Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md | scope 1.0 v0.1; południca i forest-guardian mają jawne locki |
-| Kultury | world/Cultures.md + world/MacroCultures.md + research/cultures/* | framework v0.1; R0–R3 evidence packages v0.1; R4–R5 niegotowe |
+| Kultury | world/Cultures.md + world/MacroCultures.md + research/cultures/* | framework v0.1; R0–R4 evidence packages v0.1; R5 niegotowe |
 | Quest framework | design/QuestDesign.md | v0.1 |
 | Vertical slice quest | quests/LightOverSwamp*.md | pełny pakiet v0.1 |
 | Combat | design/CombatDesign.md + MeleeCombat.md + BowCombat.md | v0.1 |
@@ -37,7 +37,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 | Architektura/rendering | design/EngineArchitecture.md + technical/RenderingAndPlatform.md | v0.1 |
 | Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md | v0.1; pomiary performance otwarte |
 | Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md | first pass |
-| Material culture research | research/material-culture/* + research/cultures/CULT_R0_ZARNOWIEC.md + CULT_R1_NADBORZE.md + CULT_R2_WIELKI_BOR.md + CULT_R3_PRZYMORZE.md | R0 baseline + R1–R3 differential mappings v0.1; final locators/art locks niepełne |
+| Material culture research | research/material-culture/* + research/cultures/CULT_R0_ZARNOWIEC.md + CULT_R1_NADBORZE.md + CULT_R2_WIELKI_BOR.md + CULT_R3_PRZYMORZE.md + CULT_R4_KAMIENNE_WYZYNY.md | R0 baseline + R1–R4 differential mappings v0.1; final locators/art locks niepełne |
 | Asset list vertical slice | design/VerticalSliceAssetList.md | v0.1 |
 | Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + region bibles | R0–R6 planning catalog v0.1; finalne manifesty/art lock otwarte |
 
@@ -47,7 +47,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 2. finalne dialogi, VO i lokalizacja;
 3. finalne personalia/łączenie slotów NPC, appearance i killability windows;
 4. bestiariusz: source-strength/region-fit południcy i identity lock `forest-guardian`, plus finalne targety kontraktów `SQ_R1_02`, `SQ_R2_02`, `SQ_R3_03` i `SQ_R4_02`;
-5. culture packages R4–R5; R0–R3 mają evidence mapping v0.1, ale finalne locatory oraz costume/ornament/religion-material/naming i regionalne technology/art locki nadal są jawnie otwarte; R3 dodatkowo pozostawia maritime/fishing/salvage/language/legal locki;
+5. culture package R5; R0–R4 mają evidence mapping v0.1, ale finalne locatory oraz costume/ornament/religion-material/naming i regionalne technology/art locki nadal są jawnie otwarte; R3 dodatkowo pozostawia maritime/fishing/salvage/language/legal locki, a R4 mining/geology/transport/craft locki;
 6. konkretne finalne modele/materials/animations/audio/VFX i manifesty poza vertical slice;
 7. dalsze creature assignments, encounter/POI placement oraz decyzje o scaleniu side-quest slotów po playtestach;
 8. measured performance targets, streaming/VFX/shadow/AI budgets i wymagania sprzętowe;
@@ -60,11 +60,11 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0–R6 mają implementacyjny first pass wszystkich 21 side-questów. Culture research ma stabilne IDs/source policy, a R0–R3 mają evidence packages v0.1. R4–R5 i finalne research/art locators pozostają otwarte. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0–R6 mają implementacyjny first pass wszystkich 21 side-questów. Culture research ma stabilne IDs/source policy, a R0–R4 mają evidence packages v0.1. R5 i finalne research/art locators pozostają otwarte. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. `CULT_R4_KAMIENNE_WYZYNY`, następnie R5;
+1. `CULT_R5_AREL` z osobną, wieloźródłową bazą badawczą bez stereotypowej analogii;
 2. bestiary source/identity locki;
 3. regional encounter/vendor/item catalogs;
 4. konkretne asset manifests po art/research lockach;

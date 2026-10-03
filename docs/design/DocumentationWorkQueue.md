@@ -28,7 +28,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ### P2 — research packages
 - [x] culture research framework: stabilne `CULT_*` IDs, H/R/F/U oraz source/evidence policy (`research/cultures/CultureResearchFramework.md`);
-- [ ] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5); **R0–R3 evidence packages v0.1 gotowe**, R4–R5 pozostają;
+- [ ] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5); **R0–R4 evidence packages v0.1 gotowe**, R5 pozostaje;
 - [ ] domknięcie krytycznych źródeł panteonu;
 - [ ] research lock material culture dla produkcyjnych assetów;
 - [ ] source-strength/region-fit pass południcy;
@@ -69,4 +69,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-`CULT_R0_ZARNOWIEC`–`CULT_R3_PRZYMORZE` mają evidence packages v0.1. R3 oddziela fikcyjny portowo-handlowy scope od research locków jednostek, rybołówstwa, salvage, prawa portowego i konkretnych języków/pochodzenia NPC. Następny pakiet: **`CULT_R4_KAMIENNE_WYZYNY`** — górnictwo, kamień/metale, transport górski, osady i rzemiosło; finalne techniki, narzędzia, geologia i material culture wymagają jawnych locatorów. Następnie `CULT_R5_AREL`, który wymaga osobnej, jawnie dobranej bazy badawczej spoza inspiracji słowiańskiej. Nie wypełniać braków stereotypową analogią. Równolegle można domykać małe, jednoznaczne bestiary source/identity locki, jeśli research daje wystarczającą podstawę.
+`CULT_R0_ZARNOWIEC`–`CULT_R4_KAMIENNE_WYZYNY` mają evidence packages v0.1. R4 oddziela fikcyjny łańcuch zasobów i strukturę kopalnianą od research locków technik wydobycia, geologii, transportu, metalurgii/kamieniarstwa, wyglądu i praktyk kultowych. Następny pakiet: **`CULT_R5_AREL`** — wymaga osobnej, jawnie dobranej wieloźródłowej bazy badawczej spoza inspiracji słowiańskiej. Nie wypełniać braków stereotypową analogią „stepową”, jednym historycznym ludem ani przypadkowym zestawem ornamentów. Równolegle można domykać małe, jednoznaczne bestiary source/identity locki, jeśli research daje wystarczającą podstawę.
