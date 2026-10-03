@@ -18,7 +18,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 | Regiony | world/RegionBibleIndex.md + R0–R6 bibles | 7/7 production bibles v0.1 |
 | Panteon/religia | pantheon/* + research/pantheon/* | first pass; krytyczne źródła nadal rozwijane |
 | Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md | scope 1.0 v0.1; południca i forest-guardian mają jawne locki |
-| Kultury | world/Cultures.md + world/MacroCultures.md | framework/macro v0.1; pełne packages niegotowe |
+| Kultury | world/Cultures.md + world/MacroCultures.md + research/cultures/CultureResearchFramework.md | framework + stabilne context IDs/source policy v0.1; packages R0–R5 niegotowe |
 | Quest framework | design/QuestDesign.md | v0.1 |
 | Vertical slice quest | quests/LightOverSwamp*.md | pełny pakiet v0.1 |
 | Combat | design/CombatDesign.md + MeleeCombat.md + BowCombat.md | v0.1 |
@@ -47,7 +47,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 2. finalne dialogi, VO i lokalizacja;
 3. finalne personalia/łączenie slotów NPC, appearance i killability windows;
 4. bestiariusz: source-strength/region-fit południcy i identity lock `forest-guardian`, plus finalne targety kontraktów `SQ_R1_02`, `SQ_R2_02`, `SQ_R3_03` i `SQ_R4_02`;
-5. pełne culture research packages i research-lock szczegółów materialnych/religijnych;
+5. culture packages `CULT_R0_ZARNOWIEC`–`CULT_R5_AREL`; framework/evidence policy jest zamknięty, ale evidence ledgers i research-lock szczegółów materialnych/religijnych nie;
 6. konkretne finalne modele/materials/animations/audio/VFX i manifesty poza vertical slice;
 7. dalsze creature assignments, encounter/POI placement oraz decyzje o scaleniu side-quest slotów po playtestach;
 8. measured performance targets, streaming/VFX/shadow/AI budgets i wymagania sprzętowe;
@@ -60,11 +60,11 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0–R6 mają implementacyjny first pass wszystkich 21 side-questów. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0–R6 mają implementacyjny first pass wszystkich 21 side-questów. Culture research ma teraz stabilne IDs i source/evidence policy, ale nie komplet finalnych packages. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. culture research packages z jawną source/evidence policy;
+1. `CULT_R0_ZARNOWIEC` evidence-ledger package, następnie R1–R5;
 2. bestiary source/identity locki;
 3. regional encounter/vendor/item catalogs;
 4. konkretne asset manifests po art/research lockach;
