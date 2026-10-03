@@ -68,19 +68,20 @@ public sealed class SdlPcmPlayer : IDisposable
         _audioSubsystemInitialized = true;
     }
 
-    public static SdlPcmPlayer? TryCreate()
+    public static SdlPcmPlayer? TryCreate(string purpose = "PCM playback")
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(purpose);
         if (InitSubSystem is null || QuitSubSystem is null || OpenAudioDevice is null ||
             PauseAudioDevice is null || QueueAudio is null || ClearQueuedAudio is null ||
             CloseAudioDevice is null)
         {
-            EngineLog.Warn("TTS audio disabled: required SDL2 audio functions are unavailable.");
+            EngineLog.Warn($"{purpose} disabled: required SDL2 audio functions are unavailable.");
             return null;
         }
 
         if (InitSubSystem(SdlInitAudio) != 0)
         {
-            EngineLog.Warn("TTS audio disabled: SDL audio subsystem could not initialize.");
+            EngineLog.Warn($"{purpose} disabled: SDL audio subsystem could not initialize.");
             return null;
         }
 
@@ -98,7 +99,7 @@ public sealed class SdlPcmPlayer : IDisposable
         if (device == 0)
         {
             QuitSubSystem(SdlInitAudio);
-            EngineLog.Warn("TTS audio disabled: SDL could not open the default playback device.");
+            EngineLog.Warn($"{purpose} disabled: SDL could not open the default playback device.");
             return null;
         }
 
@@ -107,12 +108,12 @@ public sealed class SdlPcmPlayer : IDisposable
             CloseAudioDevice(device);
             QuitSubSystem(SdlInitAudio);
             EngineLog.Warn(
-                $"TTS audio disabled: unexpected SDL format {obtained.Freq} Hz / 0x{obtained.Format:X} / {obtained.Channels} ch.");
+                $"{purpose} disabled: unexpected SDL format {obtained.Freq} Hz / 0x{obtained.Format:X} / {obtained.Channels} ch.");
             return null;
         }
 
         PauseAudioDevice(device, 0);
-        EngineLog.Info("TTS SDL playback ready: PCM16 mono 24 kHz.");
+        EngineLog.Info($"{purpose} SDL playback ready: PCM16 mono 24 kHz.");
         return new SdlPcmPlayer(device);
     }
 
@@ -121,7 +122,7 @@ public sealed class SdlPcmPlayer : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         audio.Validate();
         if (audio.SampleRate != 24000 || audio.Channels != 1 || audio.BitsPerSample != 16)
-            throw new NotSupportedException("SDL TTS player expects PCM16 mono at 24 kHz.");
+            throw new NotSupportedException("SDL PCM player expects PCM16 mono at 24 kHz.");
 
         Clear();
         var handle = GCHandle.Alloc(audio.Data, GCHandleType.Pinned);

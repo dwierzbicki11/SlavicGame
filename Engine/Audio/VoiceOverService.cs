@@ -31,7 +31,7 @@ public sealed class VoiceOverService : IDisposable
             return new VoiceOverService(null, null);
         }
 
-        var player = SdlPcmPlayer.TryCreate();
+        var player = SdlPcmPlayer.TryCreate("TTS");
         if (player is null)
             return new VoiceOverService(null, null);
 

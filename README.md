@@ -374,3 +374,8 @@ A winding shallow river runs north–south roughly 220 metres east of spawn. It 
 ### R0 world-density pass
 
 Żarnowiec, starting forest, Czarne Mokradła and Kamienny Krąg now include an additional curated layer of buildings, ruins, investigation props, ritual dressing and small environmental storytelling models. Small props use short-range culling so the denser world remains scalable on low-end GPUs.
+
+
+### River interaction
+
+Walking through the R0 river now creates movement-driven ripple rings. The rocky channel edges receive animated foam streaks, and a separate procedural SDL ambience fades in as the listener approaches the river without interfering with local TTS playback.

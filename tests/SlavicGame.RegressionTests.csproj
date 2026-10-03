@@ -11,7 +11,7 @@
     <Compile Include="../Engine/Animation/*.cs" Link="Animation/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Assets/*.cs" Link="Assets/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Audio/*.cs"
-             Exclude="../Engine/Audio/SdlPcmPlayer.cs;../Engine/Audio/VoiceOverService.cs"
+             Exclude="../Engine/Audio/SdlPcmPlayer.cs;../Engine/Audio/VoiceOverService.cs;../Engine/Audio/RiverAmbienceService.cs"
              Link="Audio/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Combat/*.cs" Link="Combat/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Dialogue/*.cs" Link="Dialogue/%(Filename)%(Extension)" />

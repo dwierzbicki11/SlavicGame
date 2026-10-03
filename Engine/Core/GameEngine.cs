@@ -25,6 +25,7 @@ public sealed class GameEngine : IDisposable
     private readonly GameSettingsStore _settingsStore;
     private readonly SaveSlotService _saveSlots = new();
     private VoiceOverService? _voice;
+    private RiverAmbienceService? _riverAmbience;
     private readonly VoiceUsageScope _voiceUsage = VoiceUsage.FromEnvironment();
 
     private bool _initialized;
@@ -80,6 +81,7 @@ public sealed class GameEngine : IDisposable
 
         EngineLog.Info("Starting SlavicGame engine.");
         _voice ??= VoiceOverService.CreateFromEnvironment();
+        _riverAmbience ??= RiverAmbienceService.TryCreate();
         _renderer.Initialize(
             _window,
             _world,
@@ -235,6 +237,11 @@ public sealed class GameEngine : IDisposable
             }
 
             SyncCinematicVoice();
+
+            _riverAmbience?.Update(
+                _world.PlayerPosition,
+                _time.DeltaSeconds,
+                _frontend.IsPlaying);
 
             var menuView = _frontend.IsPlaying
                 ? null
@@ -578,6 +585,7 @@ public sealed class GameEngine : IDisposable
         _disposed = true;
         try
         {
+            _riverAmbience?.Dispose();
             _voice?.Dispose();
             _renderer.Dispose();
         }
