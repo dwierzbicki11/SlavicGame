@@ -120,6 +120,10 @@ public sealed class RitualExecution
         if (!validation.Started)
             return validation;
 
+        var quest = world.Progress.Quests.Get(SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.ContractQuestId);
+        if (quest.Phase == QuestPhase.Preparation)
+            quest.SetPhase(QuestPhase.Encounter);
+
         _stepIndex = 0;
         _stepRemaining = StepDurationSeconds;
         _healthAtStart = world.Player.Health;

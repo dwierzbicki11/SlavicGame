@@ -31,6 +31,7 @@ void Check(bool condition, string name)
     checks++;
 }
 MagicCinematicRegression.Run(Check);
+VerticalSliceQuestInteractionRegression.Run(Check);
 
 // River terrain and water surface must agree; distant water should be culled.
 var riverTerrain = new Terrain(513, 513, 4f);

@@ -419,6 +419,14 @@ public sealed class GameEngine : IDisposable
         if (_window.ConsumeKeyPress(Key.L) && !_world.Rituals.IsPerforming && !_world.Magic.IsCasting)
             _world.SpellLearning.TryLearnCurrent(_world);
 
+        if (_window.ConsumeKeyPress(Key.E) &&
+            !_world.Rituals.IsPerforming &&
+            !_world.Magic.IsCasting &&
+            !_world.Cinematics.IsPlaying)
+        {
+            _world.QuestInteractions.TryInteract(_world);
+        }
+
         if (_window.ConsumeKeyPress(Key.F) && !_world.Rituals.IsPerforming)
         {
             var spell = _world.Magic.Current;
