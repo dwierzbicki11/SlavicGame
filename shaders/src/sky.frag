@@ -68,8 +68,8 @@ vec3 AtmosphericBase(vec3 direction, vec3 sunDirection, float daylight, float ni
     float up = clamp(direction.y, -0.15, 1.0);
     float horizon = pow(1.0 - clamp(up, 0.0, 1.0), 2.35);
 
-    vec3 nightZenith = vec3(0.0025, 0.0055, 0.0160);
-    vec3 nightHorizon = vec3(0.010, 0.015, 0.030);
+    vec3 nightZenith = vec3(0.0008, 0.0018, 0.0060);
+    vec3 nightHorizon = vec3(0.0030, 0.0045, 0.0100);
 
     vec3 dayZenith = vec3(0.035, 0.115, 0.260);
     vec3 dayHorizon = vec3(0.36, 0.48, 0.62);
@@ -201,8 +201,8 @@ void main()
         smoothstep(-0.035, 0.025, moonDirection.y) *
         (1.0 - cloudiness * 0.82);
     float moonHalo = pow(max(dot(direction, moonDirection), 0.0), 96.0);
-    color += moon * moonVisibility * 2.5;
-    color += vec3(0.34, 0.43, 0.58) * moonHalo * moonVisibility * 0.20;
+    color += moon * moonVisibility * 1.8;
+    color += vec3(0.34, 0.43, 0.58) * moonHalo * moonVisibility * 0.08;
 
     vec2 cloudMarch = CloudRaymarch(
         direction,
@@ -231,8 +231,8 @@ void main()
             sunsetCloud,
             CelestialParameters.z * (0.44 + forwardScatter * 0.24));
 
-        vec3 nightCloud = vec3(0.028, 0.037, 0.055) +
-            vec3(0.085, 0.105, 0.155) *
+        vec3 nightCloud = vec3(0.008, 0.011, 0.018) +
+            vec3(0.035, 0.045, 0.070) *
             MoonParameters.w *
             cloudMarch.y;
         vec3 cloudColor = mix(
