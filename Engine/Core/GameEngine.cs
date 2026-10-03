@@ -120,7 +120,18 @@ public sealed class GameEngine : IDisposable
 
             if (_frontend.IsPlaying)
             {
-                if (_window.ConsumeKeyPress(Key.Escape))
+                if (_world.Cinematics.IsPlaying)
+                {
+                    if (_window.ConsumeKeyPress(Key.Escape) || _window.ConsumeKeyPress(Key.Space))
+                        _world.Cinematics.Finish(_world);
+                    else
+                        _world.Cinematics.Update(_world, _time.DeltaSeconds);
+                    if (_world.Cinematics.IsPlaying)
+                        _camera.SetCinematicPose(_world.Cinematics.CameraPosition, _world.Cinematics.CameraTarget);
+                    else
+                        _camera.ResumeFollow(_world.PlayerPosition, _world.Terrain);
+                }
+                else if (_window.ConsumeKeyPress(Key.Escape))
                 {
                     TryAutosave("pause");
                     _frontend.OpenMainMenu();
@@ -136,7 +147,15 @@ public sealed class GameEngine : IDisposable
                     }
 
                     HandleInput(_time.DeltaSeconds);
-                    _world.Update(_time.DeltaSeconds);
+                    if (!_world.Cinematics.IsPlaying)
+                    {
+                        _world.Update(_time.DeltaSeconds);
+                        _world.Magic.Update(_world, _time.DeltaSeconds);
+                        if (Vector3.Distance(_world.PlayerPosition, new Vector3(-85f, _world.PlayerPosition.Y, 55f)) < 18f)
+                            _world.Cinematics.TryStart(_world, CinematicPlayer.Shrine);
+                    }
+                    if (_world.Cinematics.IsPlaying)
+                        _camera.SetCinematicPose(_world.Cinematics.CameraPosition, _world.Cinematics.CameraTarget);
 
                     _playTimeSeconds += _time.DeltaSeconds;
                     _autosaveSeconds += _time.DeltaSeconds;
@@ -152,6 +171,9 @@ public sealed class GameEngine : IDisposable
                 switch (action)
                 {
                     case FrontendAction.StartGame:
+                        _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
+                        if (_world.Cinematics.IsPlaying)
+                            _camera.SetCinematicPose(_world.Cinematics.CameraPosition, _world.Cinematics.CameraTarget);
                         ApplySettings();
                         _window.SetMouseCapture(true);
                         break;
@@ -377,12 +399,20 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
+        if (_window.ConsumeKeyPress(Key.Q)) _world.Magic.SelectNext();
+        if (_window.ConsumeKeyPress(Key.F)) _world.Magic.TryStart(_world, _camera.GetLookDirection());
+        if (_window.ConsumeKeyPress(Key.C))
+        {
+            _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
+            if (_world.Cinematics.IsPlaying) return;
+        }
+        var canMove = !_world.Magic.IsCasting;
         var input = new PlayerInput(
-            _window.IsKeyDown(Key.W),
-            _window.IsKeyDown(Key.S),
-            _window.IsKeyDown(Key.D),
-            _window.IsKeyDown(Key.A),
-            _window.IsKeyDown(Key.ShiftLeft),
+            canMove && _window.IsKeyDown(Key.W),
+            canMove && _window.IsKeyDown(Key.S),
+            canMove && _window.IsKeyDown(Key.D),
+            canMove && _window.IsKeyDown(Key.A),
+            canMove && _window.IsKeyDown(Key.ShiftLeft),
             _window.MouseDelta);
         PlayerController.Update(_world, _camera, input, deltaSeconds);
         if (_inputDiagnostics) LogInput(input, deltaSeconds);

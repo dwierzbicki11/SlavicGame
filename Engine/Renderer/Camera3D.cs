@@ -47,6 +47,18 @@ public sealed class Camera3D
         Follow(playerPosition, deltaSeconds, terrain);
     }
 
+    public void SetCinematicPose(Vector3 position, Vector3 target)
+    {
+        Position = position;
+        Target = target;
+    }
+
+    public void ResumeFollow(Vector3 playerPosition, Terrain terrain)
+    {
+        _hasFollowed = false;
+        Follow(playerPosition, 0f, terrain);
+    }
+
     public void Rotate(float mouseDeltaX, float mouseDeltaY)
     {
         var maxMouseDelta = 150f;

@@ -30,6 +30,8 @@ void Check(bool condition, string name)
     if (!condition) throw new Exception(name);
     checks++;
 }
+MagicCinematicRegression.Run(Check);
+
 // River terrain and water surface must agree; distant water should be culled.
 var riverTerrain = new Terrain(513, 513, 4f);
 var riverPoint = new Vector3(WaterLandscape.CenterX(0f), 0f, 0f);

@@ -357,3 +357,10 @@ Event and polled mouse deltas are alternative representations of the same moveme
 ### River landscape
 
 A winding shallow river runs north–south roughly 220 metres east of spawn, with a carved channel, wet mud banks, reeds and alder trees. The existing oak, pine, birch and wetland forests remain available across the map. Water uses a distance-culled, low-poly surface in the existing actor draw call, with animated colour ripples. This first pass has no swimming or physical current simulation; the river is fordable.
+
+### First magic and in-engine cinematics
+
+- **Q** cycles Iskra (`ZAR VEK`), Szept Życia (`ZIVA DAR`) and Odsłonięcie śladu (`VEDA NAW`); **F** casts. Incantations are original fictional phrases shown as subtitles; voice acting and microphone recognition are not included.
+- Casting takes 0.9 seconds, stops movement and spends stamina once. Incoming damage interrupts it. Iskra deals 22 damage within 18 metres in front of the player with terrain/obstacle visibility checks; healing restores 25 health; revealing highlights supernatural traces for 12 seconds within 22 metres without granting quest evidence.
+- An eight-second arrival scene plays on first Start; another plays near Kamienny Krąg. Space/Escape skips. Gameplay pauses during the scene; camera control returns afterward. Seen scenes and magic cooldowns survive saving. **C** can start the unseen arrival scene for an existing session.
+- Visual effects are small mesh flashes and trace markers. These are first-pass mechanics, not finished voiced/cinematic production.

@@ -28,6 +28,20 @@ public static class VerticalSliceBootstrap
                 6.0));
         }
 
+        EnsureMagicTraces(world);
         world.Progress.SetFlag("vertical-slice-prepared");
+    }
+    public static void EnsureMagicTraces(WorldState world)
+    {
+        RegisterMagicTrace(world, "trace.shrine-echo", new System.Numerics.Vector3(-85, 0, 55));
+        RegisterMagicTrace(world, "trace.swamp-echo", new System.Numerics.Vector3(80, 0, 28));
+    }
+
+    private static void RegisterMagicTrace(WorldState world, string id, System.Numerics.Vector3 position)
+    {
+        if (world.Progress.Tracking.Tracks.Any(t => t.Id == id)) return;
+        position.Y = world.Terrain.SampleHeight(position) + 0.8f;
+        world.Progress.Tracking.Register(id, TrackCategory.SupernaturalTrace, position,
+            TrackFreshness.Old, id + ".evidence", magicSignature: "echo");
     }
 }
