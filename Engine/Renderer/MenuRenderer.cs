@@ -478,7 +478,7 @@ public sealed class MenuRenderer : IDisposable
         }
     }
 
-    private static readonly Dictionary<char, int[]> Font = new()
+    internal static readonly Dictionary<char, int[]> Font = new()
     {
         ['A'] = [0b01110,0b10001,0b10001,0b11111,0b10001,0b10001,0b10001],
         ['B'] = [0b11110,0b10001,0b10001,0b11110,0b10001,0b10001,0b11110],

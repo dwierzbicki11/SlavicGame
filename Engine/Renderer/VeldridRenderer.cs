@@ -330,6 +330,7 @@ public sealed class VeldridRenderer : IDisposable
         WaterLandscape.AppendSurface(world.Terrain, (float)animationSeconds, camera.Position,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             ref actorVertices, ref actorIndices);
+        MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
 
@@ -339,6 +340,22 @@ public sealed class VeldridRenderer : IDisposable
             world.Player.Stamina / world.Player.MaxStamina,
             settings.ShowFps,
             menuView is null);
+        if (menuView is null)
+        {
+            if (world.Cinematics.IsPlaying)
+            {
+                AddHudQuad(0, 0, displayWidth, 55, new Vector4(0, 0, 0, 1));
+                AddHudQuad(0, displayHeight - 85, displayWidth, 85, new Vector4(0, 0, 0, 1));
+                AddGameplayText(world.Cinematics.Subtitle, 18, displayHeight - 66, displayWidth - 36);
+                AddGameplayText("SPACJA / ESC - POMIN", 18, displayHeight - 32, displayWidth - 36);
+            }
+            else
+            {
+                AddGameplayText($"Q CZAR: {world.Magic.Current.Name} / F RZUC", 18, 122, displayWidth - 36);
+                AddGameplayText($"{world.Magic.Current.Incantation} / KOSZT {world.Magic.Current.Cost:0} / ODNOWIENIE {world.Magic.Cooldown:0.0}", 18, 146, displayWidth - 36);
+                AddGameplayText(world.Magic.Message, 18, 170, displayWidth - 36);
+            }
+        }
         if (_hudVertices.Count > _hudVertexCapacity)
         {
             _hudVertexCapacity = (uint)Math.Max(_hudVertices.Count, _hudVertexCapacity * 2);
@@ -645,6 +662,31 @@ public sealed class VeldridRenderer : IDisposable
         AddHudQuad(barX, 78f, barWidth * healthRatio, barHeight, new Vector4(0.62f, 0.16f, 0.12f, 0.95f));
         AddHudQuad(barX, 96f, barWidth, barHeight, new Vector4(0.08f, 0.07f, 0.06f, 0.82f));
         AddHudQuad(barX, 96f, barWidth * staminaRatio, barHeight, new Vector4(0.72f, 0.58f, 0.18f, 0.95f));
+    }
+
+    private void AddGameplayText(string text, float x, float y, float availableWidth)
+    {
+        var scale = Math.Clamp(availableWidth / Math.Max(1, text.Length * 6f), 0.8f, 2f);
+        AddHudQuad(x - 4, y - 4, text.Length * 6f * scale + 8, 7 * scale + 8, new Vector4(0, 0, 0, 0.7f));
+        foreach (var character in text.ToUpperInvariant())
+        {
+            if (MenuRenderer.Font.TryGetValue(character, out var glyph))
+                for (var row = 0; row < 7; row++)
+                for (var col = 0; col < 5; col++)
+                    if ((glyph[row] & (1 << (4 - col))) != 0)
+                    {
+                        // HUD quads have one-pixel padding, compensate for text spacing.
+                        var color = new Vector4(0.9f, 0.93f, 1f, 1f);
+                        var px = x + col * scale; var py = y + row * scale;
+                        _hudVertices.Add(new HudVertex(new Vector2(px, py), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px + scale, py), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px + scale, py + scale), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px, py), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px + scale, py + scale), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px, py + scale), color));
+                    }
+            x += 6 * scale;
+        }
     }
 
     private void AddHudQuad(float x, float y, float width, float height)

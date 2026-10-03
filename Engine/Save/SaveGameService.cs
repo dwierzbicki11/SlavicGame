@@ -20,7 +20,10 @@ public sealed record GameSaveSnapshot(
     DivineRelationshipSnapshot[] DivineRelationships, RelationshipSnapshot[] Relationships,
     string[] WorldFlags, TrackSnapshot[] Tracks, NavigationSnapshot Navigation,
     MapOverlaySnapshot MapOverlay, BoundaryPhenomenonSnapshot[] BoundaryPhenomena,
-    EnemySaveEntry[] Enemies);
+    EnemySaveEntry[] Enemies)
+{
+    public SlavicGame.Engine.Magic.MagicSnapshot? Magic { get; init; }
+}
 
 public static class SaveGameService
 {
@@ -48,7 +51,7 @@ public static class SaveGameService
                 return new EnemySaveEntry(snapshot.Id,
                     new SavedVector3(snapshot.Position.X, snapshot.Position.Y, snapshot.Position.Z),
                     snapshot.Health, snapshot.State);
-            }).ToArray());
+            }).ToArray()) { Magic = world.Magic.Capture() };
     }
 
     public static string Serialize(WorldState world, bool indented = false) =>
@@ -73,6 +76,8 @@ public static class SaveGameService
         if (snapshot.Version != CurrentVersion)
             throw new NotSupportedException($"Unsupported save version {snapshot.Version}.");
 
+        world.Magic.Restore(snapshot.Magic);
+        world.Cinematics.Reset();
         world.SetPlayerPosition(new System.Numerics.Vector3(snapshot.PlayerPosition.X, snapshot.PlayerPosition.Y, snapshot.PlayerPosition.Z));
         world.Time.SetTimeOfDay(snapshot.TimeOfDayHours);
         world.Weather.SetCondition(snapshot.Weather, immediate: true);
@@ -85,6 +90,7 @@ public static class SaveGameService
         world.Progress.Relationships.Restore(snapshot.Relationships ?? []);
         world.Progress.RestoreFlags(snapshot.WorldFlags ?? []);
         world.Progress.Tracking.Restore(snapshot.Tracks ?? []);
+        SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.EnsureMagicTraces(world);
         world.Progress.Navigation.Restore(snapshot.Navigation ?? new NavigationSnapshot(null, []));
         world.Progress.MapOverlay.Restore(snapshot.MapOverlay ?? new MapOverlaySnapshot([], [], null, false));
         world.Cosmology.Restore(snapshot.BoundaryPhenomena ?? []);
