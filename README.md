@@ -389,3 +389,8 @@ The R0 river is now gameplay-active: movement slows with real water depth, deep 
 ### Environmental exposure
 
 Deep river water now physically drifts the player downstream. Rain can keep the player wet away from water, wet/windy exposure builds a non-damaging chill state that reduces stamina recovery, and two animated campfires provide visible heat sources that rapidly dry and warm the player.
+
+
+### River current and exposure
+
+Deeper river sections now push the player downstream. Rain keeps clothing wet, wind and wetness can build a light chill state that reduces stamina recovery, while animated village/forest campfires act as real heat sources that accelerate drying and warming.
