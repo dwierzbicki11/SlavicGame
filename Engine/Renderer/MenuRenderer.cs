@@ -147,10 +147,15 @@ public sealed class MenuRenderer : IDisposable
             2.2f,
             new Vector4(0.72f, 0.68f, 0.58f, 0.92f));
 
-        if (view.Panels.Count == 1)
+        if (view.Tabs.Count == 0)
+        {
             DrawMainPanel(view.Panels[0], w, h);
+        }
         else
-            DrawSettingsPanels(view.Panels, w, h);
+        {
+            DrawTabs(view.Tabs, w);
+            DrawSettingsPage(view.Panels[0], w, h);
+        }
 
         DrawText(
             view.Footer,
@@ -209,95 +214,134 @@ public sealed class MenuRenderer : IDisposable
         }
     }
 
-    private void DrawSettingsPanels(
-        IReadOnlyList<MenuPanelView> panels,
+    private void DrawTabs(
+        IReadOnlyList<MenuTabView> tabs,
+        float width)
+    {
+        const float left = 72f;
+        const float top = 154f;
+        const float gap = 12f;
+        var available = MathF.Max(320f, width - left * 2f);
+        var tabWidth =
+            (available - gap * Math.Max(0, tabs.Count - 1)) /
+            Math.Max(1, tabs.Count);
+
+        for (var i = 0; i < tabs.Count; i++)
+        {
+            var tab = tabs[i];
+            var x = left + i * (tabWidth + gap);
+
+            AddQuad(
+                x,
+                top,
+                tabWidth,
+                38f,
+                tab.Active
+                    ? new Vector4(0.30f, 0.20f, 0.08f, 0.96f)
+                    : new Vector4(0.055f, 0.047f, 0.037f, 0.90f));
+
+            if (tab.Active)
+            {
+                AddQuad(
+                    x,
+                    top + 34f,
+                    tabWidth,
+                    4f,
+                    new Vector4(0.98f, 0.72f, 0.28f, 1f));
+            }
+
+            var scale = 1.75f;
+            var labelWidth = Measure(tab.Label, scale);
+            DrawText(
+                tab.Label,
+                x + MathF.Max(10f, (tabWidth - labelWidth) * 0.5f),
+                top + 10f,
+                scale,
+                tab.Active
+                    ? new Vector4(1f, 0.91f, 0.67f, 1f)
+                    : new Vector4(0.70f, 0.68f, 0.61f, 0.92f));
+        }
+    }
+
+    private void DrawSettingsPage(
+        MenuPanelView panel,
         float width,
         float height)
     {
-        var left = 56f;
-        var top = 180f;
-        var gap = 24f;
-        var available = width - left * 2f;
-        var panelWidth =
-            (available - gap * (panels.Count - 1)) /
-            Math.Max(1, panels.Count);
+        const float left = 72f;
+        const float top = 208f;
+        var panelWidth = MathF.Max(360f, width - left * 2f);
+        var availableRowsHeight = MathF.Max(220f, height - top - 78f);
+        var rowSpacing = MathF.Min(
+            34f,
+            availableRowsHeight / Math.Max(1, panel.Items.Count));
+        var textScale = rowSpacing < 20f
+            ? 1.15f
+            : rowSpacing < 26f
+                ? 1.40f
+                : 1.75f;
+        var selectionHeight = MathF.Max(15f, rowSpacing - 2f);
+        var panelHeight = MathF.Min(
+            height - top - 58f,
+            56f + panel.Items.Count * rowSpacing);
 
-        for (var panelIndex = 0; panelIndex < panels.Count; panelIndex++)
+        AddQuad(
+            left,
+            top,
+            panelWidth,
+            panelHeight,
+            new Vector4(0.042f, 0.035f, 0.027f, 0.90f));
+
+        AddQuad(
+            left,
+            top,
+            panelWidth,
+            4f,
+            new Vector4(0.46f, 0.32f, 0.14f, 0.92f));
+
+        DrawText(
+            panel.Title,
+            left + 18f,
+            top + 16f,
+            2.25f,
+            new Vector4(0.93f, 0.81f, 0.56f, 1f));
+
+        for (var i = 0; i < panel.Items.Count; i++)
         {
-            var panel = panels[panelIndex];
-            var x = left + panelIndex * (panelWidth + gap);
-            var availableRowsHeight = MathF.Max(180f, height - top - 136f);
-            var rowSpacing = MathF.Min(
-                30f,
-                availableRowsHeight / Math.Max(1, panel.Items.Count));
-            var textScale = rowSpacing < 22f
-                ? 1.20f
-                : rowSpacing < 28f
-                    ? 1.48f
-                    : 1.75f;
-            var selectionHeight = MathF.Max(16f, rowSpacing - 2f);
-            var panelHeight = MathF.Min(
-                height - top - 92f,
-                80f + panel.Items.Count * rowSpacing);
+            var item = panel.Items[i];
+            var y = top + 48f + i * rowSpacing;
 
-            AddQuad(
-                x,
-                top,
-                panelWidth,
-                panelHeight,
-                new Vector4(0.042f, 0.035f, 0.027f, 0.88f));
-
-            AddQuad(
-                x,
-                top,
-                panelWidth,
-                4f,
-                new Vector4(0.46f, 0.32f, 0.14f, 0.92f));
+            if (item.Selected)
+            {
+                AddQuad(
+                    left + 10f,
+                    y - 6f,
+                    panelWidth - 20f,
+                    selectionHeight,
+                    new Vector4(0.25f, 0.17f, 0.07f, 0.94f));
+            }
 
             DrawText(
-                panel.Title,
-                x + 18f,
-                top + 18f,
-                2.4f,
-                new Vector4(0.93f, 0.81f, 0.56f, 1f));
+                item.Label,
+                left + 18f,
+                y,
+                textScale,
+                item.Selected
+                    ? new Vector4(1f, 0.90f, 0.62f, 1f)
+                    : new Vector4(0.77f, 0.74f, 0.65f, 0.95f));
 
-            for (var i = 0; i < panel.Items.Count; i++)
+            if (!string.IsNullOrWhiteSpace(item.Value))
             {
-                var item = panel.Items[i];
-                var y = top + 62f + i * rowSpacing;
-
-                if (item.Selected)
-                {
-                    AddQuad(
-                        x + 10f,
-                        y - 8f,
-                        panelWidth - 20f,
-                        selectionHeight,
-                        new Vector4(0.25f, 0.17f, 0.07f, 0.94f));
-                }
-
+                var value = item.Value!;
+                var valueWidth = Measure(value, textScale);
                 DrawText(
-                    item.Label,
-                    x + 16f,
+                    value,
+                    left + panelWidth - valueWidth - 18f,
                     y,
                     textScale,
                     item.Selected
-                        ? new Vector4(1f, 0.90f, 0.62f, 1f)
-                        : new Vector4(0.77f, 0.74f, 0.65f, 0.95f));
-
-                if (!string.IsNullOrWhiteSpace(item.Value))
-                {
-                    var value = item.Value!;
-                    var valueWidth = Measure(value, textScale);
-                    DrawText(
-                        value,
-                        x + panelWidth - valueWidth - 16f,
-                        y,
-                        textScale,
-                        item.Selected
-                            ? new Vector4(1f, 0.78f, 0.35f, 1f)
-                            : new Vector4(0.64f, 0.62f, 0.56f, 0.95f));
-                }
+                        ? new Vector4(1f, 0.78f, 0.35f, 1f)
+                        : new Vector4(0.64f, 0.62f, 0.56f, 0.95f));
             }
         }
     }
