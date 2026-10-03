@@ -30,7 +30,15 @@ fi
 
 if [[ ! -x "$VENV/bin/python" ]]; then
     echo "[tts] Creating virtual environment at $VENV"
-    "$PYTHON" -m venv "$VENV"
+    if ! "$PYTHON" -m venv "$VENV"; then
+        echo
+        echo "[tts] Could not create the Python virtual environment."
+        echo "[tts] On Ubuntu/Linux Mint install the venv package, for example:"
+        echo "      sudo apt install python3-venv"
+        echo "      # or, if your distro splits it by version:"
+        echo "      sudo apt install python3.12-venv"
+        exit 1
+    fi
 fi
 
 VENV_PY="$VENV/bin/python"
