@@ -147,6 +147,7 @@ public sealed class WorldState
         SetPlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
         SpellLearning.Update(this);
+        SpellLearning.RefreshMessage(this);
         foreach (var enemy in _enemies)
         {
             enemy.Update(this, deltaSeconds);
