@@ -340,6 +340,13 @@ public sealed class VeldridRenderer : IDisposable
             (float)animationSeconds,
             ref actorVertices,
             ref actorIndices);
+        RainEffectMesh.Append(
+            world,
+            camera.Position,
+            (float)animationSeconds,
+            settings.CloudQuality,
+            ref actorVertices,
+            ref actorIndices);
         MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
@@ -429,6 +436,9 @@ public sealed class VeldridRenderer : IDisposable
 
         var screenSize = new Vector4(displayWidth, displayHeight, 0, 0);
         var celestial = CelestialLighting.Evaluate(world.Time, world.Weather);
+        var lightning = WeatherVisuals.LightningFlash(
+            world.Weather,
+            animationSeconds);
         var atmosphereColor = GetAtmosphereColor(world.Time, world.Weather, celestial);
         var fogParameters = new Vector4(
             atmosphereColor.R,
@@ -436,12 +446,16 @@ public sealed class VeldridRenderer : IDisposable
             atmosphereColor.B,
             world.Weather.FogDensity);
         var lightingParameters = new Vector4(
-            celestial.SunIntensity,
+            celestial.SunIntensity + lightning * 1.55f,
             celestial.SunDirection.X,
             celestial.SunDirection.Y,
             celestial.SunDirection.Z);
-        var sunColorTime = new Vector4(
+        var stormLightColor = Vector3.Lerp(
             celestial.SunColor,
+            new Vector3(0.72f, 0.82f, 1.00f),
+            lightning);
+        var sunColorTime = new Vector4(
+            stormLightColor,
             (float)(world.Time.TimeOfDayHours / 24.0));
         var skyWeather = new Vector4(
             world.Weather.Cloudiness,
@@ -455,7 +469,7 @@ public sealed class VeldridRenderer : IDisposable
             celestial.NightFactor,
             celestial.LunarPhase,
             celestial.TwilightFactor,
-            0f);
+            lightning);
         var graphicsFeatures0 = new Vector4(
             settings.VolumetricClouds ? 1f : 0f,
             settings.CloudShadows ? 1f : 0f,

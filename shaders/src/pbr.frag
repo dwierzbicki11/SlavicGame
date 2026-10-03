@@ -95,6 +95,8 @@ void main()
     vec4 baseSample = texture(sampler2D(BaseColorTexture, MaterialSampler), fsin_TexCoord);
     vec3 albedo = max(baseSample.rgb * BaseColorFactor.rgb, vec3(0.0));
     float alpha = baseSample.a * BaseColorFactor.a;
+    float rainWetness = clamp(SkyWeather.y, 0.0, 1.0);
+    albedo *= mix(1.0, 0.84, rainWetness);
 
     float modelPbr = GraphicsFeatures2.y;
     float normalMapping = GraphicsFeatures3.x;
@@ -125,6 +127,10 @@ void main()
             fsin_TexCoord).rgb;
         metallic = clamp(MaterialFactors.x * mr.b, 0.0, 1.0);
         roughness = clamp(MaterialFactors.y * mr.g, 0.06, 1.0);
+        roughness = mix(
+            roughness,
+            max(0.08, roughness * 0.58),
+            rainWetness);
     }
 
     vec3 viewDirection = normalize(fsin_CameraPosition - fsin_WorldPosition);

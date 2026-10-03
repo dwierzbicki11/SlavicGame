@@ -226,6 +226,8 @@ void main()
         0.98 + 0.03 * macro,
         0.97 + 0.04 * macro,
         0.95 + 0.025 * macro);
+    float rainWetness = clamp(SkyWeather.y, 0.0, 1.0);
+    albedo *= mix(1.0, 0.78, rainWetness);
 
     float terrainPbr = GraphicsFeatures2.x;
     vec3 baseNormal = normalize(fsin_WorldNormal);
@@ -259,6 +261,10 @@ void main()
                 SampleScalar(SwampRoughness, worldXZ, swampScale, 4.1) * weightsB.y +
                 SampleScalar(RockRoughness, worldXZ, rockScale, 5.4) * weightsB.z;
             roughness = clamp(roughness, 0.08, 1.0);
+            roughness = mix(
+                roughness,
+                max(0.12, roughness * 0.48),
+                rainWetness);
 
             ao =
                 SampleScalar(GrassAo, worldXZ, grassScale, 0.2) * weightsA.x +
@@ -297,7 +303,11 @@ void main()
     float directShadow = cloudShadow * geometryShadow;
     float hemisphere = mix(0.18, 0.64, clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));
 
-    float wetness = clamp(weightsB.x * 0.82 + weightsB.y * 0.66, 0.0, 1.0);
+    float materialWetness = clamp(
+        weightsB.x * 0.82 + weightsB.y * 0.66,
+        0.0,
+        1.0);
+    float wetness = max(materialWetness, rainWetness * 0.82);
     float cavity = clamp(1.0 - normal.y, 0.0, 1.0);
     float geometricOcclusion = 1.0 - cavity * 0.14 - wetness * 0.06;
     float ambientOcclusion = clamp(ao * geometricOcclusion, 0.16, 1.0);
