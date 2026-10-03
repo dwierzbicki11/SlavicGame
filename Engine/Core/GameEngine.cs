@@ -474,6 +474,15 @@ public sealed class GameEngine : IDisposable
                 _world.Dialogue.TryStartNearest(_world);
         }
 
+        if (_world.Dialogue.IsOpen)
+        {
+            _camera.Follow(
+                _world.PlayerPosition,
+                (float)deltaSeconds,
+                _world.Terrain);
+            return;
+        }
+
         if (_window.ConsumeKeyPress(Key.F) && !_world.Rituals.IsPerforming)
         {
             var spell = _world.Magic.Current;
@@ -494,7 +503,10 @@ public sealed class GameEngine : IDisposable
             _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
             if (_world.Cinematics.IsPlaying) return;
         }
-        var canMove = !_world.Magic.IsCasting && !_world.Rituals.IsPerforming;
+        var canMove =
+            !_world.Magic.IsCasting &&
+            !_world.Rituals.IsPerforming &&
+            !_world.Dialogue.IsOpen;
         var input = new PlayerInput(
             canMove && _window.IsKeyDown(Key.W),
             canMove && _window.IsKeyDown(Key.S),
