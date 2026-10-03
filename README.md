@@ -429,3 +429,8 @@ The Black Swamp now has a visible nocturnal `ENTITY_MISSING_ECHO_F` apparition. 
 ### Visible world items
 
 Key vertical-slice items now use dynamic GLB visuals instead of invisible interaction points. The missing-person keepsake, forest resin source, marsh-herb bundle and ritual thread appear only while their gameplay state allows them and disappear immediately after collection/receipt without rebuilding static world batches.
+
+
+### Ambient wildlife
+
+R0 now includes a bounded ambient fauna population using the existing animated deer, boar, wolf and raven GLBs. Ground animals wander deterministic home ranges and flee from nearby players; ravens circle above terrain with Fly animation. Wildlife stays out of the village core and is culled before dynamic mesh generation beyond 150 m to keep the system affordable on low-end GPUs.
