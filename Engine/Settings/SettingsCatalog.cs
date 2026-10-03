@@ -148,6 +148,13 @@ public static class SettingsCatalog
             (s, direction) =>
                 s.ModelLod = CycleEnum(s.ModelLod, direction)),
         new(
+            "far-vegetation",
+            SettingCategory.Graphics,
+            "DALEKIE DRZEWA",
+            s => FarVegetationName(s.FarVegetation),
+            (s, direction) =>
+                s.FarVegetation = CycleEnum(s.FarVegetation, direction)),
+        new(
             "upscaler",
             SettingCategory.Graphics,
             "UPSCALER",
@@ -266,6 +273,15 @@ public static class SettingsCatalog
             ShadowDistanceQuality.Far => "180M",
             ShadowDistanceQuality.Ultra => "210M",
             _ => "180M"
+        };
+
+    private static string FarVegetationName(FarVegetationMode mode) =>
+        mode switch
+        {
+            FarVegetationMode.Off => "WYL",
+            FarVegetationMode.Impostors => "IMPOSTORY",
+            FarVegetationMode.FullMeshes => "PELNE",
+            _ => "IMPOSTORY"
         };
 
     private static string ModelLodName(ModelLodQuality quality) =>
