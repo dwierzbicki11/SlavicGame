@@ -13,14 +13,13 @@ public static class FsrPresentationPolicy
         outputHeight >= inputHeight &&
         (outputWidth > inputWidth || outputHeight > inputHeight);
 
-    // The EASU result is another offscreen image. Whenever the real FSR
-    // upscale path runs, RCAS is the final offscreen->swapchain transition
-    // and owns one vertical orientation correction.
+    // Vulkan render targets and swapchain presentation use the same canonical
+    // fullscreen UV orientation in SlavicGame. FSR must not add an extra Y
+    // inversion in EASU or RCAS.
     public static bool RequiresFinalRcasYFlip(
         UpscalerMode upscaler,
         uint inputWidth,
         uint inputHeight,
         uint outputWidth,
-        uint outputHeight) =>
-        UsesUpscalePass(upscaler, inputWidth, inputHeight, outputWidth, outputHeight);
+        uint outputHeight) => false;
 }
