@@ -201,7 +201,7 @@ public sealed class FrontendController
                     CategoryName(activeCategory),
                     items)
             ],
-            "TAB  ZAKLADKA    STRZALKI / W S  WYBOR    LEWO PRAWO / ENTER  ZMIANA    ESC  POWROT");
+            "TAB ZAKLADKA   W/S WYBOR   A/D LUB ENTER ZMIANA   ESC POWROT");
     }
 
     private static int Wrap(int value, int count)
