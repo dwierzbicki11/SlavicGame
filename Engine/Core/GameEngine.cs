@@ -69,6 +69,7 @@ public sealed class GameEngine : IDisposable
         EngineLog.Info("Starting SlavicGame engine.");
         _renderer.Initialize(_window, _world, _vsync);
         ApplySettings();
+        _camera.Follow(_world.PlayerPosition, 0f, _world.Terrain);
         _window.SetMouseCapture(false);
         _initialized = true;
         EngineLog.Info("Engine initialization complete.");
