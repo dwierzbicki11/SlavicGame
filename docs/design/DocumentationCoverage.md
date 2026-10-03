@@ -6,7 +6,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 Projekt ma pełny szkielet designu i author truth, production bibles R0–R6 oraz production cards MQ00–MQ56. `story/ProductionNpcRoster.md` definiuje NPC lifecycle/persistence, `bestiary/ProductionBestiaryRoster.md` roster istot 1.0, `research/bestiary/ResearchCardIndex.md` research ownerów, `design/RegionalContentAssetCatalog.md` rodziny content/assets R0–R6, a `quests/SideQuestCatalog.md` zamyka planistyczny scope side-content dla wszystkich regionów. `quests/SideQuestCardsR0.md`–`SideQuestCardsR6.md` zamykają implementacyjny first pass wszystkich 21 planowanych slotów R0–R6. Implementacja systemów i regionalnego content pipeline nie musi czekać na dalsze dopisywanie fabuły.
 
-Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, source-strength/identity locki, finalne culture/material locators, konkretne asset manifests i targety performance wymagające pomiarów.
+Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, identity lock forest-guardian, finalne culture/material locators, konkretne asset manifests i targety performance wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
@@ -17,7 +17,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 | Side quest | quests/SideQuestCatalog.md + quests/SideQuestCardsR0.md–SideQuestCardsR6.md + QuestDesign.md | R0–R6, 21/21 production cards v0.1 |
 | Regiony | world/RegionBibleIndex.md + R0–R6 bibles | 7/7 production bibles v0.1 |
 | Panteon/religia | pantheon/* + research/pantheon/* | first pass; krytyczne źródła nadal rozwijane |
-| Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md | scope 1.0 v0.1; południca i forest-guardian mają jawne locki |
+| Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md | scope 1.0 v0.1; południca source-strength/region-fit PASS v0.2; forest-guardian ma identity lock |
 | Kultury | world/Cultures.md + world/MacroCultures.md + research/cultures/* | framework v0.1; R0–R5 evidence packages v0.1; production locators/art locks otwarte |
 | Quest framework | design/QuestDesign.md | v0.1 |
 | Vertical slice quest | quests/LightOverSwamp*.md | pełny pakiet v0.1 |
@@ -46,7 +46,7 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, dialogi/VO, s
 1. finalne liczby balansu: damage, economy, drop rates, reputation, evidence thresholds;
 2. finalne dialogi, VO i lokalizacja;
 3. finalne personalia/łączenie slotów NPC, appearance i killability windows;
-4. bestiariusz: source-strength/region-fit południcy i identity lock `forest-guardian`, plus finalne targety kontraktów `SQ_R1_02`, `SQ_R2_02`, `SQ_R3_03` i `SQ_R4_02`;
+4. bestiariusz: identity lock `forest-guardian`, plus finalne targety kontraktów `SQ_R1_02`, `SQ_R2_02`, `SQ_R3_03` i `SQ_R4_02`; południca ma zamknięty source-strength/region-fit, ale finalne appearance i placement pozostają art/data lockiem;
 5. R0–R5 mają culture evidence packages v0.1, ale finalne locatory oraz costume/ornament/religion-material/naming i regionalne technology/art locki nadal są jawnie otwarte; R3 dodatkowo ma maritime/fishing/salvage/language/legal locki, R4 mining/geology/transport/craft locki, a R5 transport/dwelling/costume/old-site/economy/naming/religion locki;
 6. konkretne finalne modele/materials/animations/audio/VFX i manifesty poza vertical slice;
 7. dalsze creature assignments, encounter/POI placement oraz decyzje o scaleniu side-quest slotów po playtestach;
@@ -60,13 +60,12 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0–R6 mają implementacyjny first pass wszystkich 21 side-questów. Culture research ma stabilne IDs/source policy, a R0–R5 mają evidence packages v0.1. R5 używa osobnej wieloźródłowej bazy porównawczej i jawnie zabrania kopiowania jednego realnego ludu; finalne historyczne/materialne detale nadal wymagają locatorów. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** Regionalny scope rodzin content/assets i side-content jest zdefiniowany; R0–R6 mają implementacyjny first pass wszystkich 21 side-questów. Culture research ma stabilne IDs/source policy, a R0–R5 mają evidence packages v0.1. Południca ma source-strength/region-fit PASS v0.2: implementacja może opierać encounter na `time-of-day + cultivated field + telegraph + avoidance`, bez udawania finalnego appearance jako faktu historycznego. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. bestiary source-strength/region-fit pass południcy;
-2. identity lock `forest-guardian`;
-3. krytyczne źródła panteonu i finalne material-culture locators;
-4. regional encounter/vendor/item catalogs;
-5. konkretne asset manifests po art/research lockach;
-6. później balance/playtest/performance locks.
+1. identity lock `forest-guardian`;
+2. krytyczne źródła panteonu i finalne material-culture locators;
+3. regional encounter/vendor/item catalogs;
+4. konkretne asset manifests po art/research lockach;
+5. później balance/playtest/performance locks.
