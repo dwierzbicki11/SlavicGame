@@ -220,7 +220,7 @@ public sealed class PbrModelRenderer : IDisposable
             {
                 RenderableKind.GroundClutter =>
                     Math.Min(renderDistance, groundClutterDistance),
-                RenderableKind.Vegetation =>
+                RenderableKind.Tree or RenderableKind.Vegetation =>
                     Math.Min(renderDistance, vegetationDistance),
                 _ => renderDistance
             };
@@ -295,7 +295,7 @@ public sealed class PbrModelRenderer : IDisposable
             {
                 RenderableKind.GroundClutter =>
                     Math.Min(shadowDistance, groundClutterDistance),
-                RenderableKind.Vegetation =>
+                RenderableKind.Tree or RenderableKind.Vegetation =>
                     Math.Min(shadowDistance, vegetationDistance),
                 _ => shadowDistance
             };
