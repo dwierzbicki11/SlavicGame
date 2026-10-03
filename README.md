@@ -353,3 +353,7 @@ dotnet run --project SlavicGame.csproj -- --mouse-warp
 Add `--input-debug` to print half-second input totals and camera angles, or `--windowed` to compare capture outside fullscreen. `Input pipeline v3` at startup identifies this input implementation.
 
 Event and polled mouse deltas are alternative representations of the same movement. The runtime preserves delivered mouse events when the polled accumulator is empty, without adding the two sources.
+
+### River landscape
+
+A winding shallow river runs north–south roughly 220 metres east of spawn, with a carved channel, wet mud banks, reeds and alder trees. The existing oak, pine, birch and wetland forests remain available across the map. Water uses a distance-culled, low-poly surface in the existing actor draw call, with animated colour ripples. This first pass has no swimming or physical current simulation; the river is fordable.

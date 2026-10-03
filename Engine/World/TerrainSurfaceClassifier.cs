@@ -85,7 +85,8 @@ public static class TerrainSurfaceClassifier
             swampMask * (0.28f + moistureNoise * 0.46f) +
             pathMask * lowlandWetness * 0.22f +
             villageYard * lowlandWetness * 0.18f;
-        mud = Math.Clamp(mud, 0f, 1f);
+        var riverBank = 1f - SmoothStep(0f, 20f, WaterLandscape.BankDistance(point));
+        mud = Math.Clamp(MathF.Max(mud, riverBank * 0.95f), 0f, 1f);
 
         var swamp = swampMask * (1f - mud * 0.52f);
         var path = pathMask * (1f - swampMask * 0.72f) * (1f - mud * 0.34f);

@@ -121,6 +121,17 @@ public static class WorldDecorationGenerator
         foreach (var zone in ForestLayout.Zones)
             ScatterForestZone(result, terrain, random, zone);
 
+        // Riparian reeds and alder groves follow both banks, leaving the channel clear.
+        for (var i = 0; i < 100; i++)
+        {
+            var z = -940f + i * 19f;
+            var side = i % 2 == 0 ? -1f : 1f;
+            var x = WaterLandscape.CenterX(z) + side * (WaterLandscape.HalfWidth(z) + 5f + random.NextSingle() * 9f);
+            AddInstance(result, terrain, random, $"riverbank-{i:000}",
+                i % 5 == 0 ? WetlandTrees[0] : SwampVegetation[1 + i % 3],
+                new Vector2(x, z), 0.75f, 1.25f);
+        }
+
         return result;
     }
 
@@ -194,6 +205,8 @@ public static class WorldDecorationGenerator
                 MathF.Cos(angle) * distance,
                 MathF.Sin(angle) * distance);
 
+            if (WaterLandscape.BankDistance(point) < 4f)
+                continue;
             if (Vector2.Distance(point, center) < exclusionRadius)
                 continue;
             if (avoidTrails && ForestLayout.IsTrailCorridor(point))
@@ -244,6 +257,8 @@ public static class WorldDecorationGenerator
                 MathF.Cos(angle) * distance,
                 MathF.Sin(angle) * distance);
 
+            if (WaterLandscape.BankDistance(point) < 4f)
+                continue;
             if (ForestLayout.IsTrailCorridor(point))
                 continue;
 
