@@ -394,6 +394,15 @@ public sealed class VeldridRenderer : IDisposable
                         290,
                         displayWidth - 36);
                 }
+
+                if (!string.IsNullOrWhiteSpace(world.WaterInteraction.HudStatus))
+                {
+                    AddGameplayText(
+                        world.WaterInteraction.HudStatus,
+                        18,
+                        314,
+                        displayWidth - 36);
+                }
             }
         }
         if (_hudVertices.Count > _hudVertexCapacity)
