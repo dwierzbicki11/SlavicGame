@@ -19,12 +19,22 @@ public static class FrontendSettingsRegression
 
         var settings = new GameSettings();
         var resolution = definitions.Single(item => item.Id == "resolution");
+        settings.Upscaler = UpscalerMode.Fsr1;
+        settings.FsrQuality = FsrQualityMode.Performance;
         var originalResolution = settings.Resolution;
         resolution.Change(settings, 1);
         check(settings.Resolution != originalResolution &&
               settings.ResolutionSize.Width > 0 &&
               settings.ResolutionSize.Height > 0,
             "Frontend resolution setting cycles valid render sizes");
+        check(settings.FsrQuality == FsrQualityMode.Custom,
+            "Manual render resolution overrides automatic FSR quality sizing");
+        check(resolution.ValueText(settings) == settings.ResolutionSize.ToString(),
+            "Manual render resolution displays the effective custom size");
+
+        settings.FsrQuality = FsrQualityMode.Quality;
+        check(resolution.ValueText(settings).StartsWith("AUTO ", StringComparison.Ordinal),
+            "Automatic FSR mode does not pretend the manual render resolution is active");
 
         var windowResolution = definitions.Single(item => item.Id == "window-resolution");
         var originalWindowResolution = settings.WindowResolution;
