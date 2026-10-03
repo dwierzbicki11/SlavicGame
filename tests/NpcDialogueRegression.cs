@@ -131,6 +131,15 @@ internal static class NpcDialogueRegression
         quest.SetPhase(QuestPhase.Investigation);
 
         world.NpcWorld.Update(world);
+        var familyAfterDialogue =
+            world.NpcWorld.Find("missing-family")
+            ?? throw new Exception("Missing family NPC disappeared after dialogue");
+
+        check(Vector3.Distance(
+                  familyDialoguePosition,
+                  familyAfterDialogue.Position) < 0.05f,
+            "Speaker resumes routine from the dialogue position without teleporting");
+
         check(world.Dialogue.Start(world, "missing-family") &&
               world.Dialogue.CurrentNode?.Id == "mf.keepsake",
             "Keepsake changes the family's dialogue start state");
