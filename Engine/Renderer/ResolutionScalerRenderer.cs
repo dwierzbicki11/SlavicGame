@@ -118,7 +118,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
                 ShaderStages.Fragment)));
 
         _easuConstants = factory.CreateBuffer(new BufferDescription(
-            64,
+            80,
             BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _rcasConstants = factory.CreateBuffer(new BufferDescription(
             16,
@@ -551,6 +551,11 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
             Bits(0f),
             Bits(4f * rcpIh),
+            0u,
+            0u,
+
+            outputWidth,
+            outputHeight,
             0u,
             0u
         ];
