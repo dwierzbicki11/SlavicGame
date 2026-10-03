@@ -2,53 +2,193 @@ using System.Numerics;
 
 namespace SlavicGame.Engine.World;
 
-// A shallow, fordable river: water is visual; swimming is a future mechanic.
+// Shallow fordable river. The terrain owns the channel; the water ribbon follows
+// the channel's local downstream level instead of floating at one global Y.
 public static class WaterLandscape
 {
     public const float Level = -3f;
-    public static float CenterX(float z) => 220f + 48f * MathF.Sin(z * 0.007f) + 18f * MathF.Sin(z * 0.019f);
-    public static float HalfWidth(float z) => 14f + 3f * MathF.Sin(z * 0.011f);
-    public static float BankDistance(Vector2 point) => MathF.Abs(point.X - CenterX(point.Y)) - HalfWidth(point.Y);
+    public const float BedDepth = 1.30f;
+    public const float ShoreDepth = 0.08f;
+    public const float BankInset = 1.40f;
+    public const float BankShoulderWidth = 8f;
+    public const float DownstreamSlope = 0.0012f;
+
+    private const float SurfaceStep = 4f;
+    private const int SurfaceColumns = 5;
+
+    public static float CenterX(float z) =>
+        220f +
+        48f * MathF.Sin(z * 0.007f) +
+        18f * MathF.Sin(z * 0.019f);
+
+    public static float HalfWidth(float z) =>
+        14f + 3f * MathF.Sin(z * 0.011f);
+
+    public static float SurfaceHalfWidth(float z) =>
+        MathF.Max(2f, HalfWidth(z) - BankInset);
+
+    public static float WaterLevel(float z) =>
+        Level - z * DownstreamSlope;
+
+    public static float BedLevel(float z) =>
+        WaterLevel(z) - BedDepth;
+
+    public static float BankDistance(Vector2 point) =>
+        MathF.Abs(point.X - CenterX(point.Y)) - HalfWidth(point.Y);
+
+    public static Vector2 FlowDirection(float z)
+    {
+        const float sample = 1f;
+        var previous = new Vector2(CenterX(z - sample), z - sample);
+        var next = new Vector2(CenterX(z + sample), z + sample);
+        var direction = next - previous;
+        return direction.LengthSquared() > 0.000001f
+            ? Vector2.Normalize(direction)
+            : Vector2.UnitY;
+    }
 
     public static float ShapeHeight(float x, float z, float original)
     {
-        var distance = BankDistance(new Vector2(x, z));
-        var blend = Math.Clamp((18f - distance) / 18f, 0f, 1f);
-        blend = blend * blend * (3f - 2f * blend);
-        // Cap banks below the water at the channel edge, even on high ground.
-        return original + (MathF.Min(original, Level - 0.7f) - original) * blend;
+        var offset = MathF.Abs(x - CenterX(z));
+        var halfWidth = HalfWidth(z);
+        var channelHalfWidth = SurfaceHalfWidth(z);
+        var water = WaterLevel(z);
+
+        if (offset <= channelHalfWidth)
+        {
+            var normalized = Math.Clamp(
+                offset / MathF.Max(channelHalfWidth, 0.001f),
+                0f,
+                1f);
+            var edgeBlend = SmoothStep(0.58f, 1f, normalized);
+            var target = Lerp(
+                water - BedDepth,
+                water - ShoreDepth,
+                edgeBlend);
+
+            // Carve only downward inside the actual wetted channel.
+            return MathF.Min(original, target);
+        }
+
+        var shoulderDistance = offset - channelHalfWidth;
+        if (shoulderDistance >= BankShoulderWidth)
+            return original;
+
+        // Rise from the shallow wet edge back to untouched terrain. Unlike the
+        // old implementation this never forces the dry bank below water level.
+        var shoulderBlend = SmoothStep(
+            0f,
+            1f,
+            shoulderDistance / BankShoulderWidth);
+        var shore = water - ShoreDepth;
+        return Lerp(shore, original, shoulderBlend);
     }
 
-    public static void AppendSurface(Terrain terrain, float seconds, Vector3 camera, float range,
-        ref TerrainVertex[] vertices, ref uint[] indices)
+    public static void AppendSurface(
+        Terrain terrain,
+        float seconds,
+        Vector3 camera,
+        float range,
+        ref TerrainVertex[] vertices,
+        ref uint[] indices)
     {
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
         var extentZ = (terrain.Depth - 1) * terrain.CellSize * 0.5f;
         var extentX = (terrain.Width - 1) * terrain.CellSize * 0.5f;
-        // Two triangles per 8 metres, reusing the existing actor draw call.
-        for (var z = -extentZ; z < extentZ; z += 8f)
+
+        for (var z = -extentZ; z < extentZ; z += SurfaceStep)
         {
-            var end = MathF.Min(z + 8f, extentZ);
-            var x = CenterX(z);
-            if (x - HalfWidth(z) < -extentX || x + HalfWidth(z) > extentX) continue;
-            if (CenterX(end) - HalfWidth(end) < -extentX || CenterX(end) + HalfWidth(end) > extentX) continue;
-            if (Vector2.Distance(new Vector2(x, z), new Vector2(camera.X, camera.Z)) > range + 30f) continue;
-            var start = (uint)output.Count;
-            Add(x - HalfWidth(z), z);
-            Add(x + HalfWidth(z), z);
-            Add(CenterX(end) + HalfWidth(end), end);
-            Add(CenterX(end) - HalfWidth(end), end);
-            triangles.AddRange(new uint[] { start, start + 2, start + 1, start, start + 3, start + 2 });
+            var end = MathF.Min(z + SurfaceStep, extentZ);
+            var center = CenterX(z);
+            var endCenter = CenterX(end);
+            var width = SurfaceHalfWidth(z);
+            var endWidth = SurfaceHalfWidth(end);
+
+            if (center - width < -extentX || center + width > extentX)
+                continue;
+            if (endCenter - endWidth < -extentX || endCenter + endWidth > extentX)
+                continue;
+
+            var midpoint = new Vector2(
+                (center + endCenter) * 0.5f,
+                (z + end) * 0.5f);
+            if (Vector2.Distance(
+                    midpoint,
+                    new Vector2(camera.X, camera.Z)) > range + 30f)
+            {
+                continue;
+            }
+
+            var startIndex = (uint)output.Count;
+            for (var column = 0; column < SurfaceColumns; column++)
+            {
+                var across = column / (float)(SurfaceColumns - 1) * 2f - 1f;
+                AddWaterVertex(center + across * width, z, across);
+            }
+
+            for (var column = 0; column < SurfaceColumns; column++)
+            {
+                var across = column / (float)(SurfaceColumns - 1) * 2f - 1f;
+                AddWaterVertex(endCenter + across * endWidth, end, across);
+            }
+
+            for (uint column = 0; column < SurfaceColumns - 1; column++)
+            {
+                var a = startIndex + column;
+                var b = a + 1;
+                var d = startIndex + SurfaceColumns + column;
+                var c = d + 1;
+
+                triangles.Add(a);
+                triangles.Add(c);
+                triangles.Add(b);
+                triangles.Add(a);
+                triangles.Add(d);
+                triangles.Add(c);
+            }
         }
+
         vertices = output.ToArray();
         indices = triangles.ToArray();
 
-        void Add(float x, float z)
+        void AddWaterVertex(float x, float z, float across)
         {
-            var shimmer = 0.5f + 0.5f * MathF.Sin(z * 0.32f - seconds * 1.6f);
-            output.Add(new TerrainVertex(new Vector3(x, Level, z),
-                Vector3.Lerp(new Vector3(0.035f, 0.16f, 0.19f), new Vector3(0.10f, 0.28f, 0.30f), shimmer)));
+            var primaryPhase = z * 0.34f - seconds * 2.35f + across * 1.7f;
+            var secondaryPhase = z * 0.71f - seconds * 3.7f - across * 2.2f;
+            var primary = 0.5f + 0.5f * MathF.Sin(primaryPhase);
+            var secondary = 0.5f + 0.5f * MathF.Sin(secondaryPhase);
+            var flow = Math.Clamp(primary * 0.72f + secondary * 0.28f, 0f, 1f);
+
+            // Tiny moving surface displacement makes the downstream motion
+            // readable even without expensive normal/reflection passes.
+            var wave =
+                MathF.Sin(primaryPhase) * 0.025f +
+                MathF.Sin(secondaryPhase) * 0.012f;
+
+            var edge = MathF.Abs(across);
+            var deep = new Vector3(0.025f, 0.135f, 0.18f);
+            var bright = new Vector3(0.085f, 0.31f, 0.34f);
+            var shallow = new Vector3(0.13f, 0.30f, 0.27f);
+            var color = Vector3.Lerp(deep, bright, flow * 0.72f);
+            color = Vector3.Lerp(color, shallow, edge * 0.30f);
+
+            output.Add(new TerrainVertex(
+                new Vector3(x, WaterLevel(z) + wave, z),
+                color,
+                Vector3.UnitY));
         }
+    }
+
+    private static float Lerp(float a, float b, float t) =>
+        a + (b - a) * Math.Clamp(t, 0f, 1f);
+
+    private static float SmoothStep(float edge0, float edge1, float value)
+    {
+        if (edge1 <= edge0)
+            return value >= edge1 ? 1f : 0f;
+
+        var t = Math.Clamp((value - edge0) / (edge1 - edge0), 0f, 1f);
+        return t * t * (3f - 2f * t);
     }
 }
