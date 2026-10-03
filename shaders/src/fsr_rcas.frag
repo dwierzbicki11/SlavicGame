@@ -20,7 +20,9 @@ AF4 FsrRcasLoadF(ASU2 p)
 {
     ivec2 size = textureSize(sampler2D(EasuedColor, EasuedSampler), 0);
     ivec2 q = clamp(ivec2(p), ivec2(0), size - ivec2(1));
-    q.y = size.y - 1 - q.y;
+
+    // EASU already performs the one required Vulkan offscreen Y flip.
+    // Do not flip again here or the FSR path becomes vertically inverted.
     return texelFetch(sampler2D(EasuedColor, EasuedSampler), q, 0);
 }
 
