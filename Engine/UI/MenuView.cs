@@ -10,7 +10,8 @@ public enum FrontendScreen
 public sealed record MenuItemView(
     string Label,
     string? Value,
-    bool Selected);
+    bool Selected,
+    bool RequiresRestart = false);
 
 public sealed record MenuPanelView(
     string Title,

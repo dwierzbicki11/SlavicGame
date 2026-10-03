@@ -13,7 +13,8 @@ public sealed record SettingDefinition(
     SettingCategory Category,
     string Label,
     Func<GameSettings, string> ValueText,
-    Action<GameSettings, int> Change);
+    Action<GameSettings, int> Change,
+    bool RequiresRestart = false);
 
 public static class SettingsCatalog
 {
@@ -112,7 +113,8 @@ public static class SettingsCatalog
             "JAKOSC TEKSTUR",
             s => TextureName(s.TextureQuality),
             (s, direction) =>
-                s.TextureQuality = CycleEnum(s.TextureQuality, direction)),
+                s.TextureQuality = CycleEnum(s.TextureQuality, direction),
+            RequiresRestart: true),
         new(
             "render-distance",
             SettingCategory.Graphics,
@@ -171,6 +173,13 @@ public static class SettingsCatalog
             (s, direction) =>
                 s.Upscaler = CycleEnum(s.Upscaler, direction)),
         new(
+            "fsr-quality",
+            SettingCategory.PostProcessing,
+            "FSR1 TRYB",
+            s => FsrQualityName(s.FsrQuality),
+            (s, direction) =>
+                s.FsrQuality = CycleEnum(s.FsrQuality, direction)),
+        new(
             "fsr-sharpness",
             SettingCategory.PostProcessing,
             "FSR1 OSTROSC",
@@ -193,7 +202,8 @@ public static class SettingsCatalog
             "MSAA",
             s => MsaaName(s.Msaa),
             (s, direction) =>
-                s.Msaa = CycleEnum(s.Msaa, direction)),
+                s.Msaa = CycleEnum(s.Msaa, direction),
+            RequiresRestart: true),
         new(
             "bloom",
             SettingCategory.PostProcessing,
@@ -283,6 +293,18 @@ public static class SettingsCatalog
         if (next < 0) next += values.Length;
         return values[next];
     }
+
+    private static string FsrQualityName(FsrQualityMode quality) =>
+        quality switch
+        {
+            FsrQualityMode.Quality => "QUALITY",
+            FsrQualityMode.UltraQuality => "ULTRA QUALITY",
+            FsrQualityMode.Balanced => "BALANCED",
+            FsrQualityMode.Performance => "PERFORMANCE",
+            FsrQualityMode.Native => "NATIVE",
+            FsrQualityMode.Custom => "CUSTOM",
+            _ => "QUALITY"
+        };
 
     private static string FrameLimitName(FrameRateLimit limit) =>
         limit switch

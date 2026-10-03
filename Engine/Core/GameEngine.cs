@@ -204,7 +204,7 @@ public sealed class GameEngine : IDisposable
     {
         _settings.Normalize();
 
-        var renderResolution = _settings.ResolutionSize;
+        var manualRenderResolution = _settings.ResolutionSize;
         var windowResolution = _settings.WindowResolutionSize;
 
         if (_window.IsFullscreen != _settings.Fullscreen)
@@ -214,6 +214,15 @@ public sealed class GameEngine : IDisposable
             _window.SetWindowedSize(
                 windowResolution.Width,
                 windowResolution.Height);
+
+        var renderResolution =
+            _settings.Upscaler == UpscalerMode.Fsr1
+                ? GraphicsQualityCatalog.FsrRenderResolution(
+                    Math.Max(1, _window.Width),
+                    Math.Max(1, _window.Height),
+                    _settings.FsrQuality,
+                    manualRenderResolution)
+                : manualRenderResolution;
 
         _renderer.SetRenderResolution(
             renderResolution.Width,

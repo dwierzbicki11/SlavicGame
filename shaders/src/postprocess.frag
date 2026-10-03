@@ -8,6 +8,7 @@ layout(set = 0, binding = 0) uniform PostProcessParameters
 
 layout(set = 0, binding = 1) uniform texture2D SceneColor;
 layout(set = 0, binding = 2) uniform sampler SceneSampler;
+layout(set = 0, binding = 3) uniform texture2D BloomColor;
 
 layout(location = 0) in vec2 fsin_TexCoord;
 layout(location = 0) out vec4 fsout_Color;
@@ -74,63 +75,10 @@ vec3 ApplyFxaa(vec2 uv, vec2 texel)
         : rgbB;
 }
 
-vec3 BrightPart(vec3 color, float threshold)
-{
-    float peak = max(color.r, max(color.g, color.b));
-    float amount = max(peak - threshold, 0.0) /
-        max(peak, 0.0001);
-    return color * amount;
-}
-
-vec3 ComputeBloom(vec2 uv, vec2 texel, int taps, float threshold)
-{
-    if (taps <= 0)
-        return vec3(0.0);
-
-    const vec2 directions[12] = vec2[](
-        vec2(1.0, 0.0),
-        vec2(-1.0, 0.0),
-        vec2(0.0, 1.0),
-        vec2(0.0, -1.0),
-        vec2(0.707, 0.707),
-        vec2(-0.707, 0.707),
-        vec2(0.707, -0.707),
-        vec2(-0.707, -0.707),
-        vec2(2.0, 0.5),
-        vec2(-2.0, -0.5),
-        vec2(0.5, 2.0),
-        vec2(-0.5, -2.0)
-    );
-
-    float radius = taps <= 4
-        ? 2.0
-        : taps <= 8
-            ? 3.5
-            : 5.0;
-
-    vec3 sum = vec3(0.0);
-    float weight = 0.0;
-
-    for (int i = 0; i < 12; i++)
-    {
-        if (i >= taps)
-            break;
-
-        vec2 offset = directions[i] * texel * radius;
-        float w = 1.0 / (1.0 + dot(directions[i], directions[i]));
-        sum += BrightPart(SampleScene(uv + offset), threshold) * w;
-        weight += w;
-    }
-
-    return weight > 0.0 ? sum / weight : vec3(0.0);
-}
-
 void main()
 {
     vec2 texel = Params0.xy;
     bool fxaa = Params0.z > 0.5;
-    int bloomTaps = int(Params0.w + 0.5);
-
     float bloomStrength = Params1.x;
     float bloomThreshold = Params1.y;
     float brightness = Params1.z;
@@ -140,13 +88,12 @@ void main()
         ? ApplyFxaa(fsin_TexCoord, texel)
         : SampleScene(fsin_TexCoord);
 
-    if (bloomTaps > 0 && bloomStrength > 0.001)
+    if (bloomStrength > 0.001)
     {
-        color += ComputeBloom(
-            fsin_TexCoord,
-            texel,
-            bloomTaps,
-            bloomThreshold) * bloomStrength;
+        vec3 bloom = texture(
+            sampler2D(BloomColor, SceneSampler),
+            fsin_TexCoord).rgb;
+        color += bloom * bloomStrength;
     }
 
     color *= brightness;

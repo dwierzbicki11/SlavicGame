@@ -32,6 +32,7 @@ public sealed class FrontendController
     private int _mainSelection;
     private int _settingsSelection;
     private int _settingsTabIndex;
+    private bool _restartRequired;
 
     public FrontendScreen Screen { get; private set; } = FrontendScreen.MainMenu;
 
@@ -128,7 +129,9 @@ public sealed class FrontendController
             if (left || right || confirm)
             {
                 var direction = left ? -1 : 1;
-                definitions[_settingsSelection].Change(settings, direction);
+                var definition = definitions[_settingsSelection];
+                definition.Change(settings, direction);
+                _restartRequired |= definition.RequiresRestart;
                 settings.Normalize();
                 return FrontendAction.SettingsChanged;
             }
@@ -177,7 +180,8 @@ public sealed class FrontendController
                 new MenuItemView(
                     definition.Label,
                     definition.ValueText(settings),
-                    index == _settingsSelection))
+                    index == _settingsSelection,
+                    definition.RequiresRestart))
             .ToList();
 
         items.Add(new MenuItemView(
@@ -192,6 +196,10 @@ public sealed class FrontendController
                     index == _settingsTabIndex))
             .ToArray();
 
+        var footer = _restartRequired
+            ? "RESTART WYMAGANY DLA MSAA / PELNEJ JAKOSCI TEKSTUR"
+            : "TAB ZAKLADKA   W/S WYBOR   A/D LUB ENTER ZMIANA   ESC POWROT";
+
         return new MenuView(
             "USTAWIENIA",
             "TAB  ZMIANA ZAKLADKI",
@@ -201,7 +209,7 @@ public sealed class FrontendController
                     CategoryName(activeCategory),
                     items)
             ],
-            "TAB ZAKLADKA   W/S WYBOR   A/D LUB ENTER ZMIANA   ESC POWROT");
+            footer);
     }
 
     private static int Wrap(int value, int count)
