@@ -18,11 +18,12 @@ public static class MagicCinematicRegression
             "Eight unique cinematic definitions are runtime-ready");
         check(CinematicCatalog.All.SelectMany(scene => scene.Shots).All(shot => shot.Voice is not null),
             "Every cinematic shot has explicit emotional voice direction");
-        var fearfulPrompt = VoiceDirectionPrompts.Build(new VoiceDirection(VoiceEmotion.Fearful, 0.8f, 1f));
-        check(fearfulPrompt.Contains("natural Polish", StringComparison.Ordinal) &&
-              fearfulPrompt.Contains("fearful", StringComparison.OrdinalIgnoreCase) &&
-              fearfulPrompt.Contains("never like a navigation system", StringComparison.Ordinal),
-            "TTS prompt requests natural emotional delivery instead of robotic narration");
+        var calmStyle = ChatterboxProsody.FromDirection(new VoiceDirection(VoiceEmotion.Calm, 0.4f, 1f));
+        var fearfulStyle = ChatterboxProsody.FromDirection(new VoiceDirection(VoiceEmotion.Fearful, 0.8f, 1f));
+        check(calmStyle.EmotionKey == "calm" && fearfulStyle.EmotionKey == "fearful" &&
+              fearfulStyle.Exaggeration > calmStyle.Exaggeration &&
+              fearfulStyle.CfgWeight <= calmStyle.CfgWeight,
+            "Free local TTS maps stronger emotions to more expressive Chatterbox prosody");
         check(CinematicCatalog.TryGet("ritual-preparation", out var ritualPreparation) &&
               ritualPreparation.Shots.All(shot => shot.Space == CinematicSpace.PlayerRelative),
             "Quest cinematics can use player-relative camera shots");
