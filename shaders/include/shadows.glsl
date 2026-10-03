@@ -30,8 +30,8 @@ float SampleSunShadow(
         0.0);
     float bias = max(0.00022, 0.00110 * (1.0 - ndotl));
 
-    sampler2D sampledShadow = sampler2D(shadowMap, shadowSampler);
-    vec2 texel = 1.0 / vec2(textureSize(sampledShadow, 0));
+    vec2 texel = 1.0 / vec2(
+        textureSize(sampler2D(shadowMap, shadowSampler), 0));
 
     float visible = 0.0;
     for (int y = -1; y <= 1; y++)
@@ -39,7 +39,7 @@ float SampleSunShadow(
         for (int x = -1; x <= 1; x++)
         {
             float storedDepth = texture(
-                sampledShadow,
+                sampler2D(shadowMap, shadowSampler),
                 uv + vec2(x, y) * texel).r;
             visible += projected.z - bias <= storedDepth
                 ? 1.0
