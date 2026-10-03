@@ -149,6 +149,15 @@ public static class WaterLandscape
             }
         }
 
+        AppendFoamStreaks(
+            output,
+            triangles,
+            seconds,
+            camera,
+            range,
+            extentZ,
+            extentX);
+
         vertices = output.ToArray();
         indices = triangles.ToArray();
 
@@ -177,6 +186,81 @@ public static class WaterLandscape
                 new Vector3(x, WaterLevel(z) + wave, z),
                 color,
                 Vector3.UnitY));
+        }
+    }
+
+    private static void AppendFoamStreaks(
+        List<TerrainVertex> vertices,
+        List<uint> indices,
+        float seconds,
+        Vector3 camera,
+        float range,
+        float extentZ,
+        float extentX)
+    {
+        const float step = 32f;
+        const float startZ = -920f;
+
+        for (var z = startZ; z <= extentZ; z += step)
+        {
+            if (z < -extentZ)
+                continue;
+
+            var centerX = CenterX(z);
+            var halfWidth = SurfaceHalfWidth(z);
+            var flow = FlowDirection(z);
+            var tangent = Vector2.Normalize(flow);
+            var sideVector = new Vector2(-tangent.Y, tangent.X);
+
+            for (var side = -1; side <= 1; side += 2)
+            {
+                var x = centerX + side * (halfWidth - 0.28f);
+                if (x < -extentX || x > extentX)
+                    continue;
+
+                var position2 = new Vector2(x, z);
+                if (Vector2.Distance(
+                        position2,
+                        new Vector2(camera.X, camera.Z)) > range + 20f)
+                {
+                    continue;
+                }
+
+                var pulse =
+                    0.5f +
+                    0.5f * MathF.Sin(
+                        z * 0.17f -
+                        seconds * 2.9f +
+                        side * 0.8f);
+                var length = 1.8f + pulse * 1.6f;
+                var width = 0.07f + pulse * 0.08f;
+                var along = tangent * (length * 0.5f);
+                var across = sideVector * (width * side);
+                var baseCenter = position2 + tangent * (pulse - 0.5f) * 0.8f;
+                var y = WaterLevel(z) + 0.055f;
+
+                var a2 = baseCenter - along - across;
+                var b2 = baseCenter - along + across;
+                var c2 = baseCenter + along + across;
+                var d2 = baseCenter + along - across;
+                var color = Vector3.Lerp(
+                    new Vector3(0.26f, 0.47f, 0.48f),
+                    new Vector3(0.62f, 0.79f, 0.77f),
+                    0.35f + pulse * 0.45f);
+
+                var start = checked((uint)vertices.Count);
+                vertices.Add(new TerrainVertex(new Vector3(a2.X, y, a2.Y), color, Vector3.UnitY));
+                vertices.Add(new TerrainVertex(new Vector3(b2.X, y, b2.Y), color, Vector3.UnitY));
+                vertices.Add(new TerrainVertex(new Vector3(c2.X, y, c2.Y), color, Vector3.UnitY));
+                vertices.Add(new TerrainVertex(new Vector3(d2.X, y, d2.Y), color, Vector3.UnitY));
+
+                indices.Add(start);
+                indices.Add(start + 2);
+                indices.Add(start + 1);
+                indices.Add(start);
+                indices.Add(start + 3);
+                indices.Add(start + 2);
+            }
         }
     }
 
