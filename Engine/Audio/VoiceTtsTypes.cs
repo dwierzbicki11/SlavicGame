@@ -75,13 +75,13 @@ public enum VoiceUsageScope
 
 public static class VoiceUsage
 {
-    public static VoiceUsageScope FromEnvironment()
-    {
-        var value = Environment.GetEnvironmentVariable("SLAVICGAME_TTS_SCOPE");
-        return string.Equals(value, "all", StringComparison.OrdinalIgnoreCase)
+    public static VoiceUsageScope ParseScope(string? value) =>
+        string.Equals(value, "all", StringComparison.OrdinalIgnoreCase)
             ? VoiceUsageScope.All
             : VoiceUsageScope.SpellsOnly;
-    }
+
+    public static VoiceUsageScope FromEnvironment() =>
+        ParseScope(Environment.GetEnvironmentVariable("SLAVICGAME_TTS_SCOPE"));
 
     public static string ProtagonistVoiceId =>
         string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SLAVICGAME_PLAYER_VOICE"))
