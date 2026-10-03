@@ -57,7 +57,7 @@ public sealed class SpellCasting
 
     public bool TryStart(WorldState world, Vector3 direction)
     {
-        if (!world.Player.IsAlive || world.Cinematics.IsPlaying || IsCasting) return false;
+        if (!world.Player.IsAlive || world.Cinematics.IsPlaying || world.Rituals.IsPerforming || IsCasting) return false;
         if (Cooldown > 0) { Message = "CZAR SIE ODNAWIA"; return false; }
         if (!float.IsFinite(direction.X) || !float.IsFinite(direction.Y) || !float.IsFinite(direction.Z) ||
             direction.LengthSquared() < 0.001f) return false;
