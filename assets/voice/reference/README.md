@@ -29,3 +29,16 @@ Supported emotion keys:
 - urgent
 
 A character can therefore have one neutral reference plus selected emotional variants instead of recording every dialogue line.
+
+## Protagonist spell voice
+
+Spell casting uses the stable voice ID `protagonist` by default.
+
+Recommended first references:
+
+- `protagonist.wav` — neutral identity of the player character's voice;
+- `protagonist_urgent.wav` — forceful combat casting such as `ZAR VEK`;
+- `protagonist_solemn.wav` — restorative casting such as `ZIVA DAR`;
+- `protagonist_mystical.wav` — quiet ritual casting such as `VEDA NAW`.
+
+The player-character voice ID can later come from character creation. For development it can already be overridden with `SLAVICGAME_PLAYER_VOICE`.
