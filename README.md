@@ -429,3 +429,8 @@ The Black Swamp now has a visible nocturnal `ENTITY_MISSING_ECHO_F` apparition. 
 ### Visible world items
 
 Key vertical-slice items now use dynamic GLB visuals instead of invisible interaction points. The missing-person keepsake, forest resin source, marsh-herb bundle and ritual thread appear only while their gameplay state allows them and disappear immediately after collection/receipt without rebuilding static world batches.
+
+
+### Distinct settler models
+
+NPCs no longer reuse the player hunter mesh. The village population is distributed across five dedicated animated humanoid GLBs (two villager bodies, elder, hunter and merchant) while retaining per-character scale, muted clothing palettes and lightweight silhouette accessories. All NPC geometry is still consolidated into the existing actor draw path.
