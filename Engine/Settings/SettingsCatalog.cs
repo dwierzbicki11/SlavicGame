@@ -68,6 +68,34 @@ public static class SettingsCatalog
                     : CameraPreference.FirstPerson;
             }),
 
+        new(
+            "graphics-preset",
+            SettingCategory.Graphics,
+            "PRESET GRAFIKI",
+            GraphicsPresetCatalog.DetectName,
+            (s, direction) =>
+            {
+                var presets = Enum.GetValues<GraphicsPreset>();
+                var currentName = GraphicsPresetCatalog.DetectName(s);
+                var currentIndex = currentName switch
+                {
+                    "LOW-END" => Array.IndexOf(presets, GraphicsPreset.LowEnd),
+                    "BALANCED" => Array.IndexOf(presets, GraphicsPreset.Balanced),
+                    "HIGH" => Array.IndexOf(presets, GraphicsPreset.High),
+                    "ULTRA" => Array.IndexOf(presets, GraphicsPreset.Ultra),
+                    _ => Array.IndexOf(presets, GraphicsPreset.High)
+                };
+                var next = (currentIndex + Math.Sign(direction)) % presets.Length;
+                if (next < 0) next += presets.Length;
+                GraphicsPresetCatalog.Apply(s, presets[next]);
+            }),
+        new(
+            "texture-quality",
+            SettingCategory.Graphics,
+            "JAKOSC TEKSTUR",
+            s => TextureName(s.TextureQuality),
+            (s, direction) =>
+                s.TextureQuality = CycleEnum(s.TextureQuality, direction)),
         Toggle("sky", SettingCategory.Graphics, "NIEBO",
             s => s.Sky, (s, v) => s.Sky = v),
         Toggle("sun", SettingCategory.Graphics, "SLONCE",
@@ -123,6 +151,16 @@ public static class SettingsCatalog
             CloudQuality.Medium => "SREDNIA",
             CloudQuality.High => "WYSOKA",
             CloudQuality.Ultra => "ULTRA",
+            _ => "WYSOKA"
+        };
+
+    private static string TextureName(TextureQuality quality) =>
+        quality switch
+        {
+            TextureQuality.Low => "NISKA",
+            TextureQuality.Medium => "SREDNIA",
+            TextureQuality.High => "WYSOKA",
+            TextureQuality.Ultra => "ULTRA",
             _ => "WYSOKA"
         };
 
