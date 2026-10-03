@@ -10,6 +10,7 @@ public static class ActorModelMesh
         WorldState world,
         GlbModel playerModel,
         GlbModel enemyModel,
+        IReadOnlyDictionary<string, GlbModel> npcModels,
         double animationSeconds,
         float playerYaw,
         bool includePlayer,
@@ -19,6 +20,7 @@ public static class ActorModelMesh
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(playerModel);
         ArgumentNullException.ThrowIfNull(enemyModel);
+        ArgumentNullException.ThrowIfNull(npcModels);
 
         var vertexList = new List<TerrainVertex>();
         var indexList = new List<uint>();
@@ -39,6 +41,13 @@ public static class ActorModelMesh
         foreach (var npc in world.NpcWorld.Actors)
         {
             var profile = NpcVisualCatalog.For(npc.Id, npc.Role);
+            var modelAsset = NpcVisualCatalog.ModelAssetFor(npc.Id, npc.Role);
+            if (!npcModels.TryGetValue(modelAsset, out var npcModel))
+            {
+                throw new InvalidOperationException(
+                    $"NPC model '{modelAsset}' required by '{npc.Id}' is not loaded.");
+            }
+
             var npcTransform =
                 Matrix4x4.CreateScale(profile.BodyScale) *
                 Matrix4x4.CreateRotationY(npc.YawRadians) *
@@ -51,7 +60,7 @@ public static class ActorModelMesh
                 profile.AnimationSpeed;
 
             Append(
-                playerModel.BuildMesh(
+                npcModel.BuildMesh(
                     npcTransform,
                     clip,
                     animationTime,
