@@ -291,11 +291,14 @@ public sealed class GameEngine : IDisposable
                 windowResolution.Width,
                 windowResolution.Height);
 
+        var outputWidth = Math.Max(1, _window.Width);
+        var outputHeight = Math.Max(1, _window.Height);
+
         var renderResolution =
             _settings.Upscaler == UpscalerMode.Fsr1
                 ? GraphicsQualityCatalog.FsrRenderResolution(
-                    Math.Max(1, _window.Width),
-                    Math.Max(1, _window.Height),
+                    outputWidth,
+                    outputHeight,
                     _settings.FsrQuality,
                     manualRenderResolution)
                 : manualRenderResolution;
@@ -303,6 +306,11 @@ public sealed class GameEngine : IDisposable
         _renderer.SetRenderResolution(
             renderResolution.Width,
             renderResolution.Height);
+
+        EngineLog.Info(
+            $"Display/output={outputWidth}x{outputHeight}, " +
+            $"internal render={renderResolution.Width}x{renderResolution.Height}, " +
+            $"upscaler={_settings.Upscaler}, FSR mode={_settings.FsrQuality}.");
         _renderer.SetShadowResolution(
             GraphicsQualityCatalog.ShadowMapSize(_settings.ShadowQuality));
         _renderer.SetShadowDistance(
