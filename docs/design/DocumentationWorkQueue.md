@@ -39,7 +39,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] regional encounter rosters/tables poza R0 (`design/RegionalEncounterRosters.md`): R1–R6 family-level implementation pass, persistence/filters/QA; final weights, density i placement pozostają playtest/data lockiem;
 - [x] regional vendors/services final pass (`design/RegionalVendorsServices.md`): R0–R6 service footprint, stable IDs, stock profiles, persistence/fail-forward; final prices/restock/signature goods pozostają balance/item/research lockiem;
 - [x] item/equipment/recipe catalogs dla pełnego scope (`design/ItemEquipmentRecipeCatalog.md`): stable families/IDs, equipment mapping, recipe gates, regional source matrix, persistence/QA; final tuning i exact historical assets pozostają lockiem;
-- [ ] dialogue packages po zamknięciu rosterów.
+- [x] dialogue packages implementation contract (`dialogue/FullGameDialoguePackages.md`): R0–R6 + campaign families, stable IDs, knowledge gates, persistence/fail-forward/localization/VO separation; final line writing/VO pozostają content lockiem.
 
 ### P4 — asset i budget lock
 - [x] asset families per region z reuse/LOD/variant strategy na poziomie planowania;
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P2 jest zamknięte na poziomie wymaganym do implementacji. Encounter rosters, regional vendors/services oraz full-scope item/equipment/recipe catalog mają implementation pass. Następny najmniejszy niezablokowany pakiet P3 to **dialogue packages po zamknięciu rosterów**. P4 może równolegle zacząć manifesty tylko dla rodzin z wystarczającym research/art lockiem.
+P1–P3 mają implementation-level pass dla wymaganych rosterów, questów, encounterów, usług, item/equipment/recipe i dialog package contract. Następny najmniejszy niezablokowany pakiet to **P4: konkretne asset manifests dla rodzin, które mają wystarczający research/art lock**, bez wymyślania finalnych assetów historycznych tam, gdzie locator nadal jest za słaby. Następnie budżety animation/VFX/audio oraz streaming/memory/AI.
