@@ -374,3 +374,44 @@ Heat:
 - partially offsets rain wetting at close range.
 
 Both fires receive a tiny animated geometry effect (ground glow + two low-poly flame layers) in the existing actor pass. No particle system, transparency pass, volumetric light or extra render target is used.
+
+
+## River current and exposure pass
+
+Rzeka ma teraz lekki gameplayowy nurt oraz prosty model ekspozycji środowiskowej.
+
+### Nurt
+
+`WaterInteractionState.CurrentSpeedForDepth` uruchamia znoszenie dopiero po przekroczeniu około 28 cm głębokości. Siła rośnie nieliniowo wraz z głębokością i w najgłębszej części obecnego koryta dochodzi do około 1.6 m/s.
+
+`PlayerController` dodaje wektor nurtu niezależnie od inputu gracza, więc:
+- stojący gracz może zostać zniesiony downstream;
+- ruch pod prąd realnie walczy z prędkością przepływu;
+- przy brzegu nurt praktycznie zanika;
+- system korzysta z `ResolveHorizontalPosition`, więc nadal respektuje teren i kolizje.
+
+HUD w wodzie pokazuje także przybliżoną prędkość nurtu.
+
+### Deszcz, moknięcie i wychłodzenie
+
+Poza rzeką `Weather.RainIntensity` może dalej zwiększać `Wetness`. Wiatr i deszcz zwiększają presję wychłodzenia, szczególnie gdy ubranie jest mokre.
+
+`Chill`:
+- rośnie stopniowo, bez nagłego skoku;
+- jest dodatkowo podbijany przez głębszą wodę;
+- obniża regenerację staminy;
+- nie zadaje obecnie obrażeń i nie jest systemem survivalowym;
+- schodzi szybciej przy źródle ciepła.
+
+### Ogniska
+
+Dwa istniejące paleniska są teraz aktywnymi źródłami ciepła:
+- `village-firepit`;
+- `forest-hunter-firepit`.
+
+`CampfireSystem.HeatAt` wylicza płynny falloff po dystansie. Blisko ogniska:
+- schnięcie jest znacznie szybsze;
+- wychłodzenie spada szybciej;
+- deszcz jest częściowo kompensowany przez ciepło.
+
+`CampfireEffectMesh` dodaje lekkie, animowane płomienie oraz ground glow do istniejącego actor passu. Nie ma osobnego particle systemu, shadow-castera ani dodatkowego render targetu.
