@@ -182,3 +182,17 @@ Sukces:
 - zapisuje `QuestResolution.RitualClosure` dla `light-over-swamp`;
 - może uruchomić scenę `contract-resolution`;
 - rezultat, zużycie przedmiotów i quest resolution przechodzą przez istniejący save/load.
+
+
+## Pierwszy pass VFX rytuału
+
+Runtime rytuału ma lekki proceduralny efekt geometryczny bez dodatkowych tekstur ani ciężkich particle systemów:
+
+- krąg na ziemi narasta razem z ogólnym postępem rytuału;
+- po umieszczeniu kotwicy pojawia się centralny marker;
+- znak rozpoznania dodaje główne osie symbolu;
+- oczekiwanie na reakcję dodaje cztery markery odpowiedzi;
+- domknięcie więzi dodaje przekątne i zamyka wzór;
+- sukces zostawia krótki około 2-sekundowy błysk/pełny krąg, który następnie znika.
+
+Budżet jest celowo mały i regresje pilnują, aby aktywny efekt pozostawał poniżej 512 dodatkowych wierzchołków. To pierwszy pass pod słabsze iGPU; finalne VFX mogą później zastąpić lub rozszerzyć ten mesh zależnie od benchmarków.

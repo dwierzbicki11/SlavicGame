@@ -1,3 +1,4 @@
+using System.Numerics;
 using SlavicGame.Engine.Quest;
 using SlavicGame.Engine.World;
 
@@ -98,9 +99,14 @@ public sealed class RitualExecution
 
     public bool IsPerforming => _stepIndex >= 0 && _stepIndex < Sequence.Length;
     public RitualStep CurrentStep => IsPerforming ? Sequence[_stepIndex] : RitualStep.None;
+    public Vector3 VisualOrigin { get; private set; }
+    public double CompletionGlowRemaining { get; private set; }
     public double StepProgress => !IsPerforming
         ? 0
         : Math.Clamp(1.0 - _stepRemaining / StepDurationSeconds, 0.0, 1.0);
+    public double OverallProgress => IsPerforming
+        ? Math.Clamp((_stepIndex + StepProgress) / Sequence.Length, 0.0, 1.0)
+        : CompletionGlowRemaining > 0 ? 1.0 : 0.0;
     public string Message { get; private set; } = "R RYTUAL";
     public RitualStartFailure LastFailure { get; private set; }
 
@@ -117,6 +123,8 @@ public sealed class RitualExecution
         _stepIndex = 0;
         _stepRemaining = StepDurationSeconds;
         _healthAtStart = world.Player.Health;
+        VisualOrigin = world.PlayerPosition;
+        CompletionGlowRemaining = 0;
         _completionSignal = false;
         Message = StepMessages[CurrentStep];
         return validation with { Message = Message };
@@ -175,7 +183,11 @@ public sealed class RitualExecution
     public void Update(WorldState world, double deltaSeconds)
     {
         ArgumentNullException.ThrowIfNull(world);
-        if (!IsPerforming || !double.IsFinite(deltaSeconds) || deltaSeconds < 0)
+        if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0)
+            return;
+
+        CompletionGlowRemaining = Math.Max(0, CompletionGlowRemaining - deltaSeconds);
+        if (!IsPerforming)
             return;
 
         if (!world.Player.IsAlive || world.Player.Health < _healthAtStart)
@@ -254,6 +266,7 @@ public sealed class RitualExecution
         _stepIndex = -1;
         _stepRemaining = 0;
         _completionSignal = true;
+        CompletionGlowRemaining = 2.0;
         LastFailure = RitualStartFailure.None;
         Message = "RYTUAL ZAKONCZONY: ECHO UWOLNIONE";
     }

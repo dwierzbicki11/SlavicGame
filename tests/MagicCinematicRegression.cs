@@ -167,6 +167,15 @@ public static class MagicCinematicRegression
         var firstRitualStart = ritualRuntime.TryStart(ritualWorld);
         check(firstRitualStart.Started && ritualRuntime.CurrentStep == RitualStep.DefineArea,
             "Validated release-bound-echo begins its seven-step sequence");
+
+        TerrainVertex[] ritualVisualVertices = [];
+        uint[] ritualVisualIndices = [];
+        MagicEffectMesh.Append(ritualWorld, ref ritualVisualVertices, ref ritualVisualIndices);
+        check(ritualVisualVertices.Length > 0 &&
+              ritualVisualIndices.Length > 0 &&
+              ritualVisualVertices.Length < 512,
+            "Active ritual generates a bounded low-poly circle and staged glyph mesh");
+
         check(ritualWorld.Progress.Inventory.Contains("missing-person-keepsake") &&
               ritualWorld.Progress.Inventory.Contains("ritual-thread"),
             "Starting ritual does not consume critical quest items");
@@ -194,6 +203,23 @@ public static class MagicCinematicRegression
             "Completed ritual commits items once and persists the ritual-closure outcome");
         check(ritualRuntime.Validate(ritualWorld).Failure == RitualStartFailure.AlreadyResolved,
             "Resolved apparition cannot run release-bound-echo twice");
+
+        ritualVisualVertices = [];
+        ritualVisualIndices = [];
+        MagicEffectMesh.Append(ritualWorld, ref ritualVisualVertices, ref ritualVisualIndices);
+        check(ritualRuntime.CompletionGlowRemaining > 0 &&
+              ritualVisualVertices.Length > 0 &&
+              ritualVisualVertices.Length < 512,
+            "Successful ritual leaves a short bounded completion glow");
+
+        ritualRuntime.Update(ritualWorld, 3.0);
+        ritualVisualVertices = [];
+        ritualVisualIndices = [];
+        MagicEffectMesh.Append(ritualWorld, ref ritualVisualVertices, ref ritualVisualIndices);
+        check(ritualRuntime.CompletionGlowRemaining == 0 &&
+              ritualVisualVertices.Length == 0 &&
+              ritualVisualIndices.Length == 0,
+            "Ritual completion geometry expires instead of accumulating in the world");
 
         var ritualRestored = WorldGenerator.Generate();
         SaveGameService.Restore(ritualRestored, SaveGameService.Serialize(ritualWorld));
