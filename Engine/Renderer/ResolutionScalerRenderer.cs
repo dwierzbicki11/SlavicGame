@@ -334,13 +334,15 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _bilinearSet = factory.CreateResourceSet(new ResourceSetDescription(
             _bilinearLayout,
             source,
-            _graphicsDevice.LinearSampler));
+            _graphicsDevice.LinearSampler,
+            _presentationParameters));
 
         _easuSet = factory.CreateResourceSet(new ResourceSetDescription(
             _easuLayout,
             _easuConstants,
             source,
-            _graphicsDevice.LinearSampler));
+            _graphicsDevice.LinearSampler,
+            _presentationParameters));
 
         _presentationSource = source;
     }
