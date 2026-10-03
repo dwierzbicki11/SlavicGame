@@ -85,6 +85,7 @@ AssetIntegrationRegression.Run(Check);
 PresentationPolicyRegression.Run(Check);
 CelestialLightingRegression.Run(Check);
 FrontendSettingsRegression.Run(Check);
+CameraFrustumRegression.Run(Check);
 
 var animation = new AnimationStateMachine();
 animation.Register("idle");
