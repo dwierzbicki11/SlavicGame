@@ -17,6 +17,30 @@ public static class FrontendSettingsRegression
                 definitions.Any(item => item.Category == category)),
             "Frontend has at least one setting in every category");
 
+        foreach (var definition in definitions)
+        {
+            var sample = new GameSettings();
+            sample.Normalize();
+
+            var before = definition.ValueText(sample);
+            check(!string.IsNullOrWhiteSpace(before),
+                $"Setting '{definition.Id}' always exposes a readable value");
+
+            try
+            {
+                definition.Change(sample, 1);
+                sample.Normalize();
+                var after = definition.ValueText(sample);
+                check(!string.IsNullOrWhiteSpace(after),
+                    $"Setting '{definition.Id}' remains readable after a change");
+            }
+            catch (Exception exception)
+            {
+                check(false,
+                    $"Setting '{definition.Id}' can be changed without exception: {exception.Message}");
+            }
+        }
+
         var settings = new GameSettings();
         var resolution = definitions.Single(item => item.Id == "resolution");
         settings.Upscaler = UpscalerMode.Fsr1;
@@ -89,6 +113,8 @@ public static class FrontendSettingsRegression
             "Lower texture quality reduces maximum uploaded texture dimension");
 
         var preset = definitions.Single(item => item.Id == "graphics-preset");
+        check(preset.RequiresRestart,
+            "Graphics preset reports restart because it can change MSAA and texture upload quality");
         GraphicsPresetCatalog.Apply(settings, GraphicsPreset.High);
         preset.Change(settings, -1);
         check(GraphicsPresetCatalog.DetectName(settings) == "BALANCED",
@@ -134,6 +160,10 @@ public static class FrontendSettingsRegression
             "Frontend can enable AMD FSR1");
 
         var fsrQuality = definitions.Single(item => item.Id == "fsr-quality");
+        settings.Upscaler = UpscalerMode.Bilinear;
+        check(fsrQuality.ValueText(settings) == "NIEAKTYWNE",
+            "FSR quality reports inactive while bilinear scaling is selected");
+        settings.Upscaler = UpscalerMode.Fsr1;
         settings.FsrQuality = FsrQualityMode.Quality;
         fsrQuality.Change(settings, 1);
         check(settings.FsrQuality == FsrQualityMode.UltraQuality,
@@ -187,6 +217,11 @@ public static class FrontendSettingsRegression
         check(settings.Msaa == MsaaQuality.X2 &&
               GraphicsQualityCatalog.MsaaSamples(settings.Msaa) == 2,
             "Frontend can select 2x MSAA");
+
+        var bloomStrength = definitions.Single(item => item.Id == "bloom-strength");
+        settings.Bloom = BloomQuality.Off;
+        check(bloomStrength.ValueText(settings) == "NIEAKTYWNE",
+            "Bloom strength reports inactive while bloom is disabled");
 
         var bloom = definitions.Single(item => item.Id == "bloom");
         settings.Bloom = BloomQuality.Off;
