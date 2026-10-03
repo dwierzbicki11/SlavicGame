@@ -32,7 +32,9 @@ public sealed record WildlifeWorldActor(
     Vector3 Position,
     float YawRadians,
     WildlifeBehavior Behavior,
-    bool IsMoving);
+    bool IsMoving,
+    float Health,
+    float MaxHealth);
 
 public sealed record WildlifeVisualProfile(
     string ModelFile,
@@ -41,7 +43,8 @@ public sealed record WildlifeVisualProfile(
     float WanderSpeed,
     float FleeSpeed,
     float AlertDistance,
-    float BodyRadius);
+    float BodyRadius,
+    float MaxHealth);
 
 public static class WildlifeCatalog
 {
@@ -55,7 +58,8 @@ public static class WildlifeCatalog
                 WanderSpeed: 1.15f,
                 FleeSpeed: 6.1f,
                 AlertDistance: 18f,
-                BodyRadius: 0.55f),
+                BodyRadius: 0.55f,
+                MaxHealth: 45f),
 
             [WildlifeSpecies.Boar] = new(
                 "boar_animated.glb",
@@ -64,7 +68,8 @@ public static class WildlifeCatalog
                 WanderSpeed: 0.85f,
                 FleeSpeed: 4.4f,
                 AlertDistance: 12f,
-                BodyRadius: 0.60f),
+                BodyRadius: 0.60f,
+                MaxHealth: 70f),
 
             [WildlifeSpecies.Wolf] = new(
                 "wolf_animated.glb",
@@ -73,7 +78,8 @@ public static class WildlifeCatalog
                 WanderSpeed: 1.25f,
                 FleeSpeed: 5.3f,
                 AlertDistance: 15f,
-                BodyRadius: 0.48f),
+                BodyRadius: 0.48f,
+                MaxHealth: 50f),
 
             [WildlifeSpecies.Raven] = new(
                 "raven_animated.glb",
@@ -82,7 +88,8 @@ public static class WildlifeCatalog
                 WanderSpeed: 3.5f,
                 FleeSpeed: 7.5f,
                 AlertDistance: 13f,
-                BodyRadius: 0.20f)
+                BodyRadius: 0.20f,
+                MaxHealth: 10f)
         };
 
     public static WildlifeVisualProfile For(WildlifeSpecies species) =>
@@ -138,6 +145,7 @@ public sealed class WildlifeWorldRuntime
         public WildlifeSpawnDefinition Spawn { get; } = spawn;
         public Vector3 Position;
         public Vector2 LastForward = Vector2.UnitY;
+        public float Health;
     }
 
     private readonly Dictionary<string, State> _states =
@@ -157,6 +165,9 @@ public sealed class WildlifeWorldRuntime
 
         foreach (var spawn in WildlifeLayout.Spawns)
         {
+            if (world.Progress.HasFlag(DeadFlag(spawn.Id)))
+                continue;
+
             var position = new Vector3(spawn.Home.X, 0f, spawn.Home.Y);
             var profile = WildlifeCatalog.For(spawn.Species);
 
@@ -176,11 +187,45 @@ public sealed class WildlifeWorldRuntime
                 spawn.Id,
                 new State(spawn)
                 {
-                    Position = position
+                    Position = position,
+                    Health = profile.MaxHealth
                 });
         }
 
         RebuildActors(world);
+    }
+
+    public bool TryApplyDamage(
+        WorldState world,
+        string id,
+        float amount,
+        out bool killed)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        if (!float.IsFinite(amount) || amount < 0f)
+            throw new ArgumentOutOfRangeException(nameof(amount));
+
+        killed = false;
+        if (!_states.TryGetValue(id, out var state))
+            return false;
+
+        state.Health = MathF.Max(0f, state.Health - amount);
+        if (state.Health <= 0f)
+        {
+            killed = true;
+            world.Progress.SetFlag(DeadFlag(id));
+            _states.Remove(id);
+            RebuildActors(world);
+        }
+
+        return true;
+    }
+
+    public static string DeadFlag(string id)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        return $"wildlife.dead.{id}";
     }
 
     public void Update(WorldState world, double deltaSeconds)
@@ -399,7 +444,9 @@ public sealed class WildlifeWorldRuntime
                 state.Position,
                 yaw,
                 behavior,
-                true));
+                true,
+                state.Health,
+                profile.MaxHealth));
         }
     }
 
