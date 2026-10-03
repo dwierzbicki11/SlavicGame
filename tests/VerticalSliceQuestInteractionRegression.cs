@@ -89,8 +89,8 @@ internal static class VerticalSliceQuestInteractionRegression
         world.Time.SetTimeOfDay(23);
         Move(world, -85, 55);
         var start = world.Rituals.TryStart(world);
-        check(start.Started,
-            "Collected investigation and preparation requirements make ritual executable");
+        check(start.Started && quest.Phase == QuestPhase.Encounter,
+            "Collected requirements make ritual executable and enter Encounter");
         world.Rituals.Update(world, 10);
         check(quest.Phase == QuestPhase.Resolved &&
               quest.Resolution == QuestResolution.RitualClosure &&
