@@ -17,10 +17,10 @@ internal static class EnemyDamageReceiverRegression
             Range: 1.8f,
             WindupSeconds: 0.1,
             RecoverySeconds: 0.2,
-            DamageType.Slash);
+            DamageType.Physical);
 
         var first = DamageApplication.ApplyMeleeHit(attack, enemy.Id, receiver);
-        if (first.Damage != 24f || first.DamageType != DamageType.Slash || first.Killed)
+        if (first.Damage != 24f || first.DamageType != DamageType.Physical || first.Killed)
             throw new InvalidOperationException("Enemy did not receive typed melee damage through IDamageReceiver.");
         if (enemy.Health != enemy.MaxHealth - 24f || enemy.State == EnemyState.Dead)
             throw new InvalidOperationException("Enemy health/state did not reflect non-lethal melee damage.");
