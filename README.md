@@ -409,3 +409,8 @@ Walking across mud, swamp ground and wet river banks now leaves a bounded transi
 ### NPC dialogue runtime
 
 The five R0 NPC roles now have schedule-driven world positions, visible humanoid placeholders and executable dialogue graphs. Contextual E starts conversation, W/S selects a response and E confirms it. Dialogue choices can be knowledge/item/quest gated and apply real quest/evidence/reputation/relationship/world-state effects. Spell teachers are now actual nearby NPCs: speaking to the correct teacher and staying beside them is required before the contextual L lesson can succeed.
+
+
+### Settler population
+
+Żarnowiec now renders five distinct authored NPC silhouettes plus eight ambient settlers on the shared humanoid rig. Role-specific proportions, muted palettes and lightweight shawl/hood/satchel/basket/tool/staff/spear accessories make the population readable without extra actor draw calls. Ambient settlers remain non-interactive until authored dialogue exists.
