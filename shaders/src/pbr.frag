@@ -169,7 +169,12 @@ void main()
             lightDirection),
         GraphicsFeatures0.z);
     float directShadow = cloudShadow * geometryShadow;
-    vec3 ambient = albedo * (0.028 + 0.050 * max(lightDirection.y, 0.0)) * (1.0 - metallic * 0.35);
+    float nightFactor = clamp(CelestialParameters.x, 0.0, 1.0);
+    float ambientStrength = mix(
+        0.028 + 0.050 * max(lightDirection.y, 0.0),
+        0.006,
+        nightFactor);
+    vec3 ambient = albedo * ambientStrength * (1.0 - metallic * 0.35);
     vec3 simpleDiffuse = albedo / PI;
     float fullPbr = modelPbr * specularEnabled;
     vec3 directBrdf = mix(
