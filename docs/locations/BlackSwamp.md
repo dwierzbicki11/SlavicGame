@@ -39,7 +39,7 @@ Aktywne nocą miejsce zjawiska.
 - lepsza widoczność;
 - oględziny;
 - predator tracks;
-- brak pełnego apparition encounter.
+- brak pełnej nocnej materializacji zjawy; jej ślady można badać, ale sama forma nie utrzymuje się za dnia.
 
 ## Noc
 
@@ -77,3 +77,18 @@ Leak działa w kontrolowanym/warunkowym stanie.
 - poziom grzęźnięcia/ruchu;
 - finalna identyfikacja predatora;
 - research konstrukcji przeprawy.
+
+
+## Runtime apparition pass
+
+Nocą, po aktywacji questa i w pobliżu leak zone, może materializować się `ENTITY_MISSING_ECHO_F`.
+
+Zasady:
+- dzień: forma nie materializuje się;
+- noc + aktywny quest + bliskość: stopniowa materializacja;
+- pamiątka zaginionego wzmacnia reakcję i przyciąga echo bliżej gracza;
+- samo zobaczenie zjawy nie przyznaje automatycznie evidence;
+- podczas `ritual.release-bound-echo` forma pojawia się przy miejscu rytuału;
+- po `swamp.apparition-released` stopniowo się rozprasza i nie wraca.
+
+Zjawa nie ma HP i nie jest wariantem fizycznego predatora. To celowo oddziela supernatural investigation od combat encounteru.
