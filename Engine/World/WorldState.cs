@@ -173,6 +173,32 @@ public sealed class WorldState
             new NpcScheduleSlot(7, 19, "old-shrine", "tend-shrine"),
             new NpcScheduleSlot(19, 7, "old-village", "rest"));
 
+        AddNpc("settler-farmer-01", NpcRole.Worker,
+            new NpcScheduleSlot(6, 8, "old-village", "go-to-fields"),
+            new NpcScheduleSlot(8, 18, "old-village", "field-work"),
+            new NpcScheduleSlot(18, 6, "old-village", "rest"));
+        AddNpc("settler-farmer-02", NpcRole.Worker,
+            new NpcScheduleSlot(6, 18, "old-village", "field-work"),
+            new NpcScheduleSlot(18, 6, "old-village", "rest"));
+        AddNpc("settler-woodworker-01", NpcRole.Worker,
+            new NpcScheduleSlot(7, 18, "old-village", "wood-work"),
+            new NpcScheduleSlot(18, 7, "old-village", "rest"));
+        AddNpc("settler-potter-01", NpcRole.Worker,
+            new NpcScheduleSlot(7, 18, "old-village", "craft-work"),
+            new NpcScheduleSlot(18, 7, "old-village", "rest"));
+        AddNpc("settler-trader-01", NpcRole.Trader,
+            new NpcScheduleSlot(7, 19, "old-village", "market-trade"),
+            new NpcScheduleSlot(19, 7, "old-village", "rest"));
+        AddNpc("settler-carrier-01", NpcRole.Worker,
+            new NpcScheduleSlot(6, 18, "old-village", "carry-goods"),
+            new NpcScheduleSlot(18, 6, "old-village", "rest"));
+        AddNpc("settler-elder-01", NpcRole.Other,
+            new NpcScheduleSlot(8, 18, "old-village", "village-square"),
+            new NpcScheduleSlot(18, 8, "old-village", "rest"));
+        AddNpc("settler-traveler-01", NpcRole.Traveler,
+            new NpcScheduleSlot(9, 16, "old-village", "arrive-and-trade"),
+            new NpcScheduleSlot(16, 9, "old-village", "rest"));
+
         SetPlayerPosition(Vector3.Zero);
         NpcWorld.Update(this);
         Dialogue.Close();
