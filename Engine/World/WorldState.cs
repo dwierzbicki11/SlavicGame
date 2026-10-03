@@ -24,6 +24,7 @@ public sealed class WorldState
     public SlavicGame.Engine.Magic.SpellLearningSystem SpellLearning { get; } = new();
     public SlavicGame.Engine.Magic.RitualExecution Rituals { get; } = new();
     public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
+    public SlavicGame.Engine.Combat.BowCombatRuntime Bow { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
     public SwampApparitionRuntime Apparition { get; } = new();
