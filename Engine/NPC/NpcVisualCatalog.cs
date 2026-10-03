@@ -26,6 +26,56 @@ public sealed record NpcVisualProfile(
 
 public static class NpcVisualCatalog
 {
+    public const string VillagerAAsset = "models/animated/npc_villager_a_animated.glb";
+    public const string VillagerBAsset = "models/animated/npc_villager_b_animated.glb";
+    public const string ElderAsset = "models/animated/npc_elder_animated.glb";
+    public const string HunterAsset = "models/animated/npc_hunter_animated.glb";
+    public const string MerchantAsset = "models/animated/npc_merchant_animated.glb";
+
+    private static readonly IReadOnlyDictionary<string, string> ModelById =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["missing-family"] = VillagerBAsset,
+            ["crossing-keeper"] = HunterAsset,
+            ["herbalist"] = VillagerAAsset,
+            ["community-guard"] = HunterAsset,
+            ["shrine-keeper"] = ElderAsset,
+
+            ["settler-farmer-01"] = VillagerAAsset,
+            ["settler-farmer-02"] = VillagerBAsset,
+            ["settler-woodworker-01"] = HunterAsset,
+            ["settler-potter-01"] = VillagerBAsset,
+            ["settler-trader-01"] = MerchantAsset,
+            ["settler-carrier-01"] = HunterAsset,
+            ["settler-elder-01"] = ElderAsset,
+            ["settler-traveler-01"] = MerchantAsset,
+        };
+
+    public static IReadOnlyCollection<string> RequiredModelAssets { get; } =
+        ModelById.Values
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+    public static string ModelAssetFor(
+        string id,
+        NpcRole role)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+
+        if (ModelById.TryGetValue(id, out var asset))
+            return asset;
+
+        return role switch
+        {
+            NpcRole.CommunityGuard or NpcRole.CrossingKeeper => HunterAsset,
+            NpcRole.ShrineKeeper => ElderAsset,
+            NpcRole.Trader or NpcRole.Traveler => MerchantAsset,
+            NpcRole.Herbalist => VillagerAAsset,
+            _ => VillagerAAsset
+        };
+    }
+
     private static readonly IReadOnlyDictionary<string, NpcVisualProfile> ById =
         new Dictionary<string, NpcVisualProfile>(StringComparer.Ordinal)
         {
