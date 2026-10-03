@@ -35,7 +35,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [ ] ogniki/błędne światła tylko jeśli awansują do finalnego scope.
 
 ### P3 — content production
-- [ ] side-quest production cards per region; R0–R5 gotowe (`quests/SideQuestCardsR0.md`–`SideQuestCardsR5.md`), następny R6;
+- [x] side-quest production cards per region; R0–R6 gotowe (`quests/SideQuestCardsR0.md`–`SideQuestCardsR6.md`), 21/21 planowanych slotów ma implementacyjny first pass;
 - [ ] regional encounter rosters/tables poza R0;
 - [ ] regional vendors/services final pass;
 - [ ] item/equipment/recipe catalogs dla pełnego scope;
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-Najbliższy niezablokowany pakiet: **side-quest production cards R6** dla `SQ_R6_01`–`SQ_R6_03`. Karty muszą respektować central author truth i reveal gates MQ30+, szczególnie zakaz ujawnienia prawdy Splotu przed MQ43. Po R6 side-quest catalog będzie miał production cards dla wszystkich 21 slotów; następny duży pakiet to culture research packages.
+Side-quest production cards są zamknięte dla wszystkich 21 slotów R0–R6. Najbliższy niezablokowany duży pakiet: **culture research packages**. Zacząć od audytu istniejących `world/Cultures.md`, `world/MacroCultures.md`, region bibles i `research/`, ustalić stabilne context IDs oraz source/evidence policy; nie wypełniać braków stereotypową analogią. Równolegle można domykać małe, jednoznaczne bestiary source/identity locki, jeśli research daje wystarczającą podstawę.
