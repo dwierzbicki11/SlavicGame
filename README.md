@@ -356,7 +356,7 @@ Event and polled mouse deltas are alternative representations of the same moveme
 
 ### River landscape
 
-A winding shallow river runs north–south roughly 220 metres east of spawn. It now has a real terrain channel: a deeper center bed, shallow wet edges, dry rising banks, rocky bank dressing, reeds and alder trees. The water surface follows a gentle downstream slope instead of one global Y plane and uses a distance-culled 5-column ribbon with animated downstream colour bands plus small moving surface waves. This pass still has no swimming or physical current simulation; the river remains fordable.
+A winding shallow river runs north–south roughly 220 metres east of spawn. It has a real terrain channel with a deeper center bed, shallow wet edges, dry rising banks, rocky bank dressing, reeds and alder trees. The water surface follows a gentle downstream slope and uses a distance-culled 5-column ribbon with animated downstream colour bands, moving surface waves, foam and player ripples. Deeper water now applies a real downstream current to the player; the river remains fordable and still has no swimming mode.
 
 ### First magic and in-engine cinematics
 
@@ -386,16 +386,6 @@ Walking through the R0 river now creates movement-driven ripple rings. The rocky
 The R0 river is now gameplay-active: movement slows with real water depth, deep water disables sprint, shallow-water sprint costs extra stamina, soaked clothing dries gradually and temporarily reduces recovery, while movement produces synchronized ripple and splash feedback.
 
 
-### Environmental exposure
+### River current, weather and campfires
 
-Deep river water now physically drifts the player downstream. Rain can keep the player wet away from water, wet/windy exposure builds a non-damaging chill state that reduces stamina recovery, and two animated campfires provide visible heat sources that rapidly dry and warm the player.
-
-
-### River current and exposure
-
-Deeper river sections now push the player downstream. Rain keeps clothing wet, wind and wetness can build a light chill state that reduces stamina recovery, while animated village/forest campfires act as real heat sources that accelerate drying and warming.
-
-
-### Current and exposure
-
-Deep river water now physically drifts the player downstream. Rain can soak the player away from the river, wet/windy exposure builds a light chill state that reduces stamina recovery, and the village plus hunter-camp firepits now provide visible animated heat sources that accelerate drying and warming.
+Deep river sections now physically drift the player downstream, with current strength derived from local water depth and shown contextually on the HUD. Rain wets clothing even away from the river, while wetness plus wind can build a non-damaging chill state that reduces stamina recovery. The village and hunter-camp firepits render animated emissive flames and act as real heat sources, accelerating drying and warming without adding a particle system or dynamic point lights.
