@@ -13,7 +13,8 @@ public sealed record SettingDefinition(
     SettingCategory Category,
     string Label,
     Func<GameSettings, string> ValueText,
-    Action<GameSettings, int> Change);
+    Action<GameSettings, int> Change,
+    bool RequiresRestart = false);
 
 public static class SettingsCatalog
 {
@@ -112,7 +113,8 @@ public static class SettingsCatalog
             "JAKOSC TEKSTUR",
             s => TextureName(s.TextureQuality),
             (s, direction) =>
-                s.TextureQuality = CycleEnum(s.TextureQuality, direction)),
+                s.TextureQuality = CycleEnum(s.TextureQuality, direction),
+            RequiresRestart: true),
         new(
             "render-distance",
             SettingCategory.Graphics,
@@ -200,7 +202,8 @@ public static class SettingsCatalog
             "MSAA",
             s => MsaaName(s.Msaa),
             (s, direction) =>
-                s.Msaa = CycleEnum(s.Msaa, direction)),
+                s.Msaa = CycleEnum(s.Msaa, direction),
+            RequiresRestart: true),
         new(
             "bloom",
             SettingCategory.PostProcessing,
