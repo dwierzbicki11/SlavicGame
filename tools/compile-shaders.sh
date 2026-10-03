@@ -54,5 +54,9 @@ compile_shader "$SRC_DIR/shadow_depth.vert" "$OUT_DIR/shadow_depth.vert.spv" ver
 compile_shader "$SRC_DIR/shadow_depth.frag" "$OUT_DIR/shadow_depth.frag.spv" frag
 compile_shader "$SRC_DIR/present.vert"      "$OUT_DIR/present.vert.spv"      vert
 compile_shader "$SRC_DIR/present.frag"      "$OUT_DIR/present.frag.spv"      frag
+compile_shader "$SRC_DIR/fsr_easu.vert"     "$OUT_DIR/fsr_easu.vert.spv"     vert
+compile_shader "$SRC_DIR/fsr_easu.frag"     "$OUT_DIR/fsr_easu.frag.spv"     frag
+compile_shader "$SRC_DIR/fsr_rcas.vert"     "$OUT_DIR/fsr_rcas.vert.spv"     vert
+compile_shader "$SRC_DIR/fsr_rcas.frag"     "$OUT_DIR/fsr_rcas.frag.spv"     frag
 
 echo "[shader] Gotowe. SPIR-V: $OUT_DIR"
