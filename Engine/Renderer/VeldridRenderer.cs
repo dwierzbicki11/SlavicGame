@@ -351,6 +351,11 @@ public sealed class VeldridRenderer : IDisposable
             world,
             ref actorVertices,
             ref actorIndices);
+        ApparitionEffectMesh.Append(
+            world,
+            (float)animationSeconds,
+            ref actorVertices,
+            ref actorIndices);
         MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;

@@ -230,3 +230,24 @@ Still open for P1:
 - more face/hair variety;
 - authored hand placement for held props;
 - final texture/material pass.
+
+
+## Runtime apparition asset status
+
+P0 visual requirement for `ENTITY_MISSING_ECHO_F` is now implemented as a lightweight procedural actor-effect mesh:
+- nocturnal materialization near the Black Swamp leak zone;
+- layered floating silhouette with head/core and trailing veil;
+- idle bob/wobble plus orbiting motes;
+- stronger core response when the player carries `missing-person-keepsake`;
+- apparition approaches the keepsake holder but remains a non-HP entity;
+- ritual manifestation relocates the same entity to the ritual origin;
+- successful release fades/dissolves the entity from the world;
+- no particle system, texture atlas or extra render pass.
+
+This remains **F / locked-F SlavicGame fiction** and must not be labelled as a historically reconstructed named creature.
+
+Still open for P1:
+- authored spectral texture/material pass;
+- apparition-specific audio;
+- more expressive ritual reaction animation;
+- optional cinematic framing and final art polish.
