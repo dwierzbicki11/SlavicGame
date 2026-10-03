@@ -1,6 +1,6 @@
 # Emotional TTS — free local runtime
 
-SlavicGame uses a local open-source TTS path for cinematic narration, magic incantations and future NPC dialogue. The game does not require a paid speech API.
+SlavicGame uses a local open-source TTS path primarily for the **player character speaking magic incantations**. Cinematic narration and future NPC dialogue remain optional extensions. The game does not require a paid speech API.
 
 ## Backend
 
@@ -38,6 +38,8 @@ dotnet run -c Release
 The setup creates `.venv-tts` and installs `chatterbox-tts`. On the first synthesized line, Chatterbox downloads its open model files into the normal local model cache. After the files are present, synthesis itself does not require a paid service.
 
 Use `SLAVICGAME_TTS=0` to force-disable speech.
+
+By default the runtime uses `SpellsOnly` scope: only protagonist spell incantations request TTS. Set `SLAVICGAME_TTS_SCOPE=all` only when testing cinematic/NPC voice generation.
 
 Optional overrides:
 - `SLAVICGAME_TTS_PYTHON` — full path to the Python executable;
@@ -96,9 +98,13 @@ Use only recordings that the project has permission to use.
 
 ## Current hooks
 
-- all current cinematic shots carry explicit emotional direction;
-- magic incantations use a mystical/ritual direction;
-- `DialogueNode` supports per-line `VoiceDirection` for future playable NPC conversations;
+- protagonist spell incantations are the default and primary TTS use;
+- `ZAR VEK` uses a short, forceful/urgent casting direction;
+- `ZIVA DAR` uses a slower solemn/restorative direction;
+- `VEDA NAW` uses a lower, more mystical near-whisper direction;
+- all spells use stable voice ID `protagonist`, overridable through `SLAVICGAME_PLAYER_VOICE`;
+- cinematic shots still carry voice direction metadata, but do not synthesize by default;
+- `DialogueNode` supports per-line `VoiceDirection` for future optional NPC voice;
 - repeated identical lines persist in the local generated-audio cache.
 
 ## Performance

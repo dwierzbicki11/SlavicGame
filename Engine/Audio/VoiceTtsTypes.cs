@@ -66,3 +66,25 @@ public interface ITextToSpeechProvider
 {
     Task<PcmAudio> SynthesizeAsync(VoiceRequest request, CancellationToken cancellationToken);
 }
+
+public enum VoiceUsageScope
+{
+    SpellsOnly,
+    All
+}
+
+public static class VoiceUsage
+{
+    public static VoiceUsageScope ParseScope(string? value) =>
+        string.Equals(value, "all", StringComparison.OrdinalIgnoreCase)
+            ? VoiceUsageScope.All
+            : VoiceUsageScope.SpellsOnly;
+
+    public static VoiceUsageScope FromEnvironment() =>
+        ParseScope(Environment.GetEnvironmentVariable("SLAVICGAME_TTS_SCOPE"));
+
+    public static string ProtagonistVoiceId =>
+        string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SLAVICGAME_PLAYER_VOICE"))
+            ? "protagonist"
+            : Environment.GetEnvironmentVariable("SLAVICGAME_PLAYER_VOICE")!.Trim();
+}

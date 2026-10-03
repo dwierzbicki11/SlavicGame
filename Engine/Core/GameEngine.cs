@@ -25,6 +25,7 @@ public sealed class GameEngine : IDisposable
     private readonly GameSettingsStore _settingsStore;
     private readonly SaveSlotService _saveSlots = new();
     private VoiceOverService? _voice;
+    private readonly VoiceUsageScope _voiceUsage = VoiceUsage.FromEnvironment();
 
     private bool _initialized;
     private bool _disposed;
@@ -412,14 +413,7 @@ public sealed class GameEngine : IDisposable
             var spell = _world.Magic.Current;
             if (_world.Magic.TryStart(_world, _camera.GetLookDirection()))
             {
-                _voice?.Speak(new VoiceRequest(
-                    $"magic.{spell.Id}",
-                    spell.Incantation,
-                    new VoiceDirection(
-                        VoiceEmotion.Mystical,
-                        0.82f,
-                        0.9f,
-                        "low ritual delivery; deliberate fictional words; controlled power")));
+                _voice?.Speak(BuildSpellVoiceRequest(spell));
             }
         }
         if (_window.ConsumeKeyPress(Key.C))
@@ -439,9 +433,42 @@ public sealed class GameEngine : IDisposable
         if (_inputDiagnostics) LogInput(input, deltaSeconds);
     }
 
+    private static VoiceRequest BuildSpellVoiceRequest(SlavicGame.Engine.Magic.CastSpell spell)
+    {
+        var direction = spell.Effect switch
+        {
+            SlavicGame.Engine.Magic.SpellEffect.Spark => new VoiceDirection(
+                VoiceEmotion.Urgent,
+                0.82f,
+                1.08f,
+                "protagonist casting combat magic; short, forceful and controlled"),
+            SlavicGame.Engine.Magic.SpellEffect.Mend => new VoiceDirection(
+                VoiceEmotion.Solemn,
+                0.58f,
+                0.90f,
+                "protagonist casting restorative magic; steady breath and focused concentration"),
+            SlavicGame.Engine.Magic.SpellEffect.Reveal => new VoiceDirection(
+                VoiceEmotion.Mystical,
+                0.74f,
+                0.84f,
+                "protagonist casting perception magic; low ritual delivery, nearly whispered"),
+            _ => new VoiceDirection(
+                VoiceEmotion.Mystical,
+                0.65f,
+                0.92f,
+                "protagonist speaking a deliberate magical incantation")
+        };
+
+        return new VoiceRequest(
+            $"magic.{spell.Id}",
+            spell.Incantation,
+            direction,
+            VoiceUsage.ProtagonistVoiceId);
+    }
+
     private void SyncCinematicVoice()
     {
-        if (_voice is null)
+        if (_voice is null || _voiceUsage != VoiceUsageScope.All)
             return;
 
         var cinematics = _world.Cinematics;
