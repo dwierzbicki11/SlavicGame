@@ -327,6 +327,9 @@ public sealed class VeldridRenderer : IDisposable
             camera.Mode != CameraMode.FirstPerson,
             out var actorVertices,
             out var actorIndices);
+        WaterLandscape.AppendSurface(world.Terrain, (float)animationSeconds, camera.Position,
+            GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
+            ref actorVertices, ref actorIndices);
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
 

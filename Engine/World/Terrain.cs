@@ -149,7 +149,7 @@ public sealed class Terrain
             var local = MathF.Sin(worldX * 0.082f) * MathF.Cos(worldZ * 0.067f) * 1.65f
                       + MathF.Sin((worldX + worldZ) * 0.041f) * 0.55f;
 
-            _heights[x, z] = large + regional + local;
+            _heights[x, z] = WaterLandscape.ShapeHeight(worldX, worldZ, large + regional + local);
         }
     }
 }

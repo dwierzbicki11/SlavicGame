@@ -124,8 +124,8 @@ internal static class AssetIntegrationRegression
 
         var decorationsA = WorldDecorationGenerator.Generate(world.Terrain);
         var decorationsB = WorldDecorationGenerator.Generate(world.Terrain);
-        check(decorationsA.Count == 965 && decorationsB.Count == 965,
-            "Expanded forest pass has a bounded deterministic instance budget");
+        check(decorationsA.Count == 1065 && decorationsB.Count == 1065,
+            "Forest and riverbank pass has a bounded deterministic instance budget");
         check(decorationsA.Zip(decorationsB).All(pair =>
                 pair.First.AssetPath == pair.Second.AssetPath &&
                 Vector3.DistanceSquared(pair.First.Position, pair.Second.Position) < 0.000001f &&

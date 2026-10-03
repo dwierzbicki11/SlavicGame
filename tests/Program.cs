@@ -30,6 +30,21 @@ void Check(bool condition, string name)
     if (!condition) throw new Exception(name);
     checks++;
 }
+// River terrain and water surface must agree; distant water should be culled.
+var riverTerrain = new Terrain(513, 513, 4f);
+var riverPoint = new Vector3(WaterLandscape.CenterX(0f), 0f, 0f);
+Check(riverTerrain.SampleHeight(riverPoint) < WaterLandscape.Level, "river bed below water");
+Check(WaterLandscape.ShapeHeight(0f, 0f, 4f) == 4f, "river preserves spawn terrain");
+TerrainVertex[] waterVertices = [];
+uint[] waterIndices = [];
+WaterLandscape.AppendSurface(riverTerrain, 0f, riverPoint, 100f, ref waterVertices, ref waterIndices);
+Check(waterVertices.Length > 0 && waterIndices.Length > 0, "near river rendered");
+Check(waterVertices.All(v => v.Position.Y == WaterLandscape.Level), "water surface level");
+Check(waterIndices.All(index => index < waterVertices.Length), "water indices valid");
+waterVertices = [];
+waterIndices = [];
+WaterLandscape.AppendSurface(riverTerrain, 0f, new Vector3(-900f, 0f, 0f), 100f, ref waterVertices, ref waterIndices);
+Check(waterVertices.Length == 0, "distant river culled");
 void Near(float actual, float expected, string name) => Check(MathF.Abs(actual - expected) < 0.0001f, name);
 void Reject(Action action, string name)
 {
