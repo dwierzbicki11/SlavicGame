@@ -12,6 +12,7 @@ public sealed class VeldridRenderer : IDisposable
 {
     private readonly List<HudVertex> _hudVertices = [];
     private readonly SkyRenderer _sky = new();
+    private readonly ShadowMapRenderer _shadows = new();
     private readonly TerrainMaterialRenderer _terrain = new();
     private readonly PbrModelRenderer _pbrModels = new();
 
@@ -125,9 +126,12 @@ public sealed class VeldridRenderer : IDisposable
             _cameraLayout,
             _graphicsDevice.SwapchainFramebuffer.OutputDescription);
 
+        _shadows.Initialize(_graphicsDevice);
+
         _terrain.Initialize(
             _graphicsDevice,
             _cameraLayout,
+            _shadows.SampleLayout,
             _graphicsDevice.SwapchainFramebuffer.OutputDescription,
             world.Terrain,
             assetsRoot);
@@ -135,6 +139,7 @@ public sealed class VeldridRenderer : IDisposable
         _pbrModels.Initialize(
             _graphicsDevice,
             _cameraLayout,
+            _shadows.SampleLayout,
             _graphicsDevice.SwapchainFramebuffer.OutputDescription,
             world,
             assetsRoot);
@@ -157,7 +162,7 @@ public sealed class VeldridRenderer : IDisposable
                 false),
             PrimitiveTopology.TriangleList,
             new ShaderSetDescription(new[] { vertexLayout }, _actorShaders),
-            new[] { _cameraLayout },
+            new[] { _cameraLayout, _shadows.SampleLayout },
             _graphicsDevice.SwapchainFramebuffer.OutputDescription));
 
         _hudScreenBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
@@ -314,18 +319,56 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.UpdateBuffer(_hudVertexBuffer, 0, _hudVertices.ToArray());
         }
 
+        _shadows.UpdateLight(
+            _commandList,
+            camera.Position,
+            celestial.SunDirection);
+        _shadows.BeginDepthPass(_commandList);
+
+        var shadowEnabled =
+            celestial.SunIntensity > 0.02f &&
+            celestial.SunDirection.Y > 0.02f;
+
+        if (shadowEnabled)
+        {
+            _terrain.RenderShadow(
+                _commandList,
+                _shadows.TerrainPipeline,
+                _shadows.DepthSet);
+            _pbrModels.RenderShadow(
+                _commandList,
+                _shadows.PbrPipeline,
+                _shadows.DepthSet,
+                camera.Position);
+            _shadows.RenderActors(
+                _commandList,
+                _actorVertexBuffer,
+                _actorIndexBuffer,
+                _actorIndexCount);
+        }
+
         _commandList.SetFramebuffer(framebuffer);
+        _commandList.SetFullViewports();
+        _commandList.SetFullScissorRects();
         _commandList.ClearColorTarget(0, atmosphereColor);
         _commandList.ClearDepthStencil(1f);
 
         _sky.Render(_commandList, _cameraSet);
 
-        _terrain.Render(_commandList, _cameraSet);
+        _terrain.Render(
+            _commandList,
+            _cameraSet,
+            _shadows.SampleSet);
 
-        _pbrModels.Render(_commandList, _cameraSet, camera.Position);
+        _pbrModels.Render(
+            _commandList,
+            _cameraSet,
+            _shadows.SampleSet,
+            camera.Position);
 
         _commandList.SetPipeline(_actorPipeline);
         _commandList.SetGraphicsResourceSet(0, _cameraSet);
+        _commandList.SetGraphicsResourceSet(1, _shadows.SampleSet);
 
         if (_actorIndexCount > 0)
         {
@@ -505,6 +548,7 @@ public sealed class VeldridRenderer : IDisposable
         _graphicsDevice.WaitForIdle();
 
         _sky.Dispose();
+        _shadows.Dispose();
         _terrain.Dispose();
         _pbrModels.Dispose();
 
