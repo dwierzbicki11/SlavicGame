@@ -140,6 +140,22 @@ internal static class AssetIntegrationRegression
             .All(model => !ForestLayout.IsTrailCorridor(new Vector2(model.Position.X, model.Position.Z))),
             "Named forest generation keeps travel corridors open");
 
+        var riverbankA = RiverbankPropGenerator.Generate(world.Terrain);
+        var riverbankB = RiverbankPropGenerator.Generate(world.Terrain);
+        check(riverbankA.Count == 116 && riverbankB.Count == 116,
+            "Rocky river channel dressing has a bounded deterministic population");
+        check(riverbankA.Zip(riverbankB).All(pair =>
+                pair.First.AssetPath == pair.Second.AssetPath &&
+                Vector3.DistanceSquared(pair.First.Position, pair.Second.Position) < 0.000001f &&
+                MathF.Abs(pair.First.YawRadians - pair.Second.YawRadians) < 0.000001f),
+            "Rocky riverbank placement is deterministic");
+        check(riverbankA.All(model =>
+                model.AssetPath.EndsWith("riverbank_rocky_r0_01.glb", StringComparison.Ordinal) &&
+                MathF.Abs(
+                    model.Position.X - WaterLandscape.CenterX(model.Position.Z)) >=
+                    WaterLandscape.SurfaceHalfWidth(model.Position.Z)),
+            "Rocky riverbank models sit outside the animated water ribbon");
+
         var clutterA = GroundClutterGenerator.Generate(world.Terrain);
         var clutterB = GroundClutterGenerator.Generate(world.Terrain);
         check(clutterA.Count == clutterB.Count && clutterA.Count >= 300,
@@ -187,14 +203,17 @@ internal static class AssetIntegrationRegression
                 "models/static/basket_r0_01.glb") &&
               SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
                 "models/static/slady_pazurow_r0_01.glb") &&
+              SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
+                "models/static/riverbank_rocky_r0_01.glb") &&
               !SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
                 "models/static/stodola_r0_01.glb"),
-            "Small props use clutter-distance culling while major buildings keep world render distance");
+            "Small props and rocky banks use short-range culling while major buildings keep world render distance");
 
         var expectedWorldModels =
             21 +
             RegionalPropLayout.Placements.Count +
             decorationsA.Count +
+            riverbankA.Count +
             clutterA.Count +
             VillageBoundaryLayout.Placements.Count;
         check(world.Models.Count == expectedWorldModels,
@@ -204,6 +223,14 @@ internal static class AssetIntegrationRegression
                 assetsRoot,
                 model.AssetPath.Replace('/', Path.DirectorySeparatorChar)))),
             "Every R0 world instance resolves to a tracked GLB file");
+
+        CheckFacing("village-hut-d", new Vector2(0f, -85f));
+        CheckFacing("village-forge-tools", new Vector2(21f, -91f));
+        CheckFacing("village-road-sign", new Vector2(0f, -85f));
+        CheckFacing("forest-cave-entrance", new Vector2(-45f, 20f));
+        CheckFacing("swamp-damaged-boardwalk", new Vector2(95f, 35f));
+        CheckFacing("swamp-claw-tracks-a", new Vector2(92f, 35f));
+        CheckFacing("shrine-grave-a", new Vector2(-85f, 55f));
 
         var surfaceSamples = new[]
         {
@@ -256,5 +283,16 @@ internal static class AssetIntegrationRegression
         ActorModelMesh.Build(world, player, enemy, 0.35, 0f, true, out var actorVertices, out var actorIndices);
         check(actorVertices.Length > 0 && actorIndices.Length > 0,
             "Animated player and enemy models produce dynamic actor geometry");
+
+        void CheckFacing(string id, Vector2 target)
+        {
+            var model = world.Models.Single(item =>
+                string.Equals(item.Id, id, StringComparison.Ordinal));
+            var from = new Vector2(model.Position.X, model.Position.Z);
+            var desired = Vector2.Normalize(target - from);
+            var actual = WorldPlacementOrientation.ForwardFromYaw(model.YawRadians);
+            check(Vector2.Dot(actual, desired) > 0.985f,
+                $"{id} faces its intended local anchor");
+        }
     }
 }

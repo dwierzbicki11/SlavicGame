@@ -356,7 +356,7 @@ Event and polled mouse deltas are alternative representations of the same moveme
 
 ### River landscape
 
-A winding shallow river runs north–south roughly 220 metres east of spawn, with a carved channel, wet mud banks, reeds and alder trees. The existing oak, pine, birch and wetland forests remain available across the map. Water uses a distance-culled, low-poly surface in the existing actor draw call, with animated colour ripples. This first pass has no swimming or physical current simulation; the river is fordable.
+A winding shallow river runs north–south roughly 220 metres east of spawn. It now has a real terrain channel: a deeper center bed, shallow wet edges, dry rising banks, rocky bank dressing, reeds and alder trees. The water surface follows a gentle downstream slope instead of one global Y plane and uses a distance-culled 5-column ribbon with animated downstream colour bands plus small moving surface waves. This pass still has no swimming or physical current simulation; the river remains fordable.
 
 ### First magic and in-engine cinematics
 

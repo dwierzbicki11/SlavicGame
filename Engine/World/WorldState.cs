@@ -143,6 +143,7 @@ public sealed class WorldState
         }
 
         _models.AddRange(WorldDecorationGenerator.Generate(Terrain));
+        _models.AddRange(RiverbankPropGenerator.Generate(Terrain));
         _models.AddRange(GroundClutterGenerator.Generate(Terrain));
 
         _enemies.Clear();
@@ -236,7 +237,19 @@ public sealed class WorldState
     {
         var position = new Vector3(x, 0f, z);
         position.Y = Terrain.SampleHeight(position) + yOffset;
-        _models.Add(new WorldModelInstance(id, assetPath, position, scale, yawRadians, color));
+        var correctedYaw = WorldPlacementOrientation.ResolveYaw(
+            id,
+            assetPath,
+            x,
+            z,
+            yawRadians);
+        _models.Add(new WorldModelInstance(
+            id,
+            assetPath,
+            position,
+            scale,
+            correctedYaw,
+            color));
     }
 
     private void AddEnemy(string id, float x, float z)
