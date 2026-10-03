@@ -399,3 +399,8 @@ Environmental `E` interactions now support gathering forest resin and lighting/e
 ### Visible rain and storms
 
 Rain and Storm now render lightweight camera-local rain streaks. Terrain and PBR models respond visually to rain with darker, smoother wet surfaces, while Storm adds brief deterministic lightning flashes that brighten the sky and scene without random lightning damage.
+
+
+### Dynamic muddy footprints
+
+Walking across mud, swamp ground and wet river banks now leaves a bounded transient footprint trail with alternating feet. Heavy rain erodes old prints much faster. These physical player traces are visual world feedback only: they do not create quest evidence, are not persisted in saves and are intentionally separate from magical `Reveal Trace` signatures.
