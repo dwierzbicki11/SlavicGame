@@ -44,6 +44,8 @@ public sealed class VeldridRenderer : IDisposable
     private GlbModel? _enemyModel;
     private readonly Dictionary<string, GlbModel> _npcModels =
         new(StringComparer.Ordinal);
+    private readonly Dictionary<string, GlbModel> _wildlifeModels =
+        new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _worldItemModels =
         new(StringComparer.Ordinal);
 
@@ -146,6 +148,31 @@ public sealed class VeldridRenderer : IDisposable
             }
 
             _npcModels[modelFile] = model;
+        }
+
+        _wildlifeModels.Clear();
+        foreach (var modelFile in WildlifeCatalog.RequiredModelFiles)
+        {
+            var wildlifePath = Path.Combine(
+                assetsRoot,
+                "models",
+                "animated",
+                modelFile);
+            if (!File.Exists(wildlifePath))
+            {
+                throw new FileNotFoundException(
+                    $"Required wildlife model '{modelFile}' was not found.",
+                    wildlifePath);
+            }
+
+            var model = GlbModel.Load(wildlifePath);
+            if (model.AnimationNames.Count == 0)
+            {
+                throw new InvalidDataException(
+                    $"Wildlife model '{modelFile}' does not expose animation clips.");
+            }
+
+            _wildlifeModels[modelFile] = model;
         }
 
         _worldItemModels.Clear();
@@ -322,7 +349,8 @@ public sealed class VeldridRenderer : IDisposable
             $"collision obstacles={world.Obstacles.Count}.");
         EngineLog.Info(
             $"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, " +
-            $"NPC models={_npcModels.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
+            $"NPC models={_npcModels.Count}, wildlife models={_wildlifeModels.Count}, " +
+            $"enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
 
@@ -380,6 +408,16 @@ public sealed class VeldridRenderer : IDisposable
             camera.Mode != CameraMode.FirstPerson,
             out var actorVertices,
             out var actorIndices);
+        WildlifeModelMesh.Append(
+            world,
+            _wildlifeModels,
+            animationSeconds,
+            camera.Position,
+            MathF.Min(
+                GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
+                220f),
+            ref actorVertices,
+            ref actorIndices);
         WorldItemModelMesh.Append(
             world,
             _worldItemModels,
