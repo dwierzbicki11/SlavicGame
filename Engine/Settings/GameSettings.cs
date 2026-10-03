@@ -325,15 +325,17 @@ public static class GraphicsQualityCatalog
             _ => 1.5f
         };
 
-        static int RoundTo8(float value, int minimum)
+        static int RoundToEven(float value, int minimum)
         {
-            var rounded = (int)MathF.Round(value / 8f) * 8;
+            var rounded = (int)MathF.Round(value);
+            if ((rounded & 1) != 0)
+                rounded++;
             return Math.Max(minimum, rounded);
         }
 
         return new ResolutionSize(
-            RoundTo8(outputWidth / divisor, 640),
-            RoundTo8(outputHeight / divisor, 360));
+            RoundToEven(outputWidth / divisor, 640),
+            RoundToEven(outputHeight / divisor, 360));
     }
 
     public static int MsaaSamples(MsaaQuality quality) =>
