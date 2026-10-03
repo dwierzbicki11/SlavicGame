@@ -394,3 +394,8 @@ Deep river water now physically drifts the player downstream. Rain can keep the 
 ### Campfires and resin
 
 Environmental `E` interactions now support gathering forest resin and lighting/extinguishing campfires. The village fire starts lit, the hunter-camp fire requires resin, exposed fire can be extinguished by sustained heavy rain, and campfire state persists through save/load via world flags.
+
+
+### Visible rain and storms
+
+Rain and Storm now render lightweight camera-local rain streaks. Terrain and PBR models respond visually to rain with darker, smoother wet surfaces, while Storm adds brief deterministic lightning flashes that brighten the sky and scene without random lightning damage.
