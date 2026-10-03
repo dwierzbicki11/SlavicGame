@@ -35,9 +35,13 @@ public static class RiverAmbienceSynthesizer
         return 1f - smooth;
     }
 
-    public static PcmAudio Generate(float volume, int segmentIndex = 0)
+    public static PcmAudio Generate(
+        float volume,
+        int segmentIndex = 0,
+        float splashIntensity = 0f)
     {
         volume = Math.Clamp(volume, 0f, 1f);
+        splashIntensity = Math.Clamp(splashIntensity, 0f, 1f);
 
         var frames = (int)Math.Round(SampleRate * SegmentSeconds);
         var data = new byte[frames * sizeof(short)];
@@ -69,10 +73,31 @@ public static class RiverAmbienceSynthesizer
             else if (i > frames - fadeFrames)
                 edgeFade = (frames - i) / (float)fadeFrames;
 
+            var splashEnvelope = 0f;
+            if (splashIntensity > 0f)
+            {
+                var splashTime = t;
+                if (splashTime < 0.18f)
+                {
+                    var normalized = splashTime / 0.18f;
+                    splashEnvelope =
+                        MathF.Sin(normalized * MathF.PI) *
+                        (1f - normalized * 0.35f);
+                }
+            }
+
+            var splashNoise =
+                noise * 0.62f +
+                (low - slow) * 0.38f;
+
             var sample = Math.Clamp(
-                (waterNoise + rippleTone) *
-                volume *
-                0.42f *
+                ((waterNoise + rippleTone) *
+                    volume *
+                    0.42f +
+                 splashNoise *
+                    splashEnvelope *
+                    splashIntensity *
+                    0.52f) *
                 Math.Clamp(edgeFade, 0f, 1f),
                 -1f,
                 1f);
