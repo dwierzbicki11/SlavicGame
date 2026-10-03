@@ -9,11 +9,11 @@ namespace SlavicGame.Engine.Renderer;
 public sealed class ShadowMapRenderer : IDisposable
 {
     public const uint DefaultMapSize = 2048;
-    public const float WorldSpan = 420f;
-    public const float HalfWorldSpan = WorldSpan * 0.5f;
+    public const float DefaultWorldSpan = 420f;
 
     private GraphicsDevice? _graphicsDevice;
     private uint _mapSize = DefaultMapSize;
+    private float _worldSpan = DefaultWorldSpan;
     private Texture? _depthTexture;
     private TextureView? _depthView;
     private Framebuffer? _framebuffer;
@@ -30,6 +30,8 @@ public sealed class ShadowMapRenderer : IDisposable
     private bool _disposed;
 
     public uint MapSize => _mapSize;
+    public float WorldSpan => _worldSpan;
+    public float HalfWorldSpan => _worldSpan * 0.5f;
 
     public ResourceLayout SampleLayout =>
         _sampleLayout ?? throw new InvalidOperationException("Shadow map renderer is not initialized.");
@@ -142,7 +144,7 @@ public sealed class ShadowMapRenderer : IDisposable
                     "Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3)));
 
         EngineLog.Info(
-            $"Sun shadow map initialized: {_mapSize}x{_mapSize}, world span {WorldSpan:0}m.");
+            $"Sun shadow map initialized: {_mapSize}x{_mapSize}, world span {_worldSpan:0}m.");
     }
 
     public Matrix4x4 UpdateLight(
@@ -159,7 +161,8 @@ public sealed class ShadowMapRenderer : IDisposable
         var matrix = CalculateLightViewProjection(
             focusPosition,
             sunDirection,
-            _mapSize);
+            _mapSize,
+            _worldSpan);
         commandList.UpdateBuffer(_depthMatrixBuffer, 0, matrix);
         commandList.UpdateBuffer(_sampleMatrixBuffer, 0, matrix);
         return matrix;
@@ -239,18 +242,36 @@ public sealed class ShadowMapRenderer : IDisposable
         EngineLog.Info($"Sun shadow map resolution changed to {_mapSize}x{_mapSize}.");
     }
 
+    public void SetWorldSpan(float worldSpan)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _worldSpan = Math.Clamp(worldSpan, 80f, DefaultWorldSpan);
+    }
+
     public static Matrix4x4 CalculateLightViewProjection(
         Vector3 focusPosition,
         Vector3 sunDirection) =>
         CalculateLightViewProjection(
             focusPosition,
             sunDirection,
-            DefaultMapSize);
+            DefaultMapSize,
+            DefaultWorldSpan);
 
     public static Matrix4x4 CalculateLightViewProjection(
         Vector3 focusPosition,
         Vector3 sunDirection,
-        uint mapSize)
+        uint mapSize) =>
+        CalculateLightViewProjection(
+            focusPosition,
+            sunDirection,
+            mapSize,
+            DefaultWorldSpan);
+
+    public static Matrix4x4 CalculateLightViewProjection(
+        Vector3 focusPosition,
+        Vector3 sunDirection,
+        uint mapSize,
+        float worldSpan)
     {
         if (!float.IsFinite(focusPosition.X) ||
             !float.IsFinite(focusPosition.Y) ||
@@ -272,7 +293,8 @@ public sealed class ShadowMapRenderer : IDisposable
         // Snap the shadow focus to the shadow texel footprint. This greatly
         // reduces shimmering while the camera moves slowly.
         mapSize = Math.Clamp(mapSize, 512u, 4096u);
-        var texelWorldSize = WorldSpan / mapSize;
+        worldSpan = Math.Clamp(worldSpan, 80f, DefaultWorldSpan);
+        var texelWorldSize = worldSpan / mapSize;
         var focus = new Vector3(
             MathF.Round(focusPosition.X / texelWorldSize) * texelWorldSize,
             focusPosition.Y,
@@ -285,8 +307,8 @@ public sealed class ShadowMapRenderer : IDisposable
         var eye = focus + sunDirection * 520f;
         var lightView = Matrix4x4.CreateLookAt(eye, focus, up);
         var lightProjection = Matrix4x4.CreateOrthographic(
-            WorldSpan,
-            WorldSpan,
+            worldSpan,
+            worldSpan,
             2f,
             1050f);
 
