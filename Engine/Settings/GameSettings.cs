@@ -420,6 +420,7 @@ public sealed class GameSettings
     public bool VSync { get; set; }
     public bool ShowFps { get; set; } = true;
     public RenderResolution Resolution { get; set; } = RenderResolution.Hd720;
+    public RenderResolution WindowResolution { get; set; } = RenderResolution.Hd720;
 
     public float FieldOfViewDegrees { get; set; } = 60f;
     public float MouseSensitivity { get; set; } = 1.0f;
@@ -450,6 +451,7 @@ public sealed class GameSettings
     public bool ModelPbr { get; set; } = true;
 
     public ResolutionSize ResolutionSize => ResolutionCatalog.Get(Resolution);
+    public ResolutionSize WindowResolutionSize => ResolutionCatalog.Get(WindowResolution);
 
     public void Normalize()
     {
@@ -458,6 +460,8 @@ public sealed class GameSettings
 
         if (!Enum.IsDefined(Resolution))
             Resolution = RenderResolution.Hd720;
+        if (!Enum.IsDefined(WindowResolution))
+            WindowResolution = RenderResolution.Hd720;
         if (!Enum.IsDefined(CloudQuality))
             CloudQuality = CloudQuality.High;
         if (!Enum.IsDefined(ShadowQuality))
