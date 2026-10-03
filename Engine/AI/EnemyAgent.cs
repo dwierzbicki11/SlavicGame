@@ -196,11 +196,21 @@ public sealed class EnemyAgent : IDamageReceiver
             throw new ArgumentOutOfRangeException(nameof(amount));
         }
 
+        if (!IsAlive || amount <= 0f)
+        {
+            return;
+        }
+
         Health = MathF.Max(0f, Health - amount);
         if (Health <= 0f)
         {
             State = EnemyState.Dead;
+            _alertRemaining = 0;
+            return;
         }
+
+        State = EnemyState.Alert;
+        _alertRemaining = AlertSeconds;
     }
 
     private void Patrol(WorldState world, double deltaSeconds)
