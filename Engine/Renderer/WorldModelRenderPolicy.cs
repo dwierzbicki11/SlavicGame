@@ -12,6 +12,7 @@ public static class WorldModelRenderPolicy
         "misa_",
         "paliki_rytualne_",
         "pulapka_",
+        "riverbank_rocky_",
         "sack_",
         "slady_",
         "stojak_narzedzia_",
