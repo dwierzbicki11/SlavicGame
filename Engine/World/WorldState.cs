@@ -25,6 +25,8 @@ public sealed class WorldState
     public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
+    public CampfireRuntime Campfires { get; } = new();
+    public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();
     public WorldTime Time { get; } = new();
     public WeatherSystem Weather { get; } = new();
@@ -176,7 +178,9 @@ public sealed class WorldState
         Time.Update(deltaSeconds);
         SetPlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
+        Campfires.Update(this, deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
+        EnvironmentInteractions.Update(this);
         SpellLearning.Update(this);
         SpellLearning.RefreshMessage(this);
         QuestInteractions.Update(this);
