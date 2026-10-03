@@ -157,7 +157,13 @@ public sealed class GameEngine : IDisposable
                     {
                         _world.Update(_time.DeltaSeconds);
                         _world.Magic.Update(_world, _time.DeltaSeconds);
-                        if (Vector3.Distance(_world.PlayerPosition, new Vector3(-85f, _world.PlayerPosition.Y, 55f)) < 18f)
+                        _world.Rituals.Update(_world, _time.DeltaSeconds);
+
+                        if (_world.Rituals.ConsumeCompletionSignal())
+                            _world.Cinematics.TryStartById(_world, "contract-resolution");
+
+                        if (!_world.Cinematics.IsPlaying &&
+                            Vector3.Distance(_world.PlayerPosition, new Vector3(-85f, _world.PlayerPosition.Y, 55f)) < 18f)
                             _world.Cinematics.TryStart(_world, CinematicPlayer.Shrine);
                     }
                     if (_world.Cinematics.IsPlaying)
@@ -407,8 +413,10 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
-        if (_window.ConsumeKeyPress(Key.Q)) _world.Magic.SelectNext();
-        if (_window.ConsumeKeyPress(Key.F))
+        if (_window.ConsumeKeyPress(Key.Q) && !_world.Rituals.IsPerforming)
+            _world.Magic.SelectNext();
+
+        if (_window.ConsumeKeyPress(Key.F) && !_world.Rituals.IsPerforming)
         {
             var spell = _world.Magic.Current;
             if (_world.Magic.TryStart(_world, _camera.GetLookDirection()))
@@ -416,12 +424,16 @@ public sealed class GameEngine : IDisposable
                 _voice?.Speak(BuildSpellVoiceRequest(spell));
             }
         }
-        if (_window.ConsumeKeyPress(Key.C))
+
+        if (_window.ConsumeKeyPress(Key.R) && !_world.Rituals.IsPerforming)
+            _world.Rituals.TryStart(_world);
+
+        if (_window.ConsumeKeyPress(Key.C) && !_world.Rituals.IsPerforming)
         {
             _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
             if (_world.Cinematics.IsPlaying) return;
         }
-        var canMove = !_world.Magic.IsCasting;
+        var canMove = !_world.Magic.IsCasting && !_world.Rituals.IsPerforming;
         var input = new PlayerInput(
             canMove && _window.IsKeyDown(Key.W),
             canMove && _window.IsKeyDown(Key.S),
