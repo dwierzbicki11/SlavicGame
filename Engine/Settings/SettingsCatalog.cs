@@ -26,9 +26,16 @@ public static class SettingsCatalog
             "resolution",
             SettingCategory.Display,
             "ROZDZIELCZOSC RENDERU",
-            s => s.ResolutionSize.ToString(),
+            s => s.Upscaler == UpscalerMode.Fsr1 &&
+                 s.FsrQuality != FsrQualityMode.Custom
+                ? $"AUTO {FsrQualityName(s.FsrQuality)}"
+                : s.ResolutionSize.ToString(),
             (s, direction) =>
-                s.Resolution = ResolutionCatalog.Cycle(s.Resolution, direction)),
+            {
+                s.Resolution = ResolutionCatalog.Cycle(s.Resolution, direction);
+                if (s.Upscaler == UpscalerMode.Fsr1)
+                    s.FsrQuality = FsrQualityMode.Custom;
+            }),
         new(
             "window-resolution",
             SettingCategory.Display,
