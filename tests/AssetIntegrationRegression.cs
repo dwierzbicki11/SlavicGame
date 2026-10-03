@@ -280,10 +280,38 @@ internal static class AssetIntegrationRegression
             "Static R0 mesh contains GLB world indices beyond terrain");
 
         var enemy = GlbModel.Load(enemyPath);
+
+        var npcModels = NpcVisualCatalog.RequiredModelAssets
+            .ToDictionary(
+                assetPath => assetPath,
+                assetPath =>
+                {
+                    var fullPath = Path.Combine(
+                        assetsRoot,
+                        assetPath.Replace('/', Path.DirectorySeparatorChar));
+                    check(File.Exists(fullPath),
+                        $"Assigned NPC model {assetPath} is copied into test runtime");
+                    return GlbModel.Load(fullPath);
+                },
+                StringComparer.Ordinal);
+
+        check(npcModels.Count == 5,
+            "NPC population uses five distinct authored animated base models");
+        check(npcModels.Values.All(model =>
+                model.AnimationNames.Contains("Idle") &&
+                model.AnimationNames.Contains("Walk") &&
+                model.AnimationNames.Contains("Interact")),
+            "Every NPC base model exposes the required social locomotion clips");
+        check(!NpcVisualCatalog.RequiredModelAssets.Contains(
+                "models/animated/player_hunter_animated.glb",
+                StringComparer.Ordinal),
+            "Settlers no longer reuse the player hunter GLB as their base model");
+
         ActorModelMesh.Build(
             world,
             player,
             enemy,
+            npcModels,
             0.35,
             0f,
             true,
@@ -315,6 +343,18 @@ internal static class AssetIntegrationRegression
         check(questProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 4,
             "Authored NPC silhouettes use multiple distinct accessory families");
 
+        var questModelAssets = questNpcIds
+            .Select(id =>
+            {
+                var actor = world.NpcWorld.Find(id)
+                    ?? throw new Exception($"NPC {id} missing from runtime");
+                return NpcVisualCatalog.ModelAssetFor(id, actor.Role);
+            })
+            .ToArray();
+
+        check(questModelAssets.Distinct(StringComparer.Ordinal).Count() >= 4,
+            "Five authored quest NPCs use at least four distinct base body models");
+
         var ambientProfiles = world.NpcWorld.Actors
             .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
             .Select(actor => NpcVisualCatalog.For(actor.Id, actor.Role))
@@ -324,6 +364,18 @@ internal static class AssetIntegrationRegression
               ambientProfiles.Select(profile => profile.BaseColor).Distinct().Count() >= 6 &&
               ambientProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 5,
             "Ambient settlers have varied palettes and silhouette accessories");
+
+        var ambientModelAssets = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .Select(actor => NpcVisualCatalog.ModelAssetFor(actor.Id, actor.Role))
+            .ToArray();
+
+        check(ambientModelAssets.Distinct(StringComparer.Ordinal).Count() == 5,
+            "Ambient settlers collectively use all five NPC base models");
+        check(world.NpcWorld.Actors.All(actor =>
+                npcModels.ContainsKey(
+                    NpcVisualCatalog.ModelAssetFor(actor.Id, actor.Role))),
+            "Every scheduled NPC resolves to a loaded base model");
 
         var playerGeometry = player.BuildMesh(
             Matrix4x4.Identity,
@@ -335,12 +387,25 @@ internal static class AssetIntegrationRegression
             "Idle",
             0.35f,
             sourceIsZUp: true);
+        var npcBaseVertexBudget = world.NpcWorld.Actors.Sum(actor =>
+        {
+            var asset = NpcVisualCatalog.ModelAssetFor(actor.Id, actor.Role);
+            return npcModels[asset]
+                .BuildMesh(
+                    Matrix4x4.Identity,
+                    "Idle",
+                    0.35f,
+                    sourceIsZUp: true)
+                .Positions.Length;
+        });
+
         var baseAnimatedVertexBudget =
-            playerGeometry.Positions.Length * (1 + world.NpcWorld.Actors.Count) +
+            playerGeometry.Positions.Length +
+            npcBaseVertexBudget +
             enemyGeometry.Positions.Length;
 
         check(actorVertices.Length > baseAnimatedVertexBudget,
-            "Settler accessories add visible geometry beyond the shared humanoid rig");
+            "Settler accessories add visible geometry beyond their distinct humanoid base rigs");
 
         void CheckFacing(string id, Vector2 target)
         {
