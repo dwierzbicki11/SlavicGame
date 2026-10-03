@@ -28,7 +28,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ### P2 — research packages
 - [x] culture research framework: stabilne `CULT_*` IDs, H/R/F/U oraz source/evidence policy (`research/cultures/CultureResearchFramework.md`);
-- [ ] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5); **R0–R4 evidence packages v0.1 gotowe**, R5 pozostaje;
+- [x] culture research package dla każdego finalnego kontekstu kulturowego (R0–R5) na poziomie evidence package v0.1; R5 ma osobną wieloźródłową bazę porównawczą i jawne locki zamiast stereotypowej analogii;
 - [ ] domknięcie krytycznych źródeł panteonu;
 - [ ] research lock material culture dla produkcyjnych assetów;
 - [ ] source-strength/region-fit pass południcy;
@@ -69,4 +69,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-`CULT_R0_ZARNOWIEC`–`CULT_R4_KAMIENNE_WYZYNY` mają evidence packages v0.1. R4 oddziela fikcyjny łańcuch zasobów i strukturę kopalnianą od research locków technik wydobycia, geologii, transportu, metalurgii/kamieniarstwa, wyglądu i praktyk kultowych. Następny pakiet: **`CULT_R5_AREL`** — wymaga osobnej, jawnie dobranej wieloźródłowej bazy badawczej spoza inspiracji słowiańskiej. Nie wypełniać braków stereotypową analogią „stepową”, jednym historycznym ludem ani przypadkowym zestawem ornamentów. Równolegle można domykać małe, jednoznaczne bestiary source/identity locki, jeśli research daje wystarczającą podstawę.
+`CULT_R0_ZARNOWIEC`–`CULT_R5_AREL` mają evidence packages v0.1. Arel nie jest kopią jednego realnego ludu: pakiet rozdziela fikcyjne decyzje R5 od wieloźródłowych ograniczeń porównawczych i pozostawia finalny transport, dwellings, costume, old-sites, economy, naming i religion za jawnymi lockami z wymaganiem locatorów. Następny najmniejszy niezablokowany pakiet P2: **source-strength/region-fit pass południcy**, a następnie **identity lock `forest-guardian`**. Krytyczne źródła panteonu i finalne material-culture locators pozostają większymi pakietami research.
