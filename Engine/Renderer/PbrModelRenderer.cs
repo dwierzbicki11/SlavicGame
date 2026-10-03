@@ -647,7 +647,8 @@ public sealed class PbrModelRenderer : IDisposable
     {
         if (assetPath.Contains(
                 "ground_clutter/",
-                StringComparison.OrdinalIgnoreCase))
+                StringComparison.OrdinalIgnoreCase) ||
+            WorldModelRenderPolicy.IsShortRangeProp(assetPath))
         {
             return RenderableKind.GroundClutter;
         }

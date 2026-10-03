@@ -158,8 +158,42 @@ internal static class AssetIntegrationRegression
                 wall.AssetPath.EndsWith("wall_wattle_straight.glb", StringComparison.Ordinal)),
             "Village boundary uses the new wattle asset");
 
+        check(RegionalPropLayout.Placements.Count >= 50,
+            "R0 regional prop pass adds a substantial set of curated world models");
+        check(RegionalPropLayout.Placements.Count(item =>
+                item.Id.StartsWith("village-", StringComparison.Ordinal)) >= 20,
+            "Village receives buildings plus lived-in market and workshop props");
+        check(RegionalPropLayout.Placements.Count(item =>
+                item.Id.StartsWith("swamp-", StringComparison.Ordinal)) >= 10,
+            "Black Swamp receives traversal and investigation set dressing");
+        check(RegionalPropLayout.Placements.Count(item =>
+                item.Id.StartsWith("shrine-", StringComparison.Ordinal)) >= 10,
+            "Stone Circle receives ruins graves and ritual dressing");
+        check(RegionalPropLayout.Placements.Any(item =>
+                item.AssetPath.EndsWith("chata_r0_variant_04.glb", StringComparison.Ordinal)) &&
+              RegionalPropLayout.Placements.Any(item =>
+                item.AssetPath.EndsWith("stajnia_r0_01.glb", StringComparison.Ordinal)) &&
+              RegionalPropLayout.Placements.Any(item =>
+                item.AssetPath.EndsWith("stodola_r0_01.glb", StringComparison.Ordinal)) &&
+              RegionalPropLayout.Placements.Any(item =>
+                item.AssetPath.EndsWith("wieza_straznicza_r0_01.glb", StringComparison.Ordinal)),
+            "Village skyline uses the previously unused fourth hut stable barn and watchtower");
+        check(RegionalPropLayout.Placements.All(item =>
+                File.Exists(Path.Combine(
+                    assetsRoot,
+                    item.AssetPath.Replace('/', Path.DirectorySeparatorChar)))),
+            "Every new regional prop resolves to a tracked GLB");
+        check(SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
+                "models/static/basket_r0_01.glb") &&
+              SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
+                "models/static/slady_pazurow_r0_01.glb") &&
+              !SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
+                "models/static/stodola_r0_01.glb"),
+            "Small props use clutter-distance culling while major buildings keep world render distance");
+
         var expectedWorldModels =
             21 +
+            RegionalPropLayout.Placements.Count +
             decorationsA.Count +
             clutterA.Count +
             VillageBoundaryLayout.Placements.Count;

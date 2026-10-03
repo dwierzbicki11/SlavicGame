@@ -369,3 +369,8 @@ A winding shallow river runs north–south roughly 220 metres east of spawn, wit
 - **L** attempts a contextual spell lesson. Spells are locked until their requirements are met; unknown incantations/costs stay hidden. Current lessons gate Spark by reaching the shrine, Mend by prior Spark + real injury + a practice bandage, and Reveal Trace by investigation knowledge.
 - **R** attempts the first ritual, `ritual.release-bound-echo`. It validates learned ritual/signs, location, night window, quest items, confirmed identity evidence, anchor knowledge and nearby threats. The seven-step sequence consumes the keepsake/thread only on successful completion; interruption is retry-safe.
 - Optional emotional neural TTS uses **free local Chatterbox Multilingual** primarily for the protagonist speaking spell incantations. `ZAR VEK`, `ZIVA DAR` and `VEDA NAW` have distinct casting deliveries while sharing the stable `protagonist` voice identity. Cinematic/NPC TTS is off by default. It runs locally, caches generated PCM and requires no paid API key. See `docs/technical/EmotionalTts.md`.
+
+
+### R0 world-density pass
+
+Żarnowiec, starting forest, Czarne Mokradła and Kamienny Krąg now include an additional curated layer of buildings, ruins, investigation props, ritual dressing and small environmental storytelling models. Small props use short-range culling so the denser world remains scalable on low-end GPUs.

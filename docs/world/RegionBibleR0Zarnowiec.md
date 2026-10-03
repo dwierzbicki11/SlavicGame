@@ -183,3 +183,56 @@ Jawnie niezamknięte:
 - dokładna lista assetów poza vertical slice — do P4/P5.
 
 Żadna z tych pozycji nie blokuje greyboxu i implementacji podstawowego flow R0; nie wolno jednak cicho traktować wartości tymczasowych jako finalnego locku.
+
+## Runtime environment dressing pass — 56 curated props
+
+R0 ma dodatkową ręcznie rozmieszczoną warstwę modeli ponad proceduralne lasy i ground clutter.
+
+### Żarnowiec
+Dodano m.in.:
+- czwarty wariant chaty;
+- stodołę;
+- stajnię;
+- wieżę strażniczą;
+- dwa wozy;
+- bele siana i stosy drewna;
+- kowadło i stojak narzędzi;
+- kosze, worki i gliniane garnki;
+- palenisko;
+- drogowskaz przy południowym wyjściu.
+
+Duże budynki i landmarki mają własne proste kolizje.
+
+### Puszcza przy starcie
+Dodano:
+- mały obóz myśliwski;
+- ognisko;
+- kosz i worek;
+- pułapki;
+- drogowskaz;
+- wejście do jaskini;
+- otaczające je bloki skalne.
+
+### Czarne Mokradła
+Dodano:
+- złamany fragment mostu;
+- uszkodzoną kładkę;
+- dwie wyspy bagienne;
+- pułapki rybackie;
+- ślady pazurów;
+- ślad krwi;
+- porzucone wyposażenie.
+
+Elementy śledztwa wizualnie wspierają istniejące punkty evidence, ale same modele nie przyznają wiedzy bez właściwej interakcji gameplayowej.
+
+### Kamienny Krąg
+Dodano:
+- dwa fragmenty ruin;
+- kamienie kultowe i runiczne;
+- misy ofiarne;
+- paliki rytualne;
+- świece;
+- trzy znaczniki grobów.
+
+### Performance contract
+Małe rekwizyty są klasyfikowane przez `WorldModelRenderPolicy` jako short-range props i używają dystansu ground clutter. Budynki, ruiny, jaskinia i główne landmarki zachowują pełny world render distance. To pozwala zwiększać gęstość lokacji bez utrzymywania wszystkich drobnych modeli na dużym dystansie, szczególnie na Low/Balanced i słabszych iGPU.
