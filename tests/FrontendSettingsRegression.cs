@@ -9,7 +9,7 @@ public static class FrontendSettingsRegression
         ArgumentNullException.ThrowIfNull(check);
 
         var definitions = SettingsCatalog.All;
-        check(definitions.Count >= 21,
+        check(definitions.Count >= 25,
             "Frontend exposes the current display, controls and graphics settings");
         check(definitions.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count() == definitions.Count,
             "Frontend setting identifiers are unique");
@@ -32,6 +32,18 @@ public static class FrontendSettingsRegression
         check(GraphicsQualityCatalog.ShadowMapSize(ShadowQuality.Low) <
               GraphicsQualityCatalog.ShadowMapSize(ShadowQuality.High),
             "Shadow quality maps to increasing shadow-map resolution");
+        check(GraphicsQualityCatalog.RenderDistance(RenderDistanceQuality.VeryLow) <
+              GraphicsQualityCatalog.RenderDistance(RenderDistanceQuality.Ultra),
+            "World render distance maps to increasing visibility range");
+        check(GraphicsQualityCatalog.VegetationDistance(VegetationDistanceQuality.Short) <
+              GraphicsQualityCatalog.VegetationDistance(VegetationDistanceQuality.Ultra),
+            "Vegetation distance maps to increasing visibility range");
+        check(GraphicsQualityCatalog.GroundClutterDistance(GroundClutterQuality.Off) == 0f &&
+              GraphicsQualityCatalog.GroundClutterDistance(GroundClutterQuality.High) > 0f,
+            "Ground clutter can be completely disabled");
+        check(GraphicsQualityCatalog.ShadowDistance(ShadowDistanceQuality.Short) <
+              GraphicsQualityCatalog.ShadowDistance(ShadowDistanceQuality.Ultra),
+            "Shadow distance maps to increasing shadow coverage");
 
         var textureQuality = definitions.Single(item => item.Id == "texture-quality");
         settings.TextureQuality = TextureQuality.High;
@@ -51,8 +63,12 @@ public static class FrontendSettingsRegression
         check(!settings.VolumetricClouds &&
               !settings.CloudShadows &&
               !settings.SunShadows &&
-              settings.TextureQuality == TextureQuality.Low,
-            "Low-end preset disables the heaviest GPU effects and lowers texture quality");
+              settings.TextureQuality == TextureQuality.Low &&
+              settings.RenderDistance == RenderDistanceQuality.VeryLow &&
+              settings.VegetationDistance == VegetationDistanceQuality.Short &&
+              settings.GroundClutter == GroundClutterQuality.Off &&
+              settings.ShadowDistance == ShadowDistanceQuality.Short,
+            "Low-end preset disables the heaviest GPU effects and aggressively reduces visibility work");
 
         settings.VolumetricClouds = true;
         var clouds = definitions.Single(item => item.Id == "volumetric-clouds");
