@@ -418,7 +418,7 @@ The five R0 NPC roles now have schedule-driven world positions, visible humanoid
 
 ### Living NPC routines
 
-Żarnowiec's visible settlers now follow deterministic local work and patrol routes instead of remaining fixed at schedule anchors. The guard patrols the village, workers move around their work areas, the carrier crosses between storage and market, the traveler enters from the gate, and shrine/crossing keepers move around their duties. Dialogue freezes only the active speaker and turns them toward the player.
+Żarnowiec's visible settlers follow deterministic local work and patrol routes instead of remaining fixed at schedule anchors. Moving actors use `Walk`; when a worker reaches a stationary duty such as field work, woodworking, pottery, trading, herb preparation, crossing maintenance or shrine tending, the assigned NPC model uses its authored `Interact` clip instead of standing on `Idle`. Dialogue freezes only the active speaker and turns them toward the player.
 
 
 ### Swamp apparition

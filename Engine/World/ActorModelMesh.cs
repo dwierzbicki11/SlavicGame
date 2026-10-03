@@ -53,8 +53,8 @@ public static class ActorModelMesh
                 Matrix4x4.CreateRotationY(npc.YawRadians) *
                 Matrix4x4.CreateTranslation(npc.Position);
             var clip = npc.IsMoving
-                ? NpcVisualCatalog.AnimationClip(npc.Activity)
-                : "Idle";
+                ? "Walk"
+                : NpcVisualCatalog.AnimationClip(npc.Activity);
             if (!npcModel.AnimationNames.Contains(clip))
                 clip = npc.IsMoving ? "Walk" : "Idle";
 

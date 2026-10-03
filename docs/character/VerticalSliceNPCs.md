@@ -272,3 +272,27 @@ Każda baza zachowuje własną geometrię i animacje `Idle/Walk`, a istniejące 
 - lekkie proceduralne dodatki sylwetki.
 
 Modele są ładowane po jednym egzemplarzu na rodzinę i współdzielone przez wiele instancji NPC. Dzięki temu 13 aktywnych mieszkańców nie wymaga 13 kopii danych GLB.
+
+
+## Runtime work-animation pass
+
+NPC nie używają już wyłącznie `Idle` podczas pracy.
+
+Polityka klipów:
+- ruch po trasie: `Walk`;
+- praca stacjonarna: `Interact`;
+- odpoczynek/dom/bezczynność: `Idle`.
+
+Na `Interact` przechodzą m.in.:
+- `field-work`;
+- `wood-work`;
+- `craft-work`;
+- `market-trade`;
+- `trade-and-prepare`;
+- `maintain-crossing`;
+- `tend-shrine`;
+- `home-and-search`.
+
+Jeżeli NPC rzeczywiście porusza się w ramach danej aktywności, locomotion ma pierwszeństwo i renderer używa `Walk`. Po zatrzymaniu w punkcie pracy przechodzi na `Interact`.
+
+Wszystkie pięć używanych rodzin NPC GLB jest walidowanych pod kątem obecności `Idle`, `Walk` i `Interact`.
