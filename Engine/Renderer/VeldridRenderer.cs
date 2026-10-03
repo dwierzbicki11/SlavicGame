@@ -108,7 +108,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-        _atmosphereBuffer = factory.CreateBuffer(new BufferDescription(144, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        _atmosphereBuffer = factory.CreateBuffer(new BufferDescription(160, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
         _actorVertexCapacity = 64;
         _actorIndexCapacity = 128;
@@ -346,6 +346,12 @@ public sealed class VeldridRenderer : IDisposable
             settings.ModelPbr ? 1f : 0f,
             GraphicsQualityCatalog.CloudRaymarchSteps(settings.CloudQuality),
             0f);
+        var graphicsFeatures3 = new Vector4(
+            settings.NormalMapping ? 1f : 0f,
+            settings.SpecularHighlights ? 1f : 0f,
+            GraphicsQualityCatalog.TerrainDetailLevel(settings.TerrainDetail),
+            0f);
+        var cameraFrustum = CameraFrustum.Create(camera, aspect);
 
         _commandList.Begin();
         _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
@@ -359,6 +365,7 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.UpdateBuffer(_atmosphereBuffer, 96, graphicsFeatures0);
         _commandList.UpdateBuffer(_atmosphereBuffer, 112, graphicsFeatures1);
         _commandList.UpdateBuffer(_atmosphereBuffer, 128, graphicsFeatures2);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 144, graphicsFeatures3);
         _commandList.UpdateBuffer(_hudScreenBuffer, 0, screenSize);
         if (actorVertices.Length > 0)
         {
@@ -420,6 +427,7 @@ public sealed class VeldridRenderer : IDisposable
             _cameraSet,
             _shadows.SampleSet,
             camera.Position,
+            cameraFrustum,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
             GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter));
