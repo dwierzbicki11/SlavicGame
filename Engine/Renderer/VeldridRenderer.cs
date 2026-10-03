@@ -42,6 +42,8 @@ public sealed class VeldridRenderer : IDisposable
     private Shader[]? _hudShaders;
     private GlbModel? _playerModel;
     private GlbModel? _enemyModel;
+    private readonly Dictionary<string, GlbModel> _npcModels =
+        new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _worldItemModels =
         new(StringComparer.Ordinal);
 
@@ -117,6 +119,34 @@ public sealed class VeldridRenderer : IDisposable
         var assetsRoot = Path.Combine(AppContext.BaseDirectory, "assets");
         _playerModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "player_hunter_animated.glb"));
         _enemyModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "swamp_predator_animated.glb"));
+
+        _npcModels.Clear();
+        foreach (var modelFile in world.Npcs
+                     .Select(npc => NpcVisualCatalog.ModelFile(npc.Id, npc.Role))
+                     .Distinct(StringComparer.Ordinal))
+        {
+            var npcPath = Path.Combine(
+                assetsRoot,
+                "models",
+                "animated",
+                modelFile);
+            if (!File.Exists(npcPath))
+            {
+                throw new FileNotFoundException(
+                    $"Required NPC model '{modelFile}' was not found.",
+                    npcPath);
+            }
+
+            var model = GlbModel.Load(npcPath);
+            if (!model.AnimationNames.Contains("Idle") ||
+                !model.AnimationNames.Contains("Walk"))
+            {
+                throw new InvalidDataException(
+                    $"NPC model '{modelFile}' must contain Idle and Walk clips.");
+            }
+
+            _npcModels[modelFile] = model;
+        }
 
         _worldItemModels.Clear();
         foreach (var assetPath in WorldItemVisualCatalog.Definitions
@@ -290,7 +320,9 @@ public sealed class VeldridRenderer : IDisposable
             $"unique assets={_pbrModels.UniqueAssetCount}, spatial batches={_pbrModels.RenderableCount}, " +
             $"far-tree proxies={_farVegetation.TreeCount}/{_farVegetation.BatchCount} batches, " +
             $"collision obstacles={world.Obstacles.Count}.");
-        EngineLog.Info($"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
+        EngineLog.Info(
+            $"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, " +
+            $"NPC models={_npcModels.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
 
@@ -341,6 +373,7 @@ public sealed class VeldridRenderer : IDisposable
         ActorModelMesh.Build(
             world,
             _playerModel,
+            _npcModels,
             _enemyModel,
             animationSeconds,
             camera.Yaw,

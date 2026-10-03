@@ -9,6 +9,7 @@ public static class ActorModelMesh
     public static void Build(
         WorldState world,
         GlbModel playerModel,
+        IReadOnlyDictionary<string, GlbModel> npcModels,
         GlbModel enemyModel,
         double animationSeconds,
         float playerYaw,
@@ -18,6 +19,7 @@ public static class ActorModelMesh
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(playerModel);
+        ArgumentNullException.ThrowIfNull(npcModels);
         ArgumentNullException.ThrowIfNull(enemyModel);
 
         var vertexList = new List<TerrainVertex>();
@@ -39,19 +41,29 @@ public static class ActorModelMesh
         foreach (var npc in world.NpcWorld.Actors)
         {
             var profile = NpcVisualCatalog.For(npc.Id, npc.Role);
+            var modelFile = NpcVisualCatalog.ModelFile(npc.Id, npc.Role);
+            if (!npcModels.TryGetValue(modelFile, out var npcModel))
+            {
+                throw new KeyNotFoundException(
+                    $"NPC model '{modelFile}' for '{npc.Id}' was not loaded.");
+            }
+
             var npcTransform =
                 Matrix4x4.CreateScale(profile.BodyScale) *
                 Matrix4x4.CreateRotationY(npc.YawRadians) *
                 Matrix4x4.CreateTranslation(npc.Position);
             var clip = npc.IsMoving
-                ? "Walk"
+                ? NpcVisualCatalog.AnimationClip(npc.Activity)
                 : "Idle";
+            if (!npcModel.AnimationNames.Contains(clip))
+                clip = npc.IsMoving ? "Walk" : "Idle";
+
             var animationTime =
                 (time + StableAnimationOffset(npc.Id)) *
                 profile.AnimationSpeed;
 
             Append(
-                playerModel.BuildMesh(
+                npcModel.BuildMesh(
                     npcTransform,
                     clip,
                     animationTime,

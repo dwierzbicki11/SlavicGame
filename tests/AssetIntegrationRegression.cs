@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Assets;
+using SlavicGame.Engine.NPC;
 using SlavicGame.Engine.World;
 
 internal static class AssetIntegrationRegression
@@ -280,9 +281,38 @@ internal static class AssetIntegrationRegression
             "Static R0 mesh contains GLB world indices beyond terrain");
 
         var enemy = GlbModel.Load(enemyPath);
+        var npcModelFiles = world.NpcWorld.Actors
+            .Select(actor => NpcVisualCatalog.ModelFile(actor.Id, actor.Role))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(file => file, StringComparer.Ordinal)
+            .ToArray();
+
+        check(npcModelFiles.Length == 5,
+            "NPC roster uses five distinct animated humanoid model families");
+
+        var npcModels = npcModelFiles.ToDictionary(
+            file => file,
+            file =>
+            {
+                var path = Path.Combine(
+                    assetsRoot,
+                    "models",
+                    "animated",
+                    file);
+                check(File.Exists(path),
+                    $"NPC model asset exists: {file}");
+                var model = GlbModel.Load(path);
+                check(model.AnimationNames.Contains("Idle") &&
+                      model.AnimationNames.Contains("Walk"),
+                    $"NPC model {file} contains Idle and Walk clips");
+                return model;
+            },
+            StringComparer.Ordinal);
+
         ActorModelMesh.Build(
             world,
             player,
+            npcModels,
             enemy,
             0.35,
             0f,
@@ -325,6 +355,29 @@ internal static class AssetIntegrationRegression
               ambientProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 5,
             "Ambient settlers have varied palettes and silhouette accessories");
 
+        var ambientModelFiles = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .Select(actor => NpcVisualCatalog.ModelFile(actor.Id, actor.Role))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        check(ambientModelFiles.Length >= 5 &&
+              ambientModelFiles.Contains("npc_villager_a_animated.glb") &&
+              ambientModelFiles.Contains("npc_villager_b_animated.glb") &&
+              ambientModelFiles.Contains("npc_hunter_animated.glb") &&
+              ambientModelFiles.Contains("npc_merchant_animated.glb") &&
+              ambientModelFiles.Contains("npc_elder_animated.glb"),
+            "Ambient settlers span villager A/B, hunter, merchant and elder body models");
+
+        check(
+            NpcVisualCatalog.ModelFile("community-guard", NpcRole.CommunityGuard) ==
+                "npc_hunter_animated.glb" &&
+            NpcVisualCatalog.ModelFile("shrine-keeper", NpcRole.ShrineKeeper) ==
+                "npc_elder_animated.glb" &&
+            NpcVisualCatalog.ModelFile("settler-trader-01", NpcRole.Trader) ==
+                "npc_merchant_animated.glb",
+            "Authored NPC roles resolve to their intended animated model families");
+
         var playerGeometry = player.BuildMesh(
             Matrix4x4.Identity,
             "Idle",
@@ -335,12 +388,41 @@ internal static class AssetIntegrationRegression
             "Idle",
             0.35f,
             sourceIsZUp: true);
+        var npcBaseVertexBudget = world.NpcWorld.Actors.Sum(actor =>
+        {
+            var file = NpcVisualCatalog.ModelFile(actor.Id, actor.Role);
+            return npcModels[file]
+                .BuildMesh(
+                    Matrix4x4.Identity,
+                    "Idle",
+                    0.35f,
+                    sourceIsZUp: true)
+                .Positions.Length;
+        });
         var baseAnimatedVertexBudget =
-            playerGeometry.Positions.Length * (1 + world.NpcWorld.Actors.Count) +
+            playerGeometry.Positions.Length +
+            npcBaseVertexBudget +
             enemyGeometry.Positions.Length;
 
         check(actorVertices.Length > baseAnimatedVertexBudget,
-            "Settler accessories add visible geometry beyond the shared humanoid rig");
+            "Settler accessories add visible geometry beyond their distinct humanoid GLBs");
+
+        var npcGeometries = npcModels.Values
+            .Select(model => model.BuildMesh(
+                Matrix4x4.Identity,
+                "Idle",
+                0.35f,
+                sourceIsZUp: true))
+            .ToArray();
+
+        check(npcGeometries.All(geometry =>
+                geometry.Positions.Length > 0 &&
+                geometry.Indices.Length > 0),
+            "Every NPC model family produces renderable animated geometry");
+        check(npcGeometries.Any(geometry =>
+                geometry.Positions.Length != playerGeometry.Positions.Length ||
+                !geometry.Positions.SequenceEqual(playerGeometry.Positions)),
+            "NPC models are not all copies of the player hunter geometry");
 
         void CheckFacing(string id, Vector2 target)
         {

@@ -173,6 +173,57 @@ public static class NpcVisualCatalog
         };
     }
 
+    public static string ModelFile(
+        string id,
+        NpcRole role)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+
+        return id switch
+        {
+            "missing-family" => "npc_villager_b_animated.glb",
+            "crossing-keeper" => "npc_hunter_animated.glb",
+            "herbalist" => "npc_villager_b_animated.glb",
+            "community-guard" => "npc_hunter_animated.glb",
+            "shrine-keeper" => "npc_elder_animated.glb",
+
+            "settler-farmer-01" => "npc_villager_a_animated.glb",
+            "settler-farmer-02" => "npc_villager_b_animated.glb",
+            "settler-woodworker-01" => "npc_hunter_animated.glb",
+            "settler-potter-01" => "npc_villager_b_animated.glb",
+            "settler-trader-01" => "npc_merchant_animated.glb",
+            "settler-carrier-01" => "npc_villager_a_animated.glb",
+            "settler-elder-01" => "npc_elder_animated.glb",
+            "settler-traveler-01" => "npc_merchant_animated.glb",
+
+            _ => role switch
+            {
+                NpcRole.Trader => "npc_merchant_animated.glb",
+                NpcRole.Traveler => "npc_hunter_animated.glb",
+                NpcRole.CommunityGuard => "npc_hunter_animated.glb",
+                NpcRole.ShrineKeeper => "npc_elder_animated.glb",
+                _ => StableVillagerVariant(id)
+            }
+        };
+    }
+
+    private static string StableVillagerVariant(string id)
+    {
+        unchecked
+        {
+            uint hash = 2166136261;
+            foreach (var ch in id)
+            {
+                hash ^= ch;
+                hash *= 16777619;
+            }
+
+            return (hash & 1u) == 0u
+                ? "npc_villager_a_animated.glb"
+                : "npc_villager_b_animated.glb";
+        }
+    }
+
     public static string AnimationClip(
         string activity)
     {

@@ -246,3 +246,29 @@ To nadal system bez navmesha i bez fizyki crowd:
 - brak osobnych pathfinding workerów.
 
 Docelowy system nawigacji może później zastąpić tylko sampler tras bez zmiany kontraktu harmonogramu NPC.
+
+
+## Runtime distinct NPC model families
+
+Warstwa mieszkańców nie korzysta już z geometrii `player_hunter_animated.glb` jako wspólnego modelu dla wszystkich NPC.
+
+Runtime ładuje i współdzieli pięć istniejących animowanych rodzin humanoidów:
+- `npc_villager_a_animated.glb`;
+- `npc_villager_b_animated.glb`;
+- `npc_hunter_animated.glb`;
+- `npc_merchant_animated.glb`;
+- `npc_elder_animated.glb`.
+
+Przypisanie jest deterministyczne i zależy od trwałego ID/roli NPC. Przykładowo:
+- strażnik wspólnoty i opiekun przeprawy używają bardziej użytkowej sylwetki `npc_hunter`;
+- shrine-keeper i starszy mieszkaniec używają `npc_elder`;
+- handlarz i podróżny korzystają z `npc_merchant`;
+- rolnicy, garncarz, tragarz i część głównych NPC są rozdzieleni między `villager_a` i `villager_b`.
+
+Każda baza zachowuje własną geometrię i animacje `Idle/Walk`, a istniejące `NpcVisualProfile` nadal nakłada:
+- różne proporcje;
+- paletę;
+- tempo animacji;
+- lekkie proceduralne dodatki sylwetki.
+
+Modele są ładowane po jednym egzemplarzu na rodzinę i współdzielone przez wiele instancji NPC. Dzięki temu 13 aktywnych mieszkańców nie wymaga 13 kopii danych GLB.
