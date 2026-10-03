@@ -1,6 +1,8 @@
 using System.Numerics;
 using SlavicGame.Engine.Audio;
 using SlavicGame.Engine.Gameplay;
+using SlavicGame.Engine.Input;
+using SlavicGame.Engine.Renderer;
 using SlavicGame.Engine.World;
 
 internal static class RiverInteractionRegression
@@ -136,6 +138,110 @@ internal static class RiverInteractionRegression
             WaterInteractionState.StaminaRecoveryMultiplier(0f, 0f) == 1f &&
             WaterInteractionState.StaminaRecoveryMultiplier(0.7f, 1f) < 0.5f,
             "Deep water plus soaked clothing slows stamina recovery");
+
+        check(
+            WaterInteractionState.CurrentSpeedForDepth(0.20f) == 0f &&
+            WaterInteractionState.CurrentSpeedForDepth(0.80f) >
+                WaterInteractionState.CurrentSpeedForDepth(0.40f) &&
+            WaterInteractionState.CurrentSpeedForDepth(1.30f) >= 1.5f,
+            "River current grows non-linearly with water depth");
+
+        var driftWorld = WorldGenerator.Generate();
+        var driftStart = new Vector3(
+            WaterLandscape.CenterX(0f),
+            0f,
+            0f);
+        driftWorld.SetPlayerPosition(driftStart);
+        driftWorld.WaterInteraction.Reset(driftWorld.PlayerPosition);
+
+        var camera = new Camera3D();
+        var noInput = new PlayerInput(
+            false,
+            false,
+            false,
+            false,
+            false,
+            Vector2.Zero);
+
+        var beforeDrift = driftWorld.PlayerPosition;
+        PlayerController.Update(
+            driftWorld,
+            camera,
+            noInput,
+            1.0);
+        var afterDrift = driftWorld.PlayerPosition;
+
+        var flow = WaterLandscape.FlowDirection(beforeDrift.Z);
+        var driftDelta = new Vector2(
+            afterDrift.X - beforeDrift.X,
+            afterDrift.Z - beforeDrift.Z);
+
+        check(driftDelta.Length() > 0.5f &&
+              Vector2.Dot(Vector2.Normalize(driftDelta), flow) > 0.95f,
+            "Deep river current physically drifts an idle player downstream");
+
+        var exposureWorld = WorldGenerator.Generate();
+        exposureWorld.SetPlayerPosition(new Vector3(
+            WaterLandscape.CenterX(0f),
+            0f,
+            0f));
+        exposureWorld.WaterInteraction.Reset(exposureWorld.PlayerPosition);
+        exposureWorld.Weather.SetCondition(WeatherKind.Storm, true);
+        exposureWorld.WaterInteraction.Update(exposureWorld, 45.0);
+
+        var stormWetness = exposureWorld.WaterInteraction.Wetness;
+        var stormChill = exposureWorld.WaterInteraction.Chill;
+
+        check(stormWetness > 0.95f &&
+              stormChill > 0.15f,
+            "Deep water plus storm builds full wetness and meaningful chill");
+
+        exposureWorld.SetPlayerPosition(
+            new Vector3(0f, 0f, -88f));
+        exposureWorld.Weather.SetCondition(WeatherKind.Clear, true);
+        exposureWorld.WaterInteraction.Update(exposureWorld, 25.0);
+
+        check(exposureWorld.WaterInteraction.HeatExposure > 0.8f &&
+              exposureWorld.WaterInteraction.Wetness < stormWetness &&
+              exposureWorld.WaterInteraction.Chill < stormChill,
+            "Village campfire accelerates drying and warming");
+
+        var rainWorld = WorldGenerator.Generate();
+        rainWorld.SetPlayerPosition(Vector3.Zero);
+        rainWorld.WaterInteraction.Reset(rainWorld.PlayerPosition);
+        rainWorld.Weather.SetCondition(WeatherKind.Rain, true);
+        rainWorld.WaterInteraction.Update(rainWorld, 20.0);
+
+        check(!rainWorld.WaterInteraction.IsInWater &&
+              rainWorld.WaterInteraction.Wetness > 0.25f &&
+              rainWorld.WaterInteraction.RainExposure > 0.6f,
+            "Rain wets the player even away from the river");
+
+        TerrainVertex[] fireVerticesA = [];
+        uint[] fireIndicesA = [];
+        CampfireEffectMesh.Append(
+            exposureWorld,
+            0f,
+            ref fireVerticesA,
+            ref fireIndicesA);
+
+        TerrainVertex[] fireVerticesB = [];
+        uint[] fireIndicesB = [];
+        CampfireEffectMesh.Append(
+            exposureWorld,
+            0.5f,
+            ref fireVerticesB,
+            ref fireIndicesB);
+
+        check(fireVerticesA.Length > 0 &&
+              fireIndicesA.Length > 0 &&
+              fireIndicesA.All(index => index < fireVerticesA.Length) &&
+              fireVerticesA.Length == fireVerticesB.Length &&
+              fireVerticesA.Zip(fireVerticesB).Any(pair =>
+                  Vector3.DistanceSquared(
+                      pair.First.Position,
+                      pair.Second.Position) > 0.000001f),
+            "Active campfires generate valid animated flame geometry");
 
         TerrainVertex[] waterAtA = [];
         uint[] waterIndicesA = [];
