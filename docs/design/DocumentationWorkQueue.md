@@ -37,7 +37,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 ### P3 — content production
 - [x] side-quest production cards per region; R0–R6, 21/21 slotów;
 - [x] regional encounter rosters/tables poza R0 (`design/RegionalEncounterRosters.md`): R1–R6 family-level implementation pass, persistence/filters/QA; final weights, density i placement pozostają playtest/data lockiem;
-- [ ] regional vendors/services final pass;
+- [x] regional vendors/services final pass (`design/RegionalVendorsServices.md`): R0–R6 service footprint, stable IDs, stock profiles, persistence/fail-forward; final prices/restock/signature goods pozostają balance/item/research lockiem;
 - [ ] item/equipment/recipe catalogs dla pełnego scope;
 - [ ] dialogue packages po zamknięciu rosterów.
 
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P2 jest zamknięte na poziomie wymaganym do implementacji, a regional encounter rosters R1–R6 mają implementation pass. Następny najmniejszy niezablokowany pakiet P3 to **regional vendors/services final pass**, następnie item/equipment/recipe catalogs. P4 może równolegle zacząć manifesty tylko dla rodzin z wystarczającym research/art lockiem.
+P2 jest zamknięte na poziomie wymaganym do implementacji. Encounter rosters R1–R6 i regional vendors/services R0–R6 mają implementation pass. Następny najmniejszy niezablokowany pakiet P3 to **item/equipment/recipe catalogs dla pełnego scope**, potem dialogue packages. P4 może równolegle zacząć manifesty tylko dla rodzin z wystarczającym research/art lockiem.
