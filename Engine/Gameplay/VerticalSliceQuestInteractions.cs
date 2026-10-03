@@ -191,11 +191,24 @@ public sealed class VerticalSliceQuestInteractions
                 return QuestInteractionResult.Blocked;
             }
 
-            world.Progress.Profile.ChangeMoney(40);
-            world.Progress.Reputation.Change(ReputationScope.Village, "old-village", 8);
-            world.Progress.Relationships.Change("missing-family", RelationshipKind.Trust, 10);
+            var predatorKilled = SwampPredatorEncounter.IsKilled(world);
+            var moneyReward = predatorKilled ? 60 : 40;
+            var reputationReward = predatorKilled ? 12 : 8;
+
+            world.Progress.Profile.ChangeMoney(moneyReward);
+            world.Progress.Reputation.Change(
+                ReputationScope.Village,
+                "old-village",
+                reputationReward);
+            world.Progress.Relationships.Change(
+                "missing-family",
+                RelationshipKind.Trust,
+                10);
             world.Progress.SetFlag(TurnedInFlag);
-            Message = "KONTRAKT ZAKONCZONY / NAGRODA 40 / REPUTACJA +8";
+
+            Message = predatorKilled
+                ? "KONTRAKT ZAKONCZONY / ZJAWA UWOLNIONA / DRAPIEZNIK USUNIETY / NAGRODA 60 / REPUTACJA +12"
+                : "KONTRAKT ZAKONCZONY / ZJAWA UWOLNIONA / DRAPIEZNIK NADAL ZAGRAZA / NAGRODA 40 / REPUTACJA +8";
             return QuestInteractionResult.Completed;
         }
 
@@ -269,6 +282,7 @@ public sealed class VerticalSliceQuestInteractions
             "Tropy duzej istoty prowadza wzdluz mokradla.",
             "swamp-predator"));
         world.Progress.SetFlag(PredatorTracksFlag);
+        world.Progress.Encounters.Get(SwampPredatorEncounter.Id).Observe();
         Message = "TROPY POTWIERDZAJA FIZYCZNE ZAGROZENIE";
         AdvanceInvestigation(world);
         return QuestInteractionResult.Completed;
