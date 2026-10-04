@@ -206,19 +206,33 @@ internal static class AssetIntegrationRegression
                 "models/static/slady_pazurow_r0_01.glb") &&
               SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
                 "models/static/riverbank_rocky_r0_01.glb") &&
+              SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
+                "models/static/stol_warsztatowy_r0_01.glb") &&
+              SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
+                "models/static/krosno_r0_01.glb") &&
               !SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
                 "models/static/stodola_r0_01.glb"),
-            "Small props and rocky banks use short-range culling while major buildings keep world render distance");
+            "Small props, workstation furniture and rocky banks use short-range culling while major buildings keep world render distance");
+
+        var workstationModels =
+            NpcWorkstationCatalog.BuildModels(world.Terrain);
+        check(workstationModels.Count >= 20 &&
+              workstationModels.All(model =>
+                  File.Exists(Path.Combine(
+                      assetsRoot,
+                      model.AssetPath.Replace('/', Path.DirectorySeparatorChar)))),
+            "Visible NPC workstation props resolve to tracked GLB assets");
 
         var expectedWorldModels =
             21 +
             RegionalPropLayout.Placements.Count +
             decorationsA.Count +
             riverbankA.Count +
+            workstationModels.Count +
             clutterA.Count +
             VillageBoundaryLayout.Placements.Count;
         check(world.Models.Count == expectedWorldModels,
-            "World registers curated content, forest decoration, ground clutter and village walls");
+            "World registers curated content, NPC workstations, forest decoration, ground clutter and village walls");
 
         check(world.Models.All(model => File.Exists(Path.Combine(
                 assetsRoot,
