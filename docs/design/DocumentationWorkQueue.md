@@ -46,14 +46,14 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] konkretne production asset manifests / stable integration records R0–R6 (`design/ProductionAssetManifests.md`); exact historical-final forms i final art IDs pozostają jawnie research/art lockiem;
 - [x] animation/VFX/audio budget contract (`design/AnimationVfxAudioBudgetContract.md`): cost/priority classes, reuse, fallback/degradation i measurement gate bez wymyślonych limitów liczbowych;
 - [x] streaming i memory budget contract (`design/StreamingMemoryBudgetContract.md`): residency M0–M4, pressure states, lifecycle/fallback, R0–R6 measurement scenarios i telemetry; limity MB/GB pozostają measurement lockiem;
-- [ ] AI/encounter density budgets;
+- [x] AI/encounter density budget contract (`design/AiEncounterDensityBudgetContract.md`): A0–A3, simulation zones, admission/pressure policy, R0–R6 scenarios i telemetry; liczby agentów/CPU/density pozostają measurement lockiem;
 - [ ] production estimates zależne od faktycznej przepustowości zespołu.
 
 ### P5 — playtest/measurement lock
 - [ ] combat/economy/progression tuning;
 - [ ] evidence/reputation thresholds;
 - [ ] traversal/weather/day-night tuning;
-- [ ] measured CPU/GPU/RAM/VRAM/streaming targets;
+- [ ] measured CPU/GPU/RAM/VRAM/streaming/AI targets;
 - [ ] minimal/recommended hardware po pomiarach;
 - [ ] release criteria evidence.
 
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P3 mają implementation-level pass. P4 ma concrete asset manifests, AVFX/audio contract oraz streaming/memory lifecycle i measurement contract. Następny najmniejszy niezablokowany pakiet to **P4: AI/encounter density budget contract**, nadal bez zgadywania liczby aktywnych agentów i CPU ms. Potem production estimates zależne od faktycznej przepustowości zespołu.
+P1–P3 mają implementation-level pass. P4 ma concrete asset manifests oraz kontrakty AVFX/audio, streaming/memory i AI/encounter density. Następny najmniejszy niezablokowany pakiet to **P4: production estimates framework zależny od faktycznej przepustowości zespołu** — bez wymyślania osobodni i terminów. Następnie P5: playtest/measurement locks i release evidence.
