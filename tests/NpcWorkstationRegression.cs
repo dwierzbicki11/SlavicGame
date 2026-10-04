@@ -32,6 +32,7 @@ internal static class NpcWorkstationRegression
         foreach (var workstation in NpcWorkstationCatalog.Workstations)
         {
             var sampledTime = FindWorkTime(
+                world,
                 workstation.NpcId,
                 workstation.Activity);
 
@@ -97,12 +98,26 @@ internal static class NpcWorkstationRegression
             "Fisher net-mending station uses visible rope");
 
         static double? FindWorkTime(
+            WorldState world,
             string npcId,
             string activity)
         {
+            var npc = world.Npcs.Single(item =>
+                string.Equals(item.Id, npcId, StringComparison.Ordinal));
+
             for (var minute = 0; minute < 24 * 60; minute++)
             {
                 var hour = minute / 60.0;
+                var slot = npc.GetSchedule(hour);
+                if (slot is null ||
+                    !string.Equals(
+                        slot.Activity,
+                        activity,
+                        StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 if (NpcWorkstationCatalog.TrySample(
                         npcId,
                         activity,
