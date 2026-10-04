@@ -45,7 +45,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] asset families per region z reuse/LOD/variant strategy na poziomie planowania;
 - [x] konkretne production asset manifests / stable integration records R0–R6 (`design/ProductionAssetManifests.md`); exact historical-final forms i final art IDs pozostają jawnie research/art lockiem;
 - [x] animation/VFX/audio budget contract (`design/AnimationVfxAudioBudgetContract.md`): cost/priority classes, reuse, fallback/degradation i measurement gate bez wymyślonych limitów liczbowych;
-- [ ] streaming i memory budgets;
+- [x] streaming i memory budget contract (`design/StreamingMemoryBudgetContract.md`): residency M0–M4, pressure states, lifecycle/fallback, R0–R6 measurement scenarios i telemetry; limity MB/GB pozostają measurement lockiem;
 - [ ] AI/encounter density budgets;
 - [ ] production estimates zależne od faktycznej przepustowości zespołu.
 
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P3 mają implementation-level pass. P4 ma concrete asset manifests oraz wspólny animation/VFX/audio cost/reuse/degradation/measurement contract. Następny najmniejszy niezablokowany pakiet to **P4: streaming i memory budget contract**, nadal oparty na klasach i measurement gates zamiast niezweryfikowanych MB/GB. Potem AI/encounter density budgets.
+P1–P3 mają implementation-level pass. P4 ma concrete asset manifests, AVFX/audio contract oraz streaming/memory lifecycle i measurement contract. Następny najmniejszy niezablokowany pakiet to **P4: AI/encounter density budget contract**, nadal bez zgadywania liczby aktywnych agentów i CPU ms. Potem production estimates zależne od faktycznej przepustowości zespołu.
