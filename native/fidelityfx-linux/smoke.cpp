@@ -31,6 +31,7 @@ struct Test {
     VkBuffer staging{};
     VkDeviceMemory stagingMemory{};
     ffxContext context{};
+    SlavicFgContext* fg{};
     Test() {
         VkApplicationInfo application{VK_STRUCTURE_TYPE_APPLICATION_INFO};
         application.apiVersion = VK_API_VERSION_1_2;
@@ -75,12 +76,10 @@ struct Test {
         fgCreate.displayHeight = 128;
         fgCreate.backBufferFormat = FFX_API_SURFACE_FORMAT_R16G16B16A16_FLOAT;
         fgCreate.flags = SLAVIC_FG_JITTER_MOTION_VECTORS;
-        SlavicFgContext* fg = nullptr;
         uint32_t fgRc = slavicFgCreate(&fgCreate, &fg);
         if (fgRc != 0 || !fg)
             throw std::runtime_error("FSR3 FG context creation failed " + std::to_string(fgRc));
-        slavicFgDestroy(fg);
-        std::cout << "PASS FSR3 FG context/resources/pipelines create+destroy" << std::endl;
+        std::cout << "PASS FSR3 FG context/resources/pipelines create" << std::endl;
 
         VkCommandPoolCreateInfo pools{VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
         pools.queueFamilyIndex = family; pools.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -92,6 +91,7 @@ struct Test {
     ~Test() {
         if (device) vkDeviceWaitIdle(device);
         if (context) ffxDestroyContext(&context, nullptr);
+        if (fg) slavicFgDestroy(fg);
         for (auto image : images) { vkDestroyImage(device, image.image, nullptr); vkFreeMemory(device, image.memory, nullptr); }
         if (staging) vkDestroyBuffer(device, staging, nullptr);
         if (stagingMemory) vkFreeMemory(device, stagingMemory, nullptr);
@@ -205,6 +205,109 @@ struct Test {
         readback(output);
         std::cout << "PASS AMD FSR 3.1.4 dispatch/readback " << w << "x" << h << " -> " << w*2 << "x" << h*2 << ", 3 frames + sharpening" << std::endl;
     }
+    void runFrameGeneration() {
+        const uint32_t renderW = 64, renderH = 64;
+        const uint32_t displayW = 128, displayH = 128;
+        auto depth = image(VK_FORMAT_D32_SFLOAT, renderW, renderH);
+        auto motion = image(VK_FORMAT_R16G16_SFLOAT, renderW, renderH);
+        auto present = image(VK_FORMAT_R16G16B16A16_SFLOAT, displayW, displayH);
+        auto generated = image(VK_FORMAT_R16G16B16A16_SFLOAT, displayW, displayH);
+
+        begin();
+        for (auto img : {depth, motion, present}) {
+            barrier(img, VK_IMAGE_LAYOUT_UNDEFINED,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0,
+                    VK_ACCESS_TRANSFER_WRITE_BIT);
+            VkImageSubresourceRange range{
+                img.format == VK_FORMAT_D32_SFLOAT
+                    ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT,
+                0, 1, 0, 1};
+            if (img.format == VK_FORMAT_D32_SFLOAT) {
+                VkClearDepthStencilValue clear{0.5f, 0};
+                vkCmdClearDepthStencilImage(
+                    command, img.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    &clear, 1, &range);
+            } else {
+                VkClearColorValue clear{};
+                if (img.image == present.image) {
+                    clear.float32[0] = 0.25f;
+                    clear.float32[1] = 0.50f;
+                    clear.float32[2] = 0.75f;
+                    clear.float32[3] = 1.0f;
+                }
+                vkCmdClearColorImage(
+                    command, img.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    &clear, 1, &range);
+            }
+            barrier(img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
+        }
+        barrier(generated, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL,
+                0, VK_ACCESS_SHADER_WRITE_BIT);
+        submit();
+
+        for (uint64_t frame = 0; frame < 2; ++frame) {
+            begin();
+
+            SlavicFgPrepareDesc prepare{};
+            prepare.commandList = command;
+            prepare.depth = resource(
+                depth, FFX_API_SURFACE_FORMAT_R32_FLOAT,
+                FFX_API_RESOURCE_STATE_COMPUTE_READ,
+                FFX_API_RESOURCE_USAGE_DEPTHTARGET);
+            prepare.motionVectors = resource(
+                motion, FFX_API_SURFACE_FORMAT_R16G16_FLOAT,
+                FFX_API_RESOURCE_STATE_COMPUTE_READ,
+                FFX_API_RESOURCE_USAGE_READ_ONLY);
+            prepare.renderWidth = renderW;
+            prepare.renderHeight = renderH;
+            prepare.motionVectorScaleX = static_cast<float>(renderW);
+            prepare.motionVectorScaleY = static_cast<float>(renderH);
+            prepare.frameTimeDelta = 16.67f;
+            prepare.cameraNear = 0.1f;
+            prepare.cameraFar = 100.0f;
+            prepare.viewSpaceToMetersFactor = 1.0f;
+            prepare.cameraFovAngleVertical = 1.0f;
+            prepare.frameId = frame;
+            prepare.cameraUp[1] = 1.0f;
+            prepare.cameraRight[0] = 1.0f;
+            prepare.cameraForward[2] = -1.0f;
+            uint32_t rc = slavicFgPrepare(fg, &prepare);
+            if (rc)
+                throw std::runtime_error(
+                    "FSR3 FG prepare failed " + std::to_string(rc));
+
+            SlavicFgDispatchDesc dispatch{};
+            dispatch.commandList = command;
+            dispatch.currentBackBuffer = resource(
+                present, FFX_API_SURFACE_FORMAT_R16G16B16A16_FLOAT,
+                FFX_API_RESOURCE_STATE_COMPUTE_READ,
+                FFX_API_RESOURCE_USAGE_READ_ONLY);
+            dispatch.output = resource(
+                generated, FFX_API_SURFACE_FORMAT_R16G16B16A16_FLOAT,
+                FFX_API_RESOURCE_STATE_UNORDERED_ACCESS,
+                FFX_API_RESOURCE_USAGE_UAV);
+            dispatch.frameId = frame;
+            dispatch.reset = frame == 0;
+            dispatch.backBufferTransferFunction =
+                FFX_API_BACKBUFFER_TRANSFER_FUNCTION_SRGB;
+            dispatch.minLuminance = 0.0f;
+            dispatch.maxLuminance = 1.0f;
+            rc = slavicFgDispatch(fg, &dispatch);
+            if (rc)
+                throw std::runtime_error(
+                    "FSR3 FG dispatch failed " + std::to_string(rc));
+            submit();
+        }
+
+        readback(generated);
+        std::cout << "PASS AMD FSR 3.1.4 Frame Generation offscreen "
+                  << displayW << "x" << displayH
+                  << ", prepare + optical flow + interpolation + readback"
+                  << std::endl;
+    }
+
     static float half(uint16_t value) {
         int exponent=(value>>10)&31;
         float mantissa=float(value&1023)/1024;
@@ -248,7 +351,11 @@ int main() {
         if (slavicFsrFrameGenerationComponents() != 7u)
             throw std::runtime_error("FSR3 Frame Generation components are not linked");
         std::cout << "PASS FSR3 FG components: FSR3 + Frame Interpolation + Optical Flow" << std::endl;
-        Test test; test.run(64,64); test.run(80,48); return 0;
+        Test test;
+        test.runFrameGeneration();
+        test.run(64,64);
+        test.run(80,48);
+        return 0;
     }
     catch(const std::exception& error) { std::cerr << error.what() << std::endl; return 1; }
 }
