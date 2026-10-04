@@ -358,6 +358,13 @@ public sealed class BowCombat
                         terrainT,
                         0f,
                         1f),
+                    Vector3.Lerp(
+                        from,
+                        to,
+                        Math.Clamp(
+                            terrainT,
+                            0f,
+                            1f)),
                     null));
         }
 
@@ -373,6 +380,10 @@ public sealed class BowCombat
                     new ArrowHit(
                         ArrowHitKind.World,
                         t,
+                        Vector3.Lerp(
+                            from,
+                            to,
+                            t),
                         null));
             }
         }
@@ -401,6 +412,10 @@ public sealed class BowCombat
                     new ArrowHit(
                         ArrowHitKind.Enemy,
                         t,
+                        Vector3.Lerp(
+                            from,
+                            to,
+                            t),
                         enemy.Id));
             }
         }
@@ -437,6 +452,10 @@ public sealed class BowCombat
                     new ArrowHit(
                         ArrowHitKind.Wildlife,
                         t,
+                        Vector3.Lerp(
+                            from,
+                            to,
+                            t),
                         wildlife.Id));
             }
         }
@@ -461,25 +480,7 @@ public sealed class BowCombat
         ArrowHit hit)
     {
         var impact =
-            projectile.Position +
-            projectile.Velocity *
-            0f;
-
-        var previous =
-            projectile.Position;
-        var stepVector =
-            projectile.Velocity *
-            0.02f;
-
-        // The precise segment impact is reconstructed from the current
-        // substep endpoints to keep all hit types on the same fraction.
-        var next =
-            previous + stepVector;
-        impact =
-            Vector3.Lerp(
-                previous,
-                next,
-                hit.Fraction);
+            hit.Position;
 
         var damage =
             MathF.Lerp(
@@ -701,6 +702,7 @@ public sealed class BowCombat
     private readonly record struct ArrowHit(
         ArrowHitKind Kind,
         float Fraction,
+        Vector3 Position,
         string? TargetId);
 
     private enum ArrowHitKind
