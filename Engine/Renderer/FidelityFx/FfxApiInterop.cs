@@ -22,7 +22,9 @@ internal static class FfxApi
     public const uint FormatUnknown = 0u;
     public const uint FormatR16G16B16A16Float = 4u;
     public const uint FormatR8G8B8A8Unorm = 10u;
+    public const uint FormatR8G8B8A8Srgb = 12u;
     public const uint FormatB8G8R8A8Unorm = 14u;
+    public const uint FormatB8G8R8A8Srgb = 15u;
     public const uint FormatR16G16Float = 18u;
     public const uint FormatR8Unorm = 25u;
     public const uint FormatR32Float = 28u;
