@@ -47,10 +47,18 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
         _queue = handles.GraphicsQueue;
 
         _vulkanLibrary = LoadVulkanLibrary();
-        var getDeviceProcAddr =
-            GetExport<VkGetDeviceProcAddr>(
+        if (!NativeLibrary.TryGetExport(
                 _vulkanLibrary,
-                "vkGetDeviceProcAddr");
+                "vkGetDeviceProcAddr",
+                out var getDeviceProcAddrPointer))
+        {
+            throw new MissingMethodException(
+                "Vulkan loader export 'vkGetDeviceProcAddr' is unavailable.");
+        }
+        DeviceProcAddr = getDeviceProcAddrPointer;
+        var getDeviceProcAddr =
+            Marshal.GetDelegateForFunctionPointer<VkGetDeviceProcAddr>(
+                getDeviceProcAddrPointer);
 
         T Load<T>(string name) where T : Delegate
         {
@@ -136,8 +144,6 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
                 "vkCreateFence");
         }
 
-        DeviceProcAddr = Marshal.GetFunctionPointerForDelegate(
-            getDeviceProcAddr);
     }
 
     /// <summary>
