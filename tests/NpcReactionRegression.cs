@@ -39,6 +39,10 @@ internal static class NpcReactionRegression
             avoiding.IsMoving,
             "Civilian backs away from a nearby player attack");
 
+        world.SetPlayerPosition(
+            guard.Position +
+            new Vector3(1.2f, 0f, 0f));
+
         var guardBase = new Vector2(
             guard.Position.X,
             guard.Position.Z);
