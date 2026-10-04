@@ -30,8 +30,8 @@ public static class R0FordSideQuest
     public const string FordEvidenceId = "sq_r0_01.broken-ford";
     public const string BypassEvidenceId = "sq_r0_01.safe-bypass";
 
-    public const float FordZ = -110f;
-    public const float BypassZ = -72f;
+    public const float FordZ = WaterLandscape.R0FordZ;
+    public const float BypassZ = WaterLandscape.R0BypassZ;
 
     public static string OutcomeFlag(R0FordOutcome outcome) =>
         $"sq_r0_01.outcome.{outcome.ToString().ToLowerInvariant()}";
