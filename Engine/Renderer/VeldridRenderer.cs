@@ -1458,10 +1458,10 @@ public sealed class VeldridRenderer : IDisposable
         }
         if (_temporalInputsEnabled &&
             _reactiveMask.IsInitialized &&
-            _resolutionScaler.SampleableDepthTexture is { } temporalDepthTexture)
+            _resolutionScaler.SampleableDepthTexture is { } reactiveDepthTexture)
         {
             _reactiveMask.SetDepthSource(
-                temporalDepthTexture,
+                reactiveDepthTexture,
                 _resolutionScaler.Width,
                 _resolutionScaler.Height);
         }
