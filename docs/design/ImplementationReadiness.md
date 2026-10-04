@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po ukończeniu MQ25. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ30. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -19,27 +19,28 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 - [x] MQ23 „Żelazna Brama” — trzy jawne skutki, `MQ23-D01`, persistence/idempotencja i handoff do MQ24 — scalone po zielonym CI.
 - [x] MQ24 „Droga bez granicy” — dwa sposoby pamięci trasy, recoverable trial passage, `MQ24_ROUTE_RELATION` i handoff do MQ25 — scalone po zielonym CI.
 - [x] MQ25 „Archiwum bez jednego języka” — cztery regionalne pakiety, dwie relacje między tradycjami, `NETWORK_MULTICULTURAL_ORIGIN`, persistence/idempotencja i handoff do MQ30 — scalone po zielonym CI.
+- [x] MQ30 „Pustkowie Pierwszego Progu” — dwa niezależne ślady Archiwum, `ARCHIVE_PRESENCE_CONFIRMED`, bezpieczna oś dojścia, persistence/idempotencja i handoff do MQ31 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ30 „Pustkowie Pierwszego Progu” — IMPLEMENTED
+### MQ31 „Archiwum popiołu” — IMPLEMENTED, oczekuje na CI/merge
 
 Karta `docs/quests/MainQuestCardsAct3.md` ma production documentation pass v0.1 i jednoznaczny kontrakt implementacyjny:
 
-1. wejście po `MQ25_COMPLETE` i skonsolidowanej hipotezie Sieci;
-2. zapis `R6_ENTERED` przy wejściu do regionu;
-3. co najmniej dwa niezależne ślady działalności Archiwum Progów;
-4. po dwóch śladach zapis `ARCHIVE_PRESENCE_CONFIRMED` i możliwość ustalenia bezpiecznej osi dojścia `FIRST_THRESHOLD_ROUTE_KNOWN`;
-5. `MQ30_COMPLETE`, idempotencja, persistence i gwarantowany handoff do MQ31.
+1. wejście po `MQ30_COMPLETE`;
+2. trzy niezależnie zapisywane fakty: rola rodziców, związek Wszebora z Archiwum i odniesienie do Nocy Zamkniętego Progu;
+3. każdy krytyczny fakt może pochodzić z dokumentu podstawowego albo wtórnego rejestru, więc utrata opcjonalnego dokumentu nie blokuje kampanii;
+4. zapis `ARCHIVE_RECORDS_FOUND` po pozyskaniu materiału Archiwum;
+5. `MQ31_COMPLETE`, persistence/idempotencja i gwarantowany handoff do MQ32 dopiero po poznaniu wszystkich trzech faktów.
 
-Runtime nie koduje finalnej geometrii trasy, liczby encounterów, nazw scen, assetów ani presentation. Alternatywny ślad środowiskowy pozostaje równorzędnym kanałem recovery; krytyczne evidence jest trwałym stanem kampanii.
+Runtime przechowuje fakty i provenance kanału, ale nie koduje finalnych tekstów dokumentów, scen, assetów ani interpretacji. Nie rozstrzyga losu Parent B ani prawdziwości interpretacji Nocy Zamkniętego Progu.
 
-## Kolejka po MQ30
+## Kolejka po MQ31
 
-Po pełnym zakończeniu MQ30 należy ponownie przeanalizować aktualny `main`, trzy dokumenty kolejki/coverage/readiness oraz karty Aktu III. MQ31 może rozpocząć się wyłącznie po zielonym CI i merge MQ30 oraz ponownym potwierdzeniu readiness.
+Po pełnym zakończeniu MQ31 należy ponownie przeanalizować aktualny `main`, trzy dokumenty kolejki/coverage/readiness oraz karty Aktu III. MQ32 może rozpocząć się wyłącznie po zielonym CI i merge MQ31 oraz ponownym potwierdzeniu readiness.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ30: finalna geometria i presentation Pustkowia pozostają content/art lockiem.
-- MQ30: krytyczne potwierdzenie Archiwum wymaga dwóch niezależnych kanałów; żaden pojedynczy NPC, encounter ani zniszczalny obiekt nie może być blockerem.
-- MQ30: reveal kończy się na potwierdzeniu ludzkiej działalności przy Sieci; role rodziców, Wszebora i prawda Splotu pozostają zablokowane dla późniejszych questów.
+- MQ31: finalna treść dokumentów, layout archiwum i presentation pozostają content/art lockiem.
+- MQ31: dokument podstawowy i wtórny rejestr są równoważnymi kanałami recovery dla każdego krytycznego faktu; żaden pojedynczy dokument nie może być blockerem.
+- MQ31: fakty potwierdzają role/powiązania, ale nie ustalają jeszcze jednej prawdziwej interpretacji Nocy ani losu Parent B.
