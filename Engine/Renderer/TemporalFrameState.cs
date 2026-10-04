@@ -35,13 +35,14 @@ public sealed class TemporalFrameState
         Matrix4x4 view,
         uint renderWidth,
         uint renderHeight,
-        bool enableJitter)
+        bool enableJitter,
+        int jitterPhaseCount = 8)
     {
         renderWidth = Math.Max(1u, renderWidth);
         renderHeight = Math.Max(1u, renderHeight);
 
         var jitterPixels = enableJitter
-            ? JitterForFrame(_frameIndex)
+            ? JitterForFrame(_frameIndex, jitterPhaseCount)
             : Vector2.Zero;
         var jitterNdc = new Vector2(
             jitterPixels.X * 2f / renderWidth,
@@ -98,11 +99,25 @@ public sealed class TemporalFrameState
         _previousJitterPixels = Vector2.Zero;
     }
 
-    public static Vector2 JitterForFrame(uint frameIndex)
+    public static int FsrJitterPhaseCount(
+        uint renderWidth,
+        uint displayWidth)
     {
-        // Eight samples are enough for the first temporal implementation and
-        // keep the pattern deterministic across platforms and save/load.
-        var sample = frameIndex % 8u + 1u;
+        renderWidth = Math.Max(1u, renderWidth);
+        displayWidth = Math.Max(1u, displayWidth);
+        var ratio = (float)displayWidth / renderWidth;
+        return Math.Max(
+            1,
+            (int)(8f * ratio * ratio));
+    }
+
+    public static Vector2 JitterForFrame(
+        uint frameIndex,
+        int phaseCount = 8)
+    {
+        phaseCount = Math.Max(1, phaseCount);
+        var sample =
+            frameIndex % (uint)phaseCount + 1u;
         return new Vector2(
             Halton(sample, 2u) - 0.5f,
             Halton(sample, 3u) - 0.5f);
