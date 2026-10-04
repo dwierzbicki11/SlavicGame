@@ -341,7 +341,9 @@ public sealed class FidelityFxUpscaler : IDisposable
                 Type = FfxApi.CreateContextUpscale,
                 Next = _backendDescriptorMemory
             },
-            Flags = FfxApi.EnableAutoExposure,
+            Flags =
+                FfxApi.EnableAutoExposure |
+                FfxApi.EnableMotionVectorsJitterCancellation,
             MaxRenderSize = new FfxApiDimensions2D(
                 outputWidth,
                 outputHeight),
