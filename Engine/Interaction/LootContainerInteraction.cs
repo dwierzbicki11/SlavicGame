@@ -16,6 +16,7 @@ public sealed record LootContainerSnapshot(
 public enum LootContainerResult
 {
     Looted,
+    Stored,
     Empty,
     InvalidTarget,
     ItemNotFound,
@@ -83,6 +84,35 @@ public sealed class LootContainerInteractionState
             EmitCompletedQuestEvent(container, questEvent);
 
         return LootContainerResult.Looted;
+    }
+
+    public LootContainerResult Store(
+        InteractionTarget target,
+        LootContainerDefinition container,
+        InventoryState inventory,
+        string itemId,
+        int quantity)
+    {
+        if (!TryValidate(target, container, inventory))
+            return LootContainerResult.InvalidTarget;
+        if (string.IsNullOrWhiteSpace(itemId) || quantity <= 0 || inventory.Count(itemId) < quantity)
+            return LootContainerResult.InvalidQuantity;
+
+        var remaining = GetOrCreate(container);
+        if (!inventory.Remove(itemId, quantity))
+            return LootContainerResult.InvalidQuantity;
+
+        try
+        {
+            remaining[itemId] = checked(remaining.GetValueOrDefault(itemId) + quantity);
+        }
+        catch
+        {
+            inventory.Add(itemId, quantity);
+            throw;
+        }
+
+        return LootContainerResult.Stored;
     }
 
     public IReadOnlyList<LootStack> Remaining(LootContainerDefinition container)
