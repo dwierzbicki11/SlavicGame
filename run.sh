@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
+git pull origin main
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT="$ROOT_DIR/SlavicGame.csproj"
 CONFIGURATION="${CONFIGURATION:-Release}"
