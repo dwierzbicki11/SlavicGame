@@ -141,6 +141,18 @@ void main()
         ? PineMask(fsin_TexCoord)
         : DeciduousMask(fsin_TexCoord);
 
+    // Break the old solid-card crown into small irregular gaps.  The holes are
+    // stable in UV space, so they add depth without temporal shimmer.
+    float canopyWeight = smoothstep(0.34, 0.70, fsin_TexCoord.y);
+    float cellNoise = Hash21(
+        floor(fsin_TexCoord * vec2(19.0, 23.0)) +
+        vec2(species * 7.0, species * 13.0));
+    float gapThreshold = species > 0.5 && species < 1.5 ? 0.965 : 0.925;
+    float crownGap =
+        smoothstep(gapThreshold, 0.995, cellNoise) *
+        canopyWeight;
+    mask *= 1.0 - crownGap * 0.92;
+
     if (mask < 0.38)
         discard;
 
