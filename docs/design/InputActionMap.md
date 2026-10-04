@@ -15,7 +15,7 @@ Gameplay korzysta z nazwanych akcji zamiast bezpośrednich Key checks w wielu sy
 | Look | Mouse |
 | Sprint | Left Shift |
 | Interact | E |
-| Jump | Niezaimplementowany — binding otwarty |
+| Jump | Space |
 | Crouch | C/Ctrl — otwarte |
 
 ## Combat
@@ -25,7 +25,7 @@ Gameplay korzysta z nazwanych akcji zamiast bezpośrednich Key checks w wielu sy
 | LightAttack | LMB |
 | HeavyAttack | hold LMB albo osobny binding — do testu |
 | Block | RMB |
-| Dodge | Space + WASD; bez WASD unik w tył |
+| Dodge | Left Alt + WASD; bez WASD unik w tył |
 | Aim | RMB przy broni dystansowej |
 | RangedAttack | LMB podczas Aim |
 | UseQuickItem | Q |

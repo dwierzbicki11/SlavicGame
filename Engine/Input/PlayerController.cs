@@ -16,6 +16,7 @@ public static class PlayerController
         if (!world.Player.IsAlive)
         {
             world.Dodge.Reset();
+            world.Jump.Update(world, deltaSeconds);
             world.Player.UpdateStamina(false, deltaSeconds);
             camera.Follow(world.PlayerPosition, (float)deltaSeconds, world.Terrain);
             return;
@@ -29,12 +30,13 @@ public static class PlayerController
         if (PlayerDodge.MovementBlocked(world)) move = Vector3.Zero;
 
         var isMoving = move.LengthSquared() > 0.001f;
+        if (input.JumpPressed) world.Jump.TryStart(world);
         if (input.DodgePressed)
             world.Dodge.TryStart(world, isMoving ? move : -camera.GetMoveForward());
 
         var dodgeSeconds = world.Dodge.Update(world, deltaSeconds);
         var movementSeconds = Math.Max(0d, deltaSeconds - dodgeSeconds);
-        var waterDepth = WaterInteractionState.DepthAt(
+        var waterDepth = world.Jump.IsAirborne ? 0f : WaterInteractionState.DepthAt(
             world,
             world.PlayerPosition);
         var waterSpeedMultiplier =
@@ -51,23 +53,28 @@ public static class PlayerController
         {
             move = Vector3.Normalize(move);
             var speed = (sprinting ? 9f : 5f) * waterSpeedMultiplier;
-            world.SetPlayerPosition(
-                world.PlayerPosition +
-                move * speed * (float)movementSeconds);
+            var displacement = move * speed * (float)movementSeconds;
+            var steps = world.Jump.IsAirborne
+                ? Math.Max(1, (int)MathF.Ceiling(displacement.Length() / 0.1f))
+                : 1;
+            for (var step = 0; step < steps; step++)
+                world.MovePlayerPosition(world.PlayerPosition + displacement / steps);
         }
 
-        var currentVelocity =
+        var currentVelocity = world.Jump.IsAirborne ? Vector3.Zero :
             WaterInteractionState.CurrentVelocityAt(
                 world,
                 world.PlayerPosition);
         if (currentVelocity.LengthSquared() > 0.000001f)
         {
-            world.SetPlayerPosition(
+            world.MovePlayerPosition(
                 world.PlayerPosition +
                 currentVelocity * (float)deltaSeconds);
         }
 
-        var finalWaterDepth =
+        world.Jump.Update(world, deltaSeconds);
+
+        var finalWaterDepth = world.Jump.IsAirborne ? 0f :
             WaterInteractionState.DepthAt(
                 world,
                 world.PlayerPosition);

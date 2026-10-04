@@ -56,6 +56,7 @@ LootContainerDepositRegression.Run(Check);
 EnemyRenderedHitRegression.Run(Check);
 EnemyAttackTelegraphRegression.Run(Check);
 PlayerDodgeRegression.Run(Check);
+PlayerJumpRegression.Run(Check);
 
 // River terrain and water must form one sloped channel; animation has to read downstream.
 var riverTerrain = new Terrain(513, 513, 4f);

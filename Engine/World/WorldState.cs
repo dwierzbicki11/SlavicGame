@@ -26,6 +26,7 @@ public sealed class WorldState
     public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
     public SlavicGame.Engine.Combat.BowCombatRuntime Bow { get; } = new();
     public SlavicGame.Engine.Combat.PlayerDodge Dodge { get; } = new();
+    public SlavicGame.Engine.Physics.PlayerJump Jump { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
     public SwampApparitionRuntime Apparition { get; } = new();
@@ -54,6 +55,7 @@ public sealed class WorldState
     public void Initialize()
     {
         Dodge.Reset();
+        Jump.Reset();
         _regions.Clear();
         _regions.Add(new WorldRegion("starting-forest", "Puszcza Żywia", WorldRegionType.Forest, 0f, 0f, 55f));
         _regions.Add(new WorldRegion("old-village", "Żarnowiec", WorldRegionType.Village, 0f, -85f, 32f));
@@ -246,7 +248,7 @@ public sealed class WorldState
     {
         if (SlavicGame.Engine.Combat.PlayerDodge.MovementBlocked(this)) Dodge.Cancel();
         Time.Update(deltaSeconds);
-        SetPlayerPosition(PlayerPosition);
+        MovePlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
         NpcWorld.Update(this);
         Wildlife.Update(this, deltaSeconds);
@@ -272,13 +274,30 @@ public sealed class WorldState
 
     public void SetPlayerPosition(Vector3 position)
     {
-        if (!float.IsFinite(position.X) || !float.IsFinite(position.Z))
+        ApplyPlayerPosition(position, preserveHeight: false);
+        Jump.Reset();
+    }
+
+    public void MovePlayerPosition(Vector3 position) =>
+        ApplyPlayerPosition(position, preserveHeight: Jump.IsAirborne);
+
+    private void ApplyPlayerPosition(Vector3 position, bool preserveHeight)
+    {
+        if (!float.IsFinite(position.X) || !float.IsFinite(position.Z) ||
+            (preserveHeight && !float.IsFinite(position.Y)))
             throw new ArgumentOutOfRangeException(nameof(position));
         var horizontal = ResolveHorizontalPosition(new Vector2(position.X, position.Z), PlayerRadius);
         position.X = horizontal.X;
         position.Z = horizontal.Y;
-        PlayerPosition = new Vector3(position.X, Terrain.SampleHeight(position), position.Z);
+        PlayerPosition = new Vector3(position.X,
+            preserveHeight ? position.Y : Terrain.SampleHeight(position), position.Z);
         UpdateRegion();
+    }
+
+    internal void SetPlayerHeight(float height)
+    {
+        if (!float.IsFinite(height)) throw new ArgumentOutOfRangeException(nameof(height));
+        PlayerPosition = new Vector3(PlayerPosition.X, height, PlayerPosition.Z);
     }
 
     public Vector2 ResolveHorizontalPosition(Vector2 position, float radius)

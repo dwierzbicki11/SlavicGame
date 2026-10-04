@@ -9,4 +9,5 @@ public readonly record struct PlayerInput(
     bool Left,
     bool Running,
     Vector2 LookDelta,
-    bool DodgePressed = false);
+    bool DodgePressed = false,
+    bool JumpPressed = false);

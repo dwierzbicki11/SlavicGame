@@ -440,7 +440,8 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
-        var dodgePressed = _window.ConsumeKeyPress(Key.Space);
+        var jumpPressed = _window.ConsumeKeyPress(Key.Space);
+        var dodgePressed = _window.ConsumeKeyPress(Key.AltLeft);
         if (SlavicGame.Engine.Combat.PlayerDodge.MovementBlocked(_world))
             _world.Dodge.Cancel();
         if (_world.Loot.IsOpen)
@@ -456,7 +457,7 @@ public sealed class GameEngine : IDisposable
                 if (_window.ConsumeKeyPress(Key.S)) _world.Loot.MoveSelection(_world, 1);
                 if (_window.ConsumeKeyPress(Key.E)) _world.Loot.TransferSelected(_world, _window.IsKeyDown(Key.ShiftLeft));
             }
-            _camera.Follow(_world.PlayerPosition, (float)deltaSeconds, _world.Terrain);
+            UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
         }
         if (_world.Crafting.IsOpen || _world.Vendors.IsOpen)
@@ -481,10 +482,7 @@ public sealed class GameEngine : IDisposable
                     _world.Crafting.Confirm(_world);
             }
 
-            _camera.Follow(
-                _world.PlayerPosition,
-                (float)deltaSeconds,
-                _world.Terrain);
+            UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
         }
 
@@ -509,10 +507,7 @@ public sealed class GameEngine : IDisposable
                     _world.Vendors.Confirm(_world);
             }
 
-            _camera.Follow(
-                _world.PlayerPosition,
-                (float)deltaSeconds,
-                _world.Terrain);
+            UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
         }
 
@@ -537,10 +532,7 @@ public sealed class GameEngine : IDisposable
                     _world.Dialogue.Confirm(_world);
             }
 
-            _camera.Follow(
-                _world.PlayerPosition,
-                (float)deltaSeconds,
-                _world.Terrain);
+            UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
         }
 
@@ -555,10 +547,7 @@ public sealed class GameEngine : IDisposable
 
         if (_world.Crafting.IsOpen)
         {
-            _camera.Follow(
-                _world.PlayerPosition,
-                (float)deltaSeconds,
-                _world.Terrain);
+            UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
         }
 
@@ -573,10 +562,7 @@ public sealed class GameEngine : IDisposable
 
         if (_world.Vendors.IsOpen)
         {
-            _camera.Follow(
-                _world.PlayerPosition,
-                (float)deltaSeconds,
-                _world.Terrain);
+            UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
         }
 
@@ -616,14 +602,11 @@ public sealed class GameEngine : IDisposable
         {
             _world.Bow.SetAiming(_world, false);
             _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
-            _camera.Follow(
-                _world.PlayerPosition,
-                (float)deltaSeconds,
-                _world.Terrain);
+            UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
         }
 
-        if (_window.ConsumeKeyPress(Key.F) && !dodgePressed && !_world.Rituals.IsPerforming)
+        if (_window.ConsumeKeyPress(Key.F) && !jumpPressed && !dodgePressed && !_world.Rituals.IsPerforming)
         {
             var spell = _world.Magic.Current;
             if (_world.Magic.TryStart(_world, _camera.GetLookDirection()))
@@ -632,10 +615,10 @@ public sealed class GameEngine : IDisposable
             }
         }
 
-        if (_window.ConsumeKeyPress(Key.R) && !dodgePressed && !_world.Rituals.IsPerforming)
+        if (_window.ConsumeKeyPress(Key.R) && !jumpPressed && !dodgePressed && !_world.Rituals.IsPerforming)
             _world.Rituals.TryStart(_world);
 
-        if (_window.ConsumeKeyPress(Key.C) && !_world.Dodge.IsActive && !_world.Rituals.IsPerforming)
+        if (_window.ConsumeKeyPress(Key.C) && !jumpPressed && !_world.Dodge.IsActive && !_world.Rituals.IsPerforming)
         {
             _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
             if (_world.Cinematics.IsPlaying) return;
@@ -655,7 +638,8 @@ public sealed class GameEngine : IDisposable
                 !_world.Bow.IsAiming &&
                 _window.IsKeyDown(Key.ShiftLeft),
             _window.MouseDelta,
-            canMove && dodgePressed);
+            canMove && dodgePressed,
+            canMove && jumpPressed);
         // Dodge cancels draw before this frame's mouse press/release can fire a weapon.
         PlayerController.Update(_world, _camera, input, deltaSeconds);
         if (_inputDiagnostics) LogInput(input, deltaSeconds);
@@ -682,6 +666,12 @@ public sealed class GameEngine : IDisposable
         {
             _world.Melee.TryStart(_world);
         }
+    }
+
+    private void UpdatePlayerWhileUiOpen(double deltaSeconds)
+    {
+        _world.Jump.Update(_world, deltaSeconds);
+        _camera.Follow(_world.PlayerPosition, (float)deltaSeconds, _world.Terrain);
     }
 
     private static VoiceRequest BuildSpellVoiceRequest(SlavicGame.Engine.Magic.CastSpell spell)
