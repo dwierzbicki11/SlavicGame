@@ -110,6 +110,7 @@ public sealed class VeldridRenderer : IDisposable
         MsaaQuality msaaQuality)
     {
         PresentationPolicy.Apply(vsync);
+        VulkanRuntimeCompatibility.EnsureInitialized();
 
         var options = new GraphicsDeviceOptions
         {
@@ -135,7 +136,7 @@ public sealed class VeldridRenderer : IDisposable
         var effectiveMsaa = FidelityFxStartupPolicy.EffectiveMsaa(
             msaaQuality,
             _fsr3Requested,
-            OperatingSystem.IsWindows(),
+            OperatingSystem.IsWindows() || OperatingSystem.IsLinux(),
             fidelityFxProbe.IsAvailable);
         if (effectiveMsaa != msaaQuality)
             EngineLog.Info("FSR3 uses temporal anti-aliasing; scene MSAA disabled for this run.");

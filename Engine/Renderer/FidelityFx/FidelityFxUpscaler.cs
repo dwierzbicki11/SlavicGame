@@ -79,11 +79,10 @@ public sealed class FidelityFxUpscaler : IDisposable
         ArgumentNullException.ThrowIfNull(graphicsDevice);
         upscaler = null;
 
-        if (!OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
         {
             diagnostic =
-                "Native FSR3 dispatch is currently enabled only for the official " +
-                "Windows/Vulkan AMD FidelityFX 1.1.4 provider.";
+                "Native FSR3 dispatch requires Windows or Linux with Vulkan.";
             return false;
         }
 

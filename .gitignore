@@ -18,3 +18,10 @@ shaders/bin/*.spv
 
 # Local TTS environment
 .venv-tts/
+
+# Native FidelityFX SDK cache and generated runtime
+.cache/
+native/fidelityfx/*.so
+native/fidelityfx/*.dll
+native/fidelityfx/AMD-LICENSE.txt
+native/fidelityfx-linux/__pycache__/

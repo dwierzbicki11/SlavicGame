@@ -35,6 +35,7 @@ public sealed class FidelityFxNativeLibrary : IDisposable
         out string diagnostic)
     {
         library = null;
+        string? loadFailure = null;
         var candidates = BuildCandidates().Distinct(
             StringComparer.OrdinalIgnoreCase);
 
@@ -50,9 +51,16 @@ public sealed class FidelityFxNativeLibrary : IDisposable
             if (missing.Length > 0)
             {
                 NativeLibrary.Free(handle);
-                diagnostic =
+                loadFailure =
                     $"FidelityFX library '{candidate}' is missing exports: " +
                     string.Join(", ", missing);
+                continue;
+            }
+
+            if (OperatingSystem.IsLinux() && !ValidateLinuxAbi(handle, out var abiError))
+            {
+                NativeLibrary.Free(handle);
+                loadFailure = $"FidelityFX library '{candidate}' rejected: {abiError}";
                 continue;
             }
 
@@ -62,11 +70,52 @@ public sealed class FidelityFxNativeLibrary : IDisposable
             return true;
         }
 
-        diagnostic =
+        diagnostic = loadFailure ??
             "FidelityFX Vulkan runtime was not found. " +
             "FSR3 remains unavailable and the renderer will use its fallback.";
         return false;
     }
+
+    private static bool ValidateLinuxAbi(nint handle, out string diagnostic)
+    {
+        if (!NativeLibrary.TryGetExport(handle, "slavicFsrLinuxVersion", out var versionPointer) ||
+            !NativeLibrary.TryGetExport(handle, "slavicFsrAbiLayout", out var layoutPointer))
+        {
+            diagnostic = "Missing SlavicGame Linux provider identity/ABI exports.";
+            return false;
+        }
+        var version = Marshal.GetDelegateForFunctionPointer<LinuxVersionDelegate>(versionPointer);
+        var layout = Marshal.GetDelegateForFunctionPointer<LinuxLayoutDelegate>(layoutPointer);
+        if (version() != 0x030104)
+        {
+            diagnostic = "Linux provider does not implement pinned FSR 3.1.4.";
+            return false;
+        }
+        var expected = new nuint[]
+        {
+            (nuint)Marshal.SizeOf<FfxApiHeader>(),
+            (nuint)Marshal.SizeOf<FfxCreateBackendVkDesc>(),
+            (nuint)Marshal.SizeOf<FfxCreateContextDescUpscale>(),
+            (nuint)Marshal.SizeOf<FfxApiResource>(),
+            (nuint)Marshal.SizeOf<FfxDispatchDescUpscale>(),
+            (nuint)Marshal.OffsetOf<FfxDispatchDescUpscale>(nameof(FfxDispatchDescUpscale.Reset)),
+            (nuint)Marshal.OffsetOf<FfxDispatchDescUpscale>(nameof(FfxDispatchDescUpscale.CameraNear))
+        };
+        for (uint i = 0; i < expected.Length; i++)
+        {
+            if (layout(i) == expected[i]) continue;
+            diagnostic = $"Linux provider ABI layout mismatch at entry {i}.";
+            return false;
+        }
+        diagnostic = "Linux FSR 3.1.4 provider ABI validated.";
+        return true;
+    }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate uint LinuxVersionDelegate();
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate nuint LinuxLayoutDelegate(uint entry);
 
     public nint GetExport(string name)
     {
@@ -102,15 +151,14 @@ public sealed class FidelityFxNativeLibrary : IDisposable
         }
         else if (OperatingSystem.IsLinux())
         {
-            // No official v1.1.4 Linux binary is shipped by AMD, but retain a
-            // conventional name for a future source-built Vulkan provider.
+            // Our source-built upscaler adapter, verified by version and ABI.
             yield return System.IO.Path.Combine(
                 localDirectory,
-                "libamd_fidelityfx_vk.so");
+                "libslavic_fsr3_vk.so");
             yield return System.IO.Path.Combine(
                 baseDirectory,
-                "libamd_fidelityfx_vk.so");
-            yield return "libamd_fidelityfx_vk.so";
+                "libslavic_fsr3_vk.so");
+            yield return "libslavic_fsr3_vk.so";
         }
     }
 

@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""Auditable Linux adaptations of the exact SDK v1.1.4, in build output only."""
+import sys
+from pathlib import Path
+sdk, output = map(Path, sys.argv[1:])
+header = (sdk / 'sdk/include/FidelityFX/host/ffx_fsr3upscaler.h').read_text()
+old = '#define FFX_FSR3UPSCALER_CONTEXT_SIZE (FFX_SDK_DEFAULT_CONTEXT_SIZE)'
+assert header.count(old) == 1, 'Unexpected SDK context definition'
+header = header.replace(old, '#define FFX_FSR3UPSCALER_CONTEXT_SIZE (2 * FFX_SDK_DEFAULT_CONTEXT_SIZE)')
+path = output / 'include/FidelityFX/host/ffx_fsr3upscaler.h'
+path.parent.mkdir(parents=True, exist_ok=True)
+if not path.exists() or path.read_text() != header:
+    path.write_text(header)
+source = (sdk / 'sdk/src/backends/vk/ffx_vk.cpp').read_text()
+# EffectContext has alignas(32), but the upstream scratch layout aligns slices
+# to only four bytes. Optimized GCC uses aligned stores and can crash. Align
+# the allocation and every slice consistently in both sizing and mapping.
+for begin, end in [
+    ('FFX_API size_t ffxGetScratchMemorySizeVK(', '// Create a FfxDevice'),
+    ('        // Map all of our pointers', '        // Map gpu job array')]:
+    start = source.index(begin)
+    stop = source.index(end, start)
+    part = source[start:stop]
+    assert part.count('sizeof(uint32_t))') == 6
+    part = part.replace('sizeof(uint32_t))', 'size_t(32))')
+    part = part.replace('sizeof(BackendContext_VK) +', 'FFX_ALIGN_UP(sizeof(BackendContext_VK), size_t(32)) +')
+    part = part.replace('sizeof(uint64_t));', 'size_t(32));')
+    part = part.replace('(uint8_t*)((BackendContext_VK*)(backendContext + 1))',
+                        '(uint8_t*)backendContext + FFX_ALIGN_UP(sizeof(BackendContext_VK), size_t(32))')
+    source = source[:start] + part + source[stop:]
+# UMA devices may expose device-local memory as host-visible. FSR must permit
+# this memory, and all requested flags must be present when choosing a type.
+old = '(memProperties.memoryTypes[i].propertyFlags & requestedProperties))'
+assert source.count(old) == 1
+source = source.replace(old, '(memProperties.memoryTypes[i].propertyFlags & requestedProperties) == requestedProperties)')
+old = '''            // if just device-local memory is requested, make sure this is the invisible heap to prevent over-subscribing the local heap
+            if (requestedProperties == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT && (memProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
+                continue;
+'''
+assert source.count(old) == 1
+source = source.replace(old, '')
+# An advertised extension need not be enabled by the engine. Vulkan 1.1+ has
+# core aliases for the memory requirements functions; use those when needed.
+for name in ['vkGetBufferMemoryRequirements2']:
+    line = f'        backendContext->vkFunctionTable.{name}KHR = (PFN_{name}KHR)vkDeviceContext->vkDeviceProcAddr(backendContext->device, "{name}KHR");'
+    assert source.count(line) == 1, f'Unexpected SDK load site: {name}'
+    source = source.replace(line, line + f'\n        if (!backendContext->vkFunctionTable.{name}KHR)\n            backendContext->vkFunctionTable.{name}KHR = (PFN_{name}KHR)vkDeviceContext->vkDeviceProcAddr(backendContext->device, "{name}");')
+# This provider uses only Vulkan 1.0, FP32 and AMD's no-wave SPD permutation.
+# Veldrid does not enable optional float16/subgroup/device-coherent features.
+# Do not confuse advertised extensions with enabled features or call 1.1 core
+# physical-device queries on its 1.0 instance. Keep the SDK's minimum defaults.
+start = source.index('    // check if extensions are enabled\n', source.index('FfxErrorCode GetDeviceCapabilitiesVK(FfxInterface* backendInterface, FfxDeviceCapabilities* deviceCapabilities)\n{'))
+end = source.index('    return FFX_OK;', start)
+source = source[:start] + '''    deviceCapabilities->dedicatedAllocationSupported =
+        context->vkFunctionTable.vkGetBufferMemoryRequirements2KHR != nullptr;
+
+''' + source[end:]
+path = output / 'ffx_vk_linux.cpp'
+if not path.exists() or path.read_text() != source:
+    path.write_text(source)
