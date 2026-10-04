@@ -25,10 +25,17 @@ internal static class EnemyDamageReceiverRegression
         if (enemy.Health != enemy.MaxHealth - 24f || enemy.State != EnemyState.Alert)
             throw new InvalidOperationException("A living enemy did not enter Alert after non-lethal melee damage.");
 
+        enemy.Restore(new EnemySnapshot(enemy.Id, Vector3.Zero, enemy.MaxHealth, EnemyState.Chase));
         DamageApplication.ApplyMeleeHit(attack, enemy.Id, receiver);
-        if (enemy.State != EnemyState.Alert)
-            throw new InvalidOperationException("Repeated non-lethal damage did not preserve the enemy alert reaction.");
+        if (enemy.State != EnemyState.Chase)
+            throw new InvalidOperationException("Damage interrupted an active Chase by resetting the enemy to Alert.");
 
+        enemy.Restore(new EnemySnapshot(enemy.Id, Vector3.Zero, enemy.MaxHealth, EnemyState.Attack));
+        DamageApplication.ApplyMeleeHit(attack, enemy.Id, receiver);
+        if (enemy.State != EnemyState.Attack)
+            throw new InvalidOperationException("Damage interrupted an active Attack by resetting the enemy to Alert.");
+
+        DamageApplication.ApplyMeleeHit(attack, enemy.Id, receiver);
         var lethal = DamageApplication.ApplyMeleeHit(attack, enemy.Id, receiver);
         if (!lethal.Killed || enemy.IsAlive || enemy.Health != 0f || enemy.State != EnemyState.Dead)
             throw new InvalidOperationException("Lethal melee damage did not transition EnemyAgent to Dead.");
