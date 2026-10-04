@@ -180,6 +180,7 @@ Check(catalog.Get(assetId).Path == "Assets/test.glb", "Asset catalog lookup");
 AssetIntegrationRegression.Run(Check);
 PresentationPolicyRegression.Run(Check);
 CelestialLightingRegression.Run(Check);
+TemporalFrameRegression.Run(Check);
 FrontendSettingsRegression.Run(Check);
 SettingsPersistenceRegression.Run(Check);
 CameraFrustumRegression.Run(Check);

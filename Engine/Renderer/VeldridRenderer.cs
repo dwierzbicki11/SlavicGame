@@ -18,6 +18,8 @@ public sealed class VeldridRenderer : IDisposable
     private readonly TerrainMaterialRenderer _terrain = new();
     private readonly MenuRenderer _menu = new();
     private readonly ResolutionScalerRenderer _resolutionScaler = new();
+    private readonly TemporalFrameState _temporalFrame = new();
+    private readonly MotionVectorRenderer _motionVectors = new();
     private readonly BloomRenderer _bloom = new();
     private readonly PostProcessRenderer _postProcess = new();
     private readonly PbrModelRenderer _pbrModels = new();
@@ -263,6 +265,21 @@ public sealed class VeldridRenderer : IDisposable
             _graphicsDevice.SwapchainFramebuffer.Height,
             msaaQuality);
 
+        if (_resolutionScaler.SampleableDepthView is { } temporalDepth)
+        {
+            _motionVectors.Initialize(
+                _graphicsDevice,
+                temporalDepth,
+                _resolutionScaler.Width,
+                _resolutionScaler.Height);
+        }
+        else
+        {
+            EngineLog.Info(
+                "Temporal camera motion is deferred while scene MSAA is active; " +
+                "FSR 2/3 temporal input requires single-sample depth.");
+        }
+
         var sceneOutput =
             _resolutionScaler.SceneFramebuffer.OutputDescription;
 
@@ -431,6 +448,13 @@ public sealed class VeldridRenderer : IDisposable
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(
             camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
         var view = Matrix4x4.CreateLookAt(camera.Position, camera.Target, Vector3.UnitY);
+        var temporalFrame = _temporalFrame.BeginFrame(
+            projection,
+            view,
+            width,
+            height,
+            enableJitter: false);
+        projection = temporalFrame.Projection;
 
         ActorModelMesh.Build(
             world,
@@ -1053,6 +1077,9 @@ public sealed class VeldridRenderer : IDisposable
 
         _resolutionScaler.ResolveScene(_commandList);
 
+        if (_motionVectors.IsInitialized)
+            _motionVectors.Render(_commandList, temporalFrame);
+
         var resolvedScene = _resolutionScaler.ResolvedSceneView;
         var bloomView = resolvedScene;
 
@@ -1294,6 +1321,16 @@ public sealed class VeldridRenderer : IDisposable
             checked((uint)Math.Max(1, width)),
             checked((uint)Math.Max(1, height)));
 
+        _temporalFrame.Reset();
+        if (_motionVectors.IsInitialized &&
+            _resolutionScaler.SampleableDepthView is { } temporalDepth)
+        {
+            _motionVectors.SetSource(
+                temporalDepth,
+                _resolutionScaler.Width,
+                _resolutionScaler.Height);
+        }
+
         var sceneOutput =
             _resolutionScaler.SceneFramebuffer.OutputDescription;
         _bloom.SetSource(
@@ -1342,6 +1379,7 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         _graphicsDevice.ResizeMainWindow(width, height);
+        _temporalFrame.Reset();
     }
 
     public void Dispose()
@@ -1360,6 +1398,7 @@ public sealed class VeldridRenderer : IDisposable
         _menu.Dispose();
         _postProcess.Dispose();
         _bloom.Dispose();
+        _motionVectors.Dispose();
         _resolutionScaler.Dispose();
         _shadows.Dispose();
         _terrain.Dispose();

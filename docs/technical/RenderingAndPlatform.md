@@ -165,3 +165,40 @@ To keep presentation orientation stable on Vulkan, SlavicGame now uses:
 
 This removes the extra fullscreen offscreen->swapchain pass from the Vulkan FSR path.
 The render log prints the actual clip-space/UV state reported by the active driver.
+
+
+## Temporal upscaling foundation (FSR 2/3)
+
+Temporal reconstruction is being introduced before the world grows to production
+content density. The renderer now treats the inputs required by FSR 2/3 as first-class
+rendering data instead of trying to retrofit them after actors and effects multiply.
+
+Current contract:
+
+- `TemporalFrameState` owns deterministic Halton 2/3 camera jitter and exact
+  current/previous view-projection history;
+- history can be invalidated explicitly after render-resolution changes and swapchain
+  resizes;
+- the existing spatial FSR1 path remains unjittered until a temporal backend actually
+  consumes the temporal data;
+- single-sample scene depth is created with `Sampled` usage and exposed by the
+  resolution scaler;
+- `MotionVectorRenderer` reconstructs camera motion from scene depth into an RG16F
+  normalized screen-space field after the opaque scene pass;
+- MSAA scene depth is deliberately not exposed as a temporal input. The production
+  temporal path will use single-sample rendering and temporal antialiasing rather than
+  stacking MSAA on top of FSR 2/3.
+
+The camera-reconstructed motion field is sufficient for static terrain/world geometry.
+Animated actors, moving props, water/particles and wind-deformed vegetation still need
+their own previous-transform/deformation contribution before AMD FSR 3 is exposed as a
+shipping menu option. A reactive/transparency mask is also required for unstable
+transparent/emissive content.
+
+### Vulkan SDK line
+
+SlavicGame is Vulkan-first. The native integration target is therefore the last
+FidelityFX line with the required Vulkan backend: FidelityFX SDK 1.1.4 / FSR 3.1.4.
+The newer SDK 2.x line is not treated as a drop-in target while its documented Vulkan
+support is unavailable. We do not label the current temporal foundation as "FSR 3"
+until the real AMD dispatch path is connected and validated.

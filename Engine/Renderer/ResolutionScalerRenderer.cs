@@ -13,6 +13,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
     private Texture? _colorTexture;
     private Texture? _resolvedColorTexture;
     private Texture? _depthTexture;
+    private TextureView? _depthView;
     private TextureView? _resolvedColorView;
     private Framebuffer? _sceneFramebuffer;
 
@@ -55,6 +56,11 @@ public sealed class ResolutionScalerRenderer : IDisposable
     public TextureView ResolvedSceneView =>
         _resolvedColorView ??
         throw new InvalidOperationException("Resolution scaler is not initialized.");
+
+    public TextureView? SampleableDepthView =>
+        _sceneSampleCount == TextureSampleCount.Count1
+            ? _depthView
+            : null;
 
     public uint Width => _width;
     public uint Height => _height;
@@ -382,6 +388,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
         {
             _resolvedColorTexture.Dispose();
         }
+        _depthView?.Dispose();
         _depthTexture?.Dispose();
         _colorTexture?.Dispose();
 
@@ -396,14 +403,21 @@ public sealed class ResolutionScalerRenderer : IDisposable
             TextureUsage.RenderTarget,
             _sceneSampleCount));
 
+        var depthUsage = TextureUsage.DepthStencil;
+        if (_sceneSampleCount == TextureSampleCount.Count1)
+            depthUsage |= TextureUsage.Sampled;
+
         _depthTexture = factory.CreateTexture(TextureDescription.Texture2D(
             width,
             height,
             mipLevels: 1,
             arrayLayers: 1,
             PixelFormat.R32_Float,
-            TextureUsage.DepthStencil,
+            depthUsage,
             _sceneSampleCount));
+        _depthView = _sceneSampleCount == TextureSampleCount.Count1
+            ? factory.CreateTextureView(_depthTexture)
+            : null;
 
         if (multisampled)
         {
@@ -637,6 +651,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _fsrFramebuffer?.Dispose();
         _resolvedColorView?.Dispose();
         _fsrView?.Dispose();
+        _depthView?.Dispose();
         _depthTexture?.Dispose();
 
         if (_resolvedColorTexture is not null &&
