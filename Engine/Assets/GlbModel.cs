@@ -8,17 +8,23 @@ public sealed record MeshGeometry(Vector3[] Positions, uint[] Indices);
 
 public readonly struct PbrVertex
 {
-    public const uint SizeInBytes = 32;
+    public const uint SizeInBytes = 36;
 
     public readonly Vector3 Position;
     public readonly Vector3 Normal;
     public readonly Vector2 TexCoord;
+    public readonly float WindWeight;
 
-    public PbrVertex(Vector3 position, Vector3 normal, Vector2 texCoord)
+    public PbrVertex(
+        Vector3 position,
+        Vector3 normal,
+        Vector2 texCoord,
+        float windWeight = 0f)
     {
         Position = position;
         Normal = normal;
         TexCoord = texCoord;
+        WindWeight = Math.Clamp(windWeight, 0f, 1f);
     }
 }
 
