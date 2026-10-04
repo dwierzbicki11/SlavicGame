@@ -127,7 +127,9 @@ public sealed class ShadowMapRenderer : IDisposable
                 new VertexElementDescription(
                     "Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
                 new VertexElementDescription(
-                    "TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2)));
+                    "TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                new VertexElementDescription(
+                    "WindWeight", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float1)));
 
         _actorPipeline = CreateDepthPipeline(
             factory,
