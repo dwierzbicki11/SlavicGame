@@ -44,16 +44,17 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 ### P4 — asset i budget lock
 - [x] asset families per region z reuse/LOD/variant strategy na poziomie planowania;
 - [x] konkretne production asset manifests / stable integration records R0–R6 (`design/ProductionAssetManifests.md`); exact historical-final forms i final art IDs pozostają jawnie research/art lockiem;
-- [x] animation/VFX/audio budget contract (`design/AnimationVfxAudioBudgetContract.md`): cost/priority classes, reuse, fallback/degradation i measurement gate bez wymyślonych limitów liczbowych;
-- [x] streaming i memory budget contract (`design/StreamingMemoryBudgetContract.md`): residency M0–M4, pressure states, lifecycle/fallback, R0–R6 measurement scenarios i telemetry; limity MB/GB pozostają measurement lockiem;
-- [x] AI/encounter density budget contract (`design/AiEncounterDensityBudgetContract.md`): A0–A3, simulation zones, admission/pressure policy, R0–R6 scenarios i telemetry; liczby agentów/CPU/density pozostają measurement lockiem;
-- [x] production estimates framework (`design/ProductionEstimatesFramework.md`): E0–E4, throughput baseline, estimate states, capacity/dependency forecasting i re-estimation; osobodni/terminy pozostają measurement lockiem do czasu zebrania realnych próbek.
+- [x] animation/VFX/audio budget contract (`design/AnimationVfxAudioBudgetContract.md`);
+- [x] streaming i memory budget contract (`design/StreamingMemoryBudgetContract.md`);
+- [x] AI/encounter density budget contract (`design/AiEncounterDensityBudgetContract.md`);
+- [x] production estimates framework (`design/ProductionEstimatesFramework.md`).
 
 ### P5 — playtest/measurement lock
-- [x] measurement/playtest evidence contract i ledger format (`design/MeasurementPlaytestEvidence.md`): stabilne evidence/scenario/lock/hardware IDs, build+artifact provenance, acceptance/retest policy i macierz domen;
-- [ ] combat/economy/progression tuning;
-- [ ] evidence/reputation thresholds;
-- [ ] traversal/weather/day-night tuning;
+- [x] measurement/playtest evidence contract i ledger format (`design/MeasurementPlaytestEvidence.md`);
+- [x] reprodukowalne scenario manifests dla combat/economy/progression i evidence/reputation (`design/BalancePlaytestScenarioManifests.md`); finalne liczby pozostają playtest lockiem;
+- [ ] combat/economy/progression tuning — wykonać realne scenariusze i zamknąć candidate/locked ranges;
+- [ ] evidence/reputation thresholds — wykonać realne scenariusze i zamknąć candidate/locked thresholds;
+- [ ] traversal/weather/day-night scenario manifests i tuning;
 - [ ] measured CPU/GPU/RAM/VRAM/streaming/AI targets;
 - [ ] minimal/recommended hardware po pomiarach;
 - [ ] release criteria evidence.
@@ -69,4 +70,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P4 mają implementation/planning-level pass, a wspólny kontrakt evidence dla P5 jest zdefiniowany. Następny najmniejszy niezablokowany pakiet dokumentacyjny to **konkretne scenario manifests dla combat/economy/progression i evidence/reputation**: przygotowanie reprodukowalnych scenariuszy i acceptance inputs bez wpisywania wyników, których jeszcze nie zmierzono. Finalne wartości pozostają otwarte do realnych playtestów.
+P1–P4 mają implementation/planning-level pass. P5 ma wspólny evidence contract oraz reprodukowalne scenariusze dla combat/economy/progression i evidence/reputation. Następny najmniejszy niezablokowany pakiet dokumentacyjny to **scenario manifests dla traversal/weather/day-night**, a następnie performance/release measurement manifests. Faktyczne wartości balansu i thresholdy pozostają otwarte do wykonania realnych playtestów.
