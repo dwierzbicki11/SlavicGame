@@ -506,6 +506,82 @@ public sealed class VeldridRenderer : IDisposable
                 AddGameplayText(world.Cinematics.Subtitle, 18, displayHeight - 66, displayWidth - 36);
                 AddGameplayText("SPACJA / ESC - POMIN", 18, displayHeight - 32, displayWidth - 36);
             }
+            else if (world.Vendors.IsOpen)
+            {
+                var lines = world.Vendors.BuildLines(world);
+                var panelHeight =
+                    MathF.Min(
+                        390f,
+                        MathF.Max(240f, 165f + lines.Count * 32f));
+                var panelWidth =
+                    MathF.Min(760f, displayWidth - 40f);
+                var panelLeft =
+                    (displayWidth - panelWidth) * 0.5f;
+                var panelTop =
+                    (displayHeight - panelHeight) * 0.5f;
+
+                AddHudQuad(
+                    panelLeft,
+                    panelTop,
+                    panelWidth,
+                    panelHeight,
+                    new Vector4(0.02f, 0.02f, 0.018f, 0.94f));
+
+                AddGameplayText(
+                    world.Vendors.DisplayName,
+                    panelLeft + 24,
+                    panelTop + 18,
+                    panelWidth - 48);
+
+                AddGameplayText(
+                    $"PIENIADZE {world.Progress.Profile.Money} / TRYB: " +
+                    (world.Vendors.Mode ==
+                        SlavicGame.Engine.Gameplay.VendorMode.Buy
+                            ? "KUP"
+                            : "SPRZEDAJ"),
+                    panelLeft + 24,
+                    panelTop + 50,
+                    panelWidth - 48);
+
+                for (var i = 0; i < lines.Count; i++)
+                {
+                    var line = lines[i];
+                    var prefix =
+                        i == world.Vendors.SelectedIndex
+                            ? "> "
+                            : "  ";
+                    var quantityLabel =
+                        world.Vendors.Mode ==
+                        SlavicGame.Engine.Gameplay.VendorMode.Buy
+                            ? $"STAN {line.Quantity}"
+                            : $"MASZ {line.Quantity}";
+                    var status =
+                        line.Available
+                            ? ""
+                            : " / BRAK";
+
+                    AddGameplayText(
+                        $"{prefix}{line.DisplayName} / {line.Price} / {quantityLabel}{status}",
+                        panelLeft + 34,
+                        panelTop + 90 + i * 32,
+                        panelWidth - 68);
+                }
+
+                if (!string.IsNullOrWhiteSpace(world.Vendors.Message))
+                {
+                    AddGameplayText(
+                        world.Vendors.Message,
+                        panelLeft + 24,
+                        panelTop + panelHeight - 68,
+                        panelWidth - 48);
+                }
+
+                AddGameplayText(
+                    "W/S WYBOR  A/D KUP-SPRZEDAJ  E POTWIERDZ  T/ESC ZAMKNIJ",
+                    panelLeft + 24,
+                    panelTop + panelHeight - 32,
+                    panelWidth - 48);
+            }
             else if (world.Dialogue.IsOpen)
             {
                 var node = world.Dialogue.CurrentNode;
@@ -586,6 +662,14 @@ public sealed class VeldridRenderer : IDisposable
                         !string.IsNullOrWhiteSpace(world.EnvironmentInteractions.Message)
                             ? world.EnvironmentInteractions.Message
                             : world.QuestInteractions.Message;
+                }
+
+                if (world.Vendors.CanOpenNearest(world))
+                {
+                    interactionText =
+                        string.IsNullOrWhiteSpace(interactionText)
+                            ? "T HANDEL"
+                            : interactionText + " / T HANDEL";
                 }
 
                 if (!string.IsNullOrWhiteSpace(interactionText))

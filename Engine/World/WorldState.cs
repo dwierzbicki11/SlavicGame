@@ -31,6 +31,7 @@ public sealed class WorldState
     public WildlifeWorldRuntime Wildlife { get; } = new();
     public WildlifeTrackTrailState WildlifeTracks { get; } = new();
     public DialogueRuntime Dialogue { get; } = new();
+    public VendorRuntime Vendors { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();
@@ -230,6 +231,7 @@ public sealed class WorldState
         Wildlife.Reset(this);
         WildlifeTracks.Reset(this);
         Dialogue.Close();
+        Vendors.Initialize();
         Apparition.Reset(this);
         WaterInteraction.Reset(PlayerPosition);
         Footprints.Reset(PlayerPosition);
