@@ -543,8 +543,6 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _fsrFramebuffer?.Dispose();
         _fsrView?.Dispose();
         _fsrTexture?.Dispose();
-        _fsr3OutputView?.Dispose();
-        _fsr3OutputTexture?.Dispose();
 
         _fsrTexture = factory.CreateTexture(TextureDescription.Texture2D(
             width,
@@ -724,6 +722,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         _colorTexture?.Dispose();
         _fsrTexture?.Dispose();
+        _fsr3OutputView?.Dispose();
+        _fsr3OutputTexture?.Dispose();
 
         DisposeShaders(_bilinearShaders);
         DisposeShaders(_easuShaders);
@@ -749,6 +749,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _colorTexture = null;
         _resolvedColorTexture = null;
         _fsrTexture = null;
+        _fsr3OutputView = null;
+        _fsr3OutputTexture = null;
         _presentationSource = null;
         _bilinearShaders = null;
         _easuShaders = null;
