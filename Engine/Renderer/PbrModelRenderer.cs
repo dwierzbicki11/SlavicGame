@@ -76,7 +76,8 @@ public sealed class PbrModelRenderer : IDisposable
         var vertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
             new VertexElementDescription("Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3),
-            new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2));
+            new VertexElementDescription("TexCoord", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+            new VertexElementDescription("WindWeight", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float1));
 
         _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
@@ -461,8 +462,8 @@ public sealed class PbrModelRenderer : IDisposable
             if (!foliageMaterials[materialIndex])
                 continue;
 
-            var end = range.IndexStart + range.IndexCount;
-            for (var i = range.IndexStart; i < end; i++)
+            var endIndex = range.IndexStart + range.IndexCount;
+            for (var i = range.IndexStart; i < endIndex; i++)
             {
                 var vertexIndex = mesh.Indices[checked((int)i)];
                 if (vertexIndex < (uint)foliageVertices.Length)
@@ -489,12 +490,18 @@ public sealed class PbrModelRenderer : IDisposable
             return mesh.Vertices;
         }
 
+        var fileName = Path.GetFileNameWithoutExtension(instance.AssetPath);
+        var isPine = fileName.StartsWith("sosna_", StringComparison.OrdinalIgnoreCase);
+        var isBirch = fileName.StartsWith("brzoza_", StringComparison.OrdinalIgnoreCase);
+        var isAlder = fileName.StartsWith("olsza_", StringComparison.OrdinalIgnoreCase);
+
         var seed = StableTreeHash(instance.Id);
         var widthX = 0.92f + UnitFromHash(seed ^ 0x68BC21EBu) * 0.16f;
         var widthZ = 0.92f + UnitFromHash(seed ^ 0xA53A9E37u) * 0.16f;
         var height = 0.96f + UnitFromHash(seed ^ 0x1B56C4E9u) * 0.09f;
         var asymmetry = 0.12f + UnitFromHash(seed ^ 0xD8163841u) * 0.30f;
         var phase = UnitFromHash(seed ^ 0xC6BC2796u) * MathF.Tau;
+        var secondaryPhase = UnitFromHash(seed ^ 0x54A32D19u) * MathF.Tau;
         var directionAngle = UnitFromHash(seed ^ 0x9E3779B9u) * MathF.Tau;
         var direction = new Vector2(
             MathF.Cos(directionAngle),
@@ -515,25 +522,76 @@ public sealed class PbrModelRenderer : IDisposable
                 (position.Y - minY) / crownHeight,
                 0f,
                 1f);
-            var crownWeight = height01 * height01 * (3f - 2f * height01);
+            var crownWeight =
+                height01 * height01 * (3f - 2f * height01);
+
+            var angle = MathF.Atan2(relative.Z, relative.X);
+            var primaryLobes = isPine ? 5f : isBirch ? 4f : 3f;
+            var lobeAmplitude = isPine ? 0.045f : isBirch ? 0.065f : 0.095f;
+            var lobe =
+                1f +
+                MathF.Sin(angle * primaryLobes + phase) * lobeAmplitude +
+                MathF.Sin(angle * (primaryLobes + 2f) - secondaryPhase) *
+                (lobeAmplitude * 0.45f);
+
+            var verticalLayer =
+                1f +
+                MathF.Sin(
+                    height01 * MathF.Tau * (isPine ? 5.0f : 3.0f) +
+                    secondaryPhase) *
+                (isPine ? 0.055f : 0.035f);
+
+            var speciesTaper = 1f;
+            if (isPine)
+                speciesTaper = 1.08f - height01 * 0.22f;
+            else if (isBirch)
+                speciesTaper = 0.96f + height01 * 0.05f;
+            else if (isAlder)
+                speciesTaper = 1.02f - MathF.Abs(height01 - 0.55f) * 0.08f;
+
+            var radialScale = Math.Clamp(
+                lobe * verticalLayer * speciesTaper,
+                0.80f,
+                1.18f);
+
             var localWave = MathF.Sin(
                 phase +
                 relative.Y * 0.47f +
                 relative.X * 0.11f -
                 relative.Z * 0.09f);
 
-            relative.X *= widthX;
-            relative.Z *= widthZ;
+            relative.X *= widthX * radialScale;
+            relative.Z *= widthZ * radialScale;
             relative.Y *= height;
 
             var drift = asymmetry * crownWeight;
-            relative.X += direction.X * drift + direction.Y * localWave * 0.08f * crownWeight;
-            relative.Z += direction.Y * drift - direction.X * localWave * 0.08f * crownWeight;
+            relative.X +=
+                direction.X * drift +
+                direction.Y * localWave * 0.08f * crownWeight;
+            relative.Z +=
+                direction.Y * drift -
+                direction.X * localWave * 0.08f * crownWeight;
+
+            var tipNoise =
+                MathF.Sin(
+                    relative.X * 0.83f +
+                    relative.Z * 0.67f +
+                    relative.Y * 0.31f +
+                    secondaryPhase) *
+                (isPine ? 0.035f : 0.060f) *
+                crownWeight;
+            relative.X += direction.Y * tipNoise;
+            relative.Z -= direction.X * tipNoise;
+
+            var windWeight =
+                (0.16f + 0.84f * MathF.Pow(crownWeight, 0.72f)) *
+                (isPine ? 0.78f : isBirch ? 1.0f : isAlder ? 0.92f : 0.88f);
 
             varied[i] = new PbrVertex(
                 instance.Position + relative,
                 vertex.Normal,
-                vertex.TexCoord);
+                vertex.TexCoord,
+                Math.Clamp(windWeight, 0f, 1f));
         }
 
         return varied;
