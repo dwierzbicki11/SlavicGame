@@ -143,6 +143,7 @@ public sealed class EnemyAgent : IDamageReceiver
                 else if (playerDistance <= AttackRange)
                 {
                     State = EnemyState.Attack;
+                    LockFacingTowards(world.PlayerPosition);
                 }
                 else
                 {
