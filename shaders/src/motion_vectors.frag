@@ -52,5 +52,5 @@ void main()
 
     // FSR consumes screen-space motion. Store normalized UV displacement so
     // the backend can apply its documented render-size scale exactly once.
-    fsout_Motion = fsin_TexCoord - previousUv;
+    fsout_Motion = previousUv - fsin_TexCoord;
 }
