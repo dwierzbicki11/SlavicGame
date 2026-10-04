@@ -141,12 +141,24 @@ public sealed class NpcWorldRuntime
                         routineOffset;
                 }
 
+                var routineTime =
+                    world.Time.TimeOfDayHours -
+                    routineOffset;
+
                 motion = NpcRoutineMotion.Sample(
                     npc.Id,
                     effectiveActivity,
                     fallback,
-                    world.Time.TimeOfDayHours -
-                    routineOffset);
+                    routineTime);
+
+                if (NpcWorkstationCatalog.TrySample(
+                        npc.Id,
+                        effectiveActivity,
+                        routineTime,
+                        out var workstationMotion))
+                {
+                    motion = workstationMotion;
+                }
 
                 _lastRoutineWorldHours[npc.Id] =
                     world.Time.TimeOfDayHours;
@@ -165,7 +177,6 @@ public sealed class NpcWorldRuntime
                 world.Terrain.SampleHeight(position);
 
             var yaw =
-                motion.IsMoving &&
                 motion.Forward.LengthSquared() > 0.000001f
                     ? WorldPlacementOrientation.YawFacing(
                         horizontal,
