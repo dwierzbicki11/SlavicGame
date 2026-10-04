@@ -101,9 +101,10 @@ public sealed class FidelityFxUpscaler : IDisposable
             return false;
         }
 
+        FidelityFxUpscaler? created = null;
         try
         {
-            var created = new FidelityFxUpscaler(
+            created = new FidelityFxUpscaler(
                 graphicsDevice,
                 library);
             created.CreateContext(outputWidth, outputHeight);
@@ -115,7 +116,10 @@ public sealed class FidelityFxUpscaler : IDisposable
         }
         catch (Exception ex)
         {
-            library.Dispose();
+            if (created is not null)
+                created.Dispose();
+            else
+                library.Dispose();
             diagnostic =
                 $"AMD FSR 3.1.4 context creation failed: {ex.Message}";
             return false;
