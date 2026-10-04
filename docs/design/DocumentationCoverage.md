@@ -4,9 +4,9 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 ## Próg swobodnej implementacji — stan 2026-10-04
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. `design/ProductionAssetManifests.md` dodaje konkretne stabilne rekordy integracyjne assetów R0–R6 i shared. `design/AnimationVfxAudioBudgetContract.md` definiuje wspólne klasy kosztu/priorytetu i degradation, `design/StreamingMemoryBudgetContract.md` definiuje residency M0–M4 i pressure/streaming contract, a `design/AiEncounterDensityBudgetContract.md` definiuje klasy A0–A3, strefy symulacji, encounter admission, pressure degradation i telemetry. Implementacja systemów, content pipeline, streamera, AI i integracja placeholderów nie musi czekać na dalsze dopisywanie fabuły ani na wymyślone limity wydajności.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. `design/ProductionAssetManifests.md` dodaje konkretne stabilne rekordy integracyjne assetów R0–R6 i shared. `design/AnimationVfxAudioBudgetContract.md`, `design/StreamingMemoryBudgetContract.md` i `design/AiEncounterDensityBudgetContract.md` definiują planistyczne kontrakty kosztu, degradacji i telemetry. `design/ProductionEstimatesFramework.md` definiuje E0–E4, throughput baseline, estimate states i forecasting bez wymyślonych osobodni. Implementacja systemów i content pipeline nie musi czekać na dalsze dopisywanie fabuły ani arbitralne limity.
 
-Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line writing/VO/lokalizacja, exact historical-final locators i formy, final art/AVFX/audio IDs/warianty oraz targety performance wymagające pomiarów.
+Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line writing/VO/lokalizacja, exact historical-final locators i formy, final art/AVFX/audio IDs/warianty oraz targety performance i estymaty kalendarzowe wymagające pomiarów.
 
 | Obszar | Główny dokument | Stan |
 |---|---|---|
@@ -19,28 +19,21 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 | Panteon/religia | pantheon/* + research/pantheon/* | critical source-policy PASS v0.1; dalsze pełne lektury/locators nie blokują implementacji |
 | Bestiariusz | bestiary/BestiaryBible.md + bestiary/ProductionBestiaryRoster.md + research/bestiary/ResearchCardIndex.md | scope 1.0 v0.1; południca region-fit PASS; forest-guardian CLOSED/F |
 | Kultury | world/Cultures.md + world/MacroCultures.md + research/cultures/* | framework v0.1; R0–R5 evidence packages v0.1; exact art/technology locators otwarte per asset |
-| Quest framework | design/QuestDesign.md | v0.1 |
-| Combat | design/CombatDesign.md + MeleeCombat.md + BowCombat.md | v0.1 |
-| Status/equipment/progression | design/StatusEffects.md + EquipmentSystem.md + Progression.md + ItemEquipmentRecipeCatalog.md | system v0.1 + full-scope stable item/equipment families; final stats/durability/weight otwarte |
-| Economy/vendors | design/EconomyPass01.md + design/RegionalVendorsServices.md + design/ItemEquipmentRecipeCatalog.md | framework + R0–R6 service pass + stock/item families; ceny/restock pozostają lockiem |
-| Tracking | design/TrackingSystem.md | v0.1 |
-| Encounter/AI density | design/EncounterDesign.md + design/RegionalEncounterRosters.md + design/AiEncounterDensityBudgetContract.md + content format | framework + R1–R6 family-level pass + A0–A3/simulation/admission/pressure/telemetry contract; final density/CPU/query ceilings measurement-gated |
-| Alchemy/magia | alchemy/RecipesV01.md + design/ItemEquipmentRecipeCatalog.md + magic/* | recipe implementation catalog v0.1; warunkowe receptury mają jawne gates; tuning/research otwarte |
-| NPC/dialog | design/NpcDialogueDesign.md + story/ProductionNpcRoster.md + dialogue/FullGameDialoguePackages.md + dialogue/* | R0–R6/campaign package contract implementation-ready; final wording/VO/localization otwarte |
-| Inventory | design/InventoryEconomy.md + design/ItemEquipmentRecipeCatalog.md | v0.1 + stable item family catalog |
-| Save/persistence | design/SavePersistence.md + design/StreamingMemoryBudgetContract.md | v0.1; logic state oddzielony od residency/cell lifetime |
-| Input/settings | design/ControlsAndInput.md + InputActionMap.md + SettingsMatrix.md | v0.1 |
-| UI/UX | ui/* + design/UXAccessibility.md + SaveSlotUX.md | v0.1 |
+| Quest/framework/combat/progression | design/QuestDesign.md + design/CombatDesign.md + design/Progression.md + design/ItemEquipmentRecipeCatalog.md | implementation pass; final tuning otwarty |
+| Economy/vendors | design/EconomyPass01.md + design/RegionalVendorsServices.md + design/ItemEquipmentRecipeCatalog.md | framework + R0–R6 service pass; ceny/restock pozostają lockiem |
+| Encounter/AI density | design/EncounterDesign.md + design/RegionalEncounterRosters.md + design/AiEncounterDensityBudgetContract.md | framework + family pass + A0–A3/simulation/admission/telemetry; final density/CPU measurement-gated |
+| NPC/dialog | design/NpcDialogueDesign.md + story/ProductionNpcRoster.md + dialogue/FullGameDialoguePackages.md | R0–R6/campaign package contract implementation-ready; final wording/VO/localization otwarte |
+| Save/content/input/UI | design/SavePersistence.md + content/* + design/ControlsAndInput.md + ui/* | v0.1 implementation contracts |
 | Day/night/weather | world/DayNightEvents.md + WeatherGameplay.md + content/TimeEventFormat.md | behavior + data contract v0.1 |
-| Content IDs/formats | content/IdConventions.md + content/*Template.md + content/*Format.md | v0.1 |
 | Architektura/rendering | design/EngineArchitecture.md + technical/RenderingAndPlatform.md + design/StreamingMemoryBudgetContract.md | v0.1 + streaming/residency contract |
-| Animation/VFX/audio budgets | design/AnimationVfxAudioBudgetContract.md + design/ProductionAssetManifests.md | production planning v0.1: C0–C3, priority/reuse/fallback/degradation + measurement gate; numeric ceilings otwarte |
-| Streaming/memory budgets | design/StreamingMemoryBudgetContract.md + design/ProductionAssetManifests.md | production planning v0.1: M0–M4 residency, pressure states, lifecycle, R0–R6 scenarios, telemetry; numeric RAM/VRAM/IO targets otwarte |
-| AI/encounter budgets | design/AiEncounterDensityBudgetContract.md + design/RegionalEncounterRosters.md | production planning v0.1: A0–A3, simulation zones, admission/pressure, R0–R6 scenarios i telemetry; agent count/CPU/query/density targets otwarte |
-| Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md + design/StreamingMemoryBudgetContract.md + design/AiEncounterDensityBudgetContract.md | v0.1; pressure-state QA i measurement schema zdefiniowane; pomiary performance otwarte |
-| Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md | first pass; estimates wymagają rzeczywistej throughput baseline |
-| Material culture research | research/material-culture/* + research/cultures/CULT_R0_ZARNOWIEC.md–CULT_R5_AREL.md | family-level production research PASS v0.1; L0–L3 ledger; exact locators per asset |
-| Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + design/ProductionAssetManifests.md | R0–R6 planning + concrete stable manifest records v0.1; final forms/IDs/art/performance lock otwarte |
+| Animation/VFX/audio budgets | design/AnimationVfxAudioBudgetContract.md + design/ProductionAssetManifests.md | planning v0.1; numeric ceilings otwarte |
+| Streaming/memory budgets | design/StreamingMemoryBudgetContract.md + design/ProductionAssetManifests.md | planning v0.1; numeric RAM/VRAM/IO targets otwarte |
+| AI/encounter budgets | design/AiEncounterDensityBudgetContract.md + design/RegionalEncounterRosters.md | planning v0.1; agent/CPU/query/density targets otwarte |
+| Production estimates | design/ProductionEstimatesFramework.md + design/ContentProduction.md | framework v0.1: E0–E4, baseline/sample/evidence, estimate states i forecasting; velocity/capacity/osobodni/daty pozostają measurement-gated |
+| Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md | v0.1; pomiary performance otwarte |
+| Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md + ProductionEstimatesFramework.md | planning contract; release evidence i real throughput otwarte |
+| Material culture research | research/material-culture/* + research/cultures/* | family-level production research PASS v0.1; exact locators per asset |
+| Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + design/ProductionAssetManifests.md | R0–R6 concrete stable manifest records v0.1; final forms/art/performance lock otwarte |
 
 ## Jawne otwarte decyzje
 
@@ -49,11 +42,11 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 3. finalne personalia/łączenie slotów NPC, appearance i killability windows;
 4. finalne targety kontraktów wybranych side-questów oraz appearance/placement istot;
 5. exact historical-final locators per asset, szczególnie costume/ornament/religion-material/naming i regionalne technology/art locki;
-6. finalne modele/materials/textures, warianty i konkretne animation/audio/VFX records/art IDs; stabilne rodziny/integration IDs i AVFX budget contract są już zdefiniowane;
-7. item/equipment/recipe: final stats/value/weight/durability, drop rates, recipe quantities/craft time, botanika i culture-specific goods;
-8. encounter/AI: finalne weights, density, cooldown durations, POI placement, group sizes, active-agent limits, update cadence, path/perception ceilings, combat tuning i rewards;
-9. measured performance targets: numeric animation/VFX/audio ceilings, RAM/VRAM ceilings, streaming IO/prefetch/cell targets, AI CPU/query/agent budgets i wymagania sprzętowe; kontrakty telemetry/degradation są już zdefiniowane;
-10. production estimates: osobodni/velocity/milestones dopiero po zebraniu rzeczywistej przepustowości zespołu;
+6. finalne modele/materials/textures, warianty i konkretne animation/audio/VFX records/art IDs;
+7. item/equipment/recipe final stats/value/weight/durability, drop rates, quantities/craft time, botanika i culture-specific goods;
+8. encounter/AI final weights, density, cooldowns, POI placement, group sizes, active-agent limits, update cadence, path/perception ceilings, tuning i rewards;
+9. measured performance targets: AVFX ceilings, RAM/VRAM, streaming IO/prefetch/cell, AI CPU/query/agent budgets i wymagania sprzętowe;
+10. production estimates: framework istnieje, ale velocity/capacity, czasy per domain/class, milestone ranges i release forecast wymagają rzeczywistych ukończonych próbek;
 11. tuning pogody, traversal, ekonomii, AI i encounterów po playtestach;
 12. nazwy robocze F oraz elementy research/art/playtest/performance lock.
 
@@ -63,10 +56,10 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** R0–R6 mają bibles, quest/content/system coverage, konkretne production asset manifest records oraz planistyczne kontrakty AVFX/audio, streaming/memory i AI/encounter density. Research-sensitive szczegóły oraz liczby wymagające telemetry pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** P1–P4 mają implementation/planning-level pass, łącznie z kontraktem estymacji produkcyjnych. Research-sensitive szczegóły oraz liczby wymagające telemetry/playtestów pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. production estimates framework oparty na rzeczywistej throughput baseline, bez wymyślonych terminów/osobodni;
-2. później balance/playtest/performance locks;
+1. P5 measurement/playtest evidence contract i ledger;
+2. realne balance/playtest/performance locks z evidence;
 3. measured release evidence i wymagania sprzętowe.
