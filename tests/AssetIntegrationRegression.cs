@@ -310,11 +310,13 @@ internal static class AssetIntegrationRegression
             },
             StringComparer.Ordinal);
 
+        var populationViewer = new Vector3(45f, 0f, -20f);
         ActorModelMesh.Build(
             world,
             player,
             npcModels,
             enemy,
+            populationViewer,
             0.35,
             0f,
             true,
@@ -351,10 +353,10 @@ internal static class AssetIntegrationRegression
             .Select(actor => NpcVisualCatalog.For(actor.Id, actor.Role))
             .ToArray();
 
-        check(ambientProfiles.Length == 8 &&
-              ambientProfiles.Select(profile => profile.BaseColor).Distinct().Count() >= 6 &&
-              ambientProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 5,
-            "Ambient settlers have varied palettes and silhouette accessories");
+        check(ambientProfiles.Length == 14 &&
+              ambientProfiles.Select(profile => profile.BaseColor).Distinct().Count() >= 10 &&
+              ambientProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 8,
+            "Expanded ambient settlers have varied palettes and silhouette accessories");
 
         var ambientModelFiles = world.NpcWorld.Actors
             .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
@@ -407,6 +409,22 @@ internal static class AssetIntegrationRegression
 
         check(actorVertices.Length > baseAnimatedVertexBudget,
             "Settler accessories add visible geometry beyond their distinct humanoid GLBs");
+
+        ActorModelMesh.Build(
+            world,
+            player,
+            npcModels,
+            enemy,
+            new Vector3(-900f, 0f, -900f),
+            0.35,
+            0f,
+            true,
+            out var farActorVertices,
+            out var farActorIndices);
+
+        check(farActorVertices.Length < actorVertices.Length &&
+              farActorIndices.Length < actorIndices.Length,
+            "Ambient settler mesh generation is distance-culled away from the village");
 
         var npcGeometries = npcModels.Values
             .Select(model => model.BuildMesh(
