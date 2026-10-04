@@ -34,6 +34,18 @@ public static class VerticalSliceBootstrap
             world.Progress.Inventory.Add("simple-bandage", 2);
             world.Progress.SetFlag("starter-loadout-granted");
         }
+
+        if (!world.Progress.HasFlag("starter-bow-loadout-granted"))
+        {
+            world.Progress.Inventory.Add(
+                SlavicGame.Engine.Combat.BowCombat.BowItemId);
+            world.Progress.Inventory.Add(
+                SlavicGame.Engine.Combat.BowCombat.ArrowItemId,
+                12);
+            world.Progress.SetFlag(
+                "starter-bow-loadout-granted");
+        }
+
         world.Progress.SetFlag("vertical-slice-prepared");
     }
     public static void EnsureMagicTraces(WorldState world)
