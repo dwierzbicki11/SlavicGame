@@ -92,6 +92,40 @@ public sealed class LootContainerRuntime
         return result;
     }
 
+    /// <summary>
+    /// Atomically moves every stack from the open container into inventory.
+    /// The authoritative controller preflights inventory overflow, so failure never partially empties the chest.
+    /// </summary>
+    public LootContainerResult TakeAll(WorldState world)
+    {
+        if (!IsOpen || !CanOpenNearest(world))
+        {
+            Close();
+            return LootContainerResult.InvalidTarget;
+        }
+
+        var before = Lines(world, LootPanel.Container);
+        if (before.Count == 0)
+        {
+            Message = "PUSTO";
+            return LootContainerResult.Empty;
+        }
+
+        var target = new InteractionTarget(TargetId, Position(world)!.Value, InteractionKind.Use, "KUFER");
+        var result = Controller(world).TakeAll(target);
+        if (result == LootContainerResult.Looted)
+        {
+            SelectedIndex = 0;
+            Message = $"ZABRANO WSZYSTKO ({before.Sum(stack => stack.Quantity)})";
+        }
+        else
+        {
+            Message = "NIE MOZNA PRZENIESC";
+        }
+
+        return result;
+    }
+
     private static LootContainerUiController Controller(WorldState world) =>
         new(world.Progress.LootContainers, Definition, world.Progress.Inventory);
 
