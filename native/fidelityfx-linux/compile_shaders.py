@@ -44,10 +44,10 @@ FI_DEFINES = [
 
 # Order must match FfxOpticalflowPass in SDK v1.1.4.
 OF_PASSES = [
-    'prepare_luma',
-    'compute_luminance_pyramid',
-    'generate_scd_histogram',
-    'compute_scd_divergence',
+    'prepare_luma_pass',
+    'compute_luminance_pyramid_pass',
+    'generate_scd_histogram_pass',
+    'compute_scd_divergence_pass',
     'compute_optical_flow_advanced_pass_v5',
     'filter_optical_flow_pass_v5',
     'scale_optical_flow_advanced_pass_v5',
@@ -230,7 +230,7 @@ def main():
         output = out / f'of_{pass_index}_{hdr}.spv'
         defines = [f'FFX_OPTICALFLOW_OPTION_HDR_COLOR_INPUT={hdr}']
         source = (vk_shaders / 'opticalflow' /
-                  f'ffx_opticalflow_{pass_name}_pass.glsl')
+                  f'ffx_opticalflow_{pass_name}.glsl')
         data, reflected = run_compile(source, output, defines)
         return pass_index, hdr, data, reflected
 
