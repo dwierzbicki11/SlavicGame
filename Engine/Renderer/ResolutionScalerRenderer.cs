@@ -62,6 +62,15 @@ public sealed class ResolutionScalerRenderer : IDisposable
             ? _depthView
             : null;
 
+    public Texture? SampleableDepthTexture =>
+        _sceneSampleCount == TextureSampleCount.Count1
+            ? _depthTexture
+            : null;
+
+    public Texture ResolvedSceneTexture =>
+        _resolvedColorTexture ??
+        throw new InvalidOperationException("Resolution scaler is not initialized.");
+
     public uint Width => _width;
     public uint Height => _height;
     public TextureSampleCount SceneSampleCount => _sceneSampleCount;
