@@ -96,6 +96,8 @@ internal static class AssetIntegrationRegression
             "Tree GLB preserves separate foliage and wood material names for wind rendering");
         check(oakPbr.DrawRanges.Select(range => range.MaterialIndex).Distinct().Count() >= 2,
             "Tree GLB keeps foliage and trunk in separate render material ranges");
+        check(PbrVertex.SizeInBytes == 36,
+            "PBR vertex layout reserves a per-vertex foliage wind weight");
 
         var player = GlbModel.Load(playerPath);
         check(player.AnimationNames.Contains("Idle") &&
