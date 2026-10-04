@@ -1,6 +1,7 @@
 // Real, headless Vulkan FSR dispatch/readback. Works with Mesa lavapipe in CI.
 #include <ffx_api/ffx_upscale.h>
 #include <ffx_api/vk/ffx_api_vk.h>
+#include "frame_generation.h"
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <stdexcept>
@@ -63,6 +64,24 @@ struct Test {
         deviceCreate.pEnabledFeatures = &features;
         check(vkCreateDevice(physical, &deviceCreate, nullptr, &device));
         vkGetDeviceQueue(device, family, 0, &queue);
+
+        SlavicFgCreateDesc fgCreate{};
+        fgCreate.vkDevice = device;
+        fgCreate.vkPhysicalDevice = physical;
+        fgCreate.vkDeviceProcAddr = reinterpret_cast<void*>(vkGetDeviceProcAddr);
+        fgCreate.maxRenderWidth = 64;
+        fgCreate.maxRenderHeight = 64;
+        fgCreate.displayWidth = 128;
+        fgCreate.displayHeight = 128;
+        fgCreate.backBufferFormat = FFX_API_SURFACE_FORMAT_R16G16B16A16_FLOAT;
+        fgCreate.flags = SLAVIC_FG_JITTER_MOTION_VECTORS;
+        SlavicFgContext* fg = nullptr;
+        uint32_t fgRc = slavicFgCreate(&fgCreate, &fg);
+        if (fgRc != 0 || !fg)
+            throw std::runtime_error("FSR3 FG context creation failed " + std::to_string(fgRc));
+        slavicFgDestroy(fg);
+        std::cout << "PASS FSR3 FG context/resources/pipelines create+destroy" << std::endl;
+
         VkCommandPoolCreateInfo pools{VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
         pools.queueFamilyIndex = family; pools.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         check(vkCreateCommandPool(device, &pools, nullptr, &pool));
