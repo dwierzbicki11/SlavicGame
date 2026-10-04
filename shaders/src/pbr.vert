@@ -25,6 +25,7 @@ layout(set = 1, binding = 0) uniform MaterialBuffer
 layout(location = 0) in vec3 Position;
 layout(location = 1) in vec3 Normal;
 layout(location = 2) in vec2 TexCoord;
+layout(location = 3) in float WindWeight;
 
 layout(location = 0) out vec3 fsin_WorldPosition;
 layout(location = 1) out vec3 fsin_WorldNormal;
@@ -34,7 +35,9 @@ layout(location = 4) out vec3 fsin_CameraPosition;
 
 vec3 ApplyFoliageWind(vec3 position, vec2 uv)
 {
-    float response = max(MaterialFactors.z, 0.0);
+    float response =
+        max(MaterialFactors.z, 0.0) *
+        clamp(WindWeight, 0.0, 1.0);
     float wind = clamp(SkyWeather.z, 0.0, 1.0);
     if (response <= 0.001 || wind <= 0.001)
         return position;
