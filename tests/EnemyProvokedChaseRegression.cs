@@ -18,9 +18,11 @@ internal static class EnemyProvokedChaseRegression
         if (enemy.State != EnemyState.Alert)
             throw new InvalidOperationException("Damage did not alert the enemy.");
 
-        enemy.Update(world, 0.6);
+        // Damage now spends the first 0.18 s in hit reaction before Alert can advance.
+        // Give the update enough total time for both the reaction and the 0.55 s alert.
+        enemy.Update(world, 0.731);
         if (enemy.State != EnemyState.Chase)
-            throw new InvalidOperationException("A provoked enemy outside normal detection range did not enter Chase.");
+            throw new InvalidOperationException("A provoked enemy outside normal detection range did not enter Chase after hit reaction and alert elapsed.");
 
         var before = enemy.Position;
         enemy.Update(world, 0.5);
