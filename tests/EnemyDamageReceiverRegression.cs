@@ -38,7 +38,11 @@ internal static class EnemyDamageReceiverRegression
         if (!enemy.IsHitReacting || enemy.State != EnemyState.Chase || enemy.Position != Vector3.Zero)
             throw new InvalidOperationException("Hit reaction did not briefly suspend active chase behavior.");
 
-        enemy.Update(world, 0.08);
+        // Step just beyond the remaining 0.08 s rather than exactly onto the
+        // floating-point boundary. The contract is that the reaction lasts at
+        // least 0.18 s and then engagement resumes, not that binary subtraction
+        // of decimal frame times must land on an exact zero.
+        enemy.Update(world, 0.081);
         if (enemy.IsHitReacting || enemy.State != EnemyState.Attack)
             throw new InvalidOperationException("Enemy did not resume its preserved engagement after hit reaction elapsed.");
 
