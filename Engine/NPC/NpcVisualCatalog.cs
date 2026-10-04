@@ -13,7 +13,10 @@ public enum NpcAccessoryKind
     Hood,
     ToolBundle,
     Basket,
-    BeltPouch
+    BeltPouch,
+    Apron,
+    FishingPole,
+    ShoulderBundle
 }
 
 public sealed record NpcVisualProfile(
@@ -132,6 +135,54 @@ public static class NpcVisualCatalog
                 NpcAccessoryKind.Satchel,
                 NpcAccessoryKind.Hood,
                 1.08f),
+
+            ["settler-smith-helper-01"] = new(
+                new Vector3(1.07f, 1.05f, 1.06f),
+                new Vector3(0.30f, 0.24f, 0.18f),
+                new Vector3(0.56f, 0.31f, 0.14f),
+                NpcAccessoryKind.Apron,
+                NpcAccessoryKind.ToolBundle,
+                1.04f),
+
+            ["settler-weaver-01"] = new(
+                new Vector3(0.94f, 0.99f, 0.95f),
+                new Vector3(0.42f, 0.34f, 0.46f),
+                new Vector3(0.68f, 0.55f, 0.38f),
+                NpcAccessoryKind.Shawl,
+                NpcAccessoryKind.Basket,
+                0.92f),
+
+            ["settler-shepherd-01"] = new(
+                new Vector3(1.02f, 1.06f, 1.01f),
+                new Vector3(0.35f, 0.39f, 0.23f),
+                new Vector3(0.52f, 0.44f, 0.29f),
+                NpcAccessoryKind.Staff,
+                NpcAccessoryKind.ShoulderBundle,
+                0.98f),
+
+            ["settler-gatherer-01"] = new(
+                new Vector3(0.93f, 1.00f, 0.94f),
+                new Vector3(0.29f, 0.43f, 0.28f),
+                new Vector3(0.58f, 0.47f, 0.26f),
+                NpcAccessoryKind.Basket,
+                NpcAccessoryKind.Hood,
+                1.02f),
+
+            ["settler-fisher-01"] = new(
+                new Vector3(1.03f, 1.04f, 1.02f),
+                new Vector3(0.28f, 0.35f, 0.39f),
+                new Vector3(0.49f, 0.42f, 0.27f),
+                NpcAccessoryKind.FishingPole,
+                NpcAccessoryKind.BeltPouch,
+                0.97f),
+
+            ["settler-youth-01"] = new(
+                new Vector3(0.88f, 0.92f, 0.88f),
+                new Vector3(0.44f, 0.36f, 0.24f),
+                new Vector3(0.64f, 0.50f, 0.28f),
+                NpcAccessoryKind.ShoulderBundle,
+                NpcAccessoryKind.BeltPouch,
+                1.12f),
         };
 
     public static NpcVisualProfile For(
@@ -195,6 +246,12 @@ public static class NpcVisualCatalog
             "settler-carrier-01" => "npc_villager_a_animated.glb",
             "settler-elder-01" => "npc_elder_animated.glb",
             "settler-traveler-01" => "npc_merchant_animated.glb",
+            "settler-smith-helper-01" => "npc_hunter_animated.glb",
+            "settler-weaver-01" => "npc_villager_b_animated.glb",
+            "settler-shepherd-01" => "npc_villager_a_animated.glb",
+            "settler-gatherer-01" => "npc_villager_b_animated.glb",
+            "settler-fisher-01" => "npc_hunter_animated.glb",
+            "settler-youth-01" => "npc_villager_a_animated.glb",
 
             _ => role switch
             {
@@ -235,11 +292,20 @@ public static class NpcVisualCatalog
             "night-watch" or
             "carry-goods" or
             "arrive-and-trade" or
-            "go-to-fields" => "Walk",
+            "go-to-fields" or
+            "drive-flock" or
+            "gather-herbs" or
+            "run-errands" => "Walk",
 
             "field-work" or
             "wood-work" or
             "craft-work" or
+            "forge-work" or
+            "weave-work" or
+            "graze-flock" or
+            "sort-herbs" or
+            "river-fishing" or
+            "mend-nets" or
             "market-trade" or
             "trade-and-prepare" or
             "maintain-crossing" or
