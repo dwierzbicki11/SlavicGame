@@ -26,4 +26,4 @@ if ($size -lt 1000000) {
 
 Write-Host "[FidelityFX] Installed official amd_fidelityfx_vk.dll ($size bytes)"
 Write-Host "[FidelityFX] Target: $target"
-Write-Host "[FidelityFX] Start with SLAVICGAME_FSR3=1 to exercise the native validation path."
+Write-Host "[FidelityFX] Build the game again, then select UPSCALER -> FSR3 in the graphics menu. SLAVICGAME_FSR3=1 remains a developer override."
