@@ -26,6 +26,7 @@ public sealed record GameSaveSnapshot(
     public SlavicGame.Engine.Gameplay.EncounterSnapshot[]? Encounters { get; init; }
     public SlavicGame.Engine.Gameplay.VendorStockSnapshot[]? Vendors { get; init; }
     public WildlifeSnapshot[]? Wildlife { get; init; }
+    public SlavicGame.Engine.Interaction.LootContainerSnapshot[]? LootContainers { get; init; }
 }
 
 public static class SaveGameService
@@ -59,7 +60,8 @@ public static class SaveGameService
             Magic = world.Magic.Capture(),
             Encounters = world.Progress.Encounters.Capture(),
             Vendors = world.Vendors.Capture(),
-            Wildlife = world.Wildlife.Capture()
+            Wildlife = world.Wildlife.Capture(),
+            LootContainers = world.Progress.LootContainers.Capture()
         };
     }
 
@@ -100,6 +102,8 @@ public static class SaveGameService
         world.Progress.RestoreFlags(snapshot.WorldFlags ?? []);
         world.Progress.Encounters.Restore(snapshot.Encounters ?? []);
         world.Vendors.Restore(snapshot.Vendors ?? []);
+        world.Progress.LootContainers.Restore(snapshot.LootContainers ?? []);
+        world.Loot.Close();
         world.Wildlife.Restore(
             world,
             snapshot.Wildlife ?? []);

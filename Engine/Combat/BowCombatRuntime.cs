@@ -96,7 +96,8 @@ public sealed class BowCombatRuntime
             !world.Cinematics.IsPlaying &&
             !world.Dialogue.IsOpen &&
             !world.Vendors.IsOpen &&
-            !world.Crafting.IsOpen;
+            !world.Crafting.IsOpen &&
+            !world.Loot.IsOpen;
 
         if (!canAim)
         {

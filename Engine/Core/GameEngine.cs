@@ -143,6 +143,7 @@ public sealed class GameEngine : IDisposable
                 else if (!_world.Dialogue.IsOpen &&
                          !_world.Vendors.IsOpen &&
                          !_world.Crafting.IsOpen &&
+                         !_world.Loot.IsOpen &&
                          _window.ConsumeKeyPress(Key.Escape))
                 {
                     _world.Bow.SetAiming(_world, false);
@@ -434,6 +435,22 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
+        if (_world.Loot.IsOpen)
+        {
+            _world.Bow.SetAiming(_world, false);
+            _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
+            if (_window.ConsumeKeyPress(Key.Escape)) _world.Loot.Close();
+            else
+            {
+                if (_window.ConsumeKeyPress(Key.A)) _world.Loot.SelectPanel(SlavicGame.Engine.Gameplay.LootPanel.Container);
+                if (_window.ConsumeKeyPress(Key.D)) _world.Loot.SelectPanel(SlavicGame.Engine.Gameplay.LootPanel.Inventory);
+                if (_window.ConsumeKeyPress(Key.W)) _world.Loot.MoveSelection(_world, -1);
+                if (_window.ConsumeKeyPress(Key.S)) _world.Loot.MoveSelection(_world, 1);
+                if (_window.ConsumeKeyPress(Key.E)) _world.Loot.TransferSelected(_world, _window.IsKeyDown(Key.ShiftLeft));
+            }
+            _camera.Follow(_world.PlayerPosition, (float)deltaSeconds, _world.Terrain);
+            return;
+        }
         if (_world.Crafting.IsOpen || _world.Vendors.IsOpen)
         {
             _world.Bow.SetAiming(_world, false);
@@ -578,11 +595,16 @@ public sealed class GameEngine : IDisposable
                 handled = _world.Bow.TryRetrieveNearest(_world);
 
             if (!handled)
+                handled = _world.Loot.TryOpenNearest(_world);
+
+            if (!handled)
                 _world.Dialogue.TryStartNearest(_world);
         }
 
-        if (_world.Dialogue.IsOpen)
+        if (_world.Loot.IsOpen || _world.Dialogue.IsOpen)
         {
+            _world.Bow.SetAiming(_world, false);
+            _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
             _camera.Follow(
                 _world.PlayerPosition,
                 (float)deltaSeconds,

@@ -491,3 +491,8 @@ Ground wildlife is now huntable with the existing light melee system. Deer, boar
 ### Bow hunting
 
 The vertical slice now includes a physical projectile bow. Hold RMB to aim, hold LMB to draw and release LMB to fire. Arrow speed and damage scale with draw time, gravity affects the flight path, targets are hit by segment collision, terrain arrows can be recovered with E, and wildlife wounds, carcasses and harvested loot share the existing save/load state. Aiming uses the existing R0 bow/arrow models and a lightweight reticle while projectiles remain consolidated in the actor render path.
+
+
+### Market chest storage
+
+The existing chest at the village market now opens with E and shows container and inventory panels. A/D selects the panel, W/S selects an item, E moves one item, Shift+E moves the selected stack, and Escape closes the panel. Deposited contents persist in the full game save. Storage cancels bow aiming and closes when the player leaves its reach.

@@ -520,6 +520,39 @@ public sealed class VeldridRenderer : IDisposable
                 AddGameplayText(world.Cinematics.Subtitle, 18, displayHeight - 66, displayWidth - 36);
                 AddGameplayText("SPACJA / ESC - POMIN", 18, displayHeight - 32, displayWidth - 36);
             }
+            else if (world.Loot.IsOpen)
+            {
+                var panelWidth = MathF.Min(960f, displayWidth - 32f);
+                var panelHeight = MathF.Min(460f, displayHeight - 32f);
+                var left = (displayWidth - panelWidth) * 0.5f;
+                var top = (displayHeight - panelHeight) * 0.5f;
+                var half = panelWidth * 0.5f;
+                AddHudQuad(left, top, panelWidth, panelHeight, new Vector4(0.02f, 0.025f, 0.018f, 0.96f));
+                AddGameplayText("KUFER NA RYNKU", left + 18, top + 16, panelWidth - 36);
+                var visibleRows = Math.Max(1, (int)((panelHeight - 165f) / 26f));
+                foreach (var side in new[] { SlavicGame.Engine.Gameplay.LootPanel.Container, SlavicGame.Engine.Gameplay.LootPanel.Inventory })
+                {
+                    var columnLeft = left + (side == SlavicGame.Engine.Gameplay.LootPanel.Container ? 0f : half);
+                    var active = world.Loot.Panel == side;
+                    AddGameplayText((active ? "> " : "  ") + (side == SlavicGame.Engine.Gameplay.LootPanel.Container ? "KUFER [A]" : "EKWIPUNEK [D]"),
+                        columnLeft + 18, top + 48, half - 36);
+                    var lines = world.Loot.Lines(world, side);
+                    var start = active ? Math.Max(0, world.Loot.SelectedIndex - visibleRows + 1) : 0;
+                    if (lines.Count == 0) AddGameplayText("PUSTO", columnLeft + 18, top + 82, half - 36);
+                    for (var i = start; i < Math.Min(lines.Count, start + visibleRows); i++)
+                    {
+                        var line = lines[i];
+                        var text = (active && i == world.Loot.SelectedIndex ? "> " : "  ") +
+                            SlavicGame.Engine.Gameplay.LootContainerRuntime.DisplayName(line.ItemId) + $" x{line.Quantity}";
+                        var maxChars = Math.Max(4, (int)((half - 36f) / 4.8f));
+                        if (text.Length > maxChars) text = text[..(maxChars - 3)] + "...";
+                        AddGameplayText(text, columnLeft + 18, top + 82 + (i - start) * 26f, half - 36);
+                    }
+                }
+                AddGameplayText(world.Loot.Message, left + 18, top + panelHeight - 72, panelWidth - 36);
+                AddGameplayText("A/D PANEL  W/S WYBOR  E PRZENIES 1", left + 18, top + panelHeight - 46, panelWidth - 36);
+                AddGameplayText("SHIFT+E CALY STOS  ESC ZAMKNIJ", left + 18, top + panelHeight - 22, panelWidth - 36);
+            }
             else if (world.Crafting.IsOpen)
             {
                 var lines = world.Crafting.BuildLines(world);
@@ -737,6 +770,9 @@ public sealed class VeldridRenderer : IDisposable
 
                 if (string.IsNullOrWhiteSpace(interactionText))
                     interactionText = world.Bow.RetrievalPrompt(world);
+
+                if (string.IsNullOrWhiteSpace(interactionText) && world.Loot.CanOpenNearest(world))
+                    interactionText = "E OTWORZ KUFER";
 
                 if (string.IsNullOrWhiteSpace(interactionText))
                     interactionText = world.NpcWorld.HudPrompt(world.PlayerPosition);
