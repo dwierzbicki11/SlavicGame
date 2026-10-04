@@ -23,6 +23,8 @@ public sealed class PostProcessRenderer : IDisposable
 
     public TextureView OutputView => _targetView ?? throw new InvalidOperationException("Post-process renderer is not initialized.");
 
+    public Texture OutputTexture => _targetTexture ?? throw new InvalidOperationException("Post-process renderer is not initialized.");
+
     public void Initialize(GraphicsDevice graphicsDevice, OutputDescription sceneOutput, TextureView sourceView, uint width, uint height)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
