@@ -20,11 +20,17 @@ public static class VerticalSliceDialogueCatalog
             ["shrine-keeper"] = BuildShrineKeeper()
         };
 
-    public static DialogueGraph GetGraph(string npcId) =>
-        Graphs.TryGetValue(npcId, out var graph)
-            ? graph
-            : throw new KeyNotFoundException(
-                $"No vertical-slice dialogue graph for NPC '{npcId}'.");
+    public static DialogueGraph GetGraph(string npcId)
+    {
+        if (Graphs.TryGetValue(npcId, out var graph))
+            return graph;
+
+        if (CommunityDialogueCatalog.TryGetGraph(npcId, out var community))
+            return community;
+
+        throw new KeyNotFoundException(
+            $"No vertical-slice dialogue graph for NPC '{npcId}'.");
+    }
 
     public static string SelectStartNode(
         WorldState world,
@@ -53,6 +59,8 @@ public static class VerticalSliceDialogueCatalog
             "herbalist" => "hb.intro",
             "community-guard" => "cg.intro",
             "shrine-keeper" => "sk.intro",
+            _ when CommunityDialogueCatalog.HasGraph(npcId) =>
+                CommunityDialogueCatalog.SelectStartNode(world, npcId),
             _ => GetGraph(npcId).StartNodeId
         };
     }
