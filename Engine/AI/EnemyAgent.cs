@@ -218,9 +218,17 @@ public sealed class EnemyAgent : IDamageReceiver
             return;
         }
 
+        _provokedByDamage = true;
+
+        // A hit can wake or re-alert an enemy, but it must not make an enemy that is
+        // already pursuing or attacking forget its engagement and replay Alert.
+        if (State is EnemyState.Chase or EnemyState.Attack)
+        {
+            return;
+        }
+
         State = EnemyState.Alert;
         _alertRemaining = AlertSeconds;
-        _provokedByDamage = true;
     }
 
     private void Patrol(WorldState world, double deltaSeconds)
