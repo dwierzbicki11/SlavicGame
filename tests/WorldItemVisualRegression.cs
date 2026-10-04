@@ -28,8 +28,8 @@ internal static class WorldItemVisualRegression
                 },
                 StringComparer.Ordinal);
 
-        check(models.Count == 4,
-            "P0 world item pass uses four distinct tracked GLB assets");
+        check(models.Count == 5,
+            "World item pass includes the missing-tools axe plus four existing tracked GLB assets");
 
         var world = WorldGenerator.Generate();
         var quest = world.Progress.Quests.Get(
@@ -39,12 +39,14 @@ internal static class WorldItemVisualRegression
         var resin = Find("visual.resource.resin");
         var herb = Find("visual.resource.marsh-herb");
         var thread = Find("visual.quest.ritual-thread");
+        var missingAxe = Find("visual.side.missing-tools.axe");
 
         check(!WorldItemVisualCatalog.IsVisible(world, keepsake) &&
               WorldItemVisualCatalog.IsVisible(world, resin) &&
               WorldItemVisualCatalog.IsVisible(world, herb) &&
-              !WorldItemVisualCatalog.IsVisible(world, thread),
-            "New game shows gatherable resources but hides gated quest items");
+              !WorldItemVisualCatalog.IsVisible(world, thread) &&
+              !WorldItemVisualCatalog.IsVisible(world, missingAxe),
+            "New game shows gatherable resources but hides gated quest and side-quest items");
 
         TerrainVertex[] initialVertices = [];
         uint[] initialIndices = [];
