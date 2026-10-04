@@ -469,3 +469,8 @@ R0 settlers now apply deterministic local separation after their scheduled routi
 ### Visible NPC workstations
 
 Żarnowiec workers now periodically stop at authored visible workstations instead of only looping around schedule anchors. Existing GLBs form woodworking, pottery, weaving, herb-sorting, net-mending, forge, market, farming and crossing-maintenance stations; stationary workers face the correct station and use their Interact animation. Small workstation props use short-range culling.
+
+
+### R0 trading
+
+The trader and herbalist now expose a playable vendor screen while they are on duty and nearby. Press **T** to trade, W/S to select, A/D to switch buy/sell and E to confirm. Vendor stock is finite and survives save/load, village reputation applies a small prototype price modifier, tonic stock is knowledge-gated, and quest-protected items are excluded from selling.
