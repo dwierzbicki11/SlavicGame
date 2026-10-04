@@ -42,6 +42,7 @@ FootprintTrailRegression.Run(Check);
 NpcDialogueRegression.Run(Check);
 NpcWeatherBehaviorRegression.Run(Check);
 NpcCrowdSteeringRegression.Run(Check);
+NpcWorkstationRegression.Run(Check);
 MissingToolsSideQuestRegression.Run(Check);
 R0FordSideQuestRegression.Run(Check);
 WildlifeRegression.Run(Check);
