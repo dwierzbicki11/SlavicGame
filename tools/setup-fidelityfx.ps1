@@ -4,30 +4,26 @@ param(
 
 $ErrorActionPreference = "Stop"
 $version = "1.1.4"
-$url = "https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/releases/download/v$version/FidelityFX-SDK-v$version.zip"
+$url = "https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/v$version/PrebuiltSignedDLL/amd_fidelityfx_vk.dll"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $destinationPath = Join-Path $root $Destination
-$cache = Join-Path $root ".cache/fidelityfx-$version"
-$zip = "$cache.zip"
+$target = Join-Path $destinationPath "amd_fidelityfx_vk.dll"
 
 New-Item -ItemType Directory -Force -Path $destinationPath | Out-Null
 
-Write-Host "[FidelityFX] Downloading official SDK v$version..."
-Invoke-WebRequest -Uri $url -OutFile $zip
+Write-Host "[FidelityFX] Downloading official signed Vulkan runtime v$version..."
+Invoke-WebRequest -Uri $url -OutFile $target
 
-if (Test-Path $cache) {
-    Remove-Item -Recurse -Force $cache
-}
-Expand-Archive -Path $zip -DestinationPath $cache -Force
-
-$dll = Get-ChildItem -Path $cache -Recurse -Filter "amd_fidelityfx_vk.dll" |
-    Select-Object -First 1
-if (-not $dll) {
-    throw "Official SDK archive did not contain amd_fidelityfx_vk.dll."
+if (-not (Test-Path $target)) {
+    throw "FidelityFX Vulkan runtime download failed."
 }
 
-Copy-Item -Force $dll.FullName (Join-Path $destinationPath "amd_fidelityfx_vk.dll")
-Write-Host "[FidelityFX] Installed Vulkan runtime: $($dll.FullName)"
-Write-Host "[FidelityFX] Target: $destinationPath"
+$size = (Get-Item $target).Length
+if ($size -lt 1000000) {
+    Remove-Item -Force $target
+    throw "Downloaded FidelityFX Vulkan runtime is unexpectedly small."
+}
 
-Remove-Item -Force $zip
+Write-Host "[FidelityFX] Installed official amd_fidelityfx_vk.dll ($size bytes)"
+Write-Host "[FidelityFX] Target: $target"
+Write-Host "[FidelityFX] Start with SLAVICGAME_FSR3=1 to exercise the native validation path."
