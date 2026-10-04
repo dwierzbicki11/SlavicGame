@@ -583,8 +583,41 @@ public sealed class GameEngine : IDisposable
         if (_window.ConsumeKeyPress(Key.R) && !_world.Rituals.IsPerforming)
             _world.Rituals.TryStart(_world);
 
-        if (_window.ConsumeLeftMousePress())
-            _world.Melee.TryStart(_world);
+        var bowOrigin =
+            _world.PlayerPosition +
+            Vector3.UnitY * 1.45f +
+            _camera.GetLookDirection() * 0.65f;
+        var bowAimHeld =
+            _window.IsRightMouseDown;
+
+        if (bowAimHeld || _world.Bow.IsDrawing)
+        {
+            var bowLeftPressed =
+                _window.ConsumeLeftMousePress();
+
+            _world.Bow.UpdateControl(
+                _world,
+                bowAimHeld,
+                bowLeftPressed,
+                _window.IsLeftMouseDown,
+                bowOrigin,
+                _camera.GetLookDirection(),
+                deltaSeconds);
+        }
+        else
+        {
+            _world.Bow.UpdateControl(
+                _world,
+                false,
+                false,
+                _window.IsLeftMouseDown,
+                bowOrigin,
+                _camera.GetLookDirection(),
+                deltaSeconds);
+
+            if (_window.ConsumeLeftMousePress())
+                _world.Melee.TryStart(_world);
+        }
 
         if (_window.ConsumeKeyPress(Key.C) && !_world.Rituals.IsPerforming)
         {
@@ -602,7 +635,9 @@ public sealed class GameEngine : IDisposable
             canMove && _window.IsKeyDown(Key.S),
             canMove && _window.IsKeyDown(Key.D),
             canMove && _window.IsKeyDown(Key.A),
-            canMove && _window.IsKeyDown(Key.ShiftLeft),
+            canMove &&
+                !_world.Bow.IsAiming &&
+                _window.IsKeyDown(Key.ShiftLeft),
             _window.MouseDelta);
         PlayerController.Update(_world, _camera, input, deltaSeconds);
         if (_inputDiagnostics) LogInput(input, deltaSeconds);
