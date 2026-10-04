@@ -160,9 +160,11 @@ internal static class PlayerJumpRegression
         Frame(world, camera, Idle with { Backward = true }, 0.2);
         check(world.Footprints.Footprints.Count > 0, "Jump trail fixture has trackable ground footprints");
         world.Footprints.Reset(world.PlayerPosition);
+        var launchPosition = world.PlayerPosition;
+        check(world.Jump.TryStart(world), "Trackable-bank fixture permits a normal jump launch");
         Frame(world, camera, Idle with { Backward = true, JumpPressed = true }, 0.2);
         check(world.Jump.IsAirborne && world.Footprints.Footprints.Count == 0,
-            "Airborne movement does not paint walking footprints onto the ground");
+            $"Airborne movement does not paint walking footprints onto the ground (launch {launchPosition}, end {world.PlayerPosition}, velocity {world.Jump.VerticalVelocity}, footprints {world.Footprints.Footprints.Count})");
 
         RenderedJump(check);
     }

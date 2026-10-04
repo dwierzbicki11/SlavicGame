@@ -7,6 +7,7 @@ namespace SlavicGame.Engine.Input;
 
 public static class PlayerController
 {
+    private const double MaxAirMovementStep = 1.0 / 120.0;
     public static void Update(WorldState world, Camera3D camera, PlayerInput input, double deltaSeconds)
     {
         if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0d) return;
@@ -49,16 +50,27 @@ public static class PlayerController
             world.Player.CanSprint &&
             WaterInteractionState.CanSprintAtDepth(waterDepth);
 
+        var jumpSeconds = 0d;
         if (isMoving)
         {
             move = Vector3.Normalize(move);
             var speed = (sprinting ? 9f : 5f) * waterSpeedMultiplier;
-            var displacement = move * speed * (float)movementSeconds;
-            var steps = world.Jump.IsAirborne
-                ? Math.Max(1, (int)MathF.Ceiling(displacement.Length() / 0.1f))
-                : 1;
-            for (var step = 0; step < steps; step++)
-                world.MovePlayerPosition(world.PlayerPosition + displacement / steps);
+            if (world.Jump.IsAirborne)
+            {
+                // Advance horizontal travel and gravity together. Comparing the first
+                // vertical step against the whole frame's uphill endpoint lands too early.
+                while (jumpSeconds < movementSeconds - 0.000000001)
+                {
+                    var step = Math.Min(MaxAirMovementStep, movementSeconds - jumpSeconds);
+                    world.MovePlayerPosition(world.PlayerPosition + move * speed * (float)step);
+                    world.Jump.Update(world, step);
+                    jumpSeconds += step;
+                }
+            }
+            else
+            {
+                world.MovePlayerPosition(world.PlayerPosition + move * speed * (float)movementSeconds);
+            }
         }
 
         var currentVelocity = world.Jump.IsAirborne ? Vector3.Zero :
@@ -72,7 +84,7 @@ public static class PlayerController
                 currentVelocity * (float)deltaSeconds);
         }
 
-        world.Jump.Update(world, deltaSeconds);
+        world.Jump.Update(world, Math.Max(0d, deltaSeconds - jumpSeconds));
 
         var finalWaterDepth = world.Jump.IsAirborne ? 0f :
             WaterInteractionState.DepthAt(
