@@ -220,6 +220,25 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
         _slot = (_slot + 1) % RingSize;
     }
 
+    public void WaitAll()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        for (var i = 0; i < RingSize; i++)
+        {
+            var fence = _fences[i];
+            if (fence == 0)
+                continue;
+            Check(
+                _waitForFences(
+                    _device,
+                    1,
+                    ref fence,
+                    1,
+                    ulong.MaxValue),
+                "vkWaitForFences");
+        }
+    }
+
     private static nint LoadVulkanLibrary()
     {
         var names = OperatingSystem.IsWindows()
