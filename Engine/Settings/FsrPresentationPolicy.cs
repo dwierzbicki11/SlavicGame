@@ -13,11 +13,10 @@ public static class FsrPresentationPolicy
         outputHeight >= inputHeight &&
         (outputWidth > inputWidth || outputHeight > inputHeight);
 
-    // Vulkan compatibility path: EASU renders directly to the swapchain.
-    // This avoids the second fullscreen offscreen->swapchain pass (RCAS),
-    // which can invert presentation on drivers where clip-space Y differs
-    // from the requested standard convention.
-    public static bool UsesSinglePassEasuCompatibility(bool isVulkan) => isVulkan;
+    // AMD FSR1 is EASU followed by RCAS on every backend. Keep one canonical
+    // fullscreen UV convention instead of bypassing RCAS to work around a
+    // backend-specific presentation orientation.
+    public static bool UsesSinglePassEasuCompatibility(bool isVulkan) => false;
 
     public static bool RequiresFinalRcasYFlip(
         UpscalerMode upscaler,
