@@ -8,7 +8,6 @@
 #include <FidelityFX/host/ffx_frameinterpolation.h>
 #include <FidelityFX/host/ffx_opticalflow.h>
 #include <FidelityFX/host/backends/vk/ffx_vk.h>
-#include <ffx_internal_types.h>
 
 #include <cstdlib>
 #include <cstring>
