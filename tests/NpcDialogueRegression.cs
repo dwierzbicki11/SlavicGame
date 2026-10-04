@@ -16,15 +16,15 @@ internal static class NpcDialogueRegression
         world.Time.SetTimeOfDay(10);
         world.NpcWorld.Update(world);
 
-        check(world.NpcWorld.Actors.Count == 13,
-            "Five authored NPCs plus eight ambient settlers exist in the daytime world");
+        check(world.NpcWorld.Actors.Count == 19,
+            "Five authored NPCs plus fourteen ambient settlers exist in the daytime world");
 
         var ambientSettlers = world.NpcWorld.Actors
             .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
             .ToArray();
 
-        check(ambientSettlers.Length == 8,
-            "R0 village population includes eight ambient settlers");
+        check(ambientSettlers.Length == 14,
+            "R0 population includes fourteen ambient settlers");
         check(ambientSettlers
                 .Select(actor => new Vector2(actor.Position.X, actor.Position.Z))
                 .Distinct()
@@ -245,13 +245,19 @@ internal static class NpcDialogueRegression
             "settler-trader-01",
             "settler-carrier-01",
             "settler-elder-01",
-            "settler-traveler-01"
+            "settler-traveler-01",
+            "settler-smith-helper-01",
+            "settler-weaver-01",
+            "settler-shepherd-01",
+            "settler-gatherer-01",
+            "settler-fisher-01",
+            "settler-youth-01"
         };
 
         check(communityIds.All(id =>
                 NpcPresentation.HasDialogue(id) &&
                 CommunityDialogueCatalog.HasGraph(id)),
-            "All eight R0 ambient settlers expose authored community dialogue graphs");
+            "All fourteen R0 ambient settlers expose authored community dialogue graphs");
 
         world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
         world.Time.SetTimeOfDay(10);

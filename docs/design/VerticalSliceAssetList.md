@@ -219,10 +219,10 @@ Asset ma:
 
 P0 placeholder requirement for visible settlers is now implemented:
 - five authored NPC silhouette variants on the shared animated rig;
-- eight ambient Żarnowiec settlers;
+- fourteen ambient Żarnowiec settlers across farming/craft/trade/herding/gathering/fishing/errand roles;
 - lightweight role accessories;
 - idle/walk reuse from the shared rig;
-- no fake dialogue prompt on ambient settlers.
+- authored optional community dialogue for every ambient settler;
 
 Still open for P1:
 - final researched clothing families;
