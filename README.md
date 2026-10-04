@@ -449,3 +449,8 @@ Ground wildlife now leaves transient species-specific tracks on suitable terrain
 ### Settler weather behavior
 
 Żarnowiec's eight ambient settlers now interrupt ordinary work/travel routines during severe storms and move along lightweight deterministic shelter routes. Normal rain leaves routine work intact, core quest NPC schedules are untouched, and residents resume their authored jobs when the storm passes.
+
+
+### Missing tools micro side quest
+
+The Żarnowiec woodworker now offers the optional `side-r0-missing-tools` investigation. A physical axe can be recovered at the forest worksite, separate context evidence can be inspected, and the return supports careful, uncertain, or unsupported-accusation outcomes with persistent relationship/reputation consequences. The quest is deliberately mundane and does not turn every local problem into a supernatural encounter.

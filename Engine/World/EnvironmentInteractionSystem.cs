@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.Interaction;
+using SlavicGame.Engine.Gameplay;
 
 namespace SlavicGame.Engine.World;
 
@@ -13,6 +14,8 @@ public sealed class EnvironmentInteractionSystem
     private const float InteractionDistance = 3.6f;
     private static readonly Vector3 ResinSpot = new(31f, 0f, 15f);
     private static readonly Vector3 MarshHerbSpot = new(107f, 0f, 20f);
+    private static readonly Vector3 MissingToolSpot = new(22f, 0f, 17f);
+    private static readonly Vector3 MissingToolsWorksiteSpot = new(18.5f, 0f, 15.5f);
 
     public InteractionTarget? Current { get; private set; }
     public string Message { get; private set; } = "";
@@ -54,6 +57,28 @@ public sealed class EnvironmentInteractionSystem
             Message = "ZDOBYTO: ZIOLO BAGIENNE x2";
             Current = FindNearest(world);
             return true;
+        }
+
+        if (Current.Id == "side-r0-missing-tools.tool")
+        {
+            var collected = MissingToolsSideQuest.RecordToolFound(world);
+            if (collected)
+            {
+                Message = "ODNALEZIONO: SIEKIERA CIESLI";
+                Current = FindNearest(world);
+            }
+            return collected;
+        }
+
+        if (Current.Id == "side-r0-missing-tools.worksite")
+        {
+            var inspected = MissingToolsSideQuest.RecordWorksiteContext(world);
+            if (inspected)
+            {
+                Message = "SLAD: NARZEDZIE ZOSTAWIONO PRZY NIEDOKONCZONEJ PRACY";
+                Current = FindNearest(world);
+            }
+            return inspected;
         }
 
         const string prefix = "campfire.";
@@ -100,6 +125,27 @@ public sealed class EnvironmentInteractionSystem
                 Ground(world, MarshHerbSpot),
                 InteractionKind.Take,
                 "E ZBIERZ ZIOLO BAGIENNE"));
+        }
+
+        if (MissingToolsSideQuest.CanInvestigate(world))
+        {
+            if (!world.Progress.HasFlag(MissingToolsSideQuest.ToolCollectedFlag))
+            {
+                targets.Add(new InteractionTarget(
+                    "side-r0-missing-tools.tool",
+                    Ground(world, MissingToolSpot),
+                    InteractionKind.Take,
+                    "E PODNIES SIEKIERE CIESLI"));
+            }
+
+            if (!world.Progress.HasFlag(MissingToolsSideQuest.WorksiteInspectedFlag))
+            {
+                targets.Add(new InteractionTarget(
+                    "side-r0-missing-tools.worksite",
+                    Ground(world, MissingToolsWorksiteSpot),
+                    InteractionKind.Inspect,
+                    "E OBEJRZYJ MIEJSCE PRACY"));
+            }
         }
 
         foreach (var fire in CampfireSystem.Fires)

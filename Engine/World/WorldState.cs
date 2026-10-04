@@ -235,6 +235,7 @@ public sealed class WorldState
         }
 
         SwampPredatorEncounter.Update(this);
+        MissingToolsSideQuest.Synchronize(this);
     }
 
     public void SetPlayerPosition(Vector3 position)

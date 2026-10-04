@@ -77,3 +77,14 @@ Każdy quest używa faz z `QuestDesign.md` i zapisuje `quest_id`, `phase`, ukoń
 ## Definition of Ready
 
 `SQ_R0_01`–`SQ_R0_03` mają stabilne wejścia, fazy, legalne outcomes, persistence, fail-forward, dependencies i minimalne QA. Implementacja quest state machines może ruszyć bez wymyślania brakującego lore; content oznaczony research/art/dialogue/playtest lockiem pozostaje jawnie poza kartą.
+
+## Vertical-slice compatibility note
+
+The implemented micro side quest `side-r0-missing-tools` is an additional vertical-slice teaching quest derived from the older candidate list in `VerticalSliceSideQuests.md`. It does not consume or rename any production catalog slot.
+
+In particular:
+- `SQ_R0_01` remains **Złamany bród**;
+- `SQ_R0_02` remains **Dług zielarki**;
+- `SQ_R0_03` remains **Stary kopiec**.
+
+The micro quest may coexist with all three and must never be treated as their completion flag or prerequisite.
