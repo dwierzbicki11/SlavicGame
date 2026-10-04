@@ -53,13 +53,13 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] measurement/playtest evidence contract i ledger format (`design/MeasurementPlaytestEvidence.md`);
 - [x] reprodukowalne scenario manifests dla combat/economy/progression i evidence/reputation (`design/BalancePlaytestScenarioManifests.md`); finalne liczby pozostają playtest lockiem;
 - [x] traversal/weather/day-night scenario manifests (`design/TraversalWeatherDayNightScenarioManifests.md`); tuning pozostaje measurement/playtest lockiem;
+- [x] performance/release measurement manifests (`design/PerformanceReleaseMeasurementManifests.md`); targety liczbowe i hardware pozostają measurement lockiem;
 - [ ] combat/economy/progression tuning — wykonać realne scenariusze i zamknąć candidate/locked ranges;
 - [ ] evidence/reputation thresholds — wykonać realne scenariusze i zamknąć candidate/locked thresholds;
 - [ ] traversal/weather/day-night tuning — wykonać scenariusze i zamknąć candidate/locked ranges;
-- [ ] performance/release measurement manifests;
-- [ ] measured CPU/GPU/RAM/VRAM/streaming/AI targets;
-- [ ] minimal/recommended hardware po pomiarach;
-- [ ] release criteria evidence.
+- [ ] measured CPU/GPU/RAM/VRAM/streaming/AI/AVFX targets z raw captures;
+- [ ] minimal/recommended hardware po pomiarach pełnego manifest setu;
+- [ ] release criteria evidence dla konkretnego candidate SHA.
 
 ## Reguły kolejki
 
@@ -72,4 +72,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P4 mają implementation/planning-level pass. P5 ma wspólny evidence contract oraz reprodukowalne gameplay scenario manifests dla combat/economy/progression, evidence/reputation i traversal/weather/day-night. Następny najmniejszy niezablokowany pakiet dokumentacyjny to **performance/release measurement manifests**. Faktyczne wartości balansu, thresholdy i targety wydajności pozostają otwarte do wykonania realnych playtestów/profilowania.
+P1–P4 mają implementation/planning-level pass. P5 ma wspólny evidence contract oraz reprodukowalne scenario manifests dla gameplay/world i performance/release. Dokumentacyjny kontrakt pomiarów jest zamknięty; następny etap P5 wymaga już **realnego wykonania scenariuszy/profilowania** i zapisania candidate/locked values. Bez rzeczywistych captures nie deklarujemy targetów performance, hardware ani release evidence.

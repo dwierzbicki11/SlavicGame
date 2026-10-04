@@ -49,6 +49,7 @@ CraftingRegression.Run(Check);
 MissingToolsSideQuestRegression.Run(Check);
 R0FordSideQuestRegression.Run(Check);
 WildlifeRegression.Run(Check);
+WildlifeHuntingRegression.Run(Check);
 WildlifeTrackingRegression.Run(Check);
 
 // River terrain and water must form one sloped channel; animation has to read downstream.

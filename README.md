@@ -484,3 +484,7 @@ The herbalist now exposes a playable alchemy station while on duty. Press **K** 
 ### NPC reactions
 
 R0 settlers now react to immediate danger: civilians watch or move away from player attacks, flee engaged enemies, and the community guard faces or moves toward threats instead of fleeing. Dialogue speakers remain protected from reaction overrides.
+
+### Wildlife hunting
+
+Ground wildlife is now huntable with the existing light melee system. Deer, boar and wolves have prototype health, flee for several seconds after a wound, become persistent carcasses when killed, and expose a one-time contextual E harvest interaction. Harvested carcasses disappear from rendering, and wildlife health/position/loot state survives save/load. Ravens remain ambient for ground melee and are reserved for future ranged hunting.

@@ -142,6 +142,40 @@ public sealed class EnvironmentInteractionSystem
             return changed;
         }
 
+        const string harvestPrefix = "wildlife.harvest.";
+        if (Current.Id.StartsWith(
+                harvestPrefix,
+                StringComparison.Ordinal))
+        {
+            var wildlifeId =
+                Current.Id[harvestPrefix.Length..];
+            var actor =
+                world.Wildlife.Actors.FirstOrDefault(item =>
+                    string.Equals(
+                        item.Id,
+                        wildlifeId,
+                        StringComparison.Ordinal));
+
+            if (actor is null ||
+                !world.Wildlife.TryHarvest(
+                    world,
+                    wildlifeId))
+            {
+                return false;
+            }
+
+            var lootText = string.Join(
+                " / ",
+                WildlifeHarvestCatalog.For(actor.Species)
+                    .Select(item =>
+                        $"{item.ItemId.ToUpperInvariant()} x{item.Quantity}"));
+
+            Message =
+                $"ZEBRANO LUP: {WildlifeCatalog.DisplayName(actor.Species)} / {lootText}";
+            Current = FindNearest(world);
+            return true;
+        }
+
         const string prefix = "campfire.";
         if (Current.Id.StartsWith(prefix, StringComparison.Ordinal))
         {
@@ -266,6 +300,19 @@ public sealed class EnvironmentInteractionSystem
                         "E ZAMKNIJ BROD I OZNACZ OBEJSCIE"));
                 }
             }
+        }
+
+        var carcass =
+            world.Wildlife.FindNearestHarvestable(
+                world.PlayerPosition,
+                InteractionDistance);
+        if (carcass is not null)
+        {
+            targets.Add(new InteractionTarget(
+                $"wildlife.harvest.{carcass.Id}",
+                carcass.Position,
+                InteractionKind.Take,
+                $"E ZBIERZ LUP: {WildlifeCatalog.DisplayName(carcass.Species)}"));
         }
 
         foreach (var fire in CampfireSystem.Fires)
