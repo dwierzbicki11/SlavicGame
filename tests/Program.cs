@@ -44,6 +44,7 @@ NpcWeatherBehaviorRegression.Run(Check);
 NpcCrowdSteeringRegression.Run(Check);
 NpcWorkstationRegression.Run(Check);
 VendorRegression.Run(Check);
+CraftingRegression.Run(Check);
 MissingToolsSideQuestRegression.Run(Check);
 R0FordSideQuestRegression.Run(Check);
 WildlifeRegression.Run(Check);

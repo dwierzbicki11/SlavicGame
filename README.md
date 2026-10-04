@@ -474,3 +474,8 @@ R0 settlers now apply deterministic local separation after their scheduled routi
 ### R0 trading
 
 The trader and herbalist now expose a playable vendor screen while they are on duty and nearby. Press **T** to trade, W/S to select, A/D to switch buy/sell and E to confirm. Vendor stock is finite and survives save/load, village reputation applies a small prototype price modifier, tonic stock is knowledge-gated, and quest-protected items are excluded from selling.
+
+
+### R0 alchemy
+
+The herbalist now exposes a playable alchemy station while on duty. Press **K** nearby to open crafting; the first executable recipe is `marsh-sight-tonic`, gated by learned recipe knowledge and consuming one `marsh-herb` plus one `forest-resin`. Ingredient validation is atomic and the crafted tonic is excluded from the first-pass sell loop.

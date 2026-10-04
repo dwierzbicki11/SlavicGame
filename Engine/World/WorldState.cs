@@ -32,6 +32,7 @@ public sealed class WorldState
     public WildlifeTrackTrailState WildlifeTracks { get; } = new();
     public DialogueRuntime Dialogue { get; } = new();
     public VendorRuntime Vendors { get; } = new();
+    public CraftingRuntime Crafting { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();

@@ -506,6 +506,74 @@ public sealed class VeldridRenderer : IDisposable
                 AddGameplayText(world.Cinematics.Subtitle, 18, displayHeight - 66, displayWidth - 36);
                 AddGameplayText("SPACJA / ESC - POMIN", 18, displayHeight - 32, displayWidth - 36);
             }
+            else if (world.Crafting.IsOpen)
+            {
+                var lines = world.Crafting.BuildLines(world);
+                var panelHeight =
+                    MathF.Min(
+                        350f,
+                        MathF.Max(230f, 175f + lines.Count * 48f));
+                var panelWidth =
+                    MathF.Min(820f, displayWidth - 40f);
+                var panelLeft =
+                    (displayWidth - panelWidth) * 0.5f;
+                var panelTop =
+                    (displayHeight - panelHeight) * 0.5f;
+
+                AddHudQuad(
+                    panelLeft,
+                    panelTop,
+                    panelWidth,
+                    panelHeight,
+                    new Vector4(0.02f, 0.025f, 0.018f, 0.94f));
+
+                AddGameplayText(
+                    "ALCHEMIA - STOL ZIELARKI",
+                    panelLeft + 24,
+                    panelTop + 18,
+                    panelWidth - 48);
+
+                for (var i = 0; i < lines.Count; i++)
+                {
+                    var line = lines[i];
+                    var prefix =
+                        i == world.Crafting.SelectedIndex
+                            ? "> "
+                            : "  ";
+                    var status =
+                        !line.Unlocked
+                            ? "NIEZNANA RECEPTURA"
+                            : line.CanCraft
+                                ? "GOTOWE"
+                                : "BRAK SKLADNIKOW";
+
+                    AddGameplayText(
+                        $"{prefix}{line.DisplayName} / {status}",
+                        panelLeft + 34,
+                        panelTop + 62 + i * 48,
+                        panelWidth - 68);
+                    AddGameplayText(
+                        $"  {line.RequirementText}",
+                        panelLeft + 52,
+                        panelTop + 84 + i * 48,
+                        panelWidth - 90);
+                }
+
+                if (!string.IsNullOrWhiteSpace(world.Crafting.Message))
+                {
+                    AddGameplayText(
+                        world.Crafting.Message,
+                        panelLeft + 24,
+                        panelTop + panelHeight - 68,
+                        panelWidth - 48);
+                }
+
+                AddGameplayText(
+                    "W/S WYBOR  E WYTWORZ  K/ESC ZAMKNIJ",
+                    panelLeft + 24,
+                    panelTop + panelHeight - 32,
+                    panelWidth - 48);
+            }
             else if (world.Vendors.IsOpen)
             {
                 var lines = world.Vendors.BuildLines(world);
@@ -670,6 +738,14 @@ public sealed class VeldridRenderer : IDisposable
                         string.IsNullOrWhiteSpace(interactionText)
                             ? "T HANDEL"
                             : interactionText + " / T HANDEL";
+                }
+
+                if (world.Crafting.CanOpenNearest(world))
+                {
+                    interactionText =
+                        string.IsNullOrWhiteSpace(interactionText)
+                            ? "K ALCHEMIA"
+                            : interactionText + " / K ALCHEMIA";
                 }
 
                 if (!string.IsNullOrWhiteSpace(interactionText))
