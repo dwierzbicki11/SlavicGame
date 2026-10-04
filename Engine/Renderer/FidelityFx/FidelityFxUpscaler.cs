@@ -247,7 +247,7 @@ public sealed class FidelityFxUpscaler : IDisposable
             CameraFar = cameraFar,
             CameraFovAngleVertical = verticalFov,
             ViewSpaceToMetersFactor = 1f,
-            Flags = 0
+            Flags = FfxApi.DispatchNonLinearColorSrgb
         };
 
         var descriptorMemory =
@@ -343,7 +343,8 @@ public sealed class FidelityFxUpscaler : IDisposable
             },
             Flags =
                 FfxApi.EnableAutoExposure |
-                FfxApi.EnableMotionVectorsJitterCancellation,
+                FfxApi.EnableMotionVectorsJitterCancellation |
+                FfxApi.EnableNonLinearColorspace,
             MaxRenderSize = new FfxApiDimensions2D(
                 outputWidth,
                 outputHeight),
