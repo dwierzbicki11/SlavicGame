@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Compile AMD GLSL with a portable build-time SPIR-V binding reflector.
+"""Compile AMD FSR3/Frame-Interpolation/Optical-Flow GLSL to embedded SPIR-V.
 
-The provider embeds FP32 Vulkan 1.0 binaries using AMD's shared-memory SPD path.
-Wave64/FP16 requests use these binaries; no subgroup or shaderFloat16 is required.
+The Linux provider intentionally builds FP32 Vulkan binaries from the exact
+pinned FidelityFX SDK source. The backend advertises neither FP16 nor forced
+wave64, so those permutations are not needed. FSR3 upscaling keeps its full
+existing option matrix; Frame Interpolation needs three boolean options and
+Optical Flow needs the HDR-input option.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor
@@ -12,15 +15,47 @@ from pathlib import Path
 import struct
 import subprocess
 
-PASSES = ['prepare_inputs', 'luma_pyramid', 'shading_change_pyramid',
-          'shading_change', 'prepare_reactivity', 'luma_instability',
-          'accumulate', 'rcas', 'debug_view', 'autogen_reactive']
-DEFINES = ['REPROJECT_USE_LANCZOS_TYPE', 'HDR_COLOR_INPUT',
-           'LOW_RESOLUTION_MOTION_VECTORS', 'JITTERED_MOTION_VECTORS',
-           'INVERTED_DEPTH', 'APPLY_SHARPENING']
-GROUPS = ['cbv', 'srvTexture', 'uavTexture', 'srvBuffer', 'uavBuffer', 'sampler', 'rtAccelStruct']
-FIELDS = ['ConstantBuffer', 'SRVTexture', 'UAVTexture', 'SRVBuffer', 'UAVBuffer', 'Sampler', 'RTAccelerationStructure']
-BIND_FIELDS = ['ConstantBuffers', 'SRVTextures', 'UAVTextures', 'SRVBuffers', 'UAVBuffers', 'Samplers', 'RTAccelerationStructures']
+FSR_PASSES = ['prepare_inputs', 'luma_pyramid', 'shading_change_pyramid',
+              'shading_change', 'prepare_reactivity', 'luma_instability',
+              'accumulate', 'rcas', 'debug_view', 'autogen_reactive']
+FSR_DEFINES = ['REPROJECT_USE_LANCZOS_TYPE', 'HDR_COLOR_INPUT',
+               'LOW_RESOLUTION_MOTION_VECTORS', 'JITTERED_MOTION_VECTORS',
+               'INVERTED_DEPTH', 'APPLY_SHARPENING']
+
+# Order must match FfxFrameInterpolationPass in SDK v1.1.4.
+FI_PASSES = [
+    'reconstruct_and_dilate',
+    'setup',
+    'reconstruct_previous_depth',
+    'game_motion_vector_field',
+    'optical_flow_vector_field',
+    'disocclusion_mask',
+    '__interpolation__',
+    'compute_inpainting_pyramid',
+    'inpainting',
+    'compute_game_vector_field_inpainting_pyramid',
+    'debug_view',
+]
+FI_DEFINES = [
+    'LOW_RES_MOTION_VECTORS',
+    'JITTER_MOTION_VECTORS',
+    'INVERTED_DEPTH',
+]
+
+# Order must match FfxOpticalflowPass in SDK v1.1.4.
+OF_PASSES = [
+    'prepare_luma',
+    'compute_luminance_pyramid',
+    'generate_scd_histogram',
+    'compute_scd_divergence',
+    'compute_optical_flow_advanced_pass_v5',
+    'filter_optical_flow_pass_v5',
+    'scale_optical_flow_advanced_pass_v5',
+]
+
+GROUPS = ['cbv', 'srvTexture', 'uavTexture', 'srvBuffer', 'uavBuffer',
+          'sampler', 'rtAccelStruct']
+
 
 def bindings(data):
     words = struct.unpack('<%dI' % (len(data) // 4), data)
@@ -34,7 +69,8 @@ def bindings(data):
             raise ValueError('Malformed SPIR-V instruction')
         a = words[i + 1:i + n]
         if op == 5:  # OpName
-            names[a[0]] = struct.pack('<%dI' % (len(a) - 1), *a[1:]).split(b'\0')[0].decode()
+            names[a[0]] = struct.pack(
+                '<%dI' % (len(a) - 1), *a[1:]).split(b'\0')[0].decode()
         elif op == 71 and a[1] in (33, 34):  # Binding / DescriptorSet
             decorations.setdefault(a[0], {})[a[1]] = a[2]
         elif op in (25, 26, 27, 28, 29, 30, 32):
@@ -44,6 +80,7 @@ def bindings(data):
         elif op == 59:
             variables.append(a[:3])
         i += n
+
     result = {g: [] for g in GROUPS}
     for pointer, ident, storage in variables:
         dec = decorations.get(ident, {})
@@ -68,16 +105,56 @@ def bindings(data):
         elif storage == 0 and op == 25:
             group = 'srvTexture' if typ[5] == 1 else 'uavTexture'
         else:
-            raise ValueError(f'Unhandled descriptor type {op}, storage {storage}')
+            raise ValueError(
+                f'Unhandled descriptor type {op}, storage {storage}')
         name = names.get(ident)
         if not name:
-            raise ValueError('Missing descriptor name needed by AMD resource mapping')
+            raise ValueError(
+                'Missing descriptor name needed by AMD resource mapping')
         result[group].append((name, dec[33], count))
     for values in result.values():
         values.sort(key=lambda x: x[1])
-    if not result['cbv']:
-        raise ValueError('FSR shader missing constant buffer')
     return result
+
+
+def emit_blob(chunks, unique, data, resources):
+    digest = hashlib.sha256(data).hexdigest()
+    if digest in unique:
+        return unique[digest]
+
+    symbol = f's{len(unique)}'
+    unique[digest] = symbol
+    words = struct.unpack('<%dI' % (len(data) // 4), data)
+    chunks.append(
+        f'static const uint32_t {symbol}_data[] = {{' +
+        ','.join(hex(w) for w in words) + '};\n')
+    for group in GROUPS:
+        values = resources[group]
+        if values:
+            chunks.append(
+                f'static const char* {symbol}_{group}_names[] = {{' +
+                ','.join(json.dumps(x[0]) for x in values) + '};\n')
+            for suffix, value in [('slots', 1), ('counts', 2)]:
+                chunks.append(
+                    f'static const uint32_t {symbol}_{group}_{suffix}[] = {{' +
+                    ','.join(str(x[value]) for x in values) + '};\n')
+            chunks.append(
+                f'static const uint32_t {symbol}_{group}_spaces[] = {{' +
+                ','.join('0' for _ in values) + '};\n')
+    fields = [
+        f'(const uint8_t*){symbol}_data',
+        str(len(data)),
+    ] + [str(len(resources[g])) for g in GROUPS]
+    for group in GROUPS:
+        fields += [
+            f'{symbol}_{group}_{suffix}' if resources[group] else 'nullptr'
+            for suffix in ['names', 'slots', 'counts', 'spaces']
+        ]
+    chunks.append(
+        f'static const FfxShaderBlob {symbol} = {{' +
+        ','.join(fields) + '};\n')
+    return symbol
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -85,62 +162,165 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--compiler', required=True)
     args = parser.parse_args()
+
     gpu = args.sdk / 'sdk/include/FidelityFX/gpu'
-    source = args.sdk / 'sdk/src/backends/vk/shaders/fsr3upscaler'
+    vk_shaders = args.sdk / 'sdk/src/backends/vk/shaders'
     out = args.output / 'spirv'
     out.mkdir(parents=True, exist_ok=True)
-    base = ['FFX_GPU=1', 'FFX_GLSL=1', 'FFX_HALF=0', 'FFX_SPD_NO_WAVE_OPERATIONS=1',
-            'FFX_FSR3UPSCALER_OPTION_UPSAMPLE_SAMPLERS_USE_DATA_HALF=0',
-            'FFX_FSR3UPSCALER_OPTION_ACCUMULATE_SAMPLERS_USE_DATA_HALF=0',
-            'FFX_FSR3UPSCALER_OPTION_REPROJECT_SAMPLERS_USE_DATA_HALF=1',
-            'FFX_FSR3UPSCALER_OPTION_POSTPROCESSLOCKSTATUS_SAMPLERS_USE_DATA_HALF=0',
-            'FFX_FSR3UPSCALER_OPTION_UPSAMPLE_USE_LANCZOS_TYPE=2']
-    def compile_one(job):
+
+    common = [
+        'FFX_GPU=1',
+        'FFX_GLSL=1',
+        'FFX_HALF=0',
+        'FFX_SPD_NO_WAVE_OPERATIONS=1',
+    ]
+
+    def run_compile(source, output, defines):
+        command = [
+            args.compiler, '-V', '--target-env', 'vulkan1.0',
+            '-S', 'comp', '-Os',
+            '-I' + str(gpu),
+        ]
+        command += ['-D' + d for d in common + defines]
+        command += [str(source), '-o', str(output)]
+        subprocess.run(
+            command, check=True, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT)
+        data = output.read_bytes()
+        return data, bindings(data)
+
+    fsr_base = [
+        'FFX_FSR3UPSCALER_OPTION_UPSAMPLE_SAMPLERS_USE_DATA_HALF=0',
+        'FFX_FSR3UPSCALER_OPTION_ACCUMULATE_SAMPLERS_USE_DATA_HALF=0',
+        'FFX_FSR3UPSCALER_OPTION_REPROJECT_SAMPLERS_USE_DATA_HALF=1',
+        'FFX_FSR3UPSCALER_OPTION_POSTPROCESSLOCKSTATUS_SAMPLERS_USE_DATA_HALF=0',
+        'FFX_FSR3UPSCALER_OPTION_UPSAMPLE_USE_LANCZOS_TYPE=2',
+    ]
+
+    def compile_fsr(job):
         pass_name, bits = job
-        path = out / f'{pass_name}_{bits}.spv'
-        options = base + [f'FFX_FSR3UPSCALER_OPTION_{name}={(bits >> bit) & 1}'
-                          for bit, name in enumerate(DEFINES)]
-        command = [args.compiler, '-V', '--target-env', 'vulkan1.0', '-S', 'comp', '-Os',
-                   '-I' + str(gpu), '-I' + str(gpu / 'fsr3upscaler')]
-        command += ['-D' + d for d in options]
-        command += [str(source / f'ffx_fsr3upscaler_{pass_name}_pass.glsl'), '-o', str(path)]
-        subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        data = path.read_bytes()
-        return pass_name, bits, data, bindings(data)
-    # Four compiler processes keeps memory bounded on developer laptops/CI.
+        output = out / f'fsr_{pass_name}_{bits}.spv'
+        defines = fsr_base + [
+            f'FFX_FSR3UPSCALER_OPTION_{name}={(bits >> bit) & 1}'
+            for bit, name in enumerate(FSR_DEFINES)
+        ]
+        source = (vk_shaders / 'fsr3upscaler' /
+                  f'ffx_fsr3upscaler_{pass_name}_pass.glsl')
+        data, reflected = run_compile(source, output, defines)
+        return pass_name, bits, data, reflected
+
+    def fi_source(pass_name):
+        if pass_name == '__interpolation__':
+            return vk_shaders / 'frameinterpolation' / 'ffx_frameinterpolation_pass.glsl'
+        return (vk_shaders / 'frameinterpolation' /
+                f'ffx_frameinterpolation_{pass_name}_pass.glsl')
+
+    def compile_fi(job):
+        pass_index, pass_name, bits = job
+        output = out / f'fi_{pass_index}_{bits}.spv'
+        defines = [
+            f'FFX_FRAMEINTERPOLATION_OPTION_{name}={(bits >> bit) & 1}'
+            for bit, name in enumerate(FI_DEFINES)
+        ]
+        data, reflected = run_compile(fi_source(pass_name), output, defines)
+        return pass_index, bits, data, reflected
+
+    def compile_of(job):
+        pass_index, pass_name, hdr = job
+        output = out / f'of_{pass_index}_{hdr}.spv'
+        defines = [f'FFX_OPTICALFLOW_OPTION_HDR_COLOR_INPUT={hdr}']
+        source = (vk_shaders / 'opticalflow' /
+                  f'ffx_opticalflow_{pass_name}_pass.glsl')
+        data, reflected = run_compile(source, output, defines)
+        return pass_index, hdr, data, reflected
+
+    # Keep memory bounded on developer laptops and GitHub runners.
     with ThreadPoolExecutor(max_workers=4) as executor:
-        compiled = list(executor.map(compile_one, ((p, b) for p in PASSES for b in range(64))))
-    chunks = ['#include <FidelityFX/host/ffx_fsr3upscaler.h>\n#include <ffx_shader_blobs.h>\n#include <cstring>\n']
-    unique, table = {}, {}
-    for name, bits, data, resources in compiled:
-        digest = hashlib.sha256(data).hexdigest()
-        if digest not in unique:
-            symbol = f's{len(unique)}'
-            unique[digest] = symbol
-            words = struct.unpack('<%dI' % (len(data) // 4), data)
-            chunks.append(f'static const uint32_t {symbol}_data[] = {{' + ','.join(hex(w) for w in words) + '};\n')
-            for group in GROUPS:
-                values = resources[group]
-                if values:
-                    chunks.append(f'static const char* {symbol}_{group}_names[] = {{' + ','.join(json.dumps(x[0]) for x in values) + '};\n')
-                    for suffix, value in [('slots', 1), ('counts', 2)]:
-                        chunks.append(f'static const uint32_t {symbol}_{group}_{suffix}[] = {{' + ','.join(str(x[value]) for x in values) + '};\n')
-                    chunks.append(f'static const uint32_t {symbol}_{group}_spaces[] = {{' + ','.join('0' for _ in values) + '};\n')
-            fields = [f'(const uint8_t*){symbol}_data', str(len(data))] + [str(len(resources[g])) for g in GROUPS]
-            for g in GROUPS:
-                fields += [f'{symbol}_{g}_{s}' if resources[g] else 'nullptr' for s in ['names','slots','counts','spaces']]
-            chunks.append(f'static const FfxShaderBlob {symbol} = {{' + ','.join(fields) + '};\n')
-        table[name, bits] = unique[digest]
-    order = PASSES[:7] + ['accumulate'] + PASSES[7:]
-    chunks.append('static const FfxShaderBlob* shaders[11][64] = {\n')
-    for p in order:
-        chunks.append('{' + ','.join('&' + table[p, b] for b in range(64)) + '},\n')
-    chunks.append('};\nextern "C" FfxErrorCode ffxGetPermutationBlobByIndex(FfxEffect effect, FfxPass pass, FfxBindStage stage, uint32_t bits, FfxShaderBlob* blob) {\n'
-                  ' if(effect != FFX_EFFECT_FSR3UPSCALER || pass >= 11 || !blob || stage != FFX_BIND_COMPUTE_SHADER_STAGE) return FFX_ERROR_INVALID_ARGUMENT;\n'
-                  ' std::memcpy(blob, shaders[pass][bits & 63], sizeof(*blob)); return FFX_OK; }\n'
-                  'extern "C" FfxErrorCode ffxIsWave64(FfxEffect, uint32_t, bool& wave64) { wave64 = false; return FFX_OK; }\n')
+        fsr_compiled = list(executor.map(
+            compile_fsr,
+            ((p, b) for p in FSR_PASSES for b in range(64))))
+        fi_compiled = list(executor.map(
+            compile_fi,
+            ((i, p, b) for i, p in enumerate(FI_PASSES)
+             for b in range(8))))
+        of_compiled = list(executor.map(
+            compile_of,
+            ((i, p, hdr) for i, p in enumerate(OF_PASSES)
+             for hdr in range(2))))
+
+    chunks = [
+        '#include <FidelityFX/host/ffx_fsr3upscaler.h>\n',
+        '#include <FidelityFX/host/ffx_frameinterpolation.h>\n',
+        '#include <FidelityFX/host/ffx_opticalflow.h>\n',
+        '#include <ffx_shader_blobs.h>\n',
+        '#include <cstring>\n',
+    ]
+    unique = {}
+
+    fsr_table = {}
+    for name, bits, data, resources in fsr_compiled:
+        fsr_table[name, bits] = emit_blob(
+            chunks, unique, data, resources)
+
+    # FSR3 has two pass IDs which intentionally use the same accumulate shader.
+    fsr_order = FSR_PASSES[:7] + ['accumulate'] + FSR_PASSES[7:]
+    chunks.append('static const FfxShaderBlob* fsrShaders[11][64] = {\n')
+    for pass_name in fsr_order:
+        chunks.append(
+            '{' + ','.join(
+                '&' + fsr_table[pass_name, b] for b in range(64)) + '},\n')
+    chunks.append('};\n')
+
+    fi_table = {}
+    for pass_index, bits, data, resources in fi_compiled:
+        fi_table[pass_index, bits] = emit_blob(
+            chunks, unique, data, resources)
+    chunks.append('static const FfxShaderBlob* fiShaders[11][8] = {\n')
+    for pass_index in range(len(FI_PASSES)):
+        chunks.append(
+            '{' + ','.join(
+                '&' + fi_table[pass_index, b] for b in range(8)) + '},\n')
+    chunks.append('};\n')
+
+    of_table = {}
+    for pass_index, hdr, data, resources in of_compiled:
+        of_table[pass_index, hdr] = emit_blob(
+            chunks, unique, data, resources)
+    chunks.append('static const FfxShaderBlob* ofShaders[7][2] = {\n')
+    for pass_index in range(len(OF_PASSES)):
+        chunks.append(
+            '{' + ','.join(
+                '&' + of_table[pass_index, hdr] for hdr in range(2)) + '},\n')
+    chunks.append('};\n')
+
+    chunks.append(
+        'extern "C" FfxErrorCode ffxGetPermutationBlobByIndex('
+        'FfxEffect effect, FfxPass pass, FfxBindStage stage, uint32_t bits, '
+        'FfxShaderBlob* blob) {\n'
+        ' if(!blob || stage != FFX_BIND_COMPUTE_SHADER_STAGE) '
+        'return FFX_ERROR_INVALID_ARGUMENT;\n'
+        ' const FfxShaderBlob* selected = nullptr;\n'
+        ' if(effect == FFX_EFFECT_FSR3UPSCALER && pass < 11) '
+        'selected = fsrShaders[pass][bits & 63];\n'
+        ' else if(effect == FFX_EFFECT_FRAMEINTERPOLATION && pass < 11) '
+        'selected = fiShaders[pass][bits & 7];\n'
+        ' else if(effect == FFX_EFFECT_OPTICALFLOW && pass < 7) '
+        'selected = ofShaders[pass][(bits >> 2) & 1];\n'
+        ' else return FFX_ERROR_INVALID_ARGUMENT;\n'
+        ' std::memcpy(blob, selected, sizeof(*blob)); return FFX_OK; }\n'
+        'extern "C" FfxErrorCode ffxIsWave64('
+        'FfxEffect, uint32_t, bool& wave64) { '
+        'wave64 = false; return FFX_OK; }\n')
+
     (args.output / 'fsr_shaders.cpp').write_text(''.join(chunks))
-    print(f'FSR3: compiled {len(compiled)} permutations, embedded {len(unique)} unique FP32 shaders', flush=True)
+    total = len(fsr_compiled) + len(fi_compiled) + len(of_compiled)
+    print(
+        f'FSR3/FG: compiled {total} permutations, '
+        f'embedded {len(unique)} unique FP32 shaders '
+        f'(upscale={len(fsr_compiled)}, fi={len(fi_compiled)}, '
+        f'of={len(of_compiled)})',
+        flush=True)
+
 
 if __name__ == '__main__':
     main()
