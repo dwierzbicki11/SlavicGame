@@ -2,26 +2,47 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CACHE_DIR="$ROOT_DIR/.cache/fidelityfx-sdk-v1.1.4"
+SDK_DIR="${SLAVICGAME_FFX_SDK_DIR:-$ROOT_DIR/.cache/fidelityfx-sdk-v1.1.4}"
+BUILD_DIR="${SLAVICGAME_FFX_BUILD_DIR:-$ROOT_DIR/.cache/fidelityfx-linux-build}"
 REPO="https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK.git"
-
-cat <<'EOF'
-[FidelityFX] AMD FidelityFX SDK 1.1.4 exposes Vulkan, but AMD's official
-prebuilt FSR 3.1.4 runtime is a Windows DLL. SlavicGame therefore does not
-pretend that copying that DLL produces a native Linux implementation.
-
-This helper fetches the exact open-source SDK revision so the Linux Vulkan
-provider can be built from source by the SlavicGame native bridge.
-EOF
-
-mkdir -p "$(dirname "$CACHE_DIR")"
-if [[ -d "$CACHE_DIR/.git" ]]; then
-    git -C "$CACHE_DIR" fetch --tags --depth 1 origin v1.1.4
-    git -C "$CACHE_DIR" checkout --force v1.1.4
-else
-    rm -rf "$CACHE_DIR"
-    git clone --depth 1 --branch v1.1.4 "$REPO" "$CACHE_DIR"
+SDK_SHA="c6efa6bf7f2027b3ec94f28578bb5965eabb9e55"
+RUN_TESTS=0
+if [[ "${1:-}" == "--test" && "$#" -eq 1 ]]; then
+    RUN_TESTS=1
+elif [[ "$#" -ne 0 ]]; then
+    echo "Usage: $0 [--test]" >&2
+    exit 2
 fi
-
-echo "[FidelityFX] SDK source ready: $CACHE_DIR"
-echo "[FidelityFX] No unsupported Windows DLL has been installed on Linux."
+if [[ "$(uname -s)" != Linux ]]; then
+    echo "This helper builds the native Linux provider; use setup-fidelityfx.ps1 on Windows." >&2
+    exit 2
+fi
+for dependency in git cmake g++ python3 glslangValidator; do
+    if ! command -v "$dependency" >/dev/null; then
+        echo "Missing $dependency. On Debian/Ubuntu/Mint: sudo apt install git cmake g++ python3 libvulkan-dev glslang-tools" >&2
+        exit 127
+    fi
+done
+if [[ ! -d "$SDK_DIR/.git" ]]; then
+    if [[ -e "$SDK_DIR" ]]; then
+        echo "SDK path exists but is not a git checkout: $SDK_DIR" >&2
+        exit 1
+    fi
+    mkdir -p "$(dirname "$SDK_DIR")"
+    git clone --depth 1 --filter=blob:none --sparse --branch v1.1.4 "$REPO" "$SDK_DIR"
+    git -C "$SDK_DIR" sparse-checkout set sdk ffx-api
+fi
+if [[ "$(git -C "$SDK_DIR" rev-parse HEAD)" != "$SDK_SHA" || -n "$(git -C "$SDK_DIR" status --porcelain --untracked-files=no)" ]]; then
+    echo "SDK checkout must be unmodified v1.1.4 ($SDK_SHA): $SDK_DIR" >&2
+    exit 1
+fi
+cmake -S "$ROOT_DIR/native/fidelityfx-linux" -B "$BUILD_DIR" \
+    -DCMAKE_BUILD_TYPE=Release -DFFX_SDK_ROOT="$SDK_DIR" -DBUILD_TESTING=ON
+cmake --build "$BUILD_DIR" --parallel 4
+if [[ "$RUN_TESTS" == 1 ]]; then
+    ctest --test-dir "$BUILD_DIR" --output-on-failure
+fi
+mkdir -p "$ROOT_DIR/native/fidelityfx"
+cp "$BUILD_DIR/libslavic_fsr3_vk.so" "$ROOT_DIR/native/fidelityfx/libslavic_fsr3_vk.so"
+cp "$ROOT_DIR/native/fidelityfx-linux/AMD-LICENSE.txt" "$ROOT_DIR/native/fidelityfx/AMD-LICENSE.txt"
+echo "[FidelityFX] Native Linux FSR 3.1.4 installed. Build the game again, then run: SLAVICGAME_FSR3=1 ./run.sh"

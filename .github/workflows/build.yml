@@ -38,6 +38,15 @@ jobs:
       - name: Validate Vulkan fullscreen orientation
         if: runner.os == 'Linux'
         run: bash tools/check-render-orientation.sh
+      - name: Build and validate native Linux FSR3
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y cmake g++ libvulkan-dev mesa-vulkan-drivers
+          bash -n tools/setup-fidelityfx.sh
+          python3 -m py_compile native/fidelityfx-linux/compile_shaders.py native/fidelityfx-linux/prepare_sdk.py
+          export VK_ICD_FILENAMES="$(find /usr/share/vulkan/icd.d -name '*lvp*' -print -quit)"
+          test -n "$VK_ICD_FILENAMES"
+          bash tools/setup-fidelityfx.sh --test
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '11.0.x'
@@ -56,4 +65,12 @@ jobs:
           test -f bin/Release/net11.0/shaders/bin/pbr.frag.spv
           test -f bin/Release/net11.0/shaders/bin/sky.vert.spv
           test -f bin/Release/net11.0/shaders/bin/sky.frag.spv
-      - run: dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
+      - name: Run regression checks
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            export SLAVICGAME_TEST_FSR3_NATIVE=1
+            export VK_ICD_FILENAMES="$(find /usr/share/vulkan/icd.d -name '*lvp*' -print -quit)"
+            test -n "$VK_ICD_FILENAMES"
+          fi
+          dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
