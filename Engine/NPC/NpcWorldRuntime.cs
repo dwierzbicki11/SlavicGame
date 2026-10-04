@@ -192,6 +192,16 @@ public sealed class NpcWorldRuntime
                 yaw,
                 motion.IsMoving && !speaking));
         }
+
+        NpcCrowdSteering.Resolve(
+            world,
+            _actors,
+            world.Dialogue.IsOpen
+                ? world.Dialogue.SpeakerId
+                : null);
+
+        foreach (var actor in _actors)
+            _lastPositions[actor.Id] = actor.Position;
     }
 
     public NpcWorldActor? FindNearest(Vector3 position, float maxDistance = 3.8f) =>

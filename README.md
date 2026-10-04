@@ -459,3 +459,8 @@ The Żarnowiec woodworker now offers the optional `side-r0-missing-tools` invest
 ### SQ_R0_01 — Broken ford
 
 The first production R0 side-quest slot is now playable directly from field discovery. The damaged river crossing supports three durable outcomes: repair the direct ford with prototype timber, mark a discovered shallow bypass, or deliberately close the unsafe ford while preserving the alternate route. Each outcome changes local traversal and dynamic world models and survives save/load.
+
+
+### NPC local crowd steering
+
+R0 settlers now apply deterministic local separation after their scheduled routine motion. Nearby NPCs yield around each other and moving settlers keep personal space from the player, while a dialogue speaker remains fixed. The pass stays deliberately lightweight and reuses normal world collision resolution instead of introducing a full navmesh.

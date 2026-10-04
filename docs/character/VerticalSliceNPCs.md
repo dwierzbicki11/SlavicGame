@@ -350,3 +350,21 @@ Nowe role:
 - `settler-youth-01` — młody mieszkaniec roznoszący drobne sprawy po osadzie.
 
 Każda z tych postaci ma własny profil proporcji/palety/akcesoriów, harmonogram, lokalną trasę pracy, reakcję na burzę i opcjonalny graf `DLG_R0_COMMUNITY`. Wszystkie pozostają contentem F/placeholder art do późniejszego research locku ubioru.
+
+
+## Local crowd steering pass
+
+R0 nadal nie używa pełnego navmesha ani fizyki crowd, ale NPC nie mogą już bezkarnie zajmować dokładnie tej samej przestrzeni.
+
+`NpcCrowdSteering` działa po wyliczeniu deterministic routine pose:
+- dwa krótkie przebiegi solvera;
+- minimalny dystans centrum NPC: około 0.76 m;
+- maksymalny korekcyjny push per pass: 0.40 m;
+- korekta po każdym pushu przechodzi ponownie przez `WorldState.ResolveHorizontalPosition`, więc respektuje statyczne przeszkody i granice terenu;
+- ruchomy NPC utrzymuje około 0.72 m przestrzeni od gracza;
+- NPC aktualnie prowadzący dialog jest chroniony i nie jest przesuwany przez crowd solver;
+- fallback dla idealnie nakładających się pozycji jest deterministyczny z ID postaci, bez losowości per-frame.
+
+To pozostaje rozwiązaniem low-cost dla obecnej populacji kilkunastu mieszkańców. Złożoność par to O(n²), ale przy R0 jest to kilkaset prostych testów dystansu na update, bez path query, bez rigid-body solvera i bez navmesh rebuild.
+
+Przejście do spatial grid/navmesh jest wymagane dopiero po pomiarze, jeśli docelowa gęstość regionów przekroczy budżet tego prostego solvera.
