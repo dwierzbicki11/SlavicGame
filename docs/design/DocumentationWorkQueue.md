@@ -50,13 +50,14 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] production estimates framework (`design/ProductionEstimatesFramework.md`).
 
 ### P5 — playtest/measurement lock
-- [x] measurement/playtest evidence contract i ledger format (`design/MeasurementPlaytestEvidence.md`);
+- [x] measurement/playtest evidence contract (`design/MeasurementPlaytestEvidence.md`);
+- [x] centralny evidence ledger z trwałymi target IDs (`design/P5EvidenceLedger.md`); wartości pozostają puste do realnych captures;
 - [x] reprodukowalne scenario manifests dla combat/economy/progression i evidence/reputation (`design/BalancePlaytestScenarioManifests.md`); finalne liczby pozostają playtest lockiem;
 - [x] traversal/weather/day-night scenario manifests (`design/TraversalWeatherDayNightScenarioManifests.md`); tuning pozostaje measurement/playtest lockiem;
 - [x] performance/release measurement manifests (`design/PerformanceReleaseMeasurementManifests.md`); targety liczbowe i hardware pozostają measurement lockiem;
-- [ ] combat/economy/progression tuning — wykonać realne scenariusze i zamknąć candidate/locked ranges;
-- [ ] evidence/reputation thresholds — wykonać realne scenariusze i zamknąć candidate/locked thresholds;
-- [ ] traversal/weather/day-night tuning — wykonać scenariusze i zamknąć candidate/locked ranges;
+- [ ] combat/economy/progression tuning — wykonać realne scenariusze i promować odpowiednie `EV-*` do MEASURED/CANDIDATE/LOCKED;
+- [ ] evidence/reputation thresholds — wykonać realne scenariusze i promować odpowiednie `EV-*`;
+- [ ] traversal/weather/day-night tuning — wykonać scenariusze i promować odpowiednie `EV-*`;
 - [ ] measured CPU/GPU/RAM/VRAM/streaming/AI/AVFX targets z raw captures;
 - [ ] minimal/recommended hardware po pomiarach pełnego manifest setu;
 - [ ] release criteria evidence dla konkretnego candidate SHA.
@@ -69,7 +70,8 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 4. Zmiana central lore wymaga uzasadnienia i aktualizacji zależności.
 5. Każdy production card wskazuje persistence, dependencies, fail-forward i minimalne QA.
 6. Coverage aktualizujemy po każdym większym pakiecie.
+7. Wynik P5 nie istnieje jako production evidence, dopóki nie ma wpisu/rekordu w `P5EvidenceLedger.md` wskazującego exact SHA i raw artifact locator.
 
 ## Następny element
 
-P1–P4 mają implementation/planning-level pass. P5 ma wspólny evidence contract oraz reprodukowalne scenario manifests dla gameplay/world i performance/release. Dokumentacyjny kontrakt pomiarów jest zamknięty; następny etap P5 wymaga już **realnego wykonania scenariuszy/profilowania** i zapisania candidate/locked values. Bez rzeczywistych captures nie deklarujemy targetów performance, hardware ani release evidence.
+P1–P4 mają implementation/planning-level pass. P5 ma evidence contract, centralny pusty ledger targetów oraz reprodukowalne scenario manifests dla gameplay/world i performance/release. Dokumentacyjny kontrakt pomiarów jest zamknięty; następny etap P5 wymaga już **implementacji brakującej instrumentacji, realnego wykonania scenariuszy/profilowania i zapisania MEASURED/CANDIDATE/LOCKED evidence w ledgerze**. Bez rzeczywistych captures nie deklarujemy targetów performance, hardware ani release evidence.
