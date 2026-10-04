@@ -15,9 +15,9 @@ internal static class NpcWeatherBehaviorRegression
             .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
             .ToArray();
 
-        check(normalAmbient.Length == 8 &&
+        check(normalAmbient.Length == 14 &&
               normalAmbient.All(actor =>
-                  actor.Activity != NpcSituationalBehavior.StormShelterActivity),
+                  !NpcSituationalBehavior.IsStormShelterActivity(actor.Activity)),
             "Ambient settlers keep their normal daytime routines in clear weather");
 
         world.Weather.SetCondition(WeatherKind.Rain, immediate: true);
@@ -26,7 +26,7 @@ internal static class NpcWeatherBehaviorRegression
         check(world.NpcWorld.Actors
                 .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
                 .All(actor =>
-                    actor.Activity != NpcSituationalBehavior.StormShelterActivity),
+                    !NpcSituationalBehavior.IsStormShelterActivity(actor.Activity)),
             "Ordinary rain does not evacuate the whole village into storm shelters");
 
         world.Weather.SetCondition(WeatherKind.Storm, immediate: true);
@@ -36,15 +36,15 @@ internal static class NpcWeatherBehaviorRegression
             .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
             .ToArray();
 
-        check(sheltered.Length == 8 &&
+        check(sheltered.Length == 14 &&
               sheltered.All(actor =>
-                  actor.Activity == NpcSituationalBehavior.StormShelterActivity),
-            "All eight ambient settlers switch to storm shelter routines in severe weather");
+                  NpcSituationalBehavior.IsStormShelterActivity(actor.Activity)),
+            "All fourteen ambient settlers switch to storm shelter routines in severe weather");
 
         check(sheltered
                 .Select(actor => (actor.Position.X, actor.Position.Z))
                 .Distinct()
-                .Count() >= 6,
+                .Count() >= 10,
             "Storm shelter routines keep residents distributed instead of stacking at one point");
 
         var guard = world.NpcWorld.Find("community-guard");
@@ -63,7 +63,7 @@ internal static class NpcWeatherBehaviorRegression
             .ToArray();
 
         check(resumed.All(actor =>
-                  actor.Activity != NpcSituationalBehavior.StormShelterActivity) &&
+                  !NpcSituationalBehavior.IsStormShelterActivity(actor.Activity)) &&
               resumed.Any(actor => actor.Activity == "field-work") &&
               resumed.Any(actor => actor.Activity == "market-trade"),
             "Settlers resume authored work routines after the storm ends");
