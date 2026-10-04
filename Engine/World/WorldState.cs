@@ -25,6 +25,7 @@ public sealed class WorldState
     public SlavicGame.Engine.Magic.RitualExecution Rituals { get; } = new();
     public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
     public SlavicGame.Engine.Combat.BowCombatRuntime Bow { get; } = new();
+    public SlavicGame.Engine.Combat.PlayerDodge Dodge { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
     public SwampApparitionRuntime Apparition { get; } = new();
@@ -52,6 +53,7 @@ public sealed class WorldState
 
     public void Initialize()
     {
+        Dodge.Reset();
         _regions.Clear();
         _regions.Add(new WorldRegion("starting-forest", "Puszcza Żywia", WorldRegionType.Forest, 0f, 0f, 55f));
         _regions.Add(new WorldRegion("old-village", "Żarnowiec", WorldRegionType.Village, 0f, -85f, 32f));
@@ -242,6 +244,7 @@ public sealed class WorldState
 
     public void Update(double deltaSeconds)
     {
+        if (SlavicGame.Engine.Combat.PlayerDodge.MovementBlocked(this)) Dodge.Cancel();
         Time.Update(deltaSeconds);
         SetPlayerPosition(PlayerPosition);
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);

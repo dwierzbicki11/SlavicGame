@@ -142,7 +142,7 @@ public sealed class RitualExecution
         var inventory = progress.Inventory;
         var quest = progress.Quests.Get(SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.ContractQuestId);
 
-        if (!world.Player.IsAlive || world.Magic.IsCasting || world.Cinematics.IsPlaying || IsPerforming)
+        if (!world.Player.IsAlive || world.Dodge.IsActive || world.Magic.IsCasting || world.Cinematics.IsPlaying || IsPerforming)
             return RitualStartResult.Reject(RitualStartFailure.PlayerUnavailable, "RYTUAL TERAZ NIEDOSTEPNY");
 
         if (progress.HasFlag(VerticalSliceRituals.ReleasedFlag) ||
