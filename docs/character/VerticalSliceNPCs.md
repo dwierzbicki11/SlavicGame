@@ -407,3 +407,35 @@ Storm shelter nadal zastępuje aktywność pracy, więc NPC nie pozostaje przy w
 ### Performance
 
 Małe workstation props używają short-range cullingu. Nie tworzą nowych animowanych rigów, particle systemów ani dodatkowych render passów.
+
+
+## Runtime situational reactions
+
+Modele i rutyny osadników są już spięte z lekką warstwą reakcji sytuacyjnych.
+
+### Player threat
+Gdy gracz wykonuje atak wręcz albo aktywnie inkantuje czar w pobliżu:
+- zwykły osadnik patrzy na gracza;
+- jeśli gracz podejdzie bardzo blisko podczas ataku, osadnik cofa się i używa ruchowej animacji;
+- `community-guard` nie ucieka — zatrzymuje się i zwraca w stronę gracza.
+
+### Physical threat
+Jeśli żywy przeciwnik znajduje się w aktywnym stanie `Alert`, `Chase` albo `Attack` blisko NPC:
+- cywile przechodzą w `FleeThreat` i odsuwają się od przeciwnika;
+- strażnik przechodzi w `GuardThreat` i podchodzi do kontrolowanego dystansu od zagrożenia.
+
+To nie jest jeszcze pełne combat AI strażnika — `GuardThreat` jest reakcją pozycyjną i wizualną, nie automatycznym zadawaniem obrażeń.
+
+### Dialogue priority
+NPC będący aktywnym rozmówcą jest chroniony przed crowd push oraz reaction override:
+- pozostaje na miejscu;
+- patrzy na gracza;
+- po zamknięciu dialogu wraca do swojej deterministic routine bez skoku czasu.
+
+### Animation mapping
+- `AvoidPlayer` / `FleeThreat` preferują `Run`;
+- `GuardThreat` preferuje `Walk`;
+- `WatchPlayer` używa `Idle`;
+- jeśli GLB nie ma danego clipu, runtime bezpiecznie wraca do `Walk` albo `Idle`.
+
+System pozostaje bez navmesha i używa istniejącego collision resolvera oraz crowd steering.

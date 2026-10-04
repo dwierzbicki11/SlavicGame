@@ -479,3 +479,8 @@ The trader and herbalist now expose a playable vendor screen while they are on d
 ### R0 alchemy
 
 The herbalist now exposes a playable alchemy station while on duty. Press **K** nearby to open crafting; the first executable recipe is `marsh-sight-tonic`, gated by learned recipe knowledge and consuming one `marsh-herb` plus one `forest-resin`. Ingredient validation is atomic and the crafted tonic is excluded from the first-pass sell loop.
+
+
+### NPC reactions
+
+R0 settlers now react to immediate danger: civilians watch or move away from player attacks, flee engaged enemies, and the community guard faces or moves toward threats instead of fleeing. Dialogue speakers remain protected from reaction overrides.

@@ -10,7 +10,8 @@ public sealed record NpcWorldActor(
     string LocationId,
     Vector3 Position,
     float YawRadians,
-    bool IsMoving);
+    bool IsMoving,
+    NpcReactionKind Reaction = NpcReactionKind.None);
 
 public static class NpcPresentation
 {
@@ -164,9 +165,17 @@ public sealed class NpcWorldRuntime
                     world.Time.TimeOfDayHours;
             }
 
+            var reaction = NpcReactionSystem.Resolve(
+                world,
+                npc,
+                motion.Position,
+                motion.Forward,
+                motion.IsMoving,
+                speaking);
+
             var horizontal =
                 world.ResolveHorizontalPosition(
-                    motion.Position,
+                    reaction.Position,
                     0.42f);
             var position =
                 new Vector3(
@@ -177,10 +186,10 @@ public sealed class NpcWorldRuntime
                 world.Terrain.SampleHeight(position);
 
             var yaw =
-                motion.Forward.LengthSquared() > 0.000001f
+                reaction.Forward.LengthSquared() > 0.000001f
                     ? WorldPlacementOrientation.YawFacing(
                         horizontal,
-                        horizontal + motion.Forward)
+                        horizontal + reaction.Forward)
                     : DefaultYaw(
                         npc.Id,
                         slot.LocationId);
@@ -201,7 +210,8 @@ public sealed class NpcWorldRuntime
                 slot.LocationId,
                 position,
                 yaw,
-                motion.IsMoving && !speaking));
+                reaction.IsMoving && !speaking,
+                reaction.Kind));
         }
 
         NpcCrowdSteering.Resolve(

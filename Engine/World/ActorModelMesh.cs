@@ -62,9 +62,20 @@ public static class ActorModelMesh
                 Matrix4x4.CreateScale(profile.BodyScale) *
                 Matrix4x4.CreateRotationY(npc.YawRadians) *
                 Matrix4x4.CreateTranslation(npc.Position);
-            var clip = npc.IsMoving
-                ? "Walk"
-                : NpcVisualCatalog.AnimationClip(npc.Activity);
+            var clip = npc.Reaction switch
+            {
+                NpcReactionKind.FleeThreat or
+                NpcReactionKind.AvoidPlayer => "Run",
+
+                NpcReactionKind.GuardThreat => "Walk",
+
+                NpcReactionKind.WatchPlayer => "Idle",
+
+                _ => npc.IsMoving
+                    ? "Walk"
+                    : NpcVisualCatalog.AnimationClip(npc.Activity)
+            };
+
             if (!npcModel.AnimationNames.Contains(clip))
                 clip = npc.IsMoving ? "Walk" : "Idle";
 
