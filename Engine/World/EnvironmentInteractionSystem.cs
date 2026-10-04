@@ -142,6 +142,28 @@ public sealed class EnvironmentInteractionSystem
             return changed;
         }
 
+        const string arrowPrefix = "arrow.recover.";
+        if (Current.Id.StartsWith(
+                arrowPrefix,
+                StringComparison.Ordinal))
+        {
+            var value =
+                Current.Id[arrowPrefix.Length..];
+            if (!long.TryParse(
+                    value,
+                    out var arrowId) ||
+                !world.Bow.TryRecover(
+                    world,
+                    arrowId))
+            {
+                return false;
+            }
+
+            Message = world.Bow.Message;
+            Current = FindNearest(world);
+            return true;
+        }
+
         const string harvestPrefix = "wildlife.harvest.";
         if (Current.Id.StartsWith(
                 harvestPrefix,
@@ -300,6 +322,19 @@ public sealed class EnvironmentInteractionSystem
                         "E ZAMKNIJ BROD I OZNACZ OBEJSCIE"));
                 }
             }
+        }
+
+        var recoverableArrow =
+            world.Bow.FindNearestRecoverable(
+                world.PlayerPosition,
+                InteractionDistance);
+        if (recoverableArrow is not null)
+        {
+            targets.Add(new InteractionTarget(
+                $"arrow.recover.{recoverableArrow.Id}",
+                recoverableArrow.Position,
+                InteractionKind.Take,
+                "E ODZYSKAJ STRZALE"));
         }
 
         var carcass =
