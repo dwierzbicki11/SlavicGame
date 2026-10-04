@@ -175,17 +175,21 @@ def main():
         'FFX_SPD_NO_WAVE_OPERATIONS=1',
     ]
 
-    def run_compile(source, output, defines):
+    def run_compile(source, output, defines, target_env='vulkan1.0'):
         command = [
-            args.compiler, '-V', '--target-env', 'vulkan1.0',
+            args.compiler, '-V', '--target-env', target_env,
             '-S', 'comp', '-Os',
             '-I' + str(gpu),
         ]
         command += ['-D' + d for d in common + defines]
         command += [str(source), '-o', str(output)]
-        subprocess.run(
-            command, check=True, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+        completed = subprocess.run(
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True)
+        if completed.returncode != 0:
+            raise RuntimeError(
+                'glslangValidator failed for ' + str(source) + '\n' +
+                completed.stdout)
         data = output.read_bytes()
         return data, bindings(data)
 
@@ -231,7 +235,11 @@ def main():
         defines = [f'FFX_OPTICALFLOW_OPTION_HDR_COLOR_INPUT={hdr}']
         source = (vk_shaders / 'opticalflow' /
                   f'ffx_opticalflow_{pass_name}.glsl')
-        data, reflected = run_compile(source, output, defines)
+        # Optical Flow's advanced passes use subgroupShuffleXor through
+        # GL_KHR_shader_subgroup_basic. Those instructions are core in
+        # SPIR-V 1.3 / Vulkan 1.1, which is the minimum for FSR3 FG.
+        data, reflected = run_compile(
+            source, output, defines, target_env='vulkan1.1')
         return pass_index, hdr, data, reflected
 
     # Keep memory bounded on developer laptops and GitHub runners.
