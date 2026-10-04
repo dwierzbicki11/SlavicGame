@@ -10,7 +10,10 @@ public static class WorldDecorationGenerator
     [
         "models/static/dab_stary_r0_01.glb",
         "models/static/dab_stary_r0_02.glb",
+        "models/static/dab_r0_02.glb",
+        "models/static/brzoza_r0_01.glb",
         "models/static/brzoza_r0_02.glb",
+        "models/static/sosna_r0_01.glb",
         "models/static/sosna_r0_02.glb"
     ];
 
@@ -293,10 +296,11 @@ public static class WorldDecorationGenerator
         position.Y = terrain.SampleHeight(position);
 
         var uniformScale = minScale + random.NextSingle() * (maxScale - minScale);
+        var speciesProfile = TreeScaleProfile(asset);
         var scale = new Vector3(
-            uniformScale * (0.93f + random.NextSingle() * 0.14f),
-            uniformScale * (0.90f + random.NextSingle() * 0.22f),
-            uniformScale * (0.93f + random.NextSingle() * 0.14f));
+            uniformScale * (0.93f + random.NextSingle() * 0.14f) * speciesProfile.X,
+            uniformScale * (0.90f + random.NextSingle() * 0.22f) * speciesProfile.Y,
+            uniformScale * (0.93f + random.NextSingle() * 0.14f) * speciesProfile.Z);
 
         output.Add(new WorldModelInstance(
             id,
@@ -305,5 +309,27 @@ public static class WorldDecorationGenerator
             scale,
             random.NextSingle() * MathF.Tau,
             Vector3.One));
+    }
+
+    private static Vector3 TreeScaleProfile(string asset)
+    {
+        var name = Path.GetFileNameWithoutExtension(asset);
+
+        if (name.StartsWith("sosna_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(0.91f, 1.10f, 0.91f);
+
+        if (name.StartsWith("brzoza_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(0.94f, 1.07f, 0.94f);
+
+        if (name.StartsWith("olsza_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(1.02f, 1.03f, 1.02f);
+
+        if (name.StartsWith("dab_", StringComparison.OrdinalIgnoreCase) ||
+            name.StartsWith("dab_stary_", StringComparison.OrdinalIgnoreCase))
+        {
+            return new Vector3(1.06f, 0.98f, 1.06f);
+        }
+
+        return Vector3.One;
     }
 }
