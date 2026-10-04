@@ -22,7 +22,7 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 
 ## Aktywny element
 
-### MQ30 „Pustkowie Pierwszego Progu” — IMPLEMENTING
+### MQ30 „Pustkowie Pierwszego Progu” — IMPLEMENTED
 
 Karta `docs/quests/MainQuestCardsAct3.md` ma production documentation pass v0.1 i jednoznaczny kontrakt implementacyjny:
 

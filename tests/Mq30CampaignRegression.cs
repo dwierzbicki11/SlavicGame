@@ -43,6 +43,15 @@ internal static class Mq30CampaignRegression
         Check(resumed.CompleteQuest(), "restored MQ30 completes");
         Check(restored.Progress.HasFlag(Mq30Campaign.ArchivePresenceConfirmed), "critical evidence survives restore path");
         Check(restored.Progress.HasFlag(Mq30Campaign.RouteKnown), "route survives restore path");
+        var completedRestored = new WorldState(); completedRestored.Initialize();
+        SaveGameService.Restore(completedRestored, SaveGameService.Serialize(restored));
+        Check(completedRestored.Progress.HasFlag(Mq30Campaign.Complete), "completion survives save/load");
+        Check(completedRestored.Progress.HasFlag(Mq30Campaign.RouteKnown), "safe route survives completed save/load");
+        Check(completedRestored.Progress.Quests.Get(Mq30Campaign.NextQuestId).Phase == QuestPhase.Offered, "MQ31 handoff survives save/load");
+        completedRestored.Progress.Quests.Get(Mq30Campaign.NextQuestId).SetPhase(QuestPhase.Investigation);
+        Check(!new Mq30Campaign(completedRestored.Progress).CompleteQuest(), "restored completion remains idempotent");
+        Check(completedRestored.Progress.Quests.Get(Mq30Campaign.NextQuestId).Phase == QuestPhase.Investigation, "repeated completion cannot reset MQ31 progress");
+        Console.WriteLine($"MQ30 campaign regression checks passed: {checks}");
         return checks;
     }
 
