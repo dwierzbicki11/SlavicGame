@@ -89,7 +89,8 @@ public sealed class GameEngine : IDisposable
             _world,
             _vsync,
             _settings.TextureQuality,
-            _settings.Msaa);
+            _settings.Msaa,
+            _settings.Upscaler);
         ApplySettings();
         _camera.Follow(_world.PlayerPosition, 0f, _world.Terrain);
         _window.SetMouseCapture(false);
@@ -392,7 +393,7 @@ public sealed class GameEngine : IDisposable
             var outputHeight = Math.Max(1, _window.Height);
 
             var renderResolution =
-                _settings.Upscaler == UpscalerMode.Fsr1
+                _settings.Upscaler is UpscalerMode.Fsr1 or UpscalerMode.Fsr3
                     ? GraphicsQualityCatalog.FsrRenderResolution(
                         outputWidth,
                         outputHeight,
