@@ -1,4 +1,5 @@
 using SlavicGame.Engine.Gameplay;
+using SlavicGame.Engine.Magic;
 using SlavicGame.Engine.Quest;
 using SlavicGame.Engine.World;
 
