@@ -333,7 +333,7 @@ internal static class NpcDialogueRegression
 
             check(
                 graph.GetNode(CommunityDialogueCatalog.SelectStartNode(world, id))
-                    .Choices.Count > 0,
+                    .Choices.Length > 0,
                 $"Community graph {id} always exposes a safe exit choice");
         }
 
