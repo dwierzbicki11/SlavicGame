@@ -130,3 +130,32 @@ Dla każdego pakietu produkcyjnego:
 ## Definition of done pakietu
 
 Pakiet jest implementation-ready, gdy ma ownera/rolę, entry conditions, graph/state list, effects, persistence, fallback i QA. `writing-final` wymaga dodatkowo finalnego tekstu i localization pass; `VO-final` jest osobnym późniejszym lockiem.
+
+## Implemented runtime package — DLG_R0_COMMUNITY
+
+`DLG_R0_COMMUNITY` is now executable for all eight ambient Żarnowiec settlers:
+
+- `settler-farmer-01`;
+- `settler-farmer-02`;
+- `settler-woodworker-01`;
+- `settler-potter-01`;
+- `settler-trader-01`;
+- `settler-carrier-01`;
+- `settler-elder-01`;
+- `settler-traveler-01`.
+
+Each graph has stable entry nodes for:
+
+- normal daytime fallback;
+- active `light-over-swamp` investigation;
+- predator removed;
+- apparition released;
+- both threats resolved;
+- rain/storm;
+- night.
+
+The selector uses current world state at conversation start. Ambient community graphs are intentionally non-critical: they never carry unique mandatory quest information, never advance the main quest and always expose a safe exit choice.
+
+The package therefore adds world reactivity without creating a softlock dependency on optional settlers. Dialogue start still uses normal proximity and freezes only the active speaker while the rest of the village routine continues.
+
+Current text remains production-placeholder Polish copy. Final localization/writing polish and optional VO remain separate later locks.

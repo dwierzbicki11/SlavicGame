@@ -296,3 +296,20 @@ Na `Interact` przechodzą m.in.:
 Jeżeli NPC rzeczywiście porusza się w ramach danej aktywności, locomotion ma pierwszeństwo i renderer używa `Walk`. Po zatrzymaniu w punkcie pracy przechodzi na `Interact`.
 
 Wszystkie pięć używanych rodzin NPC GLB jest walidowanych pod kątem obecności `Idle`, `Walk` i `Interact`.
+
+
+## Runtime ambient community dialogue pass
+
+The eight ambient settlers are no longer presentation-only actors. They now use the authored `DLG_R0_COMMUNITY` package and expose `E POROZMAWIAJ` through the same proximity contract as core NPCs.
+
+Ambient start-node selection reacts to:
+- current time of day;
+- rain/storm state;
+- active swamp investigation;
+- physical predator resolution;
+- apparition release;
+- complete two-cause resolution.
+
+The lines remain local observations and opinions. They do not grant unique mandatory evidence or mutate quest phase, so ignoring every ambient settler cannot block vertical-slice progression.
+
+Dialogue freeze still affects only the current speaker; every other resident keeps following the local routine system.

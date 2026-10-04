@@ -439,3 +439,8 @@ R0 forests now contain animated deer, boars, wolves and ravens using a lightweig
 ### Wildlife tracking
 
 Ground wildlife now leaves transient species-specific tracks on suitable terrain. Deer and boar stamp hoof marks, wolves stamp paw marks, and nearby HUD feedback reports species plus freshness without drawing a GPS trail. Rain erodes tracks faster, rock and submerged terrain reject them, and these hunting traces remain fully separate from durable quest evidence and magical Reveal Trace signatures.
+
+
+### R0 community dialogue
+
+Żarnowiec's eight ambient settlers are now interactable instead of presentation-only. Their short conversations select world-state variants for daytime/night, rain or storm, the active swamp investigation, predator removal, apparition release and complete resolution, while remaining optional and unable to softlock quest progression.

@@ -32,15 +32,17 @@ public static class NpcPresentation
         _ => id.Replace('-', ' ').ToUpperInvariant()
     };
 
-    public static bool HasDialogue(string id) => id switch
-    {
-        "missing-family" or
-        "crossing-keeper" or
-        "herbalist" or
-        "community-guard" or
-        "shrine-keeper" => true,
-        _ => false
-    };
+    public static bool HasDialogue(string id) =>
+        id.StartsWith("settler-", StringComparison.Ordinal) ||
+        id switch
+        {
+            "missing-family" or
+            "crossing-keeper" or
+            "herbalist" or
+            "community-guard" or
+            "shrine-keeper" => true,
+            _ => false
+        };
 
     public static Vector3 RoleColor(NpcRole role) => role switch
     {
