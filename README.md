@@ -464,3 +464,8 @@ The first production R0 side-quest slot is now playable directly from field disc
 ### NPC local crowd steering
 
 R0 settlers now apply deterministic local separation after their scheduled routine motion. Nearby NPCs yield around each other and moving settlers keep personal space from the player, while a dialogue speaker remains fixed. The pass stays deliberately lightweight and reuses normal world collision resolution instead of introducing a full navmesh.
+
+
+### Visible NPC workstations
+
+Żarnowiec workers now periodically stop at authored visible workstations instead of only looping around schedule anchors. Existing GLBs form woodworking, pottery, weaving, herb-sorting, net-mending, forge, market, farming and crossing-maintenance stations; stationary workers face the correct station and use their Interact animation. Small workstation props use short-range culling.
