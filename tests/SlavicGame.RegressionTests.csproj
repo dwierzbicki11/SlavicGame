@@ -38,6 +38,7 @@
     <Compile Include="../Engine/Renderer/CameraFrustum.cs" Link="CameraFrustum.cs" />
     <Compile Include="../Engine/Renderer/CelestialLighting.cs" Link="CelestialLighting.cs" />
     <Compile Include="../Engine/Renderer/PresentationPolicy.cs" Link="PresentationPolicy.cs" />
+    <Compile Include="../Engine/Renderer/TemporalFrameState.cs" Link="TemporalFrameState.cs" />
     <Compile Include="../Engine/Renderer/WorldModelRenderPolicy.cs" Link="WorldModelRenderPolicy.cs" />
     <Content Include="../assets/models/**/*.glb"
              Link="assets/models/%(RecursiveDir)%(Filename)%(Extension)"
