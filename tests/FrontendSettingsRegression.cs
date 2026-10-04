@@ -226,8 +226,8 @@ public static class FrontendSettingsRegression
                 $"{presetValue} uses EASU/RCAS without a manual Vulkan Y inversion");
         }
 
-        check(FsrPresentationPolicy.UsesSinglePassEasuCompatibility(true),
-            "Vulkan FSR uses single-pass EASU compatibility presentation");
+        check(!FsrPresentationPolicy.UsesSinglePassEasuCompatibility(true),
+            "Vulkan FSR1 retains the full EASU plus RCAS path");
         check(!FsrPresentationPolicy.UsesSinglePassEasuCompatibility(false),
             "Non-Vulkan backends retain the full EASU plus RCAS path");
 
