@@ -281,6 +281,7 @@ public sealed class GameEngine : IDisposable
                 _camera,
                 _displayFps,
                 _time.TotalSeconds,
+                _time.DeltaSeconds,
                 _settings,
                 menuView);
 

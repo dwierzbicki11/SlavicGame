@@ -73,5 +73,17 @@ internal static class TemporalFrameRegression
             .ToArray();
         check(samples.Distinct().Count() == 8,
             "Eight-sample temporal jitter pattern has no duplicates");
+
+        check(
+            TemporalFrameState.FsrJitterPhaseCount(1280, 1920) == 18 &&
+            TemporalFrameState.FsrJitterPhaseCount(960, 1920) == 32 &&
+            TemporalFrameState.FsrJitterPhaseCount(1920, 1920) == 8,
+            "FSR jitter phase count follows AMD scale-ratio formula");
+
+        var qualitySamples = Enumerable.Range(0, 18)
+            .Select(i => TemporalFrameState.JitterForFrame((uint)i, 18))
+            .ToArray();
+        check(qualitySamples.Distinct().Count() == 18,
+            "FSR quality jitter cycle uses all scale-dependent phases");
     }
 }

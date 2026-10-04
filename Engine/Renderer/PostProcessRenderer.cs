@@ -23,6 +23,8 @@ public sealed class PostProcessRenderer : IDisposable
 
     public TextureView OutputView => _targetView ?? throw new InvalidOperationException("Post-process renderer is not initialized.");
 
+    public Texture OutputTexture => _targetTexture ?? throw new InvalidOperationException("Post-process renderer is not initialized.");
+
     public void Initialize(GraphicsDevice graphicsDevice, OutputDescription sceneOutput, TextureView sourceView, uint width, uint height)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -67,13 +69,20 @@ public sealed class PostProcessRenderer : IDisposable
                MathF.Abs(settings.Gamma - 2.2f) > 0.001f;
     }
 
-    public TextureView Render(CommandList commandList, GameSettings settings)
+    public TextureView Render(
+        CommandList commandList,
+        GameSettings settings,
+        bool disableFxaa = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(commandList);
         ArgumentNullException.ThrowIfNull(settings);
         if (_paramsBuffer is null || _framebuffer is null || _pipeline is null || _set is null) throw new InvalidOperationException("Post-process renderer is not initialized.");
-        var texel = new Vector4(1f / Math.Max(1u, _width), 1f / Math.Max(1u, _height), settings.AntiAliasing == AntiAliasingMode.Fxaa ? 1f : 0f, 0f);
+        var texel = new Vector4(
+            1f / Math.Max(1u, _width),
+            1f / Math.Max(1u, _height),
+            !disableFxaa && settings.AntiAliasing == AntiAliasingMode.Fxaa ? 1f : 0f,
+            0f);
         var controls = new Vector4(settings.BloomStrength, 0.72f, settings.Brightness, settings.Gamma);
         commandList.UpdateBuffer(_paramsBuffer, 0, texel);
         commandList.UpdateBuffer(_paramsBuffer, 16, controls);

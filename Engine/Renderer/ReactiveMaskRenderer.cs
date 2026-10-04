@@ -36,6 +36,10 @@ public sealed class ReactiveMaskRenderer : IDisposable
         _maskView ?? throw new InvalidOperationException(
             "Reactive-mask renderer is not initialized.");
 
+    public Texture MaskTexture =>
+        _maskTexture ?? throw new InvalidOperationException(
+            "Reactive-mask renderer is not initialized.");
+
     public void Initialize(
         GraphicsDevice graphicsDevice,
         ResourceLayout cameraLayout,

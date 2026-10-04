@@ -37,5 +37,5 @@ void main()
 
     vec2 currentUv = currentNdc * 0.5 + 0.5;
     vec2 previousUv = previousNdc * 0.5 + 0.5;
-    fsin_Motion = currentUv - previousUv;
+    fsin_Motion = previousUv - currentUv;
 }
