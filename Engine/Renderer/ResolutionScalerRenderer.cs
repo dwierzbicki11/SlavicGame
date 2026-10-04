@@ -20,6 +20,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
     private Texture? _fsrTexture;
     private TextureView? _fsrView;
     private Framebuffer? _fsrFramebuffer;
+    private Texture? _fsr3OutputTexture;
+    private TextureView? _fsr3OutputView;
 
     private DeviceBuffer? _easuConstants;
     private DeviceBuffer? _rcasConstants;
@@ -48,6 +50,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
     private uint _height;
     private uint _outputWidth;
     private uint _outputHeight;
+    private uint _fsr3OutputWidth;
+    private uint _fsr3OutputHeight;
 
     public Framebuffer SceneFramebuffer =>
         _sceneFramebuffer ??
@@ -70,6 +74,14 @@ public sealed class ResolutionScalerRenderer : IDisposable
     public Texture ResolvedSceneTexture =>
         _resolvedColorTexture ??
         throw new InvalidOperationException("Resolution scaler is not initialized.");
+
+    public Texture Fsr3OutputTexture =>
+        _fsr3OutputTexture ??
+        throw new InvalidOperationException("FSR3 output is not initialized.");
+
+    public TextureView Fsr3OutputView =>
+        _fsr3OutputView ??
+        throw new InvalidOperationException("FSR3 output is not initialized.");
 
     public uint Width => _width;
     public uint Height => _height;
@@ -461,6 +473,45 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _height = height;
     }
 
+    public void EnsureFsr3Output(uint width, uint height)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        width = Math.Max(1u, width);
+        height = Math.Max(1u, height);
+
+        if (_fsr3OutputTexture is not null &&
+            _fsr3OutputWidth == width &&
+            _fsr3OutputHeight == height)
+        {
+            return;
+        }
+
+        if (_graphicsDevice is null)
+            throw new InvalidOperationException("Resolution scaler is not initialized.");
+
+        _graphicsDevice.WaitForIdle();
+        _fsr3OutputView?.Dispose();
+        _fsr3OutputTexture?.Dispose();
+
+        _fsr3OutputTexture =
+            _graphicsDevice.ResourceFactory.CreateTexture(
+                TextureDescription.Texture2D(
+                    width,
+                    height,
+                    mipLevels: 1,
+                    arrayLayers: 1,
+                    PixelFormat.R16_G16_B16_A16_Float,
+                    TextureUsage.Sampled | TextureUsage.Storage));
+        _fsr3OutputView =
+            _graphicsDevice.ResourceFactory.CreateTextureView(
+                _fsr3OutputTexture);
+        _fsr3OutputWidth = width;
+        _fsr3OutputHeight = height;
+
+        EngineLog.Info(
+            $"FSR3 native output target: {width}x{height} RGBA16F.");
+    }
+
     private void EnsureFsrTarget(uint width, uint height)
     {
         if (_fsrFramebuffer is not null &&
@@ -492,6 +543,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _fsrFramebuffer?.Dispose();
         _fsrView?.Dispose();
         _fsrTexture?.Dispose();
+        _fsr3OutputView?.Dispose();
+        _fsr3OutputTexture?.Dispose();
 
         _fsrTexture = factory.CreateTexture(TextureDescription.Texture2D(
             width,
