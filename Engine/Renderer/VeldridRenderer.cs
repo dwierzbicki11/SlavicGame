@@ -19,6 +19,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly MenuRenderer _menu = new();
     private readonly ResolutionScalerRenderer _resolutionScaler = new();
     private readonly TemporalFrameState _temporalFrame = new();
+    private readonly DynamicMotionHistory _dynamicMotionHistory = new();
     private readonly MotionVectorRenderer _motionVectors = new();
     private readonly ReactiveMaskRenderer _reactiveMask = new();
     private readonly BloomRenderer _bloom = new();
@@ -33,6 +34,7 @@ public sealed class VeldridRenderer : IDisposable
     private DeviceBuffer? _atmosphereBuffer;
     private DeviceBuffer? _actorVertexBuffer;
     private DeviceBuffer? _actorIndexBuffer;
+    private DeviceBuffer? _dynamicMotionVertexBuffer;
     private DeviceBuffer? _hudVertexBuffer;
     private DeviceBuffer? _hudScreenBuffer;
     private ResourceLayout? _cameraLayout;
@@ -62,6 +64,7 @@ public sealed class VeldridRenderer : IDisposable
     private uint _actorIndexCount;
     private uint _actorVertexCapacity;
     private uint _actorIndexCapacity;
+    private uint _dynamicMotionVertexCapacity;
     private uint _hudVertexCapacity;
 
     public GraphicsDevice GraphicsDevice =>
@@ -275,8 +278,15 @@ public sealed class VeldridRenderer : IDisposable
             _motionVectors.Initialize(
                 _graphicsDevice,
                 temporalDepth,
+                temporalDepthTexture,
                 _resolutionScaler.Width,
                 _resolutionScaler.Height);
+            _dynamicMotionVertexCapacity = 64;
+            _dynamicMotionVertexBuffer = factory.CreateBuffer(
+                new BufferDescription(
+                    DynamicMotionVertex.SizeInBytes *
+                    _dynamicMotionVertexCapacity,
+                    BufferUsage.VertexBuffer | BufferUsage.Dynamic));
             _reactiveMask.Initialize(
                 _graphicsDevice,
                 _cameraLayout,
@@ -284,7 +294,7 @@ public sealed class VeldridRenderer : IDisposable
                 _resolutionScaler.Width,
                 _resolutionScaler.Height);
             EngineLog.Info(
-                "Temporal FSR inputs enabled: camera motion + reactive mask.");
+                "Temporal FSR inputs enabled: camera + dynamic object motion + reactive mask.");
         }
         else if (_temporalInputsEnabled)
         {
@@ -505,6 +515,7 @@ public sealed class VeldridRenderer : IDisposable
             _worldItemModels,
             ref actorVertices,
             ref actorIndices);
+        var opaqueDynamicVertexCount = actorVertices.Length;
         var opaqueDynamicEnd = checked((uint)actorIndices.Length);
 
         var waterStart = opaqueDynamicEnd;
@@ -561,6 +572,15 @@ public sealed class VeldridRenderer : IDisposable
 
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
+
+        DynamicMotionVertex[] dynamicMotionVertices = [];
+        if (_temporalInputsEnabled && _motionVectors.IsInitialized)
+        {
+            dynamicMotionVertices = _dynamicMotionHistory.Build(
+                actorVertices.AsSpan(0, opaqueDynamicVertexCount),
+                temporalFrame.ResetHistory);
+            EnsureDynamicMotionCapacity(dynamicMotionVertices.Length);
+        }
 
         BuildHud(
             (float)Math.Max(0, fps),
@@ -1023,6 +1043,14 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.UpdateBuffer(_actorVertexBuffer, 0, actorVertices);
             _commandList.UpdateBuffer(_actorIndexBuffer, 0, actorIndices);
         }
+        if (dynamicMotionVertices.Length > 0 &&
+            _dynamicMotionVertexBuffer is not null)
+        {
+            _commandList.UpdateBuffer(
+                _dynamicMotionVertexBuffer,
+                0,
+                dynamicMotionVertices);
+        }
         if (_hudVertices.Count > 0)
         {
             _commandList.UpdateBuffer(_hudVertexBuffer, 0, _hudVertices.ToArray());
@@ -1121,7 +1149,19 @@ public sealed class VeldridRenderer : IDisposable
         _resolutionScaler.ResolveScene(_commandList);
 
         if (_temporalInputsEnabled && _motionVectors.IsInitialized)
+        {
             _motionVectors.Render(_commandList, temporalFrame);
+            if (dynamicMotionVertices.Length > 0 &&
+                _dynamicMotionVertexBuffer is not null)
+            {
+                _motionVectors.RenderDynamic(
+                    _commandList,
+                    _dynamicMotionVertexBuffer,
+                    _actorIndexBuffer,
+                    opaqueDynamicEnd,
+                    temporalFrame);
+            }
+        }
 
         var resolvedScene = _resolutionScaler.ResolvedSceneView;
         var bloomView = resolvedScene;
@@ -1176,6 +1216,45 @@ public sealed class VeldridRenderer : IDisposable
 
         _graphicsDevice.SubmitCommands(_commandList);
         _graphicsDevice.SwapBuffers();
+    }
+
+    private void EnsureDynamicMotionCapacity(int vertexCount)
+    {
+        if (!_temporalInputsEnabled ||
+            _graphicsDevice is null ||
+            vertexCount <= 0)
+        {
+            return;
+        }
+
+        if (_dynamicMotionVertexBuffer is null)
+        {
+            _dynamicMotionVertexCapacity =
+                Math.Max(64u, checked((uint)vertexCount));
+            _dynamicMotionVertexBuffer =
+                _graphicsDevice.ResourceFactory.CreateBuffer(
+                    new BufferDescription(
+                        DynamicMotionVertex.SizeInBytes *
+                        _dynamicMotionVertexCapacity,
+                        BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+            return;
+        }
+
+        if ((uint)vertexCount <= _dynamicMotionVertexCapacity)
+            return;
+
+        _dynamicMotionVertexCapacity =
+            Math.Max(
+                checked((uint)vertexCount),
+                _dynamicMotionVertexCapacity * 2);
+        _graphicsDevice.WaitForIdle();
+        _dynamicMotionVertexBuffer.Dispose();
+        _dynamicMotionVertexBuffer =
+            _graphicsDevice.ResourceFactory.CreateBuffer(
+                new BufferDescription(
+                    DynamicMotionVertex.SizeInBytes *
+                    _dynamicMotionVertexCapacity,
+                    BufferUsage.VertexBuffer | BufferUsage.Dynamic));
     }
 
     private void EnsureActorCapacity(int vertexCount, int indexCount)
@@ -1365,21 +1444,24 @@ public sealed class VeldridRenderer : IDisposable
             checked((uint)Math.Max(1, height)));
 
         _temporalFrame.Reset();
+        _dynamicMotionHistory.Reset();
         if (_temporalInputsEnabled &&
             _motionVectors.IsInitialized &&
-            _resolutionScaler.SampleableDepthView is { } temporalDepth)
+            _resolutionScaler.SampleableDepthView is { } temporalDepth &&
+            _resolutionScaler.SampleableDepthTexture is { } temporalDepthTexture)
         {
             _motionVectors.SetSource(
                 temporalDepth,
+                temporalDepthTexture,
                 _resolutionScaler.Width,
                 _resolutionScaler.Height);
         }
         if (_temporalInputsEnabled &&
             _reactiveMask.IsInitialized &&
-            _resolutionScaler.SampleableDepthTexture is { } temporalDepthTexture)
+            _resolutionScaler.SampleableDepthTexture is { } reactiveDepthTexture)
         {
             _reactiveMask.SetDepthSource(
-                temporalDepthTexture,
+                reactiveDepthTexture,
                 _resolutionScaler.Width,
                 _resolutionScaler.Height);
         }
@@ -1433,6 +1515,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _graphicsDevice.ResizeMainWindow(width, height);
         _temporalFrame.Reset();
+        _dynamicMotionHistory.Reset();
     }
 
     public void Dispose()
@@ -1473,6 +1556,7 @@ public sealed class VeldridRenderer : IDisposable
         _atmosphereBuffer?.Dispose();
         _actorVertexBuffer?.Dispose();
         _actorIndexBuffer?.Dispose();
+        _dynamicMotionVertexBuffer?.Dispose();
 
         if (_hudShaders is not null)
         {
@@ -1503,6 +1587,7 @@ public sealed class VeldridRenderer : IDisposable
         _atmosphereBuffer = null;
         _actorVertexBuffer = null;
         _actorIndexBuffer = null;
+        _dynamicMotionVertexBuffer = null;
         _commandList?.Dispose();
         _graphicsDevice.Dispose();
 

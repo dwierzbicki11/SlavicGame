@@ -181,6 +181,7 @@ AssetIntegrationRegression.Run(Check);
 PresentationPolicyRegression.Run(Check);
 CelestialLightingRegression.Run(Check);
 TemporalFrameRegression.Run(Check);
+DynamicMotionHistoryRegression.Run(Check);
 FrontendSettingsRegression.Run(Check);
 SettingsPersistenceRegression.Run(Check);
 CameraFrustumRegression.Run(Check);

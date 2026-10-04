@@ -56,6 +56,8 @@ compile_shader "$SRC_DIR/present.vert"      "$OUT_DIR/present.vert.spv"      ver
 compile_shader "$SRC_DIR/present.frag"      "$OUT_DIR/present.frag.spv"      frag
 compile_shader "$SRC_DIR/motion_vectors.vert" "$OUT_DIR/motion_vectors.vert.spv" vert
 compile_shader "$SRC_DIR/motion_vectors.frag" "$OUT_DIR/motion_vectors.frag.spv" frag
+compile_shader "$SRC_DIR/motion_dynamic.vert" "$OUT_DIR/motion_dynamic.vert.spv" vert
+compile_shader "$SRC_DIR/motion_dynamic.frag" "$OUT_DIR/motion_dynamic.frag.spv" frag
 compile_shader "$SRC_DIR/reactive_mask.vert" "$OUT_DIR/reactive_mask.vert.spv" vert
 compile_shader "$SRC_DIR/reactive_mask.frag" "$OUT_DIR/reactive_mask.frag.spv" frag
 compile_shader "$SRC_DIR/postprocess.vert"  "$OUT_DIR/postprocess.vert.spv"  vert
