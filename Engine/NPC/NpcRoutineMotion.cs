@@ -323,6 +323,9 @@ public static class NpcRoutineMotion
                 new Vector2(10f, -98f),
                 new Vector2(8f, -94f)),
             ("settler-fisher-01", "shelter-storm") => ShelterRoute(
+                new Vector2(24f, -82f),
+                new Vector2(21f, -84f)),
+            ("settler-fisher-01", "shelter-storm-swamp") => ShelterRoute(
                 new Vector2(111f, 27f),
                 new Vector2(99f, 39f)),
             ("settler-youth-01", "shelter-storm") => ShelterRoute(
