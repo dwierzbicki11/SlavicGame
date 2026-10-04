@@ -133,7 +133,7 @@ Pakiet jest implementation-ready, gdy ma ownera/rolę, entry conditions, graph/s
 
 ## Implemented runtime package — DLG_R0_COMMUNITY
 
-`DLG_R0_COMMUNITY` is now executable for all eight ambient Żarnowiec settlers:
+`DLG_R0_COMMUNITY` is now executable for all fourteen ambient Żarnowiec settlers:
 
 - `settler-farmer-01`;
 - `settler-farmer-02`;
@@ -142,7 +142,13 @@ Pakiet jest implementation-ready, gdy ma ownera/rolę, entry conditions, graph/s
 - `settler-trader-01`;
 - `settler-carrier-01`;
 - `settler-elder-01`;
-- `settler-traveler-01`.
+- `settler-traveler-01`;
+- `settler-smith-helper-01`;
+- `settler-weaver-01`;
+- `settler-shepherd-01`;
+- `settler-gatherer-01`;
+- `settler-fisher-01`;
+- `settler-youth-01`.
 
 Each graph has stable entry nodes for:
 
