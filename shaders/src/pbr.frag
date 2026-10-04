@@ -100,6 +100,7 @@ void main()
     float modelPbr = GraphicsFeatures2.y;
     float normalMapping = GraphicsFeatures3.x;
     float specularEnabled = GraphicsFeatures3.y;
+    float foliage = step(0.001, MaterialFactors.z);
 
     vec3 baseNormal = normalize(fsin_WorldNormal);
     vec3 normal = baseNormal;
@@ -129,6 +130,12 @@ void main()
             roughness,
             max(0.08, roughness * 0.58),
             rainWetness);
+
+        // Leaves are dielectric and remain broadly rough even when wet.
+        // This avoids plastic-looking crown highlights while bark and props
+        // keep their authored metallic/roughness response.
+        metallic = mix(metallic, 0.0, foliage);
+        roughness = mix(roughness, max(roughness, 0.68), foliage);
     }
 
     vec3 viewDirection = normalize(fsin_CameraPosition - fsin_WorldPosition);
@@ -196,6 +203,25 @@ void main()
     vec3 color = ambient +
         directBrdf * sunColor * ndotl *
         (1.75 * lightStrength) * directShadow;
+
+    // Thin foliage lets a small amount of sunlight through from behind.
+    // The term is intentionally cheap and only enabled for materials tagged
+    // as tree foliage by the renderer.
+    if (foliage > 0.5)
+    {
+        float backLight = max(dot(-normal, lightDirection), 0.0);
+        float grazing = 1.0 - ndotv;
+        float transmission =
+            backLight * backLight * 0.12 +
+            grazing * grazing * 0.018;
+        color +=
+            albedo *
+            sunColor *
+            transmission *
+            lightStrength *
+            cloudShadow *
+            (1.0 - nightFactor);
+    }
 
     float fogFactor = 1.0 - exp(
         -(FogColorDensity.w * GraphicsFeatures0.w) * fsin_Distance);
