@@ -20,6 +20,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly ResolutionScalerRenderer _resolutionScaler = new();
     private readonly TemporalFrameState _temporalFrame = new();
     private readonly MotionVectorRenderer _motionVectors = new();
+    private readonly ReactiveMaskRenderer _reactiveMask = new();
     private readonly BloomRenderer _bloom = new();
     private readonly PostProcessRenderer _postProcess = new();
     private readonly PbrModelRenderer _pbrModels = new();
@@ -57,6 +58,7 @@ public sealed class VeldridRenderer : IDisposable
 
     private bool _initialized;
     private bool _disposed;
+    private bool _temporalInputsEnabled;
     private uint _actorIndexCount;
     private uint _actorVertexCapacity;
     private uint _actorIndexCapacity;
@@ -265,19 +267,30 @@ public sealed class VeldridRenderer : IDisposable
             _graphicsDevice.SwapchainFramebuffer.Height,
             msaaQuality);
 
-        if (_resolutionScaler.SampleableDepthView is { } temporalDepth)
+        _temporalInputsEnabled = TemporalInputPolicy.IsEnabled();
+        if (_temporalInputsEnabled &&
+            _resolutionScaler.SampleableDepthView is { } temporalDepth &&
+            _resolutionScaler.SampleableDepthTexture is { } temporalDepthTexture)
         {
             _motionVectors.Initialize(
                 _graphicsDevice,
                 temporalDepth,
                 _resolutionScaler.Width,
                 _resolutionScaler.Height);
+            _reactiveMask.Initialize(
+                _graphicsDevice,
+                _cameraLayout,
+                temporalDepthTexture,
+                _resolutionScaler.Width,
+                _resolutionScaler.Height);
+            EngineLog.Info(
+                "Temporal FSR inputs enabled: camera motion + reactive mask.");
         }
-        else
+        else if (_temporalInputsEnabled)
         {
             EngineLog.Info(
-                "Temporal camera motion is deferred while scene MSAA is active; " +
-                "FSR 2/3 temporal input requires single-sample depth.");
+                "Temporal FSR inputs deferred while scene MSAA is active; " +
+                "temporal upscaling requires single-sample depth.");
         }
 
         var sceneOutput =
@@ -492,6 +505,9 @@ public sealed class VeldridRenderer : IDisposable
             _worldItemModels,
             ref actorVertices,
             ref actorIndices);
+        var opaqueDynamicEnd = checked((uint)actorIndices.Length);
+
+        var waterStart = opaqueDynamicEnd;
         WaterLandscape.AppendSurface(world.Terrain, (float)animationSeconds, camera.Position,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             ref actorVertices, ref actorIndices);
@@ -500,6 +516,9 @@ public sealed class VeldridRenderer : IDisposable
             (float)animationSeconds,
             ref actorVertices,
             ref actorIndices);
+        var waterEnd = checked((uint)actorIndices.Length);
+
+        var transientStart = waterEnd;
         CampfireEffectMesh.Append(
             world,
             (float)animationSeconds,
@@ -512,6 +531,8 @@ public sealed class VeldridRenderer : IDisposable
             settings.CloudQuality,
             ref actorVertices,
             ref actorIndices);
+        var transientEnd = checked((uint)actorIndices.Length);
+
         FootprintEffectMesh.Append(
             world,
             ref actorVertices,
@@ -520,12 +541,24 @@ public sealed class VeldridRenderer : IDisposable
             world,
             ref actorVertices,
             ref actorIndices);
+
+        var spectralStart = checked((uint)actorIndices.Length);
         ApparitionEffectMesh.Append(
             world,
             (float)animationSeconds,
             ref actorVertices,
             ref actorIndices);
         MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
+        var spectralEnd = checked((uint)actorIndices.Length);
+
+        var reactiveRanges = new ReactiveMaskRange[]
+        {
+            new(0, opaqueDynamicEnd, 0.42f),
+            new(waterStart, waterEnd - waterStart, 0.88f),
+            new(transientStart, transientEnd - transientStart, 1.0f),
+            new(spectralStart, spectralEnd - spectralStart, 1.0f)
+        };
+
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
 
@@ -1075,9 +1108,19 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.DrawIndexed(_actorIndexCount);
         }
 
+        if (_temporalInputsEnabled && _reactiveMask.IsInitialized)
+        {
+            _reactiveMask.Render(
+                _commandList,
+                _cameraSet,
+                _actorVertexBuffer,
+                _actorIndexBuffer,
+                reactiveRanges);
+        }
+
         _resolutionScaler.ResolveScene(_commandList);
 
-        if (_motionVectors.IsInitialized)
+        if (_temporalInputsEnabled && _motionVectors.IsInitialized)
             _motionVectors.Render(_commandList, temporalFrame);
 
         var resolvedScene = _resolutionScaler.ResolvedSceneView;
@@ -1322,11 +1365,21 @@ public sealed class VeldridRenderer : IDisposable
             checked((uint)Math.Max(1, height)));
 
         _temporalFrame.Reset();
-        if (_motionVectors.IsInitialized &&
+        if (_temporalInputsEnabled &&
+            _motionVectors.IsInitialized &&
             _resolutionScaler.SampleableDepthView is { } temporalDepth)
         {
             _motionVectors.SetSource(
                 temporalDepth,
+                _resolutionScaler.Width,
+                _resolutionScaler.Height);
+        }
+        if (_temporalInputsEnabled &&
+            _reactiveMask.IsInitialized &&
+            _resolutionScaler.SampleableDepthTexture is { } temporalDepthTexture)
+        {
+            _reactiveMask.SetDepthSource(
+                temporalDepthTexture,
                 _resolutionScaler.Width,
                 _resolutionScaler.Height);
         }
@@ -1398,6 +1451,7 @@ public sealed class VeldridRenderer : IDisposable
         _menu.Dispose();
         _postProcess.Dispose();
         _bloom.Dispose();
+        _reactiveMask.Dispose();
         _motionVectors.Dispose();
         _resolutionScaler.Dispose();
         _shadows.Dispose();
