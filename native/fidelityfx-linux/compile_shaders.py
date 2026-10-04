@@ -183,9 +183,13 @@ def main():
         ]
         command += ['-D' + d for d in common + defines]
         command += [str(source), '-o', str(output)]
-        subprocess.run(
-            command, check=True, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+        completed = subprocess.run(
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True)
+        if completed.returncode != 0:
+            raise RuntimeError(
+                'glslangValidator failed for ' + str(source) + '\n' +
+                completed.stdout)
         data = output.read_bytes()
         return data, bindings(data)
 
