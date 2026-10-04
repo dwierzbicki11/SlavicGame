@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ30. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ31. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -20,27 +20,29 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 - [x] MQ24 „Droga bez granicy” — dwa sposoby pamięci trasy, recoverable trial passage, `MQ24_ROUTE_RELATION` i handoff do MQ25 — scalone po zielonym CI.
 - [x] MQ25 „Archiwum bez jednego języka” — cztery regionalne pakiety, dwie relacje między tradycjami, `NETWORK_MULTICULTURAL_ORIGIN`, persistence/idempotencja i handoff do MQ30 — scalone po zielonym CI.
 - [x] MQ30 „Pustkowie Pierwszego Progu” — dwa niezależne ślady Archiwum, `ARCHIVE_PRESENCE_CONFIRMED`, bezpieczna oś dojścia, persistence/idempotencja i handoff do MQ31 — scalone po zielonym CI.
+- [x] MQ31 „Archiwum popiołu” — trzy niezależne fakty Archiwum, primary/secondary recovery, `ARCHIVE_RECORDS_FOUND`, persistence/idempotencja i handoff do MQ32 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ31 „Archiwum popiołu” — IMPLEMENTED, oczekuje na CI/merge
+### MQ32 „Noc Zamkniętego Progu” — IMPLEMENTED, oczekuje na CI/merge
 
 Karta `docs/quests/MainQuestCardsAct3.md` ma production documentation pass v0.1 i jednoznaczny kontrakt implementacyjny:
 
-1. wejście po `MQ30_COMPLETE`;
-2. trzy niezależnie zapisywane fakty: rola rodziców, związek Wszebora z Archiwum i odniesienie do Nocy Zamkniętego Progu;
-3. każdy krytyczny fakt może pochodzić z dokumentu podstawowego albo wtórnego rejestru, więc utrata opcjonalnego dokumentu nie blokuje kampanii;
-4. zapis `ARCHIVE_RECORDS_FOUND` po pozyskaniu materiału Archiwum;
-5. `MQ31_COMPLETE`, persistence/idempotencja i gwarantowany handoff do MQ32 dopiero po poznaniu wszystkich trzech faktów.
+1. wejście po `MQ31_COMPLETE`;
+2. niezależne kategorie evidence: dokumenty Archiwum, echo zdarzenia, świadek/przekaz pośredni, zeznanie Wszebora, zapis Straży Zamknięcia oraz recovery przez alternatywny zapis terenowy;
+3. rekonstrukcja krytycznego rdzenia wymaga co najmniej trzech kategorii i co najmniej jednego źródła spoza zainteresowanej frakcji;
+4. sprzeczności są zapisywane jako trwałe, niekierunkowe relacje między zebranymi kategoriami i nie nadpisują źródeł;
+5. `CLOSED_THRESHOLD_CORE_RECONSTRUCTED`, `MQ32_COMPLETE`, persistence/idempotencja i handoff do MQ33 dopiero po spełnieniu minimalnego kontraktu evidence.
 
-Runtime przechowuje fakty i provenance kanału, ale nie koduje finalnych tekstów dokumentów, scen, assetów ani interpretacji. Nie rozstrzyga losu Parent B ani prawdziwości interpretacji Nocy Zamkniętego Progu.
+Runtime nie koduje finalnej treści zeznań ani jednej „prawdziwej” interpretacji Nocy. Potwierdza tylko minimalny zgodny rdzeń wymagany przez kampanię i zachowuje sprzeczności do późniejszych dialogów.
 
-## Kolejka po MQ31
+## Kolejka po MQ32
 
-Po pełnym zakończeniu MQ31 należy ponownie przeanalizować aktualny `main`, trzy dokumenty kolejki/coverage/readiness oraz karty Aktu III. MQ32 może rozpocząć się wyłącznie po zielonym CI i merge MQ31 oraz ponownym potwierdzeniu readiness.
+Po pełnym zakończeniu MQ32 należy ponownie przeanalizować aktualny `main`, trzy dokumenty kolejki/coverage/readiness oraz karty Aktu III. MQ33 może rozpocząć się wyłącznie po zielonym CI i merge MQ32 oraz ponownym potwierdzeniu readiness.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ31: finalna treść dokumentów, layout archiwum i presentation pozostają content/art lockiem.
-- MQ31: dokument podstawowy i wtórny rejestr są równoważnymi kanałami recovery dla każdego krytycznego faktu; żaden pojedynczy dokument nie może być blockerem.
-- MQ31: fakty potwierdzają role/powiązania, ale nie ustalają jeszcze jednej prawdziwej interpretacji Nocy ani losu Parent B.
+- MQ32: finalna treść dokumentów, echa, zeznań i prezentacja rekonstrukcji pozostają content/art lockiem.
+- MQ32: provenance „spoza zainteresowanej frakcji” jest jawnie zapisywane przy kategorii evidence; runtime nie zgaduje afiliacji źródła.
+- MQ32: alternatywny zapis terenowy jest kategorią recovery dla pominiętego echa, zgodnie z kartą questa.
+- MQ32: sprzeczności pozostają równoległymi faktami; ich rozstrzygnięcie nie należy do tego questa.
