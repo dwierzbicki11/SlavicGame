@@ -246,7 +246,7 @@ public sealed class VeldridRenderer : IDisposable
             new ResourceLayoutElementDescription(
                 "View", ResourceKind.UniformBuffer, ShaderStages.Vertex),
             new ResourceLayoutElementDescription(
-                "Atmosphere", ResourceKind.UniformBuffer, ShaderStages.Fragment)));
+                "Atmosphere", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment)));
 
         _cameraSet = factory.CreateResourceSet(new ResourceSetDescription(
             _cameraLayout,

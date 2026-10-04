@@ -23,6 +23,7 @@ public readonly struct PbrVertex
 }
 
 public sealed record GlbMaterialData(
+    string Name,
     Vector4 BaseColorFactor,
     float MetallicFactor,
     float RoughnessFactor,
@@ -398,6 +399,9 @@ public sealed class GlbModel
                 var pbr = material.TryGetProperty("pbrMetallicRoughness", out var pbrElement)
                     ? pbrElement
                     : default;
+                var name = material.TryGetProperty("name", out var nameElement)
+                    ? nameElement.GetString() ?? string.Empty
+                    : string.Empty;
 
                 var baseColorFactor = pbr.ValueKind != JsonValueKind.Undefined &&
                                       pbr.TryGetProperty("baseColorFactor", out var baseFactor)
@@ -427,6 +431,7 @@ public sealed class GlbModel
                 var normalImage = ResolveTextureImage(material, "normalTexture", textureSources, images);
 
                 result.Add(new GlbMaterialData(
+                    name,
                     baseColorFactor,
                     metallic,
                     roughness,
@@ -439,6 +444,7 @@ public sealed class GlbModel
         if (result.Count == 0)
         {
             result.Add(new GlbMaterialData(
+                string.Empty,
                 Vector4.One,
                 0f,
                 1f,
