@@ -192,16 +192,22 @@ Dodatki rozpoznawcze:
 Dodatki są generowane jako bardzo lekka geometria w istniejącym actor mesh passie, więc uczestniczą w tym samym depth/shadow path co postacie i nie wymagają osobnych draw calli.
 
 ### Ambient population
-Żarnowiec otrzymuje dodatkowo 8 mieszkańców:
+Żarnowiec otrzymuje dodatkowo 14 mieszkańców:
 - dwóch rolników;
 - cieślę;
 - garncarza;
 - handlarza;
 - tragarza;
 - starszego mieszkańca;
-- podróżnego.
+- podróżnego;
+- pomocnika kowala;
+- tkaczkę;
+- pasterza;
+- zbieraczkę;
+- rybaka;
+- młodego mieszkańca biegającego z drobnymi sprawami.
 
-Mają osobne pozycje dzienne/nocne, role, proporcje, kolory i zestawy dodatków. W obecnym passie są widoczni i animowani, ale nie dostają fałszywego promptu dialogowego, dopóki nie powstanie dla nich właściwy graph rozmowy.
+Mają osobne pozycje dzienne/nocne, role, proporcje, kolory i zestawy dodatków. Nowe sylwetki wykorzystują dodatkowo lekki proceduralny fartuch, wędkę i tobołek na ramię. W obecnym passie są widoczni i animowani, ale nie dostają fałszywego promptu dialogowego, dopóki nie powstanie dla nich właściwy graph rozmowy.
 
 ### Animation policy
 Wspólny rig zachowuje istniejące klipy. Aktywności typu patrol, noszenie towaru lub przybycie do wsi korzystają z `Walk`; pozostałe prototypowo z `Idle`. Docelowe animacje pracy nadal pozostają P1.
@@ -271,7 +277,7 @@ Każda baza zachowuje własną geometrię i animacje `Idle/Walk`, a istniejące 
 - tempo animacji;
 - lekkie proceduralne dodatki sylwetki.
 
-Modele są ładowane po jednym egzemplarzu na rodzinę i współdzielone przez wiele instancji NPC. Dzięki temu 13 aktywnych mieszkańców nie wymaga 13 kopii danych GLB.
+Modele są ładowane po jednym egzemplarzu na rodzinę i współdzielone przez wiele instancji NPC. Dzięki temu 19 aktywnych NPC nie wymaga 19 kopii danych GLB. Ambientowa geometria mieszkańców jest dodatkowo pomijana poza 95 m od obserwatora.
 
 
 ## Runtime work-animation pass
@@ -300,7 +306,7 @@ Wszystkie pięć używanych rodzin NPC GLB jest walidowanych pod kątem obecnoś
 
 ## Runtime ambient community dialogue pass
 
-The eight ambient settlers are no longer presentation-only actors. They now use the authored `DLG_R0_COMMUNITY` package and expose `E POROZMAWIAJ` through the same proximity contract as core NPCs.
+The fourteen ambient settlers are no longer presentation-only actors. They now use the authored `DLG_R0_COMMUNITY` package and expose `E POROZMAWIAJ` through the same proximity contract as core NPCs.
 
 Ambient start-node selection reacts to:
 - current time of day;
@@ -320,7 +326,7 @@ Dialogue freeze still affects only the current speaker; every other resident kee
 Ambient settlers now react physically to severe weather instead of only commenting on it.
 
 When the active weather reaches `Storm` (or an equivalent rain intensity >= 0.85):
-- all eight ambient Żarnowiec settlers switch from their current work/travel activity to `shelter-storm`;
+- all fourteen ambient Żarnowiec settlers switch from their current work/travel activity to `shelter-storm`;
 - each NPC uses its own short deterministic route toward a nearby sheltered part of the village;
 - residents remain spatially distributed instead of stacking at one shelter point;
 - actor locomotion continues to use existing `Walk`/idle behavior and the same obstacle resolution;
@@ -329,3 +335,18 @@ When the active weather reaches `Storm` (or an equivalent rain intensity >= 0.85
 Ordinary `Rain` does not trigger full evacuation. When severe weather ends, ambient residents return to their normal schedule-selected activities on the next runtime update.
 
 This is intentionally a lightweight situational override rather than a navmesh/crowd simulation.
+
+
+## Runtime population expansion pass
+
+Drugi pass populacji zwiększa ambient Żarnowca z 8 do 14 postaci bez dodawania kolejnych bazowych GLB.
+
+Nowe role:
+- `settler-smith-helper-01` — pomocnik kowala;
+- `settler-weaver-01` — tkaczka;
+- `settler-shepherd-01` — pasterz;
+- `settler-gatherer-01` — zbieraczka;
+- `settler-fisher-01` — rybak pracujący rano przy mokradłach/przeprawie;
+- `settler-youth-01` — młody mieszkaniec roznoszący drobne sprawy po osadzie.
+
+Każda z tych postaci ma własny profil proporcji/palety/akcesoriów, harmonogram, lokalną trasę pracy, reakcję na burzę i opcjonalny graf `DLG_R0_COMMUNITY`. Wszystkie pozostają contentem F/placeholder art do późniejszego research locku ubioru.
