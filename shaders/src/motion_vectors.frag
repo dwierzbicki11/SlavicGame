@@ -31,7 +31,12 @@ void main()
 
     vec4 currentClip = vec4(currentNdc, depth, 1.0);
     vec4 world = InverseCurrentViewProjection * currentClip;
-    world /= max(abs(world.w), 0.000001);
+    if (abs(world.w) <= 0.000001)
+    {
+        fsout_Motion = vec2(0.0);
+        return;
+    }
+    world /= world.w;
 
     vec4 previousClip = PreviousViewProjection * world;
     if (abs(previousClip.w) <= 0.000001)
