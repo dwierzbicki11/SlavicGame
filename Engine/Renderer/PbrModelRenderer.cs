@@ -375,8 +375,9 @@ public sealed class PbrModelRenderer : IDisposable
                 animationTimeSeconds: 0f,
                 sourceIsZUp: instance.SourceIsZUp);
 
+            var instanceVertices = ApplyTreeFoliageVariation(mesh, instance);
             var vertexOffset = checked((uint)combinedVertices.Count);
-            combinedVertices.AddRange(mesh.Vertices);
+            combinedVertices.AddRange(instanceVertices);
 
             foreach (var range in mesh.DrawRanges)
             {
@@ -427,6 +428,140 @@ public sealed class PbrModelRenderer : IDisposable
             draws.ToArray(),
             vertexArray.Length,
             indexArray.Length);
+    }
+
+    private static PbrVertex[] ApplyTreeFoliageVariation(
+        PbrMeshGeometry mesh,
+        WorldModelInstance instance)
+    {
+        if (!FarVegetationRenderer.IsTreeAsset(instance.AssetPath) ||
+            mesh.Vertices.Length == 0 ||
+            mesh.DrawRanges.Length == 0)
+        {
+            return mesh.Vertices;
+        }
+
+        var foliageMaterials = mesh.Materials
+            .Select(material =>
+                material.Name.Contains("leaf", StringComparison.OrdinalIgnoreCase) ||
+                material.Name.Contains("foliage", StringComparison.OrdinalIgnoreCase) ||
+                material.Name.Contains("needle", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (!foliageMaterials.Any(value => value))
+            return mesh.Vertices;
+
+        var foliageVertices = new bool[mesh.Vertices.Length];
+        foreach (var range in mesh.DrawRanges)
+        {
+            var materialIndex = Math.Clamp(
+                range.MaterialIndex,
+                0,
+                foliageMaterials.Length - 1);
+            if (!foliageMaterials[materialIndex])
+                continue;
+
+            var end = range.IndexStart + range.IndexCount;
+            for (var i = range.IndexStart; i < end; i++)
+            {
+                var vertexIndex = mesh.Indices[i];
+                if (vertexIndex < foliageVertices.Length)
+                    foliageVertices[vertexIndex] = true;
+            }
+        }
+
+        var minY = float.MaxValue;
+        var maxY = float.MinValue;
+        for (var i = 0; i < foliageVertices.Length; i++)
+        {
+            if (!foliageVertices[i])
+                continue;
+
+            var y = mesh.Vertices[i].Position.Y;
+            minY = MathF.Min(minY, y);
+            maxY = MathF.Max(maxY, y);
+        }
+
+        if (!float.IsFinite(minY) ||
+            !float.IsFinite(maxY) ||
+            maxY - minY < 0.01f)
+        {
+            return mesh.Vertices;
+        }
+
+        var seed = StableTreeHash(instance.Id);
+        var widthX = 0.92f + UnitFromHash(seed ^ 0x68BC21EBu) * 0.16f;
+        var widthZ = 0.92f + UnitFromHash(seed ^ 0xA53A9E37u) * 0.16f;
+        var height = 0.96f + UnitFromHash(seed ^ 0x1B56C4E9u) * 0.09f;
+        var asymmetry = 0.12f + UnitFromHash(seed ^ 0xD8163841u) * 0.30f;
+        var phase = UnitFromHash(seed ^ 0xC6BC2796u) * MathF.Tau;
+        var directionAngle = UnitFromHash(seed ^ 0x9E3779B9u) * MathF.Tau;
+        var direction = new Vector2(
+            MathF.Cos(directionAngle),
+            MathF.Sin(directionAngle));
+
+        var varied = mesh.Vertices.ToArray();
+        var crownHeight = maxY - minY;
+
+        for (var i = 0; i < varied.Length; i++)
+        {
+            if (!foliageVertices[i])
+                continue;
+
+            var vertex = varied[i];
+            var position = vertex.Position;
+            var relative = position - instance.Position;
+            var height01 = Math.Clamp(
+                (position.Y - minY) / crownHeight,
+                0f,
+                1f);
+            var crownWeight = height01 * height01 * (3f - 2f * height01);
+            var localWave = MathF.Sin(
+                phase +
+                relative.Y * 0.47f +
+                relative.X * 0.11f -
+                relative.Z * 0.09f);
+
+            relative.X *= widthX;
+            relative.Z *= widthZ;
+            relative.Y *= height;
+
+            var drift = asymmetry * crownWeight;
+            relative.X += direction.X * drift + direction.Y * localWave * 0.08f * crownWeight;
+            relative.Z += direction.Y * drift - direction.X * localWave * 0.08f * crownWeight;
+
+            varied[i] = new PbrVertex(
+                instance.Position + relative,
+                vertex.Normal,
+                vertex.TexCoord);
+        }
+
+        return varied;
+    }
+
+    private static uint StableTreeHash(string value)
+    {
+        const uint offset = 2166136261u;
+        const uint prime = 16777619u;
+
+        var hash = offset;
+        foreach (var character in value)
+        {
+            hash ^= character;
+            hash *= prime;
+        }
+
+        return hash;
+    }
+
+    private static float UnitFromHash(uint value)
+    {
+        value ^= value >> 16;
+        value *= 0x7FEB352Du;
+        value ^= value >> 15;
+        value *= 0x846CA68Bu;
+        value ^= value >> 16;
+        return (value & 0x00FFFFFFu) / 16777215f;
     }
 
     private static LodGeometry SelectLodGeometry(
