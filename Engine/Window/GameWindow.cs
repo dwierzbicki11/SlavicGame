@@ -21,6 +21,7 @@ public sealed class GameWindow : IDisposable
     private uint _mouseButtonsDown;
     private uint _mouseButtonsPressed;
     private const uint LeftMouseMask = 1u;
+    private const uint RightMouseMask = 4u;
 
     public Sdl2Window NativeWindow => _window;
     public bool Exists => _window.Exists;
@@ -99,6 +100,12 @@ public sealed class GameWindow : IDisposable
         _mouseButtonsPressed &= ~LeftMouseMask;
         return true;
     }
+
+    public bool IsLeftMouseDown =>
+        (_mouseButtonsDown & LeftMouseMask) != 0u;
+
+    public bool IsRightMouseDown =>
+        (_mouseButtonsDown & RightMouseMask) != 0u;
 
     public void ToggleFullscreen() => SetFullscreen(!IsFullscreen);
 
