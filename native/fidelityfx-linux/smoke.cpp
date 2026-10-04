@@ -8,6 +8,8 @@
 #include <cmath>
 #include <cstring>
 
+extern "C" uint32_t slavicFsrFrameGenerationComponents();
+
 static void check(VkResult rc) {
     if (rc != VK_SUCCESS) throw std::runtime_error("Vulkan failure " + std::to_string(rc));
 }
@@ -223,6 +225,11 @@ struct Test {
     }
 };
 int main() {
-    try { Test test; test.run(64,64); test.run(80,48); return 0; }
+    try {
+        if (slavicFsrFrameGenerationComponents() != 7u)
+            throw std::runtime_error("FSR3 Frame Generation components are not linked");
+        std::cout << "PASS FSR3 FG components: FSR3 + Frame Interpolation + Optical Flow" << std::endl;
+        Test test; test.run(64,64); test.run(80,48); return 0;
+    }
     catch(const std::exception& error) { std::cerr << error.what() << std::endl; return 1; }
 }

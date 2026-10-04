@@ -3,14 +3,29 @@
 import sys
 from pathlib import Path
 sdk, output = map(Path, sys.argv[1:])
-header = (sdk / 'sdk/include/FidelityFX/host/ffx_fsr3upscaler.h').read_text()
-old = '#define FFX_FSR3UPSCALER_CONTEXT_SIZE (FFX_SDK_DEFAULT_CONTEXT_SIZE)'
-assert header.count(old) == 1, 'Unexpected SDK context definition'
-header = header.replace(old, '#define FFX_FSR3UPSCALER_CONTEXT_SIZE (2 * FFX_SDK_DEFAULT_CONTEXT_SIZE)')
-path = output / 'include/FidelityFX/host/ffx_fsr3upscaler.h'
-path.parent.mkdir(parents=True, exist_ok=True)
-if not path.exists() or path.read_text() != header:
-    path.write_text(header)
+# The SDK sizes opaque contexts for Windows' 16-bit wchar_t. Linux uses
+# 32-bit wchar_t and therefore needs extra room for pipeline/resource names.
+# Keep this adaptation isolated in the build output and patch every context
+# which participates in FSR3 Frame Generation.
+context_headers = [
+    ('ffx_fsr3upscaler.h',
+     '#define FFX_FSR3UPSCALER_CONTEXT_SIZE (FFX_SDK_DEFAULT_CONTEXT_SIZE)',
+     '#define FFX_FSR3UPSCALER_CONTEXT_SIZE (2 * FFX_SDK_DEFAULT_CONTEXT_SIZE)'),
+    ('ffx_frameinterpolation.h',
+     '#define FFX_FRAMEINTERPOLATION_CONTEXT_SIZE (FFX_SDK_DEFAULT_CONTEXT_SIZE)',
+     '#define FFX_FRAMEINTERPOLATION_CONTEXT_SIZE (2 * FFX_SDK_DEFAULT_CONTEXT_SIZE)'),
+    ('ffx_opticalflow.h',
+     '#define FFX_OPTICALFLOW_CONTEXT_SIZE (FFX_SDK_DEFAULT_CONTEXT_SIZE)',
+     '#define FFX_OPTICALFLOW_CONTEXT_SIZE (2 * FFX_SDK_DEFAULT_CONTEXT_SIZE)'),
+]
+for filename, old, new in context_headers:
+    header = (sdk / 'sdk/include/FidelityFX/host' / filename).read_text()
+    assert header.count(old) == 1, f'Unexpected SDK context definition in {filename}'
+    header = header.replace(old, new)
+    path = output / 'include/FidelityFX/host' / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists() or path.read_text() != header:
+        path.write_text(header)
 source = (sdk / 'sdk/src/backends/vk/ffx_vk.cpp').read_text()
 # EffectContext has alignas(32), but the upstream scratch layout aligns slices
 # to only four bytes. Optimized GCC uses aligned stores and can crash. Align
