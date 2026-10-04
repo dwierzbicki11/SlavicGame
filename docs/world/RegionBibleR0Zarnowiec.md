@@ -442,7 +442,7 @@ Kruki:
 - używają klipu Fly;
 - po zbliżeniu gracza przechodzą w Spooked i zwiększają wysokość.
 
-Ten pass nie robi jeszcze polowania, lootowania ani trwałego zabijania dzikiej fauny. To osobny późniejszy lock gameplayowy.
+Fauna R0 jest teraz również grywalna łowiecko: ground wildlife może zostać zranione, ucieka po trafieniu, pozostawia trwałą tuszę po śmierci i może zostać zebrane dokładnie raz. Kruki pozostają poza naziemnym melee; późniejsza broń dystansowa może wykorzystać ten sam runtime obrażeń.
 
 ### Render budget
 Fauna korzysta z czterech małych animated GLB:
@@ -455,3 +455,50 @@ Renderer preloaduje je raz. Geometria fauny trafia do istniejącego actor buffer
 
 ### Status
 Modele i zachowanie są prototype/F. Obecność gatunków w finalnych regionach może później zostać skorygowana przez research i finalny wildlife roster.
+
+## Runtime hunting pass
+
+Pierwsza pętla polowania korzysta z istniejących modeli, tropów i lekkiego runtime fauny.
+
+### Health i reakcja na trafienie
+
+Prototypowe wartości:
+- jeleń: 45 HP;
+- dzik: 65 HP;
+- wilk: 50 HP;
+- kruk: 12 HP, ale LPM celowo go nie wybiera.
+
+Lekkie melee gracza może trafić jelenia, dzika albo wilka w tym samym front-arc resolverze co fizycznych przeciwników. Po nieśmiertelnym trafieniu zwierzę dostaje około 4,5 s wymuszonego `Flee`, niezależnie od zwykłego promienia płoszenia.
+
+### Carcass i harvest
+
+Po zejściu HP do zera:
+- runtime przechodzi w `Dead`;
+- ruch i stamping tropów ustają;
+- model używa klipu `Death`, jeśli GLB go ma, z bezpiecznym fallbackiem `Idle`;
+- dodatkowy tilt odróżnia tuszę od żywego modelu;
+- z bliska pojawia się `E ZBIERZ LUP`.
+
+Po zebraniu tusza znika z renderu i nie może zostać zebrana drugi raz.
+
+Prototypowy loot:
+- jeleń → `venison x3`, `deer-hide x1`;
+- dzik → `boar-meat x3`, `boar-hide x1`;
+- wilk → `wolf-pelt x1`, `wolf-fang x2`;
+- kruk → `raven-feather x2` dla przyszłych sposobów zabicia/ranged hunting.
+
+Nazwy i ilości są gameplayowym `F`/prototype balance, nie rekonstrukcją gospodarczą.
+
+### Persistence
+
+Save v3 pozostaje kompatybilny addytywnie. Opcjonalny snapshot fauny zapisuje:
+- ID spawnu;
+- pozycję;
+- HP;
+- stan zebrania tuszy.
+
+Stare save bez pola wildlife pozostawiają świeży stan z `Initialize()`. Nowe save nie respawnują zabitego zwierzęcia i nie otwierają ponownie już zebranego lootu.
+
+### Performance
+
+Nie dodano osobnego systemu ragdoll ani fizyki tusz. Carcass używa tego samego animated GLB, actor bufferu i istniejącego distance cullingu. Po harvest model przestaje być budowany.
