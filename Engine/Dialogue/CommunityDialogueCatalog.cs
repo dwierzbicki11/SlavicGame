@@ -136,6 +136,43 @@ public static class CommunityDialogueCatalog
             throw new KeyNotFoundException(
                 $"No R0 community dialogue profile for NPC '{npcId}'.");
 
+        if (string.Equals(
+                npcId,
+                MissingToolsSideQuest.GiverId,
+                StringComparison.Ordinal))
+        {
+            var sideQuest =
+                world.Progress.Quests.Get(
+                    MissingToolsSideQuest.QuestId);
+
+            if (sideQuest.Phase == QuestPhase.Unavailable)
+                return "mt.offer";
+
+            if (sideQuest.Phase is QuestPhase.Active or QuestPhase.Investigation)
+            {
+                if (world.Progress.Inventory.Contains(
+                        MissingToolsSideQuest.ToolItemId))
+                {
+                    return world.Progress.HasFlag(
+                            MissingToolsSideQuest.WorksiteInspectedFlag)
+                        ? "mt.return-informed"
+                        : "mt.return-unverified";
+                }
+
+                return "mt.search";
+            }
+
+            if (sideQuest.Phase is QuestPhase.Resolved or QuestPhase.TurnedIn)
+            {
+                return MissingToolsSideQuest.Outcome(world) switch
+                {
+                    MissingToolsOutcome.MisplacedConfirmed => "mt.after-careful",
+                    MissingToolsOutcome.FalseAccusation => "mt.after-accusation",
+                    _ => "mt.after-neutral"
+                };
+            }
+        }
+
         var quest =
             world.Progress.Quests.Get(
                 VerticalSliceBootstrap.ContractQuestId);
@@ -184,40 +221,192 @@ public static class CommunityDialogueCatalog
     }
 
     private static DialogueGraph BuildGraph(
-        CommunityVoice voice) =>
-        new(
+        CommunityVoice voice)
+    {
+        var nodes = new List<DialogueNode>
+        {
+            AmbientNode(
+                $"{voice.Prefix}.day",
+                voice.Id,
+                voice.Day),
+            AmbientNode(
+                $"{voice.Prefix}.quest",
+                voice.Id,
+                voice.QuestActive),
+            AmbientNode(
+                $"{voice.Prefix}.predator-gone",
+                voice.Id,
+                voice.PredatorGone),
+            AmbientNode(
+                $"{voice.Prefix}.apparition-gone",
+                voice.Id,
+                voice.ApparitionGone),
+            AmbientNode(
+                $"{voice.Prefix}.safe",
+                voice.Id,
+                voice.SafeAfterBoth),
+            AmbientNode(
+                $"{voice.Prefix}.rain",
+                voice.Id,
+                voice.Rain),
+            AmbientNode(
+                $"{voice.Prefix}.night",
+                voice.Id,
+                voice.Night)
+        };
+
+        if (string.Equals(
+                voice.Id,
+                MissingToolsSideQuest.GiverId,
+                StringComparison.Ordinal))
+        {
+            nodes.AddRange(MissingToolsNodes());
+        }
+
+        return new DialogueGraph(
             $"dialogue.community.{voice.Id}",
             $"{voice.Prefix}.day",
+            nodes);
+    }
+
+    private static IEnumerable<DialogueNode> MissingToolsNodes()
+    {
+        yield return new DialogueNode(
+            "mt.offer",
+            MissingToolsSideQuest.GiverId,
+            "Zostawiłem robotę przy powalonym pniu w lesie i nie mogę znaleźć siekiery. Jeśli tam idziesz, rozejrzyj się.",
             [
-                AmbientNode(
-                    $"{voice.Prefix}.day",
-                    voice.Id,
-                    voice.Day),
-                AmbientNode(
-                    $"{voice.Prefix}.quest",
-                    voice.Id,
-                    voice.QuestActive),
-                AmbientNode(
-                    $"{voice.Prefix}.predator-gone",
-                    voice.Id,
-                    voice.PredatorGone),
-                AmbientNode(
-                    $"{voice.Prefix}.apparition-gone",
-                    voice.Id,
-                    voice.ApparitionGone),
-                AmbientNode(
-                    $"{voice.Prefix}.safe",
-                    voice.Id,
-                    voice.SafeAfterBoth),
-                AmbientNode(
-                    $"{voice.Prefix}.rain",
-                    voice.Id,
-                    voice.Rain),
-                AmbientNode(
-                    $"{voice.Prefix}.night",
-                    voice.Id,
-                    voice.Night)
+                new DialogueChoice(
+                    "mt.accept",
+                    "Sprawdzę miejsce pracy.",
+                    null,
+                    [],
+                    [
+                        new DialogueEffect(
+                            DialogueEffectKind.AdvanceQuest,
+                            MissingToolsSideQuest.QuestId,
+                            QuestPhase.Active.ToString()),
+                        new DialogueEffect(
+                            DialogueEffectKind.SetWorldFlag,
+                            MissingToolsSideQuest.AcceptedFlag,
+                            "true")
+                    ]),
+                new DialogueChoice(
+                    "mt.decline",
+                    "Nie teraz.",
+                    null,
+                    [],
+                    [])
             ]);
+
+        yield return AmbientNode(
+            "mt.search",
+            MissingToolsSideQuest.GiverId,
+            "Sprawdź okolice powalonego pnia w lesie. Tam pracowałem, zanim wróciłem do wsi.");
+
+        yield return new DialogueNode(
+            "mt.return-unverified",
+            MissingToolsSideQuest.GiverId,
+            "To moja siekiera. Wiesz, jak znalazła się w lesie?",
+            [
+                new DialogueChoice(
+                    "mt.return-neutral",
+                    "Nie wiem. Oddaję ją bez zgadywania.",
+                    null,
+                    [],
+                    [
+                        new DialogueEffect(
+                            DialogueEffectKind.TakeItem,
+                            MissingToolsSideQuest.ToolItemId,
+                            "",
+                            1),
+                        new DialogueEffect(
+                            DialogueEffectKind.SetWorldFlag,
+                            MissingToolsSideQuest.OutcomeFlag(
+                                MissingToolsOutcome.ReturnedUncertain),
+                            "true")
+                    ]),
+                new DialogueChoice(
+                    "mt.return-accuse",
+                    "Ktoś musiał ją zabrać.",
+                    null,
+                    [],
+                    [
+                        new DialogueEffect(
+                            DialogueEffectKind.TakeItem,
+                            MissingToolsSideQuest.ToolItemId,
+                            "",
+                            1),
+                        new DialogueEffect(
+                            DialogueEffectKind.SetWorldFlag,
+                            MissingToolsSideQuest.OutcomeFlag(
+                                MissingToolsOutcome.FalseAccusation),
+                            "true")
+                    ]),
+                new DialogueChoice(
+                    "mt.return-investigate",
+                    "Najpierw sprawdzę miejsce dokładniej.",
+                    null,
+                    [],
+                    [])
+            ]);
+
+        yield return new DialogueNode(
+            "mt.return-informed",
+            MissingToolsSideQuest.GiverId,
+            "Znalazłeś siekierę i obejrzałeś miejsce. Co z tego wynika?",
+            [
+                new DialogueChoice(
+                    "mt.return-misplaced",
+                    "Została przy niedokończonej pracy. Nie ma śladów kradzieży.",
+                    null,
+                    [],
+                    [
+                        new DialogueEffect(
+                            DialogueEffectKind.TakeItem,
+                            MissingToolsSideQuest.ToolItemId,
+                            "",
+                            1),
+                        new DialogueEffect(
+                            DialogueEffectKind.SetWorldFlag,
+                            MissingToolsSideQuest.OutcomeFlag(
+                                MissingToolsOutcome.MisplacedConfirmed),
+                            "true")
+                    ]),
+                new DialogueChoice(
+                    "mt.return-informed-neutral",
+                    "Mam narzędzie, ale nie chcę wyciągać dalszych wniosków.",
+                    null,
+                    [],
+                    [
+                        new DialogueEffect(
+                            DialogueEffectKind.TakeItem,
+                            MissingToolsSideQuest.ToolItemId,
+                            "",
+                            1),
+                        new DialogueEffect(
+                            DialogueEffectKind.SetWorldFlag,
+                            MissingToolsSideQuest.OutcomeFlag(
+                                MissingToolsOutcome.ReturnedUncertain),
+                            "true")
+                    ])
+            ]);
+
+        yield return AmbientNode(
+            "mt.after-careful",
+            MissingToolsSideQuest.GiverId,
+            "Dobrze, że sprawdziłeś miejsce zamiast szukać winnego. Następnym razem sam będę pilnował narzędzi.");
+
+        yield return AmbientNode(
+            "mt.after-neutral",
+            MissingToolsSideQuest.GiverId,
+            "Najważniejsze, że siekiera wróciła. Reszty nie będę dopowiadał bez dowodu.");
+
+        yield return AmbientNode(
+            "mt.after-accusation",
+            MissingToolsSideQuest.GiverId,
+            "Narzędzie wróciło, ale oskarżenia bez śladów zostawmy na boku. We wsi łatwo zrobić komuś krzywdę słowem.");
+    }
 
     private static DialogueNode AmbientNode(
         string id,
