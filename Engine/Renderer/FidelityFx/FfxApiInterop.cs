@@ -8,6 +8,7 @@ internal static class FfxApi
     public const ulong DispatchUpscale = 0x00010001u;
     public const ulong CreateBackendVulkan = 0x00000003u;
 
+    public const uint EnableMotionVectorsJitterCancellation = 1u << 2;
     public const uint EnableAutoExposure = 1u << 5;
     public const uint ResourceUsageReadOnly = 0u;
     public const uint ResourceUsageUav = 1u << 1;
