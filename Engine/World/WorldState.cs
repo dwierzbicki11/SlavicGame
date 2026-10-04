@@ -33,6 +33,7 @@ public sealed class WorldState
     public DialogueRuntime Dialogue { get; } = new();
     public VendorRuntime Vendors { get; } = new();
     public CraftingRuntime Crafting { get; } = new();
+    public ConsumableRuntime Consumables { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();
@@ -248,6 +249,7 @@ public sealed class WorldState
         WildlifeTracks.Update(this, deltaSeconds);
         Dialogue.Update(this);
         Campfires.Update(this, deltaSeconds);
+        Consumables.Update(deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
         Footprints.Update(this, deltaSeconds);
         Apparition.Update(this, deltaSeconds);
