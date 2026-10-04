@@ -56,6 +56,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] traversal/weather/day-night scenario manifests (`design/TraversalWeatherDayNightScenarioManifests.md`); tuning pozostaje measurement/playtest lockiem;
 - [x] performance/release measurement manifests (`design/PerformanceReleaseMeasurementManifests.md`); targety liczbowe i hardware pozostają measurement lockiem;
 - [x] machine-readable capture artifact contract (`technical/P5CaptureArtifactFormat.md`); implementacja recordera/validatora pozostaje zadaniem kodowym;
+- [x] operacyjny runbook promocji evidence (`technical/P5EvidencePromotionRunbook.md`): preconditions, capture/validation/review, OPEN→MEASURED→CANDIDATE→LOCKED, invalidation/reruns;
 - [ ] combat/economy/progression tuning — wykonać realne scenariusze i promować odpowiednie `EV-*` do MEASURED/CANDIDATE/LOCKED;
 - [ ] evidence/reputation thresholds — wykonać realne scenariusze i promować odpowiednie `EV-*`;
 - [ ] traversal/weather/day-night tuning — wykonać scenariusze i promować odpowiednie `EV-*`;
@@ -73,7 +74,8 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 6. Coverage aktualizujemy po każdym większym pakiecie.
 7. Wynik P5 nie istnieje jako production evidence, dopóki nie ma wpisu/rekordu w `P5EvidenceLedger.md` wskazującego exact SHA i raw artifact locator.
 8. Nowe P5 captures muszą spełnić `technical/P5CaptureArtifactFormat.md`; brak provenance/raw data oznacza INVALID, nie wynik zerowy ani domyślny.
+9. Promocja statusu `EV-*` musi przejść procedurę `technical/P5EvidencePromotionRunbook.md`; nie wolno awansować wpisu tylko na podstawie ręcznego summary lub zielonego CI.
 
 ## Następny element
 
-P1–P4 mają implementation/planning-level pass. P5 ma evidence contract, centralny pusty ledger targetów, reprodukowalne scenario manifests oraz machine-readable capture format. Dokumentacyjny kontrakt pomiarów jest zamknięty; następny etap P5 wymaga już **implementacji recordera/validatora i brakujących collectorów, realnego wykonania scenariuszy/profilowania oraz zapisania MEASURED/CANDIDATE/LOCKED evidence w ledgerze**. Bez rzeczywistych captures nie deklarujemy targetów performance, hardware ani release evidence.
+P1–P4 mają implementation/planning-level pass. P5 ma evidence contract, centralny pusty ledger targetów, reprodukowalne scenario manifests, machine-readable capture format oraz runbook promocji evidence. Dokumentacyjny kontrakt pomiarów jest zamknięty; następny etap P5 wymaga już **implementacji recordera/validatora i brakujących collectorów, realnego wykonania scenariuszy/profilowania oraz zapisania MEASURED/CANDIDATE/LOCKED evidence w ledgerze**. Bez rzeczywistych captures nie deklarujemy targetów performance, hardware ani release evidence.
