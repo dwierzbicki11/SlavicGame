@@ -413,7 +413,7 @@ The five R0 NPC roles now have schedule-driven world positions, visible humanoid
 
 ### Settler population
 
-Żarnowiec now renders five authored NPC roles plus eight ambient settlers using five distinct animated humanoid GLB families (`villager A/B`, `hunter`, `merchant`, `elder`) instead of cloning the player hunter mesh. Role-specific proportions, muted palettes and lightweight shawl/hood/satchel/basket/tool/staff/spear accessories add another silhouette layer without extra actor draw calls. The five base NPC models are loaded once and shared across all residents. Ambient settlers remain non-interactive until authored dialogue exists.
+Żarnowiec now renders five authored NPC roles plus fourteen ambient settlers using five shared animated humanoid GLB families (`villager A/B`, `hunter`, `merchant`, `elder`) instead of cloning the player hunter mesh. The expanded community adds a smith helper, weaver, shepherd, gatherer, fisherman and young errand-runner alongside the original farmers/crafts/trader/carrier/elder/traveler. Role-specific proportions, muted palettes and lightweight shawl/hood/satchel/basket/tool/staff/spear/apron/fishing-pole/shoulder-bundle accessories create more silhouettes without multiplying base GLBs. Ambient actor geometry is skipped beyond 95 m, protecting low-end GPU/CPU budgets outside the settlement.
 
 
 ### Living NPC routines
@@ -443,9 +443,9 @@ Ground wildlife now leaves transient species-specific tracks on suitable terrain
 
 ### R0 community dialogue
 
-Żarnowiec's eight ambient settlers are now interactable instead of presentation-only. Their short conversations select world-state variants for daytime/night, rain or storm, the active swamp investigation, predator removal, apparition release and complete resolution, while remaining optional and unable to softlock quest progression.
+Żarnowiec's fourteen ambient settlers are interactable instead of presentation-only. Their short conversations select world-state variants for daytime/night, rain or storm, the active swamp investigation, predator removal, apparition release and complete resolution, while remaining optional and unable to softlock quest progression.
 
 
 ### Settler weather behavior
 
-Żarnowiec's eight ambient settlers now interrupt ordinary work/travel routines during severe storms and move along lightweight deterministic shelter routes. Normal rain leaves routine work intact, core quest NPC schedules are untouched, and residents resume their authored jobs when the storm passes.
+Żarnowiec's fourteen ambient settlers now interrupt ordinary work/travel routines during severe storms and move along lightweight deterministic shelter routes. Normal rain leaves routine work intact, core quest NPC schedules are untouched, and residents resume their authored jobs when the storm passes.
