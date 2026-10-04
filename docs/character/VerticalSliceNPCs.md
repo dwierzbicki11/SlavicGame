@@ -368,3 +368,42 @@ R0 nadal nie używa pełnego navmesha ani fizyki crowd, ale NPC nie mogą już b
 To pozostaje rozwiązaniem low-cost dla obecnej populacji kilkunastu mieszkańców. Złożoność par to O(n²), ale przy R0 jest to kilkaset prostych testów dystansu na update, bez path query, bez rigid-body solvera i bez navmesh rebuild.
 
 Przejście do spatial grid/navmesh jest wymagane dopiero po pomiarze, jeśli docelowa gęstość regionów przekroczy budżet tego prostego solvera.
+
+
+## Runtime visible-workstation pass
+
+Modele osadników są już połączone z realnymi stanowiskami pracy w świecie. Zamiast odgrywać `Interact` na pustym gruncie, wybrane dzienne aktywności mają teraz własne workstation definitions.
+
+### Stanowiska
+
+Pierwszy pass obejmuje:
+- dwóch rolników — kosz/work sack/hay przy polach;
+- cieślę — stół warsztatowy + siekiera;
+- garncarza — stół + naczynia + gliniany garnek;
+- handlarza — skrzynia i kosz przy rynku;
+- pomocnika kowala — wiadro + narzędzie przy istniejącym kowadle/kuźni;
+- tkaczkę — realne `krosno_r0_01.glb` + taboret;
+- zbieraczkę — stół do sortowania + świeże/suszone zioła;
+- rybaka — ława + zwój liny + pułapka rybacka przy naprawie sieci;
+- zielarkę — stół, kosz i zioła;
+- opiekuna przeprawy — lina i wiadro przy kładce.
+
+### Duty cycle
+
+`NpcWorkstationCatalog` rozdziela aktywność na deterministyczny cykl:
+- większość czasu NPC stoi przy stanowisku, patrzy na właściwy obiekt i używa `Interact`;
+- pozostałą część czasu zachowuje istniejącą krótką trasę `NpcRoutineMotion`.
+
+Nie ma losowego teleportowania. Faza wynika z czasu świata oraz stabilnego hasha NPC/activity.
+
+### Dialogue / weather compatibility
+
+Rozmowa nadal ma pierwszeństwo:
+- aktywny rozmówca zostaje zamrożony w aktualnym miejscu;
+- po dialogu jego harmonogram jest przesuwany tak jak wcześniej.
+
+Storm shelter nadal zastępuje aktywność pracy, więc NPC nie pozostaje przy warsztacie podczas wymuszonego schronienia.
+
+### Performance
+
+Małe workstation props używają short-range cullingu. Nie tworzą nowych animowanych rigów, particle systemów ani dodatkowych render passów.
