@@ -313,3 +313,19 @@ Ambient start-node selection reacts to:
 The lines remain local observations and opinions. They do not grant unique mandatory evidence or mutate quest phase, so ignoring every ambient settler cannot block vertical-slice progression.
 
 Dialogue freeze still affects only the current speaker; every other resident keeps following the local routine system.
+
+
+## Runtime severe-weather routine pass
+
+Ambient settlers now react physically to severe weather instead of only commenting on it.
+
+When the active weather reaches `Storm` (or an equivalent rain intensity >= 0.85):
+- all eight ambient Żarnowiec settlers switch from their current work/travel activity to `shelter-storm`;
+- each NPC uses its own short deterministic route toward a nearby sheltered part of the village;
+- residents remain spatially distributed instead of stacking at one shelter point;
+- actor locomotion continues to use existing `Walk`/idle behavior and the same obstacle resolution;
+- core quest NPCs keep their authored schedules so storm behavior cannot silently remove a progression-critical teacher/quest giver.
+
+Ordinary `Rain` does not trigger full evacuation. When severe weather ends, ambient residents return to their normal schedule-selected activities on the next runtime update.
+
+This is intentionally a lightweight situational override rather than a navmesh/crowd simulation.
