@@ -4,7 +4,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 ## Próg swobodnej implementacji — stan 2026-10-04
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. `design/ProductionAssetManifests.md` dodaje konkretne stabilne rekordy integracyjne assetów R0–R6 i shared. `design/AnimationVfxAudioBudgetContract.md`, `design/StreamingMemoryBudgetContract.md` i `design/AiEncounterDensityBudgetContract.md` definiują planistyczne kontrakty kosztu, degradacji i telemetry. `design/ProductionEstimatesFramework.md` definiuje E0–E4, throughput baseline, estimate states i forecasting bez wymyślonych osobodni. Implementacja systemów i content pipeline nie musi czekać na dalsze dopisywanie fabuły ani arbitralne limity.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. `design/ProductionAssetManifests.md` dodaje konkretne stabilne rekordy integracyjne assetów R0–R6 i shared. `design/AnimationVfxAudioBudgetContract.md`, `design/StreamingMemoryBudgetContract.md` i `design/AiEncounterDensityBudgetContract.md` definiują planistyczne kontrakty kosztu, degradacji i telemetry. `design/ProductionEstimatesFramework.md` definiuje E0–E4, throughput baseline, estimate states i forecasting bez wymyślonych osobodni. `design/MeasurementPlaytestEvidence.md` definiuje wspólną provenance i lifecycle dowodu dla liczbowych locków. Implementacja systemów i content pipeline nie musi czekać na dalsze dopisywanie fabuły ani arbitralne limity.
 
 Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line writing/VO/lokalizacja, exact historical-final locators i formy, final art/AVFX/audio IDs/warianty oraz targety performance i estymaty kalendarzowe wymagające pomiarów.
 
@@ -29,9 +29,10 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 | Animation/VFX/audio budgets | design/AnimationVfxAudioBudgetContract.md + design/ProductionAssetManifests.md | planning v0.1; numeric ceilings otwarte |
 | Streaming/memory budgets | design/StreamingMemoryBudgetContract.md + design/ProductionAssetManifests.md | planning v0.1; numeric RAM/VRAM/IO targets otwarte |
 | AI/encounter budgets | design/AiEncounterDensityBudgetContract.md + design/RegionalEncounterRosters.md | planning v0.1; agent/CPU/query/density targets otwarte |
+| Measurement/playtest evidence | design/MeasurementPlaytestEvidence.md + technical/TestingAndPerformance.md | evidence contract v0.1; stable IDs, build/scenario/hardware provenance, artifact/acceptance/retest lifecycle |
 | Production estimates | design/ProductionEstimatesFramework.md + design/ContentProduction.md | framework v0.1: E0–E4, baseline/sample/evidence, estimate states i forecasting; velocity/capacity/osobodni/daty pozostają measurement-gated |
 | Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md | v0.1; pomiary performance otwarte |
-| Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md + ProductionEstimatesFramework.md | planning contract; release evidence i real throughput otwarte |
+| Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md + ProductionEstimatesFramework.md + MeasurementPlaytestEvidence.md | planning + evidence contract; release evidence i real throughput otwarte |
 | Material culture research | research/material-culture/* + research/cultures/* | family-level production research PASS v0.1; exact locators per asset |
 | Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + design/ProductionAssetManifests.md | R0–R6 concrete stable manifest records v0.1; final forms/art/performance lock otwarte |
 
@@ -50,16 +51,18 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 11. tuning pogody, traversal, ekonomii, AI i encounterów po playtestach;
 12. nazwy robocze F oraz elementy research/art/playtest/performance lock.
 
+Wspólny format dowodu dla pozycji 1, 7–11 istnieje w `MeasurementPlaytestEvidence.md`; nie oznacza to, że wyniki zostały już zmierzone.
+
 ## Definicja „pełnej dokumentacji projektu”
 
 Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spec, wszystkie główne questy mają karty, każdy region ma bible, każda finalna istota ma research card albo jawny status F, każda finalna kultura ma research package, zakończenia są rozpisane, side-content finalnego scope ma production cards, asset listy istnieją dla pełnego scope, targety performance są zmierzone i release criteria są spełnione.
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** P1–P4 mają implementation/planning-level pass, łącznie z kontraktem estymacji produkcyjnych. Research-sensitive szczegóły oraz liczby wymagające telemetry/playtestów pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** P1–P4 mają implementation/planning-level pass. P5 ma teraz wspólny evidence contract, dzięki czemu kolejne realne pomiary i playtesty mogą zamykać locki bez zmiany semantyki dokumentacji. Research-sensitive szczegóły oraz liczby wymagające telemetry/playtestów pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. P5 measurement/playtest evidence contract i ledger;
+1. P5 scenario manifests dla combat/economy/progression i evidence/reputation;
 2. realne balance/playtest/performance locks z evidence;
 3. measured release evidence i wymagania sprzętowe.
