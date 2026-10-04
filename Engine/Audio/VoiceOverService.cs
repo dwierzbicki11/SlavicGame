@@ -13,6 +13,7 @@ public sealed class VoiceOverService : IDisposable
     private bool _disposed;
 
     public bool IsEnabled => _provider is not null && _player is not null;
+    public float Gain { get; set; } = 1f;
 
     private VoiceOverService(ITextToSpeechProvider? provider, SdlPcmPlayer? player)
     {
@@ -107,7 +108,10 @@ public sealed class VoiceOverService : IDisposable
             {
                 if (_disposed || generation != _generation || cancellationToken.IsCancellationRequested)
                     return;
-                _player!.Play(audio);
+                _player!.Play(
+                    WavPcmLoader.ApplyGain(
+                        audio,
+                        Math.Clamp(Gain, 0f, 1f)));
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

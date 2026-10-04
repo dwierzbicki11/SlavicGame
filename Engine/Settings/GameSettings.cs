@@ -605,6 +605,14 @@ public sealed class GameSettings
     public bool Fullscreen { get; set; } = true;
     public bool VSync { get; set; }
     public bool ShowFps { get; set; } = true;
+
+    public float MasterVolume { get; set; } = 0.90f;
+    public float MusicVolume { get; set; } = 0.55f;
+    public float AmbienceVolume { get; set; } = 0.75f;
+    public float EffectsVolume { get; set; } = 0.85f;
+    public float VoiceVolume { get; set; } = 0.90f;
+    public float UiVolume { get; set; } = 0.80f;
+
     public RenderResolution Resolution { get; set; } = RenderResolution.Hd720;
     public RenderResolution WindowResolution { get; set; } = RenderResolution.Hd720;
 
@@ -652,6 +660,12 @@ public sealed class GameSettings
     {
         FieldOfViewDegrees = Math.Clamp(FieldOfViewDegrees, 50f, 100f);
         MouseSensitivity = Math.Clamp(MouseSensitivity, 0.25f, 3.0f);
+        MasterVolume = Math.Clamp(MasterVolume, 0f, 1f);
+        MusicVolume = Math.Clamp(MusicVolume, 0f, 1f);
+        AmbienceVolume = Math.Clamp(AmbienceVolume, 0f, 1f);
+        EffectsVolume = Math.Clamp(EffectsVolume, 0f, 1f);
+        VoiceVolume = Math.Clamp(VoiceVolume, 0f, 1f);
+        UiVolume = Math.Clamp(UiVolume, 0f, 1f);
 
         if (!Enum.IsDefined(Resolution))
             Resolution = RenderResolution.Hd720;

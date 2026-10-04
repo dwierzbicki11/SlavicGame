@@ -5,7 +5,8 @@ public enum SettingCategory
     Display,
     Controls,
     Graphics,
-    PostProcessing
+    PostProcessing,
+    Audio
 }
 
 public sealed record SettingDefinition(
@@ -56,6 +57,19 @@ public static class SettingsCatalog
             s => FrameLimitName(s.FpsLimit),
             (s, direction) =>
                 s.FpsLimit = CycleEnum(s.FpsLimit, direction)),
+
+        Volume("master-volume", "GLOSNOSC GLOWNA",
+            s => s.MasterVolume, (s, v) => s.MasterVolume = v),
+        Volume("music-volume", "MUZYKA",
+            s => s.MusicVolume, (s, v) => s.MusicVolume = v),
+        Volume("ambience-volume", "AMBIENT",
+            s => s.AmbienceVolume, (s, v) => s.AmbienceVolume = v),
+        Volume("effects-volume", "EFEKTY",
+            s => s.EffectsVolume, (s, v) => s.EffectsVolume = v),
+        Volume("voice-volume", "GLOSY",
+            s => s.VoiceVolume, (s, v) => s.VoiceVolume = v),
+        Volume("ui-volume", "INTERFEJS",
+            s => s.UiVolume, (s, v) => s.UiVolume = v),
 
         new(
             "fov",
@@ -457,6 +471,24 @@ public static class SettingsCatalog
             ShadowQuality.High => "4096",
             _ => "2048"
         };
+
+    private static SettingDefinition Volume(
+        string id,
+        string label,
+        Func<GameSettings, float> getter,
+        Action<GameSettings, float> setter) =>
+        new(
+            id,
+            SettingCategory.Audio,
+            label,
+            s => $"{getter(s) * 100f:0}%",
+            (s, direction) =>
+                setter(
+                    s,
+                    Math.Clamp(
+                        getter(s) + Math.Sign(direction) * 0.05f,
+                        0f,
+                        1f)));
 
     private static SettingDefinition Toggle(
         string id,
