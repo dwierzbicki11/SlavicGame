@@ -38,4 +38,7 @@ public sealed class LootContainerUiController
 
     public LootContainerResult TakeAll(InteractionTarget target) =>
         _state.LootAll(target, _container, _inventory, _questEvent);
+
+    public LootContainerResult Store(InteractionTarget target, string itemId, int quantity) =>
+        _state.Store(target, _container, _inventory, itemId, quantity);
 }
