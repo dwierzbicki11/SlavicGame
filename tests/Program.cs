@@ -40,6 +40,7 @@ WeatherVisualRegression.Run(Check);
 CampfireInteractionRegression.Run(Check);
 FootprintTrailRegression.Run(Check);
 NpcDialogueRegression.Run(Check);
+NpcWeatherBehaviorRegression.Run(Check);
 WildlifeRegression.Run(Check);
 WildlifeTrackingRegression.Run(Check);
 
