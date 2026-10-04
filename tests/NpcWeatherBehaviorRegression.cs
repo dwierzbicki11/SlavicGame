@@ -15,7 +15,7 @@ internal static class NpcWeatherBehaviorRegression
             .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
             .ToArray();
 
-        check(normalAmbient.Length == 8 &&
+        check(normalAmbient.Length == 14 &&
               normalAmbient.All(actor =>
                   actor.Activity != NpcSituationalBehavior.StormShelterActivity),
             "Ambient settlers keep their normal daytime routines in clear weather");
@@ -36,15 +36,15 @@ internal static class NpcWeatherBehaviorRegression
             .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
             .ToArray();
 
-        check(sheltered.Length == 8 &&
+        check(sheltered.Length == 14 &&
               sheltered.All(actor =>
                   actor.Activity == NpcSituationalBehavior.StormShelterActivity),
-            "All eight ambient settlers switch to storm shelter routines in severe weather");
+            "All fourteen ambient settlers switch to storm shelter routines in severe weather");
 
         check(sheltered
                 .Select(actor => (actor.Position.X, actor.Position.Z))
                 .Distinct()
-                .Count() >= 6,
+                .Count() >= 10,
             "Storm shelter routines keep residents distributed instead of stacking at one point");
 
         var guard = world.NpcWorld.Find("community-guard");
