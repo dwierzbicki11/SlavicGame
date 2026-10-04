@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <ffx_api/ffx_types.h>
+#include <ffx_api/ffx_upscale.h>
 
 #ifdef __cplusplus
 extern "C" {
