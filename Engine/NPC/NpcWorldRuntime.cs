@@ -29,6 +29,12 @@ public static class NpcPresentation
         "settler-carrier-01" => "TRAGARZ",
         "settler-elder-01" => "STARSZY MIESZKANIEC",
         "settler-traveler-01" => "PODROZNY",
+        "settler-smith-helper-01" => "POMOCNIK KOWALA",
+        "settler-weaver-01" => "TKACZKA",
+        "settler-shepherd-01" => "PASTERZ",
+        "settler-gatherer-01" => "ZBIERACZKA",
+        "settler-fisher-01" => "RYBAK",
+        "settler-youth-01" => "MLODY MIESZKANIEC",
         _ => id.Replace('-', ' ').ToUpperInvariant()
     };
 
@@ -295,6 +301,27 @@ public sealed class NpcWorldRuntime
 
             ("settler-traveler-01", "old-village", "arrive-and-trade") => new(2f, -109f),
             ("settler-traveler-01", "old-village", _) => new(18f, -76f),
+
+            ("settler-smith-helper-01", "old-village", "forge-work") => new(22f, -91f),
+            ("settler-smith-helper-01", "old-village", _) => new(17f, -99f),
+
+            ("settler-weaver-01", "old-village", "weave-work") => new(-17f, -78f),
+            ("settler-weaver-01", "old-village", _) => new(-21f, -94f),
+
+            ("settler-shepherd-01", "old-village", "drive-flock") => new(22f, -71f),
+            ("settler-shepherd-01", "old-village", "graze-flock") => new(30f, -64f),
+            ("settler-shepherd-01", "old-village", _) => new(24f, -80f),
+
+            ("settler-gatherer-01", "old-village", "gather-herbs") => new(-34f, -56f),
+            ("settler-gatherer-01", "old-village", "sort-herbs") => new(7f, -90f),
+            ("settler-gatherer-01", "old-village", _) => new(10f, -98f),
+
+            ("settler-fisher-01", "black-swamp", "river-fishing") => new(111f, 27f),
+            ("settler-fisher-01", "old-village", "mend-nets") => new(20f, -75f),
+            ("settler-fisher-01", "old-village", _) => new(24f, -82f),
+
+            ("settler-youth-01", "old-village", "run-errands") => new(-1f, -84f),
+            ("settler-youth-01", "old-village", _) => new(6f, -96f),
 
             _ => LocationCenter(locationId)
         };
