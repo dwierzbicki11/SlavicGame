@@ -270,6 +270,11 @@ public sealed class WorldState
             }
         }
 
+        position = R0FordSideQuest.ResolveTraversal(
+            this,
+            position,
+            radius);
+
         position.X = Math.Clamp(position.X, -halfWidth, halfWidth);
         position.Y = Math.Clamp(position.Y, -halfDepth, halfDepth);
         return position;

@@ -28,8 +28,8 @@ internal static class WorldItemVisualRegression
                 },
                 StringComparer.Ordinal);
 
-        check(models.Count == 5,
-            "World item pass includes the missing-tools axe plus four existing tracked GLB assets");
+        check(models.Count == 8,
+            "World item pass includes persistent R0 ford variants plus existing quest/resource GLBs");
 
         var world = WorldGenerator.Generate();
         var quest = world.Progress.Quests.Get(
@@ -40,13 +40,19 @@ internal static class WorldItemVisualRegression
         var herb = Find("visual.resource.marsh-herb");
         var thread = Find("visual.quest.ritual-thread");
         var missingAxe = Find("visual.side.missing-tools.axe");
+        var brokenFord = Find("visual.side.sq-r0-01.broken-ford");
+        var repairedFord = Find("visual.side.sq-r0-01.repaired-ford");
+        var bypassMarker = Find("visual.side.sq-r0-01.bypass-marker");
 
         check(!WorldItemVisualCatalog.IsVisible(world, keepsake) &&
               WorldItemVisualCatalog.IsVisible(world, resin) &&
               WorldItemVisualCatalog.IsVisible(world, herb) &&
               !WorldItemVisualCatalog.IsVisible(world, thread) &&
-              !WorldItemVisualCatalog.IsVisible(world, missingAxe),
-            "New game shows gatherable resources but hides gated quest and side-quest items");
+              !WorldItemVisualCatalog.IsVisible(world, missingAxe) &&
+              WorldItemVisualCatalog.IsVisible(world, brokenFord) &&
+              !WorldItemVisualCatalog.IsVisible(world, repairedFord) &&
+              !WorldItemVisualCatalog.IsVisible(world, bypassMarker),
+            "New game shows resources and the broken ford while hiding gated side-quest variants");
 
         TerrainVertex[] initialVertices = [];
         uint[] initialIndices = [];
@@ -123,9 +129,13 @@ internal static class WorldItemVisualRegression
             ref consumedVertices,
             ref consumedIndices);
 
-        check(consumedVertices.Length == 0 &&
-              consumedIndices.Length == 0,
-            "Collected P0 item visuals leave no stale dynamic geometry");
+        check(consumedVertices.Length > 0 &&
+              consumedIndices.Length > 0 &&
+              !WorldItemVisualCatalog.IsVisible(world, keepsake) &&
+              !WorldItemVisualCatalog.IsVisible(world, resin) &&
+              !WorldItemVisualCatalog.IsVisible(world, herb) &&
+              !WorldItemVisualCatalog.IsVisible(world, thread),
+            "Collected item visuals disappear while persistent broken-ford world-state geometry remains");
 
         WorldItemVisualDefinition Find(string id) =>
             WorldItemVisualCatalog.Definitions.Single(
