@@ -31,6 +31,9 @@ public static class WildlifeModelMesh
 
         foreach (var actor in world.Wildlife.Actors)
         {
+            if (actor.Looted)
+                continue;
+
             var delta = actor.Position - cameraPosition;
             if (delta.LengthSquared() > maxDistanceSquared)
                 continue;
