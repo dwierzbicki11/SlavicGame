@@ -86,7 +86,8 @@ including temporal history and sharpening. CI additionally dispatches through
 the game's C#/Veldrid adapter, reads asymmetric color quadrants, and checks
 orientation, context growth and history reset. Mesa lavapipe runs these tests
 without a window or physical GPU. These checks do not establish in-game FPS or
-visual quality on a Vega 7; the runtime remains opt-in until hardware validation.
+visual quality on a Vega 7; real-hardware validation is still required before
+making FSR3 the default in any graphics preset.
 
 ## UI behavior
 
