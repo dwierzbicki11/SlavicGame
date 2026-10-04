@@ -464,9 +464,9 @@ public sealed class PbrModelRenderer : IDisposable
             var end = range.IndexStart + range.IndexCount;
             for (var i = range.IndexStart; i < end; i++)
             {
-                var vertexIndex = mesh.Indices[i];
-                if (vertexIndex < foliageVertices.Length)
-                    foliageVertices[vertexIndex] = true;
+                var vertexIndex = mesh.Indices[checked((int)i)];
+                if (vertexIndex < (uint)foliageVertices.Length)
+                    foliageVertices[checked((int)vertexIndex)] = true;
             }
         }
 
