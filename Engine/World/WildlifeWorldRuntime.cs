@@ -149,6 +149,48 @@ public static class WildlifeLayout
     ];
 }
 
+public sealed record WildlifeSnapshot(
+    string Id,
+    Vector3 Position,
+    float Health,
+    bool Looted);
+
+public sealed record WildlifeLoot(
+    string ItemId,
+    int Quantity);
+
+public static class WildlifeHarvestCatalog
+{
+    public static IReadOnlyList<WildlifeLoot> For(
+        WildlifeSpecies species) => species switch
+    {
+        WildlifeSpecies.Deer =>
+        [
+            new("venison", 3),
+            new("deer-hide", 1)
+        ],
+
+        WildlifeSpecies.Boar =>
+        [
+            new("boar-meat", 3),
+            new("boar-hide", 1)
+        ],
+
+        WildlifeSpecies.Wolf =>
+        [
+            new("wolf-pelt", 1),
+            new("wolf-fang", 2)
+        ],
+
+        WildlifeSpecies.Raven =>
+        [
+            new("raven-feather", 2)
+        ],
+
+        _ => []
+    };
+}
+
 public sealed class WildlifeWorldRuntime
 {
     private sealed class State(WildlifeSpawnDefinition spawn)
