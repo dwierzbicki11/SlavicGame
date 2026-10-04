@@ -28,6 +28,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly PbrModelRenderer _pbrModels = new();
     private readonly FarVegetationRenderer _farVegetation = new();
 
+    private FidelityFxUpscaler? _fsr3Upscaler;
     private GraphicsDevice? _graphicsDevice;
     private CommandList? _commandList;
     private DeviceBuffer? _projectionBuffer;
@@ -62,6 +63,8 @@ public sealed class VeldridRenderer : IDisposable
     private bool _initialized;
     private bool _disposed;
     private bool _temporalInputsEnabled;
+    private bool _fsr3Requested;
+    private bool _fsr3DisabledAfterError;
     private uint _actorIndexCount;
     private uint _actorVertexCapacity;
     private uint _actorIndexCapacity;
@@ -279,7 +282,10 @@ public sealed class VeldridRenderer : IDisposable
             _graphicsDevice.SwapchainFramebuffer.Height,
             msaaQuality);
 
-        _temporalInputsEnabled = TemporalInputPolicy.IsEnabled();
+        _fsr3Requested = FidelityFxUpscalerPolicy.IsRequested();
+        _temporalInputsEnabled =
+            TemporalInputPolicy.IsEnabled() ||
+            _fsr3Requested;
         if (_temporalInputsEnabled &&
             _resolutionScaler.SampleableDepthView is { } temporalDepth &&
             _resolutionScaler.SampleableDepthTexture is { } temporalDepthTexture)
@@ -310,6 +316,36 @@ public sealed class VeldridRenderer : IDisposable
             EngineLog.Info(
                 "Temporal FSR inputs deferred while scene MSAA is active; " +
                 "temporal upscaling requires single-sample depth.");
+        }
+
+        if (_fsr3Requested &&
+            _motionVectors.IsInitialized &&
+            _reactiveMask.IsInitialized)
+        {
+            var outputWidth =
+                Math.Max(1u, _graphicsDevice.SwapchainFramebuffer.Width);
+            var outputHeight =
+                Math.Max(1u, _graphicsDevice.SwapchainFramebuffer.Height);
+
+            if (FidelityFxUpscaler.TryCreate(
+                    _graphicsDevice,
+                    outputWidth,
+                    outputHeight,
+                    out _fsr3Upscaler,
+                    out var fsr3Diagnostic))
+            {
+                _resolutionScaler.EnsureFsr3Output(
+                    outputWidth,
+                    outputHeight);
+                EngineLog.Info(fsr3Diagnostic);
+            }
+            else
+            {
+                _fsr3DisabledAfterError = true;
+                EngineLog.Warn(
+                    "FSR3 request fell back to the normal presentation path: " +
+                    fsr3Diagnostic);
+            }
         }
 
         var sceneOutput =
@@ -442,6 +478,7 @@ public sealed class VeldridRenderer : IDisposable
         Camera3D camera,
         double fps,
         double animationSeconds,
+        double frameDeltaSeconds,
         GameSettings settings,
         MenuView? menuView)
     {
@@ -477,15 +514,24 @@ public sealed class VeldridRenderer : IDisposable
         var displayWidth = Math.Max(1u, swapchainFramebuffer.Width);
         var displayHeight = Math.Max(1u, swapchainFramebuffer.Height);
         var aspect = MathF.Max(0.1f, (float)width / height);
+        var fsr3Active =
+            _fsr3Upscaler is { IsReady: true } &&
+            !_fsr3DisabledAfterError;
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(
             camera.FieldOfView, aspect, camera.NearPlane, camera.FarPlane);
         var view = Matrix4x4.CreateLookAt(camera.Position, camera.Target, Vector3.UnitY);
+        var jitterPhaseCount = fsr3Active
+            ? TemporalFrameState.FsrJitterPhaseCount(
+                width,
+                displayWidth)
+            : 8;
         var temporalFrame = _temporalFrame.BeginFrame(
             projection,
             view,
             width,
             height,
-            enableJitter: false);
+            enableJitter: fsr3Active,
+            jitterPhaseCount: jitterPhaseCount);
         projection = temporalFrame.Projection;
 
         ActorModelMesh.Build(
@@ -1193,19 +1239,83 @@ public sealed class VeldridRenderer : IDisposable
             sceneOutputDescription.ColorAttachments[0].Format);
 
         TextureView presentationSource = resolvedScene;
+        Texture presentationTexture =
+            _resolutionScaler.ResolvedSceneTexture;
         if (_postProcess.IsNeeded(settings))
         {
             presentationSource = _postProcess.Render(
                 _commandList,
-                settings);
+                settings,
+                disableFxaa: fsr3Active);
+            presentationTexture =
+                _postProcess.OutputTexture;
         }
 
-        _resolutionScaler.Present(
-            _commandList,
-            swapchainFramebuffer,
-            settings.Upscaler,
-            settings.FsrSharpness,
-            presentationSource);
+        if (fsr3Active &&
+            _fsr3Upscaler is not null &&
+            _resolutionScaler.SampleableDepthTexture is { } fsrDepth)
+        {
+            // Submit all scene, motion, reactive, bloom and post-process work
+            // before recording AMD's native Vulkan compute dispatch.
+            _commandList.End();
+            _graphicsDevice.SubmitCommands(_commandList);
+
+            try
+            {
+                _resolutionScaler.EnsureFsr3Output(
+                    displayWidth,
+                    displayHeight);
+                _fsr3Upscaler.EnsureOutputSize(
+                    displayWidth,
+                    displayHeight);
+                _fsr3Upscaler.Dispatch(
+                    presentationTexture,
+                    fsrDepth,
+                    _motionVectors.MotionVectorTexture,
+                    _reactiveMask.MaskTexture,
+                    _resolutionScaler.Fsr3OutputTexture,
+                    temporalFrame,
+                    (float)Math.Max(0.00001, frameDeltaSeconds),
+                    camera.NearPlane,
+                    camera.FarPlane,
+                    camera.FieldOfView,
+                    settings.FsrSharpness);
+
+                _commandList.Begin();
+                _resolutionScaler.Present(
+                    _commandList,
+                    swapchainFramebuffer,
+                    UpscalerMode.Bilinear,
+                    0f,
+                    _resolutionScaler.Fsr3OutputView);
+            }
+            catch (Exception exception)
+            {
+                _fsr3DisabledAfterError = true;
+                _temporalFrame.Reset();
+                _dynamicMotionHistory.Reset();
+                EngineLog.Warn(
+                    "Native FSR3 dispatch failed; disabling it for this run: " +
+                    exception.Message);
+
+                _commandList.Begin();
+                _resolutionScaler.Present(
+                    _commandList,
+                    swapchainFramebuffer,
+                    settings.Upscaler,
+                    settings.FsrSharpness,
+                    presentationSource);
+            }
+        }
+        else
+        {
+            _resolutionScaler.Present(
+                _commandList,
+                swapchainFramebuffer,
+                settings.Upscaler,
+                settings.FsrSharpness,
+                presentationSource);
+        }
 
         if (_hudVertices.Count > 0)
         {
@@ -1543,6 +1653,8 @@ public sealed class VeldridRenderer : IDisposable
         _menu.Dispose();
         _postProcess.Dispose();
         _bloom.Dispose();
+        _fsr3Upscaler?.Dispose();
+        _fsr3Upscaler = null;
         _reactiveMask.Dispose();
         _motionVectors.Dispose();
         _resolutionScaler.Dispose();
