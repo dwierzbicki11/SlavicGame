@@ -44,7 +44,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 ### P4 — asset i budget lock
 - [x] asset families per region z reuse/LOD/variant strategy na poziomie planowania;
 - [x] konkretne production asset manifests / stable integration records R0–R6 (`design/ProductionAssetManifests.md`); exact historical-final forms i final art IDs pozostają jawnie research/art lockiem;
-- [ ] animation/VFX/audio budgets;
+- [x] animation/VFX/audio budget contract (`design/AnimationVfxAudioBudgetContract.md`): cost/priority classes, reuse, fallback/degradation i measurement gate bez wymyślonych limitów liczbowych;
 - [ ] streaming i memory budgets;
 - [ ] AI/encounter density budgets;
 - [ ] production estimates zależne od faktycznej przepustowości zespołu.
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P3 mają implementation-level pass, a P4 ma już konkretny manifest rodzin i stabilnych punktów integracji assetów R0–R6 bez zgadywania historycznych detali. Następny najmniejszy niezablokowany pakiet to **P4: animation/VFX/audio budget contract**, definiujący klasy kosztu, reuse, priorytety i pomiar zamiast wymyślonych liczbowych limitów. Potem streaming/memory oraz AI/encounter density budgets.
+P1–P3 mają implementation-level pass. P4 ma concrete asset manifests oraz wspólny animation/VFX/audio cost/reuse/degradation/measurement contract. Następny najmniejszy niezablokowany pakiet to **P4: streaming i memory budget contract**, nadal oparty na klasach i measurement gates zamiast niezweryfikowanych MB/GB. Potem AI/encounter density budgets.
