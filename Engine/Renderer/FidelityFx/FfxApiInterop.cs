@@ -10,6 +10,8 @@ internal static class FfxApi
 
     public const uint EnableMotionVectorsJitterCancellation = 1u << 2;
     public const uint EnableAutoExposure = 1u << 5;
+    public const uint EnableNonLinearColorspace = 1u << 8;
+    public const uint DispatchNonLinearColorSrgb = 1u << 1;
     public const uint ResourceUsageReadOnly = 0u;
     public const uint ResourceUsageUav = 1u << 1;
     public const uint ResourceUsageDepthTarget = 1u << 2;
