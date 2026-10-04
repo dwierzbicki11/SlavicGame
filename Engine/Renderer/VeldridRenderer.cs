@@ -454,6 +454,10 @@ public sealed class VeldridRenderer : IDisposable
             _worldItemModels,
             ref actorVertices,
             ref actorIndices);
+        BowProjectileMesh.Append(
+            world,
+            ref actorVertices,
+            ref actorIndices);
         WaterLandscape.AppendSurface(world.Terrain, (float)animationSeconds, camera.Position,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
             ref actorVertices, ref actorIndices);
@@ -751,7 +755,22 @@ public sealed class VeldridRenderer : IDisposable
                 if (!string.IsNullOrWhiteSpace(interactionText))
                     AddGameplayText(interactionText, 18, 242, displayWidth - 36);
 
-                AddGameplayText(world.Melee.Message, 18, 266, displayWidth - 36);
+                AddGameplayText(
+                    world.Bow.IsAiming || world.Bow.IsDrawing
+                        ? world.Bow.Message
+                        : world.Melee.Message,
+                    18,
+                    266,
+                    displayWidth - 36);
+
+                if (world.Bow.IsAiming)
+                {
+                    AddGameplayText(
+                        "+",
+                        displayWidth * 0.5f - 5f,
+                        displayHeight * 0.5f - 10f,
+                        24f);
+                }
 
                 var predatorEncounter = world.Progress.Encounters.Get(
                     SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
