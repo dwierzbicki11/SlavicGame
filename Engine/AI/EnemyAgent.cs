@@ -87,8 +87,10 @@ public sealed class EnemyAgent : IDamageReceiver
 
         if (_hitReactionRemaining > 0.0)
         {
-            _hitReactionRemaining = Math.Max(0.0, _hitReactionRemaining - deltaSeconds);
-            if (_hitReactionRemaining > 0.0)
+            var reactionSeconds = Math.Min(_hitReactionRemaining, deltaSeconds);
+            _hitReactionRemaining -= reactionSeconds;
+            deltaSeconds -= reactionSeconds;
+            if (_hitReactionRemaining > 0.0 || deltaSeconds <= 0.0)
             {
                 return;
             }
