@@ -8,7 +8,7 @@ public static class NpcCrowdSteering
     public const float MinimumSpacing = BodyRadius * 2f;
     public const float PlayerSpacing = 0.72f;
     public const int SolverPasses = 2;
-    public const float MaxPushPerPass = 0.24f;
+    public const float MaxPushPerPass = 0.40f;
 
     public static void Resolve(
         WorldState world,
