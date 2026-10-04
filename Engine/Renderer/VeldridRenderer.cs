@@ -64,6 +64,7 @@ public sealed class VeldridRenderer : IDisposable
     private bool _disposed;
     private bool _temporalInputsEnabled;
     private bool _fsr3Requested;
+    private bool _fsr3ForcedByEnvironment;
     private bool _fsr3DisabledAfterError;
     private uint _actorIndexCount;
     private uint _actorVertexCapacity;
@@ -79,7 +80,8 @@ public sealed class VeldridRenderer : IDisposable
         WorldState world,
         bool vsync,
         TextureQuality textureQuality,
-        MsaaQuality msaaQuality)
+        MsaaQuality msaaQuality,
+        UpscalerMode upscalerMode)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_initialized) return;
@@ -92,7 +94,8 @@ public sealed class VeldridRenderer : IDisposable
                 world,
                 vsync,
                 textureQuality,
-                msaaQuality);
+                msaaQuality,
+                upscalerMode);
             _initialized = true;
         }
         catch
@@ -107,7 +110,8 @@ public sealed class VeldridRenderer : IDisposable
         WorldState world,
         bool vsync,
         TextureQuality textureQuality,
-        MsaaQuality msaaQuality)
+        MsaaQuality msaaQuality,
+        UpscalerMode upscalerMode)
     {
         PresentationPolicy.Apply(vsync);
         VulkanRuntimeCompatibility.EnsureInitialized();
@@ -132,7 +136,10 @@ public sealed class VeldridRenderer : IDisposable
             $"Mesa override={Environment.GetEnvironmentVariable(PresentationPolicy.MesaPresentModeVariable) ?? "<none>"}.");
 
         var fidelityFxProbe = FidelityFxRuntimePolicy.Probe();
-        _fsr3Requested = FidelityFxUpscalerPolicy.IsRequested();
+        _fsr3ForcedByEnvironment = FidelityFxUpscalerPolicy.IsRequested();
+        _fsr3Requested =
+            upscalerMode == UpscalerMode.Fsr3 ||
+            _fsr3ForcedByEnvironment;
         var effectiveMsaa = FidelityFxStartupPolicy.EffectiveMsaa(
             msaaQuality,
             _fsr3Requested,
@@ -524,7 +531,13 @@ public sealed class VeldridRenderer : IDisposable
         var displayWidth = Math.Max(1u, swapchainFramebuffer.Width);
         var displayHeight = Math.Max(1u, swapchainFramebuffer.Height);
         var aspect = MathF.Max(0.1f, (float)width / height);
+        var spatialFallbackUpscaler =
+            settings.Upscaler == UpscalerMode.Fsr3
+                ? UpscalerMode.Fsr1
+                : settings.Upscaler;
         var fsr3Active =
+            (_fsr3ForcedByEnvironment ||
+             settings.Upscaler == UpscalerMode.Fsr3) &&
             _fsr3Upscaler is { IsReady: true } &&
             !_fsr3DisabledAfterError;
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(
@@ -1314,7 +1327,7 @@ public sealed class VeldridRenderer : IDisposable
                 _resolutionScaler.Present(
                     _commandList,
                     swapchainFramebuffer,
-                    settings.Upscaler,
+                    spatialFallbackUpscaler,
                     settings.FsrSharpness,
                     presentationSource);
             }
@@ -1324,7 +1337,7 @@ public sealed class VeldridRenderer : IDisposable
             _resolutionScaler.Present(
                 _commandList,
                 swapchainFramebuffer,
-                settings.Upscaler,
+                spatialFallbackUpscaler,
                 settings.FsrSharpness,
                 presentationSource);
         }

@@ -24,7 +24,7 @@ public static class SettingsPersistenceRegression
                 Fullscreen = false,
                 Resolution = RenderResolution.Hd720,
                 WindowResolution = RenderResolution.FullHd1080,
-                Upscaler = UpscalerMode.Fsr1,
+                Upscaler = UpscalerMode.Fsr3,
                 FsrQuality = FsrQualityMode.Quality,
                 Bloom = BloomQuality.Medium,
                 TextureQuality = TextureQuality.Low
@@ -38,7 +38,7 @@ public static class SettingsPersistenceRegression
                     StringComparison.Ordinal),
                 "Settings persist resolution by stable enum name");
             check(savedJson.Contains(
-                    "\"Upscaler\": \"Fsr1\"",
+                    "\"Upscaler\": \"Fsr3\"",
                     StringComparison.Ordinal),
                 "Settings persist upscaler by stable enum name");
             check(savedJson.Contains(
@@ -49,7 +49,7 @@ public static class SettingsPersistenceRegression
             var roundTrip = store.Load();
             check(roundTrip.Resolution == RenderResolution.Hd720 &&
                   roundTrip.WindowResolution == RenderResolution.FullHd1080 &&
-                  roundTrip.Upscaler == UpscalerMode.Fsr1 &&
+                  roundTrip.Upscaler == UpscalerMode.Fsr3 &&
                   roundTrip.FsrQuality == FsrQualityMode.Quality &&
                   roundTrip.Bloom == BloomQuality.Medium,
                 "Named settings survive save/load round trip");

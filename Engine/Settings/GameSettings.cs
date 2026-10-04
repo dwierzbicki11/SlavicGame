@@ -103,7 +103,8 @@ public enum ModelLodQuality
 public enum UpscalerMode
 {
     Bilinear,
-    Fsr1
+    Fsr1,
+    Fsr3
 }
 
 public enum FsrQualityMode

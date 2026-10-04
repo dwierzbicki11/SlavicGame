@@ -157,20 +157,28 @@ public static class FrontendSettingsRegression
             "Frontend can switch far trees from full meshes to impostors");
 
         var upscaler = definitions.Single(item => item.Id == "upscaler");
+        check(upscaler.RequiresRestart,
+            "Upscaler warns that switching temporal FSR requires renderer restart");
         settings.Upscaler = UpscalerMode.Bilinear;
         upscaler.Change(settings, 1);
-        check(settings.Upscaler == UpscalerMode.Fsr1,
+        check(settings.Upscaler == UpscalerMode.Fsr1 &&
+              upscaler.ValueText(settings) == "FSR1",
             "Frontend can enable AMD FSR1");
+        upscaler.Change(settings, 1);
+        check(settings.Upscaler == UpscalerMode.Fsr3 &&
+              upscaler.ValueText(settings) == "FSR3",
+            "Frontend exposes AMD FSR3 temporal upscaling");
 
         var fsrQuality = definitions.Single(item => item.Id == "fsr-quality");
         settings.Upscaler = UpscalerMode.Bilinear;
         check(fsrQuality.ValueText(settings) == "NIEAKTYWNE",
             "FSR quality reports inactive while bilinear scaling is selected");
-        settings.Upscaler = UpscalerMode.Fsr1;
+        settings.Upscaler = UpscalerMode.Fsr3;
         settings.FsrQuality = FsrQualityMode.Quality;
         fsrQuality.Change(settings, 1);
-        check(settings.FsrQuality == FsrQualityMode.UltraQuality,
-            "Frontend can change FSR1 quality mode");
+        check(settings.FsrQuality == FsrQualityMode.UltraQuality &&
+              fsrQuality.ValueText(settings) == "ULTRA QUALITY",
+            "Frontend can change FSR3 quality mode");
 
         var custom = new ResolutionSize(1152, 648);
         var fsrPerformance = GraphicsQualityCatalog.FsrRenderResolution(
