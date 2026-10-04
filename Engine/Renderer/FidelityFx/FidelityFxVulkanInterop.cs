@@ -2,13 +2,6 @@ using Veldrid;
 
 namespace SlavicGame.Engine.Renderer.FidelityFx;
 
-public readonly record struct FidelityFxVulkanDeviceHandles(
-    nint Instance,
-    nint PhysicalDevice,
-    nint Device,
-    nint GraphicsQueue,
-    uint GraphicsQueueFamilyIndex);
-
 public readonly record struct FidelityFxVulkanImageHandle(
     ulong Image,
     uint Width,

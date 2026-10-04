@@ -29,8 +29,21 @@ ffxQuery and ffxConfigure before the renderer may advertise FSR3.
 
 ### Windows / Vulkan
 
-Run tools/setup-fidelityfx.ps1. The helper downloads AMD's official v1.1.4
-release and extracts amd_fidelityfx_vk.dll into native/fidelityfx/.
+Run `powershell -ExecutionPolicy Bypass -File tools/setup-fidelityfx.ps1`.
+The helper downloads AMD's official signed v1.1.4 Vulkan provider directly
+into `native/fidelityfx/`. Build again after installing it, then launch with
+`SLAVICGAME_FSR3=1` (PowerShell: `$env:SLAVICGAME_FSR3='1'`).
+
+The native context and dispatch path are implemented, but remain opt-in pending
+hardware validation. When requested on Windows with a loadable provider, scene
+MSAA is disabled for that run: FSR supplies temporal AA and needs single-sample
+depth. The saved MSAA preference is preserved. If initialization or dispatch
+fails, spatial presentation resumes and unused temporal passes stop, unless
+`SLAVICGAME_TEMPORAL_INPUTS=1` explicitly requests input validation.
+
+The Vulkan command ring waits only for successfully submitted work. A failed
+recording or queue submission cannot make shutdown wait on a fence that no GPU
+submission can signal.
 
 ### Linux / Vulkan
 

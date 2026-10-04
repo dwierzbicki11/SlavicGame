@@ -131,6 +131,14 @@ public sealed class VeldridRenderer : IDisposable
             $"Mesa override={Environment.GetEnvironmentVariable(PresentationPolicy.MesaPresentModeVariable) ?? "<none>"}.");
 
         var fidelityFxProbe = FidelityFxRuntimePolicy.Probe();
+        _fsr3Requested = FidelityFxUpscalerPolicy.IsRequested();
+        var effectiveMsaa = FidelityFxStartupPolicy.EffectiveMsaa(
+            msaaQuality,
+            _fsr3Requested,
+            OperatingSystem.IsWindows(),
+            fidelityFxProbe.IsAvailable);
+        if (effectiveMsaa != msaaQuality)
+            EngineLog.Info("FSR3 uses temporal anti-aliasing; scene MSAA disabled for this run.");
         var fidelityFxHandles =
             FidelityFxVulkanInterop.GetDeviceHandles(_graphicsDevice);
         EngineLog.Info(
@@ -280,9 +288,8 @@ public sealed class VeldridRenderer : IDisposable
             _graphicsDevice.SwapchainFramebuffer.OutputDescription,
             _graphicsDevice.SwapchainFramebuffer.Width,
             _graphicsDevice.SwapchainFramebuffer.Height,
-            msaaQuality);
+            effectiveMsaa);
 
-        _fsr3Requested = FidelityFxUpscalerPolicy.IsRequested();
         _temporalInputsEnabled =
             TemporalInputPolicy.IsEnabled() ||
             _fsr3Requested;
@@ -345,6 +352,8 @@ public sealed class VeldridRenderer : IDisposable
                 EngineLog.Warn(
                     "FSR3 request fell back to the normal presentation path: " +
                     fsr3Diagnostic);
+                _temporalInputsEnabled = FidelityFxStartupPolicy.NeedsTemporalInputs(
+                    TemporalInputPolicy.IsEnabled(), _fsr3Requested, fsrFailed: true);
             }
         }
 
@@ -1292,6 +1301,8 @@ public sealed class VeldridRenderer : IDisposable
             catch (Exception exception)
             {
                 _fsr3DisabledAfterError = true;
+                _temporalInputsEnabled = FidelityFxStartupPolicy.NeedsTemporalInputs(
+                    TemporalInputPolicy.IsEnabled(), _fsr3Requested, fsrFailed: true);
                 _temporalFrame.Reset();
                 _dynamicMotionHistory.Reset();
                 EngineLog.Warn(
