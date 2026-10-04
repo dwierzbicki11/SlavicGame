@@ -165,6 +165,11 @@ internal static class PlayerJumpRegression
         Frame(world, camera, Idle with { Backward = true, JumpPressed = true }, 0.2);
         check(world.Jump.IsAirborne && world.Footprints.Footprints.Count == 0,
             $"Airborne movement does not paint walking footprints onto the ground (launch {launchPosition}, end {world.PlayerPosition}, velocity {world.Jump.VerticalVelocity}, footprints {world.Footprints.Footprints.Count})");
+        var bankSlow = Simulate(0.1, 0.2, launchPosition, backward: true);
+        var bankFast = Simulate(1.0 / 120.0, 0.2, launchPosition, backward: true);
+        check(bankSlow.Airborne && bankFast.Airborne && Near(bankSlow.HeightAboveStart, 0.98f) &&
+              Vector3.Distance(bankSlow.Position, bankFast.Position) < 0.002f,
+            "The river-bank slope cannot force an early landing at 10 FPS compared with 120 FPS");
 
         RenderedJump(check);
     }
@@ -194,14 +199,17 @@ internal static class PlayerJumpRegression
         }
     }
 
-    private static (Vector3 Position, float HeightAboveStart, float Travel, float Velocity, float Stamina, bool Airborne) Simulate(double step, double duration)
+    private static (Vector3 Position, float HeightAboveStart, float Travel, float Velocity, float Stamina, bool Airborne) Simulate(
+        double step, double duration, Vector3? initialPosition = null, bool backward = false)
     {
-        var world = WorldGenerator.Generate(); var camera = new Camera3D(); var start = world.PlayerPosition;
+        var world = WorldGenerator.Generate(); var camera = new Camera3D();
+        if (initialPosition is { } position) world.SetPlayerPosition(position);
+        var start = world.PlayerPosition;
         var remaining = duration; var first = true;
         while (remaining > 0.000000001)
         {
             var dt = Math.Min(step, remaining);
-            Frame(world, camera, Idle with { Forward = true, JumpPressed = first }, dt);
+            Frame(world, camera, Idle with { Forward = !backward, Backward = backward, JumpPressed = first }, dt);
             first = false; remaining -= dt;
         }
         return (world.PlayerPosition, world.PlayerPosition.Y - start.Y,
