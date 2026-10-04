@@ -34,10 +34,12 @@ public sealed class EnemyAgent : IDamageReceiver
     private const float Damage = 8f;
     private const float AttackIntervalSeconds = 1.2f;
     private const float AlertSeconds = 0.55f;
+    private const float HitReactionSeconds = 0.18f;
 
     private float _patrolSign = 1f;
     private double _alertRemaining;
     private double _attackCooldown;
+    private double _hitReactionRemaining;
     private bool _provokedByDamage;
 
     public string Id { get; }
@@ -49,6 +51,7 @@ public sealed class EnemyAgent : IDamageReceiver
     public float Health { get; private set; } = 60f;
     public EnemyState State { get; private set; } = EnemyState.Patrol;
     public bool IsAlive => Health > 0f;
+    public bool IsHitReacting => _hitReactionRemaining > 0.0;
 
     public EnemyAgent(string id, Vector3 homePosition)
     {
@@ -75,6 +78,15 @@ public sealed class EnemyAgent : IDamageReceiver
         {
             State = EnemyState.Dead;
             return;
+        }
+
+        if (_hitReactionRemaining > 0.0)
+        {
+            _hitReactionRemaining = Math.Max(0.0, _hitReactionRemaining - deltaSeconds);
+            if (_hitReactionRemaining > 0.0)
+            {
+                return;
+            }
         }
 
         _attackCooldown = Math.Max(0.0, _attackCooldown - deltaSeconds);
@@ -184,6 +196,7 @@ public sealed class EnemyAgent : IDamageReceiver
         State = Health <= 0f ? EnemyState.Dead : snapshot.State;
         _alertRemaining = 0;
         _attackCooldown = State == EnemyState.Attack ? AttackIntervalSeconds : 0;
+        _hitReactionRemaining = 0;
         _provokedByDamage = false;
     }
 
@@ -214,11 +227,13 @@ public sealed class EnemyAgent : IDamageReceiver
         {
             State = EnemyState.Dead;
             _alertRemaining = 0;
+            _hitReactionRemaining = 0;
             _provokedByDamage = false;
             return;
         }
 
         _provokedByDamage = true;
+        _hitReactionRemaining = HitReactionSeconds;
 
         // A hit can wake or re-alert an enemy, but it must not make an enemy that is
         // already pursuing or attacking forget its engagement and replay Alert.
