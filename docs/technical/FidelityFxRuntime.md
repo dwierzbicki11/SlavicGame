@@ -1,7 +1,8 @@
 # FidelityFX / FSR 3 Vulkan runtime
 
-SlavicGame has an opt-in AMD FidelityFX Super Resolution 3.1.4 temporal
-upscaler for Vulkan on Windows and Linux. Frame generation is not implemented.
+SlavicGame integrates AMD FidelityFX Super Resolution 3.1.4 temporal
+upscaling for Vulkan on Windows and Linux. It is selectable in the in-game
+UPSCALER setting as FSR3. Frame generation is not implemented.
 
 ## Pinned SDK
 
@@ -31,11 +32,12 @@ ffxQuery and ffxConfigure before the renderer may advertise FSR3.
 
 Run `powershell -ExecutionPolicy Bypass -File tools/setup-fidelityfx.ps1`.
 The helper downloads AMD's official signed v1.1.4 Vulkan provider directly
-into `native/fidelityfx/`. Build again after installing it, then launch with
-`SLAVICGAME_FSR3=1` (PowerShell: `$env:SLAVICGAME_FSR3='1'`).
+into `native/fidelityfx/`. Build again after installing it, then select **FSR3** in the graphics settings.
+`SLAVICGAME_FSR3=1` (PowerShell: `$env:SLAVICGAME_FSR3='1'`) remains a
+developer override that forces the temporal path regardless of the saved menu
+selection.
 
-The native context and dispatch path are implemented, but remain opt-in pending
-hardware validation. When requested on Windows or Linux with a loadable provider, scene
+When FSR3 is selected on Windows or Linux with a loadable provider, scene
 MSAA is disabled for that run: FSR supplies temporal AA and needs single-sample
 depth. The saved MSAA preference is preserved. If initialization or dispatch
 fails, spatial presentation resumes and unused temporal passes stop, unless
@@ -54,7 +56,8 @@ builds `libslavic_fsr3_vk.so` from the pinned AMD sources and installs it under
 ```bash
 sudo apt install git cmake g++ python3 libvulkan-dev glslang-tools mesa-vulkan-drivers
 bash tools/setup-fidelityfx.sh --test
-SLAVICGAME_FSR3=1 ./run.sh
+./run.sh
+# Then choose UPSCALER -> FSR3 in the graphics menu.
 ```
 
 Build the game again after installing the provider so the `.so` and AMD license
@@ -85,15 +88,14 @@ orientation, context growth and history reset. Mesa lavapipe runs these tests
 without a window or physical GPU. These checks do not establish in-game FPS or
 visual quality on a Vega 7; the runtime remains opt-in until hardware validation.
 
-## UI rule
+## UI behavior
 
-Do **not** expose an FSR3 setting merely because temporal inputs or the DLL
-exist. The option becomes user-visible only after:
+The graphics menu exposes **BILINEAR**, **FSR1** and **FSR3**. Switching the
+upscaler is marked as requiring a restart because temporal FSR changes the
+startup MSAA/depth policy and creates native FidelityFX resources.
 
-- a FidelityFX context is created successfully;
-- color/depth/motion/reactive resources are dispatched through FSR;
-- output is presented upright on Vulkan;
-- resize/history reset works;
-- CI plus real runtime validation passes.
-
-Until then FSR1/native presentation remains the production fallback.
+If the FSR3 provider is unavailable, context creation fails or a dispatch fails,
+the renderer falls back to the existing FSR1 presentation path for that run.
+The saved FSR3 preference is preserved so it can become active after the native
+provider is installed. The environment override remains available for
+diagnostics and CI.
