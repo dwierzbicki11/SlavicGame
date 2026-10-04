@@ -50,6 +50,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] production estimates framework (`design/ProductionEstimatesFramework.md`): E0–E4, throughput baseline, estimate states, capacity/dependency forecasting i re-estimation; osobodni/terminy pozostają measurement lockiem do czasu zebrania realnych próbek.
 
 ### P5 — playtest/measurement lock
+- [x] measurement/playtest evidence contract i ledger format (`design/MeasurementPlaytestEvidence.md`): stabilne evidence/scenario/lock/hardware IDs, build+artifact provenance, acceptance/retest policy i macierz domen;
 - [ ] combat/economy/progression tuning;
 - [ ] evidence/reputation thresholds;
 - [ ] traversal/weather/day-night tuning;
@@ -68,4 +69,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P4 mają implementation/planning-level pass. Następny etap to **P5: playtest/measurement locks**. Najmniejszy niezablokowany pakiet dokumentacyjny to measurement/playtest evidence contract i ledger: wspólny format zapisu prób, build/scenario/hardware, wyniku, acceptance oraz powiązania z otwartymi lockami. Same wartości balansu i performance pozostają otwarte do czasu realnych testów.
+P1–P4 mają implementation/planning-level pass, a wspólny kontrakt evidence dla P5 jest zdefiniowany. Następny najmniejszy niezablokowany pakiet dokumentacyjny to **konkretne scenario manifests dla combat/economy/progression i evidence/reputation**: przygotowanie reprodukowalnych scenariuszy i acceptance inputs bez wpisywania wyników, których jeszcze nie zmierzono. Finalne wartości pozostają otwarte do realnych playtestów.
