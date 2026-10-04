@@ -12,6 +12,8 @@ public static class WaterLandscape
     public const float BankInset = 1.40f;
     public const float BankShoulderWidth = 8f;
     public const float DownstreamSlope = 0.0012f;
+    public const float R0FordZ = -110f;
+    public const float R0BypassZ = -72f;
 
     private const float SurfaceStep = 4f;
     private const int SurfaceColumns = 5;
@@ -31,7 +33,27 @@ public static class WaterLandscape
         Level - z * DownstreamSlope;
 
     public static float BedLevel(float z) =>
-        WaterLevel(z) - BedDepth;
+        WaterLevel(z) - ChannelDepth(z);
+
+    public static float ChannelDepth(float z)
+    {
+        var depth = BedDepth;
+        depth = MathF.Min(
+            depth,
+            LocalCrossingDepth(
+                z,
+                R0FordZ,
+                shallowDepth: 0.28f,
+                halfLength: 7.5f));
+        depth = MathF.Min(
+            depth,
+            LocalCrossingDepth(
+                z,
+                R0BypassZ,
+                shallowDepth: 0.36f,
+                halfLength: 6.0f));
+        return depth;
+    }
 
     public static float BankDistance(Vector2 point) =>
         MathF.Abs(point.X - CenterX(point.Y)) - HalfWidth(point.Y);
@@ -62,7 +84,7 @@ public static class WaterLandscape
                 1f);
             var edgeBlend = SmoothStep(0.58f, 1f, normalized);
             var target = Lerp(
-                water - BedDepth,
+                water - ChannelDepth(z),
                 water - ShoreDepth,
                 edgeBlend);
 
@@ -262,6 +284,23 @@ public static class WaterLandscape
                 indices.Add(start + 2);
             }
         }
+    }
+
+    private static float LocalCrossingDepth(
+        float z,
+        float centerZ,
+        float shallowDepth,
+        float halfLength)
+    {
+        var distance = MathF.Abs(z - centerZ);
+        if (distance >= halfLength)
+            return BedDepth;
+
+        var t = SmoothStep(
+            0f,
+            1f,
+            distance / halfLength);
+        return Lerp(shallowDepth, BedDepth, t);
     }
 
     private static float Lerp(float a, float b, float t) =>
