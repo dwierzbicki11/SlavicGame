@@ -106,7 +106,73 @@ public static class CommunityDialogueCatalog
             "Jeśli uspokoiłeś zjawę, pilnuj, kto będzie opowiadał tę historię. Ludzie dodają własne zakończenia.",
             "To dobra historia do opowiadania przy drodze: jedno miejsce, dwa zagrożenia i człowiek, który ich nie pomylił.",
             "W deszcz zostanę tu dłużej. Koła ugrzęzną szybciej niż ja zdążę pożałować wyjazdu.",
-            "Podróżny po zmroku liczy ogniska. Każde następne oznacza, że droga jeszcze żyje.")
+            "Podróżny po zmroku liczy ogniska. Każde następne oznacza, że droga jeszcze żyje."),
+
+new(
+            "settler-smith-helper-01",
+            "com.smithhelper",
+            "Kowal mówi, że żelazo zdradza po dźwięku, czy było dobrze grzane.",
+            "Jeśli przeprawa jest uszkodzona, pewnie zaraz będą chcieli nowych okuć i gwoździ.",
+            "Dobrze, że bestia padła. Mniej ostrzy pójdzie teraz na strach, więcej na robotę.",
+            "Skoro światło ucichło, nocna warta może przestać brać dwa razy tyle oszczepów.",
+            "Jak naprawią drogę, kuźnia będzie miała pełne ręce pracy przez kilka dni.",
+            "W deszcz dym wraca do środka. W kuźni od razu czuć to w oczach.",
+            "Nocą ogień wygląda jaśniej, ale młot brzmi za głośno dla śpiącej wsi."),
+
+        new(
+            "settler-weaver-01",
+            "com.weaver",
+            "Dobra nić musi być równa. Inaczej cały wzór zaczyna uciekać.",
+            "Od kiedy ludzie boją się mokradeł, częściej proszą o grubsze okrycia na noc.",
+            "Jeśli drapieżnika już nie ma, pasterze przestaną wracać przed zmierzchem.",
+            "Kiedy zniknęło światło, pierwszy raz od dawna ktoś poprosił mnie o barwne płótno, nie żałobne.",
+            "Może wieś wreszcie zacznie myśleć o czymś innym niż o drodze na mokradła.",
+            "Wilgoć jest najgorsza dla nici. Wszystko schnie dwa razy dłużej.",
+            "Po zmroku pracuję tylko przy lampie. Wzór bez światła kłamie."),
+
+        new(
+            "settler-shepherd-01",
+            "com.shepherd",
+            "Owce szybciej niż człowiek czują, kiedy coś w lesie jest nie tak.",
+            "Stado nie chce iść w stronę mokradeł. Nawet gdy człowiek je ciągnie.",
+            "Po śmierci drapieżnika powinno być spokojniej, ale zwierzęta jeszcze pamiętają zapach.",
+            "Nocne światło znikło, a stado przestało zbijać się w jeden kłąb.",
+            "Jeśli oba zagrożenia minęły, jutro poprowadzę je dalej niż zwykle.",
+            "Deszcz przygniata wełnę. Potem wszystko trzeba długo suszyć.",
+            "Po nocy liczę sztuki dwa razy. Cień i owca łatwo się mylą."),
+
+        new(
+            "settler-gatherer-01",
+            "com.gatherer",
+            "Najlepsze zioła rosną tam, gdzie ludzie rzadko depczą ziemię.",
+            "Przez mokradła teraz chodzę tylko do pierwszych wierzb. Dalej nie ryzykuję.",
+            "Jeśli bestii nie ma, wrócę po korzenie, których od tygodnia nie zbierałam.",
+            "Światło ucichło. Może znowu da się zbierać po zachodzie, zanim rosa siądzie.",
+            "Dobrze, że rozdzieliłeś ślady bestii od śladów zjawy. Ziemia mówi różnymi głosami.",
+            "Po deszczu rośliny pachną mocniej, ale ścieżki znikają szybciej.",
+            "Nocą zbiera się tylko to, co zna się bez patrzenia."),
+
+        new(
+            "settler-fisher-01",
+            "com.fisher",
+            "Ryba bierze najlepiej, kiedy woda niesie trochę mułu, ale nie całe drzewo.",
+            "Przy mokradłach ostatnio było za cicho. Nawet ptaki milkły wcześniej.",
+            "Po bestii zostały ślady przy wodzie. Dobrze, że już nie będzie płoszyć ryb.",
+            "Odkąd nocne światło znikło, tafla znowu wygląda jak woda, nie jak oko.",
+            "Jeśli oba kłopoty minęły, rano postawię pułapki dalej od brzegu.",
+            "Deszcz pomaga rzece, ale człowiekowi przeszkadza wiązać sieci.",
+            "Nocą nie łowię sam. Woda za dobrze niesie dźwięk."),
+
+        new(
+            "settler-youth-01",
+            "com.youth",
+            "Jak biegnę od bramy do kuźni, stary strażnik mówi, że kiedyś robił to szybciej.",
+            "Wszyscy mówią, żebym nie chodził na mokradła. To znaczy, że naprawdę coś tam jest.",
+            "Słyszałem, że bestia padła. Chciałem zobaczyć ślady, ale mnie nie puścili.",
+            "Światło znikło? To może teraz dorośli przestaną szeptać, kiedy dzieci są obok.",
+            "Jak droga będzie bezpieczna, pierwszy pobiegnę sprawdzić, czy kładka stoi.",
+            "W deszcz i tak każą mi biegać z wiadomościami. Tylko błoto jest głębsze.",
+            "Po zmroku już nie biegam za bramę. Nie dlatego, że się boję. Po prostu nie biegam.")
     ];
 
     private static readonly IReadOnlyDictionary<string, CommunityVoice> VoiceById =
