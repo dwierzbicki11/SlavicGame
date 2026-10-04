@@ -27,14 +27,14 @@ public static class SettingsCatalog
             "resolution",
             SettingCategory.Display,
             "ROZDZIELCZOSC RENDERU",
-            s => s.Upscaler == UpscalerMode.Fsr1 &&
+            s => s.Upscaler is UpscalerMode.Fsr1 or UpscalerMode.Fsr3 &&
                  s.FsrQuality != FsrQualityMode.Custom
                 ? $"AUTO {FsrQualityName(s.FsrQuality)}"
                 : s.ResolutionSize.ToString(),
             (s, direction) =>
             {
                 s.Resolution = ResolutionCatalog.Cycle(s.Resolution, direction);
-                if (s.Upscaler == UpscalerMode.Fsr1)
+                if (s.Upscaler is UpscalerMode.Fsr1 or UpscalerMode.Fsr3)
                     s.FsrQuality = FsrQualityMode.Custom;
             }),
         new(
@@ -193,14 +193,20 @@ public static class SettingsCatalog
             "upscaler",
             SettingCategory.PostProcessing,
             "UPSCALER",
-            s => s.Upscaler == UpscalerMode.Fsr1 ? "FSR1" : "BILINEAR",
+            s => s.Upscaler switch
+            {
+                UpscalerMode.Fsr3 => "FSR3",
+                UpscalerMode.Fsr1 => "FSR1",
+                _ => "BILINEAR"
+            },
             (s, direction) =>
-                s.Upscaler = CycleEnum(s.Upscaler, direction)),
+                s.Upscaler = CycleEnum(s.Upscaler, direction),
+            RequiresRestart: true),
         new(
             "fsr-quality",
             SettingCategory.PostProcessing,
-            "FSR1 TRYB",
-            s => s.Upscaler == UpscalerMode.Fsr1
+            "FSR TRYB",
+            s => s.Upscaler is UpscalerMode.Fsr1 or UpscalerMode.Fsr3
                 ? FsrQualityName(s.FsrQuality)
                 : "NIEAKTYWNE",
             (s, direction) =>
@@ -208,8 +214,8 @@ public static class SettingsCatalog
         new(
             "fsr-sharpness",
             SettingCategory.PostProcessing,
-            "FSR1 OSTROSC",
-            s => s.Upscaler == UpscalerMode.Fsr1 &&
+            "FSR OSTROSC",
+            s => s.Upscaler is UpscalerMode.Fsr1 or UpscalerMode.Fsr3 &&
                  s.FsrQuality != FsrQualityMode.Native
                 ? $"{s.FsrSharpness:0.00}"
                 : "NIEAKTYWNE",
