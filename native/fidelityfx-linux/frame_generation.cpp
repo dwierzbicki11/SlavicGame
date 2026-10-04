@@ -42,6 +42,34 @@ static FfxErrorCode createResource(
     return rc;
 }
 
+static FfxResource wrap(const FfxApiResource& resource) {
+    FfxResource result{};
+    result.resource = resource.resource;
+    result.state = static_cast<FfxResourceStates>(resource.state);
+    const auto& d = resource.description;
+    result.description = {
+        static_cast<FfxResourceType>(d.type),
+        static_cast<FfxSurfaceFormat>(d.format),
+        d.width, d.height, d.depth, d.mipCount,
+        static_cast<FfxResourceFlags>(d.flags),
+        static_cast<FfxResourceUsage>(d.usage)
+    };
+    return result;
+}
+
+struct PreparedFrame {
+    bool valid = false;
+    uint64_t frameId = 0;
+    uint32_t sharedSlot = 0;
+    uint32_t renderWidth = 0;
+    uint32_t renderHeight = 0;
+    float frameTimeDelta = 0;
+    float cameraNear = 0;
+    float cameraFar = 0;
+    float viewSpaceToMetersFactor = 1;
+    float cameraFovAngleVertical = 0;
+};
+
 } // namespace
 
 struct SlavicFgContext {
@@ -61,6 +89,15 @@ struct SlavicFgContext {
     SharedResource dilatedDepth[2]{};
     SharedResource dilatedMotionVectors[2]{};
     SharedResource reconstructedPrevDepth[2]{};
+
+    uint32_t displayWidth = 0;
+    uint32_t displayHeight = 0;
+    uint32_t opticalFlowWidth = 0;
+    uint32_t opticalFlowHeight = 0;
+    uint32_t sharedToggle = 0;
+    PreparedFrame prepared[2]{};
+    bool hasLastFrame = false;
+    uint64_t lastFrameId = 0;
 
     ~SlavicFgContext() {
         auto destroy = [this](SharedResource& resource) {
@@ -200,6 +237,13 @@ extern "C" __attribute__((visibility("default"))) uint32_t slavicFgCreate(
         ofResources.opticalFlowSCD, context->opticalFlowScd);
     if (rc != FFX_OK) return fail(rc);
 
+    context->displayWidth = desc->displayWidth;
+    context->displayHeight = desc->displayHeight;
+    context->opticalFlowWidth =
+        ofResources.opticalFlowVector.resourceDescription.width;
+    context->opticalFlowHeight =
+        ofResources.opticalFlowVector.resourceDescription.height;
+
     FfxFrameInterpolationSharedResourceDescriptions fiResources{};
     rc = ffxFrameInterpolationGetSharedResourceDescriptions(
         &context->frameInterpolation, &fiResources);
@@ -236,6 +280,166 @@ extern "C" __attribute__((visibility("default"))) uint32_t slavicFgCreate(
     }
 
     *outContext = context;
+    return 0;
+}
+
+extern "C" __attribute__((visibility("default"))) uint32_t slavicFgPrepare(
+    SlavicFgContext* context, const SlavicFgPrepareDesc* desc)
+{
+    if (!context || !desc || !desc->commandList ||
+        !desc->depth.resource || !desc->motionVectors.resource ||
+        !desc->renderWidth || !desc->renderHeight)
+        return static_cast<uint32_t>(FFX_ERROR_INVALID_ARGUMENT);
+
+    context->sharedToggle = (context->sharedToggle + 1u) & 1u;
+    const uint32_t slot = context->sharedToggle;
+
+    FfxFrameInterpolationPrepareDescription prepare{};
+    prepare.commandList = desc->commandList;
+    prepare.renderSize = {desc->renderWidth, desc->renderHeight};
+    prepare.jitterOffset = {desc->jitterX, desc->jitterY};
+    prepare.motionVectorScale = {
+        desc->motionVectorScaleX, desc->motionVectorScaleY
+    };
+    prepare.frameTimeDelta = desc->frameTimeDelta;
+    prepare.cameraNear = desc->cameraNear;
+    prepare.cameraFar = desc->cameraFar;
+    prepare.viewSpaceToMetersFactor = desc->viewSpaceToMetersFactor;
+    prepare.cameraFovAngleVertical = desc->cameraFovAngleVertical;
+    prepare.depth = wrap(desc->depth);
+    prepare.motionVectors = wrap(desc->motionVectors);
+    prepare.frameID = desc->frameId;
+    prepare.dilatedDepth = context->sharedBackend.fpGetResource(
+        &context->sharedBackend, context->dilatedDepth[slot].resource);
+    prepare.dilatedMotionVectors = context->sharedBackend.fpGetResource(
+        &context->sharedBackend, context->dilatedMotionVectors[slot].resource);
+    prepare.reconstructedPrevDepth = context->sharedBackend.fpGetResource(
+        &context->sharedBackend, context->reconstructedPrevDepth[slot].resource);
+    std::memcpy(prepare.cameraPosition, desc->cameraPosition, sizeof(desc->cameraPosition));
+    std::memcpy(prepare.cameraUp, desc->cameraUp, sizeof(desc->cameraUp));
+    std::memcpy(prepare.cameraRight, desc->cameraRight, sizeof(desc->cameraRight));
+    std::memcpy(prepare.cameraForward, desc->cameraForward, sizeof(desc->cameraForward));
+
+    FfxErrorCode rc = ffxFrameInterpolationPrepare(
+        &context->frameInterpolation, &prepare);
+    if (rc != FFX_OK)
+        return static_cast<uint32_t>(rc);
+
+    PreparedFrame& saved = context->prepared[desc->frameId & 1u];
+    saved.valid = true;
+    saved.frameId = desc->frameId;
+    saved.sharedSlot = slot;
+    saved.renderWidth = desc->renderWidth;
+    saved.renderHeight = desc->renderHeight;
+    saved.frameTimeDelta = desc->frameTimeDelta;
+    saved.cameraNear = desc->cameraNear;
+    saved.cameraFar = desc->cameraFar;
+    saved.viewSpaceToMetersFactor = desc->viewSpaceToMetersFactor;
+    saved.cameraFovAngleVertical = desc->cameraFovAngleVertical;
+    return 0;
+}
+
+extern "C" __attribute__((visibility("default"))) uint32_t slavicFgDispatch(
+    SlavicFgContext* context, const SlavicFgDispatchDesc* desc)
+{
+    if (!context || !desc || !desc->commandList ||
+        !desc->currentBackBuffer.resource || !desc->output.resource)
+        return static_cast<uint32_t>(FFX_ERROR_INVALID_ARGUMENT);
+
+    const PreparedFrame& prepared = context->prepared[desc->frameId & 1u];
+    if (!prepared.valid || prepared.frameId != desc->frameId)
+        return static_cast<uint32_t>(FFX_ERROR_INVALID_ARGUMENT);
+
+    const bool disjoint = context->hasLastFrame &&
+        desc->frameId != context->lastFrameId + 1u;
+    const bool reset = desc->reset != 0 || disjoint;
+
+    FfxResource opticalFlowVector = context->sharedBackend.fpGetResource(
+        &context->sharedBackend, context->opticalFlowVector.resource);
+    FfxResource opticalFlowScd = context->sharedBackend.fpGetResource(
+        &context->sharedBackend, context->opticalFlowScd.resource);
+
+    FfxOpticalflowDispatchDescription opticalFlow{};
+    opticalFlow.commandList = desc->commandList;
+    opticalFlow.color = desc->currentBackBufferHudless.resource
+        ? wrap(desc->currentBackBufferHudless)
+        : wrap(desc->currentBackBuffer);
+    opticalFlow.opticalFlowVector = opticalFlowVector;
+    opticalFlow.opticalFlowSCD = opticalFlowScd;
+    opticalFlow.reset = reset;
+    opticalFlow.backbufferTransferFunction =
+        static_cast<int>(desc->backBufferTransferFunction);
+    opticalFlow.minMaxLuminance = {
+        desc->minLuminance, desc->maxLuminance
+    };
+
+    FfxErrorCode rc = ffxOpticalflowContextDispatch(
+        &context->opticalFlow, &opticalFlow);
+    if (rc != FFX_OK)
+        return static_cast<uint32_t>(rc);
+
+    FfxFrameInterpolationDispatchDescription interpolation{};
+    interpolation.commandList = desc->commandList;
+    interpolation.displaySize = {
+        desc->currentBackBuffer.description.width,
+        desc->currentBackBuffer.description.height
+    };
+    interpolation.renderSize = {
+        prepared.renderWidth, prepared.renderHeight
+    };
+    interpolation.currentBackBuffer = wrap(desc->currentBackBuffer);
+    interpolation.currentBackBuffer_HUDLess =
+        wrap(desc->currentBackBufferHudless);
+    interpolation.output = wrap(desc->output);
+    interpolation.interpolationRect = {
+        0, 0,
+        desc->currentBackBuffer.description.width,
+        desc->currentBackBuffer.description.height
+    };
+    interpolation.opticalFlowVector = opticalFlowVector;
+    interpolation.opticalFlowSceneChangeDetection = opticalFlowScd;
+    interpolation.opticalFlowBufferSize = {
+        context->opticalFlowWidth, context->opticalFlowHeight
+    };
+    interpolation.opticalFlowScale = {
+        1.0f / static_cast<float>(context->displayWidth),
+        1.0f / static_cast<float>(context->displayHeight)
+    };
+    interpolation.opticalFlowBlockSize = 8;
+    interpolation.cameraNear = prepared.cameraNear;
+    interpolation.cameraFar = prepared.cameraFar;
+    interpolation.cameraFovAngleVertical =
+        prepared.cameraFovAngleVertical;
+    interpolation.viewSpaceToMetersFactor =
+        prepared.viewSpaceToMetersFactor;
+    interpolation.frameTimeDelta = prepared.frameTimeDelta;
+    interpolation.reset = reset;
+    interpolation.backBufferTransferFunction =
+        static_cast<FfxBackbufferTransferFunction>(
+            desc->backBufferTransferFunction);
+    interpolation.minMaxLuminance[0] = desc->minLuminance;
+    interpolation.minMaxLuminance[1] = desc->maxLuminance;
+    interpolation.frameID = desc->frameId;
+
+    const uint32_t slot = prepared.sharedSlot;
+    interpolation.dilatedDepth = context->sharedBackend.fpGetResource(
+        &context->sharedBackend, context->dilatedDepth[slot].resource);
+    interpolation.dilatedMotionVectors =
+        context->sharedBackend.fpGetResource(
+            &context->sharedBackend,
+            context->dilatedMotionVectors[slot].resource);
+    interpolation.reconstructedPrevDepth =
+        context->sharedBackend.fpGetResource(
+            &context->sharedBackend,
+            context->reconstructedPrevDepth[slot].resource);
+
+    rc = ffxFrameInterpolationDispatch(
+        &context->frameInterpolation, &interpolation);
+    if (rc != FFX_OK)
+        return static_cast<uint32_t>(rc);
+
+    context->hasLastFrame = true;
+    context->lastFrameId = desc->frameId;
     return 0;
 }
 
