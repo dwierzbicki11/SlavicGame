@@ -69,3 +69,66 @@ Nie ustalamy finalnych nominałów przed researchu gospodarczego świata i pierw
 - nagroda quest tylko raz;
 - brak nieskończonego craft-sell loop bez kosztu;
 - ceny muszą być testowane automatycznie, jeśli pojawią się recipes z wartością sprzedaży.
+
+
+## Runtime R0 vendor pass
+
+Pierwsza grywalna implementacja vendora obejmuje dwóch istniejących NPC:
+- `vendor.r0.trader` → `settler-trader-01`;
+- `vendor.r0.herbalist` → `herbalist`.
+
+### Sterowanie
+Przy dostępnym vendorze HUD pokazuje `T HANDEL`.
+- `T` — otwórz/zamknij handel;
+- `W/S` — wybór pozycji;
+- `A/D` — przełącz `KUP` / `SPRZEDAJ`;
+- `E` — zatwierdź transakcję;
+- `Esc` — zamknij.
+
+Podczas handlu ruch gracza jest zablokowany.
+
+### Stock prototypowy
+
+Trader:
+- `simple-bandage`: 6;
+- `arrow-basic`: 24;
+- `forest-resin`: 4.
+
+Herbalist:
+- `marsh-herb`: 8;
+- `simple-bandage`: 6;
+- `marsh-sight-tonic`: 2, widoczny dopiero po `recipe.marsh-sight-tonic.learned`.
+
+Liczby i ceny są **gameplay F / playtest tuning**. Nie są twierdzeniem o historycznych cenach, walucie ani sile nabywczej.
+
+### Transaction contract
+Zakup jest atomowy:
+1. walidacja unlocku;
+2. walidacja stocku;
+3. walidacja pieniędzy;
+4. pobranie pieniędzy;
+5. dodanie itemu;
+6. decrement stocku.
+
+Sprzedaż jest atomowa w odwrotną stronę.
+
+Quest-protected items, w tym `missing-person-keepsake` i `ritual-thread`, nie wchodzą do sell path.
+
+### Reputation pricing
+`old-village` reputation daje mały, ograniczony modyfikator:
+- dodatnia reputacja lekko obniża buy price;
+- dodatnia reputacja lekko podnosi sell price;
+- ujemna reputacja działa odwrotnie.
+
+To nie zastępuje przyszłego balance passu.
+
+### Availability
+Vendor działa tylko, gdy:
+- jego NPC istnieje w runtime;
+- wykonuje właściwą aktywność vendora;
+- gracz stoi w zasięgu.
+
+W nocy/rest vendor nie jest dostępny.
+
+### Persistence
+Stock vendora jest zapisany jako opcjonalna sekcja bieżącego save v3. Starszy save v3 bez tej sekcji dostaje bazowy stock. Otwarte UI handlu nie jest persistowane.
