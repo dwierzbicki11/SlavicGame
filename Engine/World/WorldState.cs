@@ -154,6 +154,7 @@ public sealed class WorldState
 
         _models.AddRange(WorldDecorationGenerator.Generate(Terrain));
         _models.AddRange(RiverbankPropGenerator.Generate(Terrain));
+        _models.AddRange(NpcWorkstationCatalog.BuildModels(Terrain));
         _models.AddRange(GroundClutterGenerator.Generate(Terrain));
 
         _enemies.Clear();
