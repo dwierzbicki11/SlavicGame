@@ -42,6 +42,8 @@ public sealed class VeldridRenderer : IDisposable
     private Shader[]? _hudShaders;
     private GlbModel? _playerModel;
     private GlbModel? _enemyModel;
+    private GlbModel? _bowModel;
+    private GlbModel? _arrowModel;
     private readonly Dictionary<string, GlbModel> _npcModels =
         new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _wildlifeModels =
@@ -123,6 +125,8 @@ public sealed class VeldridRenderer : IDisposable
         var assetsRoot = Path.Combine(AppContext.BaseDirectory, "assets");
         _playerModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "player_hunter_animated.glb"));
         _enemyModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "swamp_predator_animated.glb"));
+        _bowModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "static", "luk_r0_01.glb"));
+        _arrowModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "static", "strzala_r0_01.glb"));
 
         _npcModels.Clear();
         foreach (var modelFile in world.Npcs
@@ -449,6 +453,16 @@ public sealed class VeldridRenderer : IDisposable
                 220f),
             ref actorVertices,
             ref actorIndices);
+        BowPresentationMesh.Append(
+            world,
+            _bowModel!,
+            _arrowModel!,
+            camera.Position,
+            camera.GetLookDirection(),
+            camera.GetMoveRight(),
+            camera.Mode == CameraMode.FirstPerson,
+            ref actorVertices,
+            ref actorIndices);
         WorldItemModelMesh.Append(
             world,
             _worldItemModels,
@@ -722,6 +736,9 @@ public sealed class VeldridRenderer : IDisposable
                     world.EnvironmentInteractions.Current?.Prompt;
 
                 if (string.IsNullOrWhiteSpace(interactionText))
+                    interactionText = world.Bow.RetrievalPrompt(world);
+
+                if (string.IsNullOrWhiteSpace(interactionText))
                     interactionText = world.NpcWorld.HudPrompt(world.PlayerPosition);
 
                 if (string.IsNullOrWhiteSpace(interactionText))
@@ -751,7 +768,13 @@ public sealed class VeldridRenderer : IDisposable
                 if (!string.IsNullOrWhiteSpace(interactionText))
                     AddGameplayText(interactionText, 18, 242, displayWidth - 36);
 
-                AddGameplayText(world.Melee.Message, 18, 266, displayWidth - 36);
+                AddGameplayText(
+                    world.Bow.IsAiming
+                        ? world.Bow.HudText(world)
+                        : world.Melee.Message,
+                    18,
+                    266,
+                    displayWidth - 36);
 
                 var predatorEncounter = world.Progress.Encounters.Get(
                     SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
@@ -790,6 +813,24 @@ public sealed class VeldridRenderer : IDisposable
                         wildlifeTrackStatus,
                         18,
                         338,
+                        displayWidth - 36);
+                }
+
+                if (world.Bow.IsAiming)
+                {
+                    var reticleX = displayWidth * 0.5f;
+                    var reticleY = displayHeight * 0.5f;
+                    var reticle = new Vector4(0.92f, 0.92f, 0.86f, 0.92f);
+
+                    AddHudQuad(reticleX - 13f, reticleY - 1f, 9f, 2f, reticle);
+                    AddHudQuad(reticleX + 4f, reticleY - 1f, 9f, 2f, reticle);
+                    AddHudQuad(reticleX - 1f, reticleY - 13f, 2f, 9f, reticle);
+                    AddHudQuad(reticleX - 1f, reticleY + 4f, 2f, 9f, reticle);
+
+                    AddGameplayText(
+                        world.Bow.Message,
+                        18,
+                        362,
                         displayWidth - 36);
                 }
             }

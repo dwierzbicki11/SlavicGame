@@ -130,6 +130,7 @@ public sealed class GameEngine : IDisposable
             {
                 if (_world.Cinematics.IsPlaying)
                 {
+                    _world.Bow.SetAiming(_world, false);
                     if (_window.ConsumeKeyPress(Key.Escape) || _window.ConsumeKeyPress(Key.Space))
                         _world.Cinematics.Finish(_world);
                     else
@@ -144,6 +145,8 @@ public sealed class GameEngine : IDisposable
                          !_world.Crafting.IsOpen &&
                          _window.ConsumeKeyPress(Key.Escape))
                 {
+                    _world.Bow.SetAiming(_world, false);
+                    _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
                     TryAutosave("pause");
                     _frontend.OpenMainMenu();
                     _window.SetMouseCapture(false);
@@ -164,6 +167,9 @@ public sealed class GameEngine : IDisposable
                         _world.Melee.Update(
                             _world,
                             _camera.GetMoveForward(),
+                            _time.DeltaSeconds);
+                        _world.Bow.Update(
+                            _world,
                             _time.DeltaSeconds);
                         _world.Magic.Update(_world, _time.DeltaSeconds);
                         _world.Rituals.Update(_world, _time.DeltaSeconds);
@@ -428,6 +434,11 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
+        if (_world.Crafting.IsOpen || _world.Vendors.IsOpen)
+        {
+            _world.Bow.SetAiming(_world, false);
+            _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
+        }
         if (_world.Crafting.IsOpen)
         {
             if (_window.ConsumeKeyPress(Key.Escape) ||
@@ -482,6 +493,11 @@ public sealed class GameEngine : IDisposable
 
         if (_world.Dialogue.IsOpen)
         {
+            _world.Bow.SetAiming(_world, false);
+            _camera.FieldOfView =
+                MathF.PI / 180f *
+                _settings.FieldOfViewDegrees;
+
             if (_window.ConsumeKeyPress(Key.Escape))
             {
                 _world.Dialogue.Close();
@@ -559,6 +575,9 @@ public sealed class GameEngine : IDisposable
                 handled = _world.EnvironmentInteractions.TryInteract(_world);
 
             if (!handled)
+                handled = _world.Bow.TryRetrieveNearest(_world);
+
+            if (!handled)
                 _world.Dialogue.TryStartNearest(_world);
         }
 
@@ -583,8 +602,32 @@ public sealed class GameEngine : IDisposable
         if (_window.ConsumeKeyPress(Key.R) && !_world.Rituals.IsPerforming)
             _world.Rituals.TryStart(_world);
 
-        if (_window.ConsumeLeftMousePress())
+        _world.Bow.SetAiming(
+            _world,
+            _window.IsRightMouseDown);
+
+        _camera.FieldOfView =
+            MathF.PI / 180f *
+            _settings.FieldOfViewDegrees *
+            (_world.Bow.IsAiming ? 0.82f : 1f);
+
+        if (_world.Bow.IsAiming)
+        {
+            if (_window.ConsumeLeftMousePress())
+                _world.Bow.TryStartDraw(_world);
+
+            if (_window.ConsumeLeftMouseRelease())
+            {
+                _world.Bow.TryRelease(
+                    _world,
+                    _camera.Position,
+                    _camera.GetLookDirection());
+            }
+        }
+        else if (_window.ConsumeLeftMousePress())
+        {
             _world.Melee.TryStart(_world);
+        }
 
         if (_window.ConsumeKeyPress(Key.C) && !_world.Rituals.IsPerforming)
         {
@@ -602,7 +645,9 @@ public sealed class GameEngine : IDisposable
             canMove && _window.IsKeyDown(Key.S),
             canMove && _window.IsKeyDown(Key.D),
             canMove && _window.IsKeyDown(Key.A),
-            canMove && _window.IsKeyDown(Key.ShiftLeft),
+            canMove &&
+                !_world.Bow.IsAiming &&
+                _window.IsKeyDown(Key.ShiftLeft),
             _window.MouseDelta);
         PlayerController.Update(_world, _camera, input, deltaSeconds);
         if (_inputDiagnostics) LogInput(input, deltaSeconds);

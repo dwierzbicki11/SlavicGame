@@ -103,6 +103,8 @@ public static class SaveGameService
         world.Wildlife.Restore(
             world,
             snapshot.Wildlife ?? []);
+        SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.EnsureStarterBow(world);
+        world.Bow.Reset();
         world.Magic.NormalizeSelection(world);
         world.Progress.Tracking.Restore(snapshot.Tracks ?? []);
         SlavicGame.Engine.Gameplay.VerticalSliceBootstrap.EnsureMagicTraces(world);

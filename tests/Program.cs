@@ -51,6 +51,7 @@ R0FordSideQuestRegression.Run(Check);
 WildlifeRegression.Run(Check);
 WildlifeHuntingRegression.Run(Check);
 WildlifeTrackingRegression.Run(Check);
+BowCombatRegression.Run(Check);
 
 // River terrain and water must form one sloped channel; animation has to read downstream.
 var riverTerrain = new Terrain(513, 513, 4f);

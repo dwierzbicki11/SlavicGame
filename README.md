@@ -488,3 +488,6 @@ R0 settlers now react to immediate danger: civilians watch or move away from pla
 ### Wildlife hunting
 
 Ground wildlife is now huntable with the existing light melee system. Deer, boar and wolves have prototype health, flee for several seconds after a wound, become persistent carcasses when killed, and expose a one-time contextual E harvest interaction. Harvested carcasses disappear from rendering, and wildlife health/position/loot state survives save/load. Ravens remain ambient for ground melee and are reserved for future ranged hunting.
+### Bow hunting
+
+The vertical slice now includes a physical projectile bow. Hold RMB to aim, hold LMB to draw and release LMB to fire. Arrow speed and damage scale with draw time, gravity affects the flight path, targets are hit by segment collision, terrain arrows can be recovered with E, and wildlife wounds, carcasses and harvested loot share the existing save/load state. Aiming uses the existing R0 bow/arrow models and a lightweight reticle while projectiles remain consolidated in the actor render path.

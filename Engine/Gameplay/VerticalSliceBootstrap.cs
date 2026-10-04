@@ -34,8 +34,31 @@ public static class VerticalSliceBootstrap
             world.Progress.Inventory.Add("simple-bandage", 2);
             world.Progress.SetFlag("starter-loadout-granted");
         }
+
+        EnsureStarterBow(world);
         world.Progress.SetFlag("vertical-slice-prepared");
     }
+    public static void EnsureStarterBow(WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+
+        const string flag = "starter-bow-loadout-granted";
+        if (world.Progress.HasFlag(flag))
+            return;
+
+        if (!world.Progress.Inventory.Contains(
+                SlavicGame.Engine.Combat.BowCombatRuntime.BowItemId))
+        {
+            world.Progress.Inventory.Add(
+                SlavicGame.Engine.Combat.BowCombatRuntime.BowItemId);
+        }
+
+        world.Progress.Inventory.Add(
+            SlavicGame.Engine.Combat.BowCombatRuntime.ArrowItemId,
+            16);
+        world.Progress.SetFlag(flag);
+    }
+
     public static void EnsureMagicTraces(WorldState world)
     {
         RegisterMagicTrace(world, "trace.shrine-echo", new System.Numerics.Vector3(-85, 0, 55));
