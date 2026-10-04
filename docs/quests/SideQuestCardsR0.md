@@ -77,3 +77,58 @@ Każdy quest używa faz z `QuestDesign.md` i zapisuje `quest_id`, `phase`, ukoń
 ## Definition of Ready
 
 `SQ_R0_01`–`SQ_R0_03` mają stabilne wejścia, fazy, legalne outcomes, persistence, fail-forward, dependencies i minimalne QA. Implementacja quest state machines może ruszyć bez wymyślania brakującego lore; content oznaczony research/art/dialogue/playtest lockiem pozostaje jawnie poza kartą.
+
+## Vertical-slice compatibility note
+
+The implemented micro side quest `side-r0-missing-tools` is an additional vertical-slice teaching quest derived from the older candidate list in `VerticalSliceSideQuests.md`. It does not consume or rename any production catalog slot.
+
+In particular:
+- `SQ_R0_01` remains **Złamany bród**;
+- `SQ_R0_02` remains **Dług zielarki**;
+- `SQ_R0_03` remains **Stary kopiec**.
+
+The micro quest may coexist with all three and must never be treated as their completion flag or prerequisite.
+
+
+## Runtime implementation — SQ_R0_01 Złamany bród
+
+`SQ_R0_01` now has a playable first-pass runtime implementation.
+
+### Discovery
+The quest does not require a giver. Inspecting the damaged local ford starts the quest directly in `Investigation`, records `sq_r0_01.broken-ford`, and discovers landmark `r0-broken-ford`.
+
+### Local traversal
+The R0 river now contains two authored shallow crossing profiles:
+- direct damaged ford at `z=-110`;
+- alternate shallow route at `z=-72`.
+
+Before a legal outcome, both local crossing corridors are blocked by the world traversal resolver. This is a local convenience/state change, not a campaign gate; the rest of the open world remains recoverable.
+
+### Legal outcomes
+- `Repaired`: consumes two prototype `ford-repair-timber` units and opens the direct ford;
+- `Bypass`: requires field discovery of the alternate shallow route, keeps the damaged ford closed, opens the bypass and places a persistent route marker;
+- `ClosedSafe`: deliberately leaves the damaged ford closed while preserving the discovered alternate route as the safe crossing.
+
+Runtime flags:
+- `sq_r0_01.outcome.repaired`;
+- `sq_r0_01.outcome.bypass`;
+- `sq_r0_01.outcome.closedsafe`;
+- common access flag `r0_ford_access`.
+
+### World presentation
+Dynamic GLB state uses existing tracked assets:
+- unresolved / bypass / closed-safe: `bridge_broken_r0_01.glb`;
+- repaired: `kladka_bagienna_03.glb`;
+- alternate route marker: `drogowskaz_r0_01.glb`.
+
+Presentation reads the durable outcome; it does not infer state from transient model presence.
+
+### Prototype rewards
+- repaired: 25 Money, +6 old-village reputation;
+- bypass: 15 Money, +4 reputation;
+- closed-safe: 10 Money, +3 reputation.
+
+Numbers remain playtest lock.
+
+### Persistence and fail-forward
+Quest phase/evidence, navigation landmarks, outcome/access flags, inventory cost, reputation and reward claim all use existing save contracts. Each outcome is terminal and idempotent. Repair materials are optional because both alternate-route outcomes remain available without them.

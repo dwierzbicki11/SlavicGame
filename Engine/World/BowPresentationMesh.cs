@@ -107,7 +107,8 @@ public static class BowPresentationMesh
                 Matrix4x4.CreateWorld(
                     position,
                     direction,
-                    Vector3.UnitY);
+                    MathF.Abs(Vector3.Dot(direction, Vector3.UnitY)) > 0.99f
+                        ? Vector3.UnitX : Vector3.UnitY);
 
             AppendGeometry(
                 arrowModel.BuildMesh(

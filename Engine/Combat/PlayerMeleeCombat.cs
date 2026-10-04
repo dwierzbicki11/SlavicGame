@@ -86,6 +86,20 @@ public sealed class PlayerMeleeCombat
                 enemy.Id,
                 enemy.Position,
                 enemy.Radius))
+            .Concat(
+                world.Wildlife.Actors
+                    .Where(actor =>
+                        actor.Behavior != WildlifeBehavior.Dead &&
+                        actor.Species != WildlifeSpecies.Raven)
+                    .Select(actor =>
+                    {
+                        var profile =
+                            WildlifeCatalog.For(actor.Species);
+                        return new MeleeHitCandidate(
+                            actor.Id,
+                            actor.Position,
+                            profile.BodyRadius);
+                    }))
             .ToArray();
 
         var hits = MeleeHitResolver.ResolveActiveHits(
@@ -97,21 +111,75 @@ public sealed class PlayerMeleeCombat
 
         foreach (var hit in hits)
         {
-            var enemy = world.Enemies.First(item =>
-                string.Equals(item.Id, hit.TargetId, StringComparison.Ordinal));
-            enemy.TakeDamage(attack.Damage);
+            var enemy = world.Enemies.FirstOrDefault(item =>
+                string.Equals(
+                    item.Id,
+                    hit.TargetId,
+                    StringComparison.Ordinal));
 
-            if (!enemy.IsAlive)
+            if (enemy is not null)
             {
-                if (string.Equals(enemy.Id, SwampPredatorEncounter.Id, StringComparison.Ordinal))
-                    SwampPredatorEncounter.MarkKilled(world);
+                enemy.TakeDamage(attack.Damage);
 
-                Message = $"POKONANO: {enemy.Id.ToUpperInvariant()}";
+                if (!enemy.IsAlive)
+                {
+                    if (string.Equals(
+                            enemy.Id,
+                            SwampPredatorEncounter.Id,
+                            StringComparison.Ordinal))
+                    {
+                        SwampPredatorEncounter.MarkKilled(world);
+                    }
+
+                    Message =
+                        $"POKONANO: {enemy.Id.ToUpperInvariant()}";
+                }
+                else
+                {
+                    Message =
+                        $"TRAFIENIE: {enemy.Id.ToUpperInvariant()} / HP {enemy.Health:0}/{enemy.MaxHealth:0}";
+                }
+
+                continue;
             }
-            else
+
+            var wildlifeBefore =
+                world.Wildlife.Actors.FirstOrDefault(actor =>
+                    string.Equals(
+                        actor.Id,
+                        hit.TargetId,
+                        StringComparison.Ordinal));
+
+            if (wildlifeBefore is null ||
+                !world.Wildlife.TryDamage(
+                    world,
+                    hit.TargetId,
+                    attack.Damage))
             {
-                Message = $"TRAFIENIE: {enemy.Id.ToUpperInvariant()} / HP {enemy.Health:0}/{enemy.MaxHealth:0}";
+                continue;
             }
+
+            var wildlifeAfter =
+                world.Wildlife.Actors.First(actor =>
+                    string.Equals(
+                        actor.Id,
+                        hit.TargetId,
+                        StringComparison.Ordinal));
+
+            Message =
+                wildlifeAfter.Behavior == WildlifeBehavior.Dead
+                    ? $"UPOLWIONO: {WildlifeDisplayName(wildlifeAfter.Species)} / E ZBIERZ LUP"
+                    : $"ZRANIONO: {WildlifeDisplayName(wildlifeAfter.Species)} / HP {wildlifeAfter.Health:0}/{wildlifeAfter.MaxHealth:0}";
         }
     }
+    private static string WildlifeDisplayName(
+        WildlifeSpecies species) => species switch
+    {
+        WildlifeSpecies.Deer => "JELEN",
+        WildlifeSpecies.Boar => "DZIK",
+        WildlifeSpecies.Wolf => "WILK",
+        WildlifeSpecies.Raven => "KRUK",
+        _ => species.ToString().ToUpperInvariant()
+    };
+
 }

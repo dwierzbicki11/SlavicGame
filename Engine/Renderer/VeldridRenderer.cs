@@ -48,6 +48,8 @@ public sealed class VeldridRenderer : IDisposable
         new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _wildlifeModels =
         new(StringComparer.Ordinal);
+    private readonly Dictionary<string, GlbModel> _bestiaryModels =
+        new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _worldItemModels =
         new(StringComparer.Ordinal);
 
@@ -177,6 +179,34 @@ public sealed class VeldridRenderer : IDisposable
             }
 
             _wildlifeModels[modelFile] = model;
+        }
+
+        _bestiaryModels.Clear();
+        foreach (var definition in BestiaryVisualCatalog.Definitions)
+        {
+            var monsterPath = Path.Combine(
+                assetsRoot,
+                "models",
+                "animated",
+                definition.ModelFile);
+            if (!File.Exists(monsterPath))
+            {
+                throw new FileNotFoundException(
+                    $"Required bestiary model '{definition.ModelFile}' was not found.",
+                    monsterPath);
+            }
+
+            var model = GlbModel.Load(monsterPath);
+            var missingClips = definition.RequiredClips
+                .Where(clip => !model.AnimationNames.Contains(clip))
+                .ToArray();
+            if (missingClips.Length > 0)
+            {
+                throw new InvalidDataException(
+                    $"Bestiary model '{definition.ModelFile}' is missing clips: {string.Join(", ", missingClips)}.");
+            }
+
+            _bestiaryModels[definition.ModelFile] = model;
         }
 
         _worldItemModels.Clear();
@@ -354,7 +384,7 @@ public sealed class VeldridRenderer : IDisposable
         EngineLog.Info(
             $"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, " +
             $"NPC models={_npcModels.Count}, wildlife models={_wildlifeModels.Count}, " +
-            $"enemy clips={_enemyModel.AnimationNames.Count}.");
+            $"bestiary models={_bestiaryModels.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
 
@@ -407,6 +437,7 @@ public sealed class VeldridRenderer : IDisposable
             _playerModel,
             _npcModels,
             _enemyModel,
+            camera.Position,
             animationSeconds,
             camera.Yaw,
             camera.Mode != CameraMode.FirstPerson,
@@ -461,6 +492,10 @@ public sealed class VeldridRenderer : IDisposable
             world,
             ref actorVertices,
             ref actorIndices);
+        WildlifeTrackEffectMesh.Append(
+            world,
+            ref actorVertices,
+            ref actorIndices);
         ApparitionEffectMesh.Append(
             world,
             (float)animationSeconds,
@@ -484,6 +519,150 @@ public sealed class VeldridRenderer : IDisposable
                 AddHudQuad(0, displayHeight - 85, displayWidth, 85, new Vector4(0, 0, 0, 1));
                 AddGameplayText(world.Cinematics.Subtitle, 18, displayHeight - 66, displayWidth - 36);
                 AddGameplayText("SPACJA / ESC - POMIN", 18, displayHeight - 32, displayWidth - 36);
+            }
+            else if (world.Crafting.IsOpen)
+            {
+                var lines = world.Crafting.BuildLines(world);
+                var panelHeight =
+                    MathF.Min(
+                        350f,
+                        MathF.Max(230f, 175f + lines.Count * 48f));
+                var panelWidth =
+                    MathF.Min(820f, displayWidth - 40f);
+                var panelLeft =
+                    (displayWidth - panelWidth) * 0.5f;
+                var panelTop =
+                    (displayHeight - panelHeight) * 0.5f;
+
+                AddHudQuad(
+                    panelLeft,
+                    panelTop,
+                    panelWidth,
+                    panelHeight,
+                    new Vector4(0.02f, 0.025f, 0.018f, 0.94f));
+
+                AddGameplayText(
+                    "ALCHEMIA - STOL ZIELARKI",
+                    panelLeft + 24,
+                    panelTop + 18,
+                    panelWidth - 48);
+
+                for (var i = 0; i < lines.Count; i++)
+                {
+                    var line = lines[i];
+                    var prefix =
+                        i == world.Crafting.SelectedIndex
+                            ? "> "
+                            : "  ";
+                    var status =
+                        !line.Unlocked
+                            ? "NIEZNANA RECEPTURA"
+                            : line.CanCraft
+                                ? "GOTOWE"
+                                : "BRAK SKLADNIKOW";
+
+                    AddGameplayText(
+                        $"{prefix}{line.DisplayName} / {status}",
+                        panelLeft + 34,
+                        panelTop + 62 + i * 48,
+                        panelWidth - 68);
+                    AddGameplayText(
+                        $"  {line.RequirementText}",
+                        panelLeft + 52,
+                        panelTop + 84 + i * 48,
+                        panelWidth - 90);
+                }
+
+                if (!string.IsNullOrWhiteSpace(world.Crafting.Message))
+                {
+                    AddGameplayText(
+                        world.Crafting.Message,
+                        panelLeft + 24,
+                        panelTop + panelHeight - 68,
+                        panelWidth - 48);
+                }
+
+                AddGameplayText(
+                    "W/S WYBOR  E WYTWORZ  K/ESC ZAMKNIJ",
+                    panelLeft + 24,
+                    panelTop + panelHeight - 32,
+                    panelWidth - 48);
+            }
+            else if (world.Vendors.IsOpen)
+            {
+                var lines = world.Vendors.BuildLines(world);
+                var panelHeight =
+                    MathF.Min(
+                        390f,
+                        MathF.Max(240f, 165f + lines.Count * 32f));
+                var panelWidth =
+                    MathF.Min(760f, displayWidth - 40f);
+                var panelLeft =
+                    (displayWidth - panelWidth) * 0.5f;
+                var panelTop =
+                    (displayHeight - panelHeight) * 0.5f;
+
+                AddHudQuad(
+                    panelLeft,
+                    panelTop,
+                    panelWidth,
+                    panelHeight,
+                    new Vector4(0.02f, 0.02f, 0.018f, 0.94f));
+
+                AddGameplayText(
+                    world.Vendors.DisplayName,
+                    panelLeft + 24,
+                    panelTop + 18,
+                    panelWidth - 48);
+
+                AddGameplayText(
+                    $"PIENIADZE {world.Progress.Profile.Money} / TRYB: " +
+                    (world.Vendors.Mode ==
+                        SlavicGame.Engine.Gameplay.VendorMode.Buy
+                            ? "KUP"
+                            : "SPRZEDAJ"),
+                    panelLeft + 24,
+                    panelTop + 50,
+                    panelWidth - 48);
+
+                for (var i = 0; i < lines.Count; i++)
+                {
+                    var line = lines[i];
+                    var prefix =
+                        i == world.Vendors.SelectedIndex
+                            ? "> "
+                            : "  ";
+                    var quantityLabel =
+                        world.Vendors.Mode ==
+                        SlavicGame.Engine.Gameplay.VendorMode.Buy
+                            ? $"STAN {line.Quantity}"
+                            : $"MASZ {line.Quantity}";
+                    var status =
+                        line.Available
+                            ? ""
+                            : " / BRAK";
+
+                    AddGameplayText(
+                        $"{prefix}{line.DisplayName} / {line.Price} / {quantityLabel}{status}",
+                        panelLeft + 34,
+                        panelTop + 90 + i * 32,
+                        panelWidth - 68);
+                }
+
+                if (!string.IsNullOrWhiteSpace(world.Vendors.Message))
+                {
+                    AddGameplayText(
+                        world.Vendors.Message,
+                        panelLeft + 24,
+                        panelTop + panelHeight - 68,
+                        panelWidth - 48);
+                }
+
+                AddGameplayText(
+                    "W/S WYBOR  A/D KUP-SPRZEDAJ  E POTWIERDZ  T/ESC ZAMKNIJ",
+                    panelLeft + 24,
+                    panelTop + panelHeight - 32,
+                    panelWidth - 48);
             }
             else if (world.Dialogue.IsOpen)
             {
@@ -570,6 +749,22 @@ public sealed class VeldridRenderer : IDisposable
                             : world.QuestInteractions.Message;
                 }
 
+                if (world.Vendors.CanOpenNearest(world))
+                {
+                    interactionText =
+                        string.IsNullOrWhiteSpace(interactionText)
+                            ? "T HANDEL"
+                            : interactionText + " / T HANDEL";
+                }
+
+                if (world.Crafting.CanOpenNearest(world))
+                {
+                    interactionText =
+                        string.IsNullOrWhiteSpace(interactionText)
+                            ? "K ALCHEMIA"
+                            : interactionText + " / K ALCHEMIA";
+                }
+
                 if (!string.IsNullOrWhiteSpace(interactionText))
                     AddGameplayText(interactionText, 18, 242, displayWidth - 36);
 
@@ -610,6 +805,17 @@ public sealed class VeldridRenderer : IDisposable
                         displayWidth - 36);
                 }
 
+                var wildlifeTrackStatus =
+                    world.WildlifeTracks.HudStatus(world);
+                if (!string.IsNullOrWhiteSpace(wildlifeTrackStatus))
+                {
+                    AddGameplayText(
+                        wildlifeTrackStatus,
+                        18,
+                        338,
+                        displayWidth - 36);
+                }
+
                 if (world.Bow.IsAiming)
                 {
                     var reticleX = displayWidth * 0.5f;
@@ -624,7 +830,7 @@ public sealed class VeldridRenderer : IDisposable
                     AddGameplayText(
                         world.Bow.Message,
                         18,
-                        338,
+                        362,
                         displayWidth - 36);
                 }
             }
@@ -1150,6 +1356,7 @@ public sealed class VeldridRenderer : IDisposable
         _actorShaders = null;
         _playerModel = null;
         _enemyModel = null;
+        _bestiaryModels.Clear();
         _worldItemModels.Clear();
         _hudPipeline = null;
         _hudSet = null;

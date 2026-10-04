@@ -197,8 +197,164 @@ public static class NpcRoutineMotion
                     new Vector2(3f, -75f)
                 ]),
 
+            ("settler-smith-helper-01", "forge-work") => new(
+                0.27,
+                [
+                    new Vector2(22f, -91f),
+                    new Vector2(19f, -88f),
+                    new Vector2(24f, -89f),
+                    new Vector2(17f, -96f)
+                ]),
+
+            ("settler-weaver-01", "weave-work") => new(
+                0.34,
+                [
+                    new Vector2(-17f, -78f),
+                    new Vector2(-13f, -80f),
+                    new Vector2(-18f, -84f),
+                    new Vector2(-22f, -81f)
+                ]),
+
+            ("settler-shepherd-01", "drive-flock") => new(
+                0.42,
+                [
+                    new Vector2(24f, -80f),
+                    new Vector2(25f, -74f),
+                    new Vector2(27f, -68f),
+                    new Vector2(30f, -64f)
+                ]),
+
+            ("settler-shepherd-01", "graze-flock") => new(
+                0.58,
+                [
+                    new Vector2(30f, -64f),
+                    new Vector2(36f, -61f),
+                    new Vector2(39f, -68f),
+                    new Vector2(33f, -72f),
+                    new Vector2(27f, -68f)
+                ]),
+
+            ("settler-gatherer-01", "gather-herbs") => new(
+                0.74,
+                [
+                    new Vector2(10f, -98f),
+                    new Vector2(2f, -89f),
+                    new Vector2(-9f, -76f),
+                    new Vector2(-21f, -65f),
+                    new Vector2(-34f, -56f),
+                    new Vector2(-27f, -48f),
+                    new Vector2(-16f, -56f)
+                ]),
+
+            ("settler-gatherer-01", "sort-herbs") => new(
+                0.30,
+                [
+                    new Vector2(7f, -90f),
+                    new Vector2(4f, -88f),
+                    new Vector2(8f, -85f),
+                    new Vector2(11f, -90f)
+                ]),
+
+            ("settler-fisher-01", "river-fishing") => new(
+                0.52,
+                [
+                    new Vector2(103f, 29f),
+                    new Vector2(108f, 26f),
+                    new Vector2(113f, 27f),
+                    new Vector2(117f, 31f),
+                    new Vector2(112f, 34f),
+                    new Vector2(106f, 33f)
+                ]),
+
+            ("settler-fisher-01", "mend-nets") => new(
+                0.33,
+                [
+                    new Vector2(20f, -75f),
+                    new Vector2(24f, -77f),
+                    new Vector2(23f, -82f),
+                    new Vector2(18f, -80f)
+                ]),
+
+            ("settler-youth-01", "run-errands") => new(
+                0.39,
+                [
+                    new Vector2(-1f, -84f),
+                    new Vector2(20f, -90f),
+                    new Vector2(4f, -75f),
+                    new Vector2(-19f, -81f),
+                    new Vector2(-4f, -101f),
+                    new Vector2(15f, -95f)
+                ]),
+
+            ("settler-farmer-01", "shelter-storm") => ShelterRoute(
+                new Vector2(-20f, -92f),
+                new Vector2(-25f, -90f)),
+            ("settler-farmer-02", "shelter-storm") => ShelterRoute(
+                new Vector2(-24f, -98f),
+                new Vector2(-27f, -94f)),
+            ("settler-woodworker-01", "shelter-storm") => ShelterRoute(
+                new Vector2(20f, -101f),
+                new Vector2(22f, -96f)),
+            ("settler-potter-01", "shelter-storm") => ShelterRoute(
+                new Vector2(-13f, -90f),
+                new Vector2(-8f, -88f)),
+            ("settler-trader-01", "shelter-storm") => ShelterRoute(
+                new Vector2(8f, -88f),
+                new Vector2(4f, -84f)),
+            ("settler-carrier-01", "shelter-storm") => ShelterRoute(
+                new Vector2(15f, -95f),
+                new Vector2(11f, -91f)),
+            ("settler-elder-01", "shelter-storm") => ShelterRoute(
+                new Vector2(-12f, -86f),
+                new Vector2(-7f, -86f)),
+            ("settler-traveler-01", "shelter-storm") => ShelterRoute(
+                new Vector2(18f, -76f),
+                new Vector2(12f, -80f)),
+            ("settler-smith-helper-01", "shelter-storm") => ShelterRoute(
+                new Vector2(17f, -99f),
+                new Vector2(21f, -94f)),
+            ("settler-weaver-01", "shelter-storm") => ShelterRoute(
+                new Vector2(-21f, -94f),
+                new Vector2(-17f, -89f)),
+            ("settler-shepherd-01", "shelter-storm") => ShelterRoute(
+                new Vector2(24f, -80f),
+                new Vector2(26f, -84f)),
+            ("settler-gatherer-01", "shelter-storm") => ShelterRoute(
+                new Vector2(10f, -98f),
+                new Vector2(8f, -94f)),
+            ("settler-fisher-01", "shelter-storm") => ShelterRoute(
+                new Vector2(24f, -82f),
+                new Vector2(21f, -84f)),
+            ("settler-fisher-01", "shelter-storm-swamp") => ShelterRoute(
+                new Vector2(111f, 27f),
+                new Vector2(99f, 39f)),
+            ("settler-youth-01", "shelter-storm") => ShelterRoute(
+                new Vector2(6f, -96f),
+                new Vector2(4f, -92f)),
+
             _ => null
         };
+
+    private static Route ShelterRoute(
+        Vector2 home,
+        Vector2 shelter)
+    {
+        var side = new Vector2(
+            -(shelter.Y - home.Y),
+            shelter.X - home.X);
+
+        if (side.LengthSquared() > 0.000001f)
+            side = Vector2.Normalize(side) * 0.9f;
+
+        return new Route(
+            0.22,
+            [
+                home,
+                Vector2.Lerp(home, shelter, 0.55f),
+                shelter - side,
+                shelter + side
+            ]);
+    }
 
     private static (
         Vector2 Position,

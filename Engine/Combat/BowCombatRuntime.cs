@@ -54,8 +54,6 @@ public sealed class BowCombatRuntime
     private readonly List<Recoverable> _recoverable = [];
     private readonly List<BowProjectileView> _projectileViews = [];
     private readonly List<RecoverableArrowView> _recoverableViews = [];
-    private readonly Dictionary<string, float> _wildlifeHealth =
-        new(StringComparer.Ordinal);
 
     private long _nextId = 1;
     private float _drawSeconds;
@@ -96,7 +94,9 @@ public sealed class BowCombatRuntime
             !world.Magic.IsCasting &&
             !world.Rituals.IsPerforming &&
             !world.Cinematics.IsPlaying &&
-            !world.Dialogue.IsOpen;
+            !world.Dialogue.IsOpen &&
+            !world.Vendors.IsOpen &&
+            !world.Crafting.IsOpen;
 
         if (!canAim)
         {
@@ -194,6 +194,8 @@ public sealed class BowCombatRuntime
         if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0d)
             return;
 
+        if (IsAiming) SetAiming(world, true);
+
         if (IsDrawing)
         {
             _drawSeconds = MathF.Min(
@@ -201,7 +203,7 @@ public sealed class BowCombatRuntime
                 _drawSeconds + (float)deltaSeconds);
         }
 
-        var remaining = Math.Min(deltaSeconds, 0.25d);
+        var remaining = Math.Min(deltaSeconds, MaxProjectileAgeSeconds);
         while (remaining > 0d && _projectiles.Count > 0)
         {
             var step = (float)Math.Min(
@@ -273,15 +275,10 @@ public sealed class BowCombatRuntime
             var projectile = _projectiles[index];
             var from = projectile.Position;
 
-            projectile.Velocity +=
-                new Vector3(
-                    0f,
-                    -Gravity * deltaSeconds,
-                    0f);
-
-            var to =
-                from +
-                projectile.Velocity * deltaSeconds;
+            var acceleration = -Vector3.UnitY * Gravity;
+            var to = from + projectile.Velocity * deltaSeconds +
+                acceleration * (0.5f * deltaSeconds * deltaSeconds);
+            projectile.Velocity += acceleration * deltaSeconds;
 
             projectile.Age += deltaSeconds;
 
@@ -455,7 +452,7 @@ public sealed class BowCombatRuntime
 
         foreach (var animal in world.Wildlife.Actors)
         {
-            if (world.Progress.HasFlag(WildlifeDeadFlag(animal.Id)))
+            if (animal.Health <= 0f || animal.Looted)
                 continue;
 
             var profile =
@@ -480,6 +477,17 @@ public sealed class BowCombatRuntime
                     ProjectileHitKind.Wildlife,
                     animal.Id,
                     fraction);
+            }
+        }
+
+        foreach (var obstacle in world.Obstacles)
+        {
+            var min = obstacle.Position - new Vector3(obstacle.HalfSize.X, 0f, obstacle.HalfSize.Y);
+            var max = obstacle.Position + new Vector3(obstacle.HalfSize.X, obstacle.Height, obstacle.HalfSize.Y);
+            if (SegmentBox(from, to, min, max, out var fraction) && fraction < bestFraction)
+            {
+                bestFraction = fraction;
+                hit = new ProjectileHit(ProjectileHitKind.Terrain, null, fraction);
             }
         }
 
@@ -513,31 +521,44 @@ public sealed class BowCombatRuntime
         if (actor is null)
             return false;
 
-        var maxHealth = actor.Species switch
-        {
-            WildlifeSpecies.Deer => 45f,
-            WildlifeSpecies.Boar => 70f,
-            WildlifeSpecies.Wolf => 50f,
-            WildlifeSpecies.Raven => 10f,
-            _ => 50f
-        };
-
-        var current = _wildlifeHealth.GetValueOrDefault(id, maxHealth);
-        current = MathF.Max(0f, current - damage);
-        _wildlifeHealth[id] = current;
-
-        if (current > 0f)
-            return false;
-
-        world.Progress.SetFlag(WildlifeDeadFlag(id));
-        _wildlifeHealth.Remove(id);
-        return true;
+        if (!world.Wildlife.TryDamage(world, id, damage)) return false;
+        return world.Wildlife.Actors.First(item => item.Id == id).Health <= 0f;
     }
 
-    public static string WildlifeDeadFlag(string id)
+    public void Reset()
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-        return $"wildlife.dead.{id}";
+        IsAiming = false;
+        CancelDraw();
+        _projectiles.Clear();
+        _recoverable.Clear();
+        RefreshViews();
+        Message = "RMB CELUJ Z LUKU";
+    }
+
+    private static bool SegmentBox(Vector3 from, Vector3 to, Vector3 min, Vector3 max, out float fraction)
+    {
+        var delta = to - from;
+        var enter = 0f;
+        var exit = 1f;
+        for (var axis = 0; axis < 3; axis++)
+        {
+            var origin = axis == 0 ? from.X : axis == 1 ? from.Y : from.Z;
+            var step = axis == 0 ? delta.X : axis == 1 ? delta.Y : delta.Z;
+            var low = axis == 0 ? min.X : axis == 1 ? min.Y : min.Z;
+            var high = axis == 0 ? max.X : axis == 1 ? max.Y : max.Z;
+            if (MathF.Abs(step) < 0.000001f)
+            {
+                if (origin < low || origin > high) { fraction = 0f; return false; }
+                continue;
+            }
+            var first = (low - origin) / step;
+            var second = (high - origin) / step;
+            enter = MathF.Max(enter, MathF.Min(first, second));
+            exit = MathF.Min(exit, MathF.Max(first, second));
+            if (enter > exit) { fraction = 0f; return false; }
+        }
+        fraction = enter;
+        return true;
     }
 
     private static bool SegmentSphere(

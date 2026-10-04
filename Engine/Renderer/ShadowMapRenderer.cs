@@ -18,7 +18,6 @@ public sealed class ShadowMapRenderer : IDisposable
     private TextureView? _depthView;
     private Framebuffer? _framebuffer;
     private DeviceBuffer? _depthMatrixBuffer;
-    private DeviceBuffer? _sampleMatrixBuffer;
     private ResourceLayout? _depthLayout;
     private ResourceLayout? _sampleLayout;
     private ResourceSet? _depthSet;
@@ -75,9 +74,6 @@ public sealed class ShadowMapRenderer : IDisposable
         _depthMatrixBuffer = factory.CreateBuffer(new BufferDescription(
             64,
             BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-        _sampleMatrixBuffer = factory.CreateBuffer(new BufferDescription(
-            64,
-            BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
         _depthLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             new ResourceLayoutElementDescription(
@@ -105,7 +101,7 @@ public sealed class ShadowMapRenderer : IDisposable
 
         _sampleSet = factory.CreateResourceSet(new ResourceSetDescription(
             _sampleLayout,
-            _sampleMatrixBuffer,
+            _depthMatrixBuffer,
             _depthView,
             graphicsDevice.PointSampler));
 
@@ -155,7 +151,7 @@ public sealed class ShadowMapRenderer : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(commandList);
 
-        if (_depthMatrixBuffer is null || _sampleMatrixBuffer is null)
+        if (_depthMatrixBuffer is null)
             throw new InvalidOperationException("Shadow map renderer is not initialized.");
 
         var matrix = CalculateLightViewProjection(
@@ -164,7 +160,6 @@ public sealed class ShadowMapRenderer : IDisposable
             _mapSize,
             _worldSpan);
         commandList.UpdateBuffer(_depthMatrixBuffer, 0, matrix);
-        commandList.UpdateBuffer(_sampleMatrixBuffer, 0, matrix);
         return matrix;
     }
 
@@ -207,7 +202,7 @@ public sealed class ShadowMapRenderer : IDisposable
 
         if (_graphicsDevice is null ||
             _sampleLayout is null ||
-            _sampleMatrixBuffer is null)
+            _depthMatrixBuffer is null)
         {
             _mapSize = mapSize;
             return;
@@ -234,7 +229,7 @@ public sealed class ShadowMapRenderer : IDisposable
             Array.Empty<FramebufferAttachmentDescription>()));
         _sampleSet = factory.CreateResourceSet(new ResourceSetDescription(
             _sampleLayout,
-            _sampleMatrixBuffer,
+            _depthMatrixBuffer,
             _depthView,
             _graphicsDevice.PointSampler));
 
@@ -354,7 +349,6 @@ public sealed class ShadowMapRenderer : IDisposable
         _depthSet?.Dispose();
         _sampleLayout?.Dispose();
         _depthLayout?.Dispose();
-        _sampleMatrixBuffer?.Dispose();
         _depthMatrixBuffer?.Dispose();
         _framebuffer?.Dispose();
         _depthView?.Dispose();
@@ -368,7 +362,6 @@ public sealed class ShadowMapRenderer : IDisposable
         _depthSet = null;
         _sampleLayout = null;
         _depthLayout = null;
-        _sampleMatrixBuffer = null;
         _depthMatrixBuffer = null;
         _framebuffer = null;
         _depthView = null;

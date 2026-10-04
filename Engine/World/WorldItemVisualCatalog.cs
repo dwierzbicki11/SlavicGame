@@ -57,7 +57,47 @@ public static class WorldItemVisualCatalog
             new Vector3(0.58f),
             -0.30f,
             new Vector3(0.66f, 0.48f, 0.28f),
-            0.055f)
+            0.055f),
+
+        new(
+            "visual.side.missing-tools.axe",
+            MissingToolsSideQuest.ToolItemId,
+            "models/static/siekiera_r0_01.glb",
+            new Vector3(22f, 0f, 17f),
+            new Vector3(0.82f),
+            0.58f,
+            new Vector3(0.56f, 0.39f, 0.20f),
+            0.075f),
+
+        new(
+            "visual.side.sq-r0-01.broken-ford",
+            "sq-r0-01-broken-ford",
+            "models/static/bridge_broken_r0_01.glb",
+            R0FordSideQuest.FordCenter,
+            new Vector3(1.45f),
+            MathF.PI * 0.5f,
+            new Vector3(0.46f, 0.34f, 0.20f),
+            0.20f),
+
+        new(
+            "visual.side.sq-r0-01.repaired-ford",
+            "sq-r0-01-repaired-ford",
+            "models/static/kladka_bagienna_03.glb",
+            R0FordSideQuest.FordCenter,
+            new Vector3(1.55f),
+            MathF.PI * 0.5f,
+            new Vector3(0.47f, 0.32f, 0.17f),
+            0.34f),
+
+        new(
+            "visual.side.sq-r0-01.bypass-marker",
+            "sq-r0-01-bypass-marker",
+            "models/static/drogowskaz_r0_01.glb",
+            R0FordSideQuest.BypassWestBankSpot,
+            new Vector3(1.05f),
+            0.25f,
+            new Vector3(0.43f, 0.30f, 0.16f),
+            0.02f)
     ];
 
     public static bool IsVisible(
@@ -82,6 +122,26 @@ public static class WorldItemVisualCatalog
 
             "visual.quest.ritual-thread" =>
                 RitualThreadVisible(world),
+
+            "visual.side.missing-tools.axe" =>
+                MissingToolsSideQuest.CanInvestigate(world) &&
+                !world.Progress.HasFlag(
+                    MissingToolsSideQuest.ToolCollectedFlag) &&
+                !world.Progress.Inventory.Contains(
+                    MissingToolsSideQuest.ToolItemId),
+
+            "visual.side.sq-r0-01.broken-ford" =>
+                R0FordSideQuest.Outcome(world) !=
+                    R0FordOutcome.Repaired,
+
+            "visual.side.sq-r0-01.repaired-ford" =>
+                R0FordSideQuest.Outcome(world) ==
+                    R0FordOutcome.Repaired,
+
+            "visual.side.sq-r0-01.bypass-marker" =>
+                R0FordSideQuest.Outcome(world) is
+                    R0FordOutcome.Bypass or
+                    R0FordOutcome.ClosedSafe,
 
             _ => false
         };

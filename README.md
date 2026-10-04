@@ -413,7 +413,7 @@ The five R0 NPC roles now have schedule-driven world positions, visible humanoid
 
 ### Settler population
 
-Żarnowiec now renders five authored NPC roles plus eight ambient settlers using five distinct animated humanoid GLB families (`villager A/B`, `hunter`, `merchant`, `elder`) instead of cloning the player hunter mesh. Role-specific proportions, muted palettes and lightweight shawl/hood/satchel/basket/tool/staff/spear accessories add another silhouette layer without extra actor draw calls. The five base NPC models are loaded once and shared across all residents. Ambient settlers remain non-interactive until authored dialogue exists.
+Żarnowiec now renders five authored NPC roles plus fourteen ambient settlers using five shared animated humanoid GLB families (`villager A/B`, `hunter`, `merchant`, `elder`) instead of cloning the player hunter mesh. The expanded community adds a smith helper, weaver, shepherd, gatherer, fisherman and young errand-runner alongside the original farmers/crafts/trader/carrier/elder/traveler. Role-specific proportions, muted palettes and lightweight shawl/hood/satchel/basket/tool/staff/spear/apron/fishing-pole/shoulder-bundle accessories create more silhouettes without multiplying base GLBs. Ambient actor geometry is skipped beyond 95 m, protecting low-end GPU/CPU budgets outside the settlement.
 
 
 ### Living NPC routines
@@ -435,6 +435,59 @@ Key vertical-slice items now use dynamic GLB visuals instead of invisible intera
 
 R0 forests now contain animated deer, boars, wolves and ravens using a lightweight deterministic territory/flee runtime. Ravens fly and gain altitude when spooked; ground wildlife wanders locally and avoids the player. Wildlife animation is distance-culled before geometry is appended to the shared actor pass.
 
+
+### Wildlife tracking
+
+Ground wildlife now leaves transient species-specific tracks on suitable terrain. Deer and boar stamp hoof marks, wolves stamp paw marks, and nearby HUD feedback reports species plus freshness without drawing a GPS trail. Rain erodes tracks faster, rock and submerged terrain reject them, and these hunting traces remain fully separate from durable quest evidence and magical Reveal Trace signatures.
+
+
+### R0 community dialogue
+
+Żarnowiec's fourteen ambient settlers are interactable instead of presentation-only. Their short conversations select world-state variants for daytime/night, rain or storm, the active swamp investigation, predator removal, apparition release and complete resolution, while remaining optional and unable to softlock quest progression.
+
+
+### Settler weather behavior
+
+Żarnowiec's fourteen ambient settlers now interrupt ordinary work/travel routines during severe storms and move along lightweight deterministic shelter routes. Normal rain leaves routine work intact, core quest NPC schedules are untouched, and residents resume their authored jobs when the storm passes.
+
+
+### Missing tools micro side quest
+
+The Żarnowiec woodworker now offers the optional `side-r0-missing-tools` investigation. A physical axe can be recovered at the forest worksite, separate context evidence can be inspected, and the return supports careful, uncertain, or unsupported-accusation outcomes with persistent relationship/reputation consequences. The quest is deliberately mundane and does not turn every local problem into a supernatural encounter.
+
+
+### SQ_R0_01 — Broken ford
+
+The first production R0 side-quest slot is now playable directly from field discovery. The damaged river crossing supports three durable outcomes: repair the direct ford with prototype timber, mark a discovered shallow bypass, or deliberately close the unsafe ford while preserving the alternate route. Each outcome changes local traversal and dynamic world models and survives save/load.
+
+
+### NPC local crowd steering
+
+R0 settlers now apply deterministic local separation after their scheduled routine motion. Nearby NPCs yield around each other and moving settlers keep personal space from the player, while a dialogue speaker remains fixed. The pass stays deliberately lightweight and reuses normal world collision resolution instead of introducing a full navmesh.
+
+
+### Visible NPC workstations
+
+Żarnowiec workers now periodically stop at authored visible workstations instead of only looping around schedule anchors. Existing GLBs form woodworking, pottery, weaving, herb-sorting, net-mending, forge, market, farming and crossing-maintenance stations; stationary workers face the correct station and use their Interact animation. Small workstation props use short-range culling.
+
+
+### R0 trading
+
+The trader and herbalist now expose a playable vendor screen while they are on duty and nearby. Press **T** to trade, W/S to select, A/D to switch buy/sell and E to confirm. Vendor stock is finite and survives save/load, village reputation applies a small prototype price modifier, tonic stock is knowledge-gated, and quest-protected items are excluded from selling.
+
+
+### R0 alchemy
+
+The herbalist now exposes a playable alchemy station while on duty. Press **K** nearby to open crafting; the first executable recipe is `marsh-sight-tonic`, gated by learned recipe knowledge and consuming one `marsh-herb` plus one `forest-resin`. Ingredient validation is atomic and the crafted tonic is excluded from the first-pass sell loop.
+
+
+### NPC reactions
+
+R0 settlers now react to immediate danger: civilians watch or move away from player attacks, flee engaged enemies, and the community guard faces or moves toward threats instead of fleeing. Dialogue speakers remain protected from reaction overrides.
+
+### Wildlife hunting
+
+Ground wildlife is now huntable with the existing light melee system. Deer, boar and wolves have prototype health, flee for several seconds after a wound, become persistent carcasses when killed, and expose a one-time contextual E harvest interaction. Harvested carcasses disappear from rendering, and wildlife health/position/loot state survives save/load. Ravens remain ambient for ground melee and are reserved for future ranged hunting.
 ### Bow hunting
 
-The vertical slice now includes a physical projectile bow. Hold RMB to aim, hold LMB to draw and release LMB to fire. Arrow speed and damage scale with draw time, gravity affects the flight path, targets are hit by segment collision, terrain arrows can be recovered with E, and wildlife kills persist through world flags. Aiming uses the existing R0 bow/arrow models and a lightweight reticle while projectiles remain consolidated in the actor render path.
+The vertical slice now includes a physical projectile bow. Hold RMB to aim, hold LMB to draw and release LMB to fire. Arrow speed and damage scale with draw time, gravity affects the flight path, targets are hit by segment collision, terrain arrows can be recovered with E, and wildlife wounds, carcasses and harvested loot share the existing save/load state. Aiming uses the existing R0 bow/arrow models and a lightweight reticle while projectiles remain consolidated in the actor render path.

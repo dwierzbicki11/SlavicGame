@@ -206,19 +206,33 @@ internal static class AssetIntegrationRegression
                 "models/static/slady_pazurow_r0_01.glb") &&
               SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
                 "models/static/riverbank_rocky_r0_01.glb") &&
+              SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
+                "models/static/stol_warsztatowy_r0_01.glb") &&
+              SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
+                "models/static/krosno_r0_01.glb") &&
               !SlavicGame.Engine.Renderer.WorldModelRenderPolicy.IsShortRangeProp(
                 "models/static/stodola_r0_01.glb"),
-            "Small props and rocky banks use short-range culling while major buildings keep world render distance");
+            "Small props, workstation furniture and rocky banks use short-range culling while major buildings keep world render distance");
+
+        var workstationModels =
+            NpcWorkstationCatalog.BuildModels(world.Terrain);
+        check(workstationModels.Count >= 20 &&
+              workstationModels.All(model =>
+                  File.Exists(Path.Combine(
+                      assetsRoot,
+                      model.AssetPath.Replace('/', Path.DirectorySeparatorChar)))),
+            "Visible NPC workstation props resolve to tracked GLB assets");
 
         var expectedWorldModels =
             21 +
             RegionalPropLayout.Placements.Count +
             decorationsA.Count +
             riverbankA.Count +
+            workstationModels.Count +
             clutterA.Count +
             VillageBoundaryLayout.Placements.Count;
         check(world.Models.Count == expectedWorldModels,
-            "World registers curated content, forest decoration, ground clutter and village walls");
+            "World registers curated content, NPC workstations, forest decoration, ground clutter and village walls");
 
         check(world.Models.All(model => File.Exists(Path.Combine(
                 assetsRoot,
@@ -310,11 +324,13 @@ internal static class AssetIntegrationRegression
             },
             StringComparer.Ordinal);
 
+        var populationViewer = new Vector3(45f, 0f, -20f);
         ActorModelMesh.Build(
             world,
             player,
             npcModels,
             enemy,
+            populationViewer,
             0.35,
             0f,
             true,
@@ -351,10 +367,10 @@ internal static class AssetIntegrationRegression
             .Select(actor => NpcVisualCatalog.For(actor.Id, actor.Role))
             .ToArray();
 
-        check(ambientProfiles.Length == 8 &&
-              ambientProfiles.Select(profile => profile.BaseColor).Distinct().Count() >= 6 &&
-              ambientProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 5,
-            "Ambient settlers have varied palettes and silhouette accessories");
+        check(ambientProfiles.Length == 14 &&
+              ambientProfiles.Select(profile => profile.BaseColor).Distinct().Count() >= 10 &&
+              ambientProfiles.Select(profile => profile.PrimaryAccessory).Distinct().Count() >= 8,
+            "Expanded ambient settlers have varied palettes and silhouette accessories");
 
         var ambientModelFiles = world.NpcWorld.Actors
             .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
@@ -408,6 +424,22 @@ internal static class AssetIntegrationRegression
         check(actorVertices.Length > baseAnimatedVertexBudget,
             "Settler accessories add visible geometry beyond their distinct humanoid GLBs");
 
+        ActorModelMesh.Build(
+            world,
+            player,
+            npcModels,
+            enemy,
+            new Vector3(-900f, 0f, -900f),
+            0.35,
+            0f,
+            true,
+            out var farActorVertices,
+            out var farActorIndices);
+
+        check(farActorVertices.Length < actorVertices.Length &&
+              farActorIndices.Length < actorIndices.Length,
+            "Ambient settler mesh generation is distance-culled away from the village");
+
         var npcGeometries = npcModels.Values
             .Select(model => model.BuildMesh(
                 Matrix4x4.Identity,
@@ -424,6 +456,35 @@ internal static class AssetIntegrationRegression
                 geometry.Positions.Length != playerGeometry.Positions.Length ||
                 !geometry.Positions.SequenceEqual(playerGeometry.Positions)),
             "NPC models are not all copies of the player hunter geometry");
+
+        check(BestiaryVisualCatalog.Definitions.Count == 5 &&
+              BestiaryVisualCatalog.RequiredModelFiles.Count == 5,
+            "Animated bestiary catalog exposes five distinct monster families");
+
+        foreach (var definition in BestiaryVisualCatalog.Definitions)
+        {
+            var bestiaryPath = Path.Combine(
+                assetsRoot,
+                "models",
+                "animated",
+                definition.ModelFile);
+            check(File.Exists(bestiaryPath),
+                $"Bestiary model asset exists: {definition.ModelFile}");
+
+            var bestiaryModel = GlbModel.Load(bestiaryPath);
+            check(definition.RequiredClips.All(clip =>
+                    bestiaryModel.AnimationNames.Contains(clip)),
+                $"Bestiary model {definition.ModelFile} exposes the full humanoid combat clip set");
+
+            var bestiaryGeometry = bestiaryModel.BuildMesh(
+                Matrix4x4.CreateScale(definition.Scale),
+                "Idle",
+                0.35f,
+                sourceIsZUp: true);
+            check(bestiaryGeometry.Positions.Length > 0 &&
+                  bestiaryGeometry.Indices.Length > 0,
+                $"Bestiary model {definition.Id} produces renderable animated geometry");
+        }
 
         void CheckFacing(string id, Vector2 target)
         {

@@ -130,6 +130,7 @@ public sealed class GameEngine : IDisposable
             {
                 if (_world.Cinematics.IsPlaying)
                 {
+                    _world.Bow.SetAiming(_world, false);
                     if (_window.ConsumeKeyPress(Key.Escape) || _window.ConsumeKeyPress(Key.Space))
                         _world.Cinematics.Finish(_world);
                     else
@@ -140,8 +141,12 @@ public sealed class GameEngine : IDisposable
                         _camera.ResumeFollow(_world.PlayerPosition, _world.Terrain);
                 }
                 else if (!_world.Dialogue.IsOpen &&
+                         !_world.Vendors.IsOpen &&
+                         !_world.Crafting.IsOpen &&
                          _window.ConsumeKeyPress(Key.Escape))
                 {
+                    _world.Bow.SetAiming(_world, false);
+                    _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
                     TryAutosave("pause");
                     _frontend.OpenMainMenu();
                     _window.SetMouseCapture(false);
@@ -429,6 +434,63 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
+        if (_world.Crafting.IsOpen || _world.Vendors.IsOpen)
+        {
+            _world.Bow.SetAiming(_world, false);
+            _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
+        }
+        if (_world.Crafting.IsOpen)
+        {
+            if (_window.ConsumeKeyPress(Key.Escape) ||
+                _window.ConsumeKeyPress(Key.K))
+            {
+                _world.Crafting.Close();
+            }
+            else
+            {
+                if (_window.ConsumeKeyPress(Key.W))
+                    _world.Crafting.MoveSelection(_world, -1);
+                if (_window.ConsumeKeyPress(Key.S))
+                    _world.Crafting.MoveSelection(_world, 1);
+                if (_window.ConsumeKeyPress(Key.E))
+                    _world.Crafting.Confirm(_world);
+            }
+
+            _camera.Follow(
+                _world.PlayerPosition,
+                (float)deltaSeconds,
+                _world.Terrain);
+            return;
+        }
+
+        if (_world.Vendors.IsOpen)
+        {
+            if (_window.ConsumeKeyPress(Key.Escape) ||
+                _window.ConsumeKeyPress(Key.T))
+            {
+                _world.Vendors.Close();
+            }
+            else
+            {
+                if (_window.ConsumeKeyPress(Key.W))
+                    _world.Vendors.MoveSelection(_world, -1);
+                if (_window.ConsumeKeyPress(Key.S))
+                    _world.Vendors.MoveSelection(_world, 1);
+                if (_window.ConsumeKeyPress(Key.A))
+                    _world.Vendors.ToggleMode(_world, -1);
+                if (_window.ConsumeKeyPress(Key.D))
+                    _world.Vendors.ToggleMode(_world, 1);
+                if (_window.ConsumeKeyPress(Key.E))
+                    _world.Vendors.Confirm(_world);
+            }
+
+            _camera.Follow(
+                _world.PlayerPosition,
+                (float)deltaSeconds,
+                _world.Terrain);
+            return;
+        }
+
         if (_world.Dialogue.IsOpen)
         {
             _world.Bow.SetAiming(_world, false);
@@ -450,6 +512,40 @@ public sealed class GameEngine : IDisposable
                     _world.Dialogue.Confirm(_world);
             }
 
+            _camera.Follow(
+                _world.PlayerPosition,
+                (float)deltaSeconds,
+                _world.Terrain);
+            return;
+        }
+
+        if (_window.ConsumeKeyPress(Key.K) &&
+            !_world.Rituals.IsPerforming &&
+            !_world.Magic.IsCasting &&
+            !_world.Cinematics.IsPlaying)
+        {
+            _world.Crafting.TryOpenNearest(_world);
+        }
+
+        if (_world.Crafting.IsOpen)
+        {
+            _camera.Follow(
+                _world.PlayerPosition,
+                (float)deltaSeconds,
+                _world.Terrain);
+            return;
+        }
+
+        if (_window.ConsumeKeyPress(Key.T) &&
+            !_world.Rituals.IsPerforming &&
+            !_world.Magic.IsCasting &&
+            !_world.Cinematics.IsPlaying)
+        {
+            _world.Vendors.TryOpenNearest(_world);
+        }
+
+        if (_world.Vendors.IsOpen)
+        {
             _camera.Follow(
                 _world.PlayerPosition,
                 (float)deltaSeconds,
@@ -541,7 +637,9 @@ public sealed class GameEngine : IDisposable
         var canMove =
             !_world.Magic.IsCasting &&
             !_world.Rituals.IsPerforming &&
-            !_world.Dialogue.IsOpen;
+            !_world.Dialogue.IsOpen &&
+            !_world.Vendors.IsOpen &&
+            !_world.Crafting.IsOpen;
         var input = new PlayerInput(
             canMove && _window.IsKeyDown(Key.W),
             canMove && _window.IsKeyDown(Key.S),

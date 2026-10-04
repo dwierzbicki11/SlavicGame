@@ -40,7 +40,17 @@ WeatherVisualRegression.Run(Check);
 CampfireInteractionRegression.Run(Check);
 FootprintTrailRegression.Run(Check);
 NpcDialogueRegression.Run(Check);
+NpcWeatherBehaviorRegression.Run(Check);
+NpcCrowdSteeringRegression.Run(Check);
+NpcReactionRegression.Run(Check);
+NpcWorkstationRegression.Run(Check);
+VendorRegression.Run(Check);
+CraftingRegression.Run(Check);
+MissingToolsSideQuestRegression.Run(Check);
+R0FordSideQuestRegression.Run(Check);
 WildlifeRegression.Run(Check);
+WildlifeHuntingRegression.Run(Check);
+WildlifeTrackingRegression.Run(Check);
 BowCombatRegression.Run(Check);
 
 // River terrain and water must form one sloped channel; animation has to read downstream.

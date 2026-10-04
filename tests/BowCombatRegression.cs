@@ -115,11 +115,8 @@ internal static class BowCombatRegression
             "Full-draw hunting arrow releases");
         world.Bow.Update(world, 0.25);
 
-        var deadFlag =
-            BowCombatRuntime.WildlifeDeadFlag("raven-start-01");
-
-        check(world.Progress.HasFlag(deadFlag),
-            "Full-draw arrow can kill low-health wildlife and records terminal world flag");
+        check(world.Wildlife.Actors.Single(actor => actor.Id == raven.Id).Health == 0f,
+            "Full-draw arrow kills wildlife through shared hunting health");
 
         var assetsRoot =
             Path.Combine(AppContext.BaseDirectory, "assets");
@@ -152,8 +149,11 @@ internal static class BowCombatRegression
         var restored = WorldGenerator.Generate();
         SaveGameService.Restore(restored, json);
 
-        check(restored.Progress.HasFlag(deadFlag),
-            "Hunted wildlife terminal state survives save/load");
+        check(restored.Wildlife.Actors.Single(actor => actor.Id == raven.Id).Health == 0f,
+            "Hunted wildlife health and carcass survive save/load");
+        check(restored.Wildlife.TryHarvest(restored, raven.Id) &&
+              !restored.Wildlife.TryHarvest(restored, raven.Id),
+            "Bow-killed wildlife yields harvest once through the shared hunting system");
 
         var wildlifeModels =
             WildlifeCatalog.RequiredModelFiles.ToDictionary(
@@ -183,6 +183,61 @@ internal static class BowCombatRegression
 
         check(deadRavenVertices.Length == 0 &&
               deadRavenIndices.Length == 0,
-            "Persistently hunted wildlife is culled from rendering after reload");
+            "Harvested wildlife is culled from rendering");
+
+        var harvestedRestore = WorldGenerator.Generate();
+        SaveGameService.Restore(harvestedRestore, SaveGameService.Serialize(restored));
+        check(harvestedRestore.Wildlife.Actors.Single(actor => actor.Id == raven.Id).Looted &&
+              !harvestedRestore.Wildlife.TryHarvest(harvestedRestore, raven.Id),
+            "Bow harvest stays consumed after save/load");
+
+        var slow = Flight(0.1);
+        var fast = Flight(1.0 / 120.0);
+        check(Vector3.Distance(slow, fast) < 0.005f,
+            "Arrow trajectory is independent of 10 versus 120 FPS");
+
+        var wounded = WorldGenerator.Generate();
+        var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
+        wounded.Wildlife.TryDamage(wounded, deer.Id, 20f);
+        var origin = deer.Position + Vector3.UnitY * WildlifeCatalog.For(deer.Species).BodyRadius * 0.72f - Vector3.UnitZ * 2f;
+        wounded.Bow.SetAiming(wounded, true);
+        wounded.Bow.TryStartDraw(wounded);
+        wounded.Bow.Update(wounded, 1.3);
+        wounded.Bow.TryRelease(wounded, origin, Vector3.UnitZ);
+        wounded.Bow.Update(wounded, 0.15);
+        check(wounded.Wildlife.Actors.Single(actor => actor.Id == deer.Id).Health == 0f,
+            "Melee wounds and bow hits use one shared wildlife health pool");
+
+        var blocked = WorldGenerator.Generate();
+        blocked.Bow.SetAiming(blocked, true);
+        blocked.Bow.TryStartDraw(blocked);
+        var ammo = blocked.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId);
+        blocked.Bow.SetAiming(blocked, false);
+        check(!blocked.Bow.TryRelease(blocked, blocked.PlayerPosition, Vector3.UnitZ) &&
+              blocked.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == ammo,
+            "Cancelled draw cannot fire or spend ammo on a later release");
+        blocked.Bow.SetAiming(blocked, true);
+        blocked.Bow.TryStartDraw(blocked);
+        blocked.Bow.TryRelease(blocked, blocked.PlayerPosition + Vector3.UnitY * 100f, Vector3.UnitZ);
+        SaveGameService.Restore(blocked, SaveGameService.Serialize(blocked));
+        check(!blocked.Bow.IsAiming && !blocked.Bow.IsDrawing && blocked.Bow.Projectiles.Count == 0,
+            "Restore clears transient bow input and projectiles");
+
+        Vector3 Flight(double step)
+        {
+            var flight = WorldGenerator.Generate();
+            flight.Bow.SetAiming(flight, true);
+            flight.Bow.TryStartDraw(flight);
+            flight.Bow.Update(flight, 1.3);
+            flight.Bow.TryRelease(flight, flight.PlayerPosition + Vector3.UnitY * 100f, Vector3.UnitZ);
+            var remaining = 0.6;
+            while (remaining > 0.000001)
+            {
+                var dt = Math.Min(step, remaining);
+                flight.Bow.Update(flight, dt);
+                remaining -= dt;
+            }
+            return flight.Bow.Projectiles.Single().Position;
+        }
     }
 }

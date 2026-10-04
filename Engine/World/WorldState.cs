@@ -30,7 +30,10 @@ public sealed class WorldState
     public SwampApparitionRuntime Apparition { get; } = new();
     public NpcWorldRuntime NpcWorld { get; } = new();
     public WildlifeWorldRuntime Wildlife { get; } = new();
+    public WildlifeTrackTrailState WildlifeTracks { get; } = new();
     public DialogueRuntime Dialogue { get; } = new();
+    public VendorRuntime Vendors { get; } = new();
+    public CraftingRuntime Crafting { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();
@@ -154,6 +157,7 @@ public sealed class WorldState
 
         _models.AddRange(WorldDecorationGenerator.Generate(Terrain));
         _models.AddRange(RiverbankPropGenerator.Generate(Terrain));
+        _models.AddRange(NpcWorkstationCatalog.BuildModels(Terrain));
         _models.AddRange(GroundClutterGenerator.Generate(Terrain));
 
         _enemies.Clear();
@@ -202,10 +206,34 @@ public sealed class WorldState
             new NpcScheduleSlot(9, 16, "old-village", "arrive-and-trade"),
             new NpcScheduleSlot(16, 9, "old-village", "rest"));
 
+        AddNpc("settler-smith-helper-01", NpcRole.Worker,
+            new NpcScheduleSlot(6, 18, "old-village", "forge-work"),
+            new NpcScheduleSlot(18, 6, "old-village", "rest"));
+        AddNpc("settler-weaver-01", NpcRole.Worker,
+            new NpcScheduleSlot(7, 18, "old-village", "weave-work"),
+            new NpcScheduleSlot(18, 7, "old-village", "rest"));
+        AddNpc("settler-shepherd-01", NpcRole.Worker,
+            new NpcScheduleSlot(6, 9, "old-village", "drive-flock"),
+            new NpcScheduleSlot(9, 17, "old-village", "graze-flock"),
+            new NpcScheduleSlot(17, 6, "old-village", "rest"));
+        AddNpc("settler-gatherer-01", NpcRole.Worker,
+            new NpcScheduleSlot(6, 11, "old-village", "gather-herbs"),
+            new NpcScheduleSlot(11, 18, "old-village", "sort-herbs"),
+            new NpcScheduleSlot(18, 6, "old-village", "rest"));
+        AddNpc("settler-fisher-01", NpcRole.Worker,
+            new NpcScheduleSlot(5, 9, "black-swamp", "river-fishing"),
+            new NpcScheduleSlot(9, 17, "old-village", "mend-nets"),
+            new NpcScheduleSlot(17, 5, "old-village", "rest"));
+        AddNpc("settler-youth-01", NpcRole.Other,
+            new NpcScheduleSlot(8, 18, "old-village", "run-errands"),
+            new NpcScheduleSlot(18, 8, "old-village", "rest"));
+
         SetPlayerPosition(Vector3.Zero);
         NpcWorld.Update(this);
         Wildlife.Reset(this);
+        WildlifeTracks.Reset(this);
         Dialogue.Close();
+        Vendors.Initialize();
         Apparition.Reset(this);
         WaterInteraction.Reset(PlayerPosition);
         Footprints.Reset(PlayerPosition);
@@ -218,6 +246,7 @@ public sealed class WorldState
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
         NpcWorld.Update(this);
         Wildlife.Update(this, deltaSeconds);
+        WildlifeTracks.Update(this, deltaSeconds);
         Dialogue.Update(this);
         Campfires.Update(this, deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
@@ -233,6 +262,7 @@ public sealed class WorldState
         }
 
         SwampPredatorEncounter.Update(this);
+        MissingToolsSideQuest.Synchronize(this);
     }
 
     public void SetPlayerPosition(Vector3 position)
@@ -266,6 +296,11 @@ public sealed class WorldState
                 position = obstacle.ResolvePoint(position, radius);
             }
         }
+
+        position = R0FordSideQuest.ResolveTraversal(
+            this,
+            position,
+            radius);
 
         position.X = Math.Clamp(position.X, -halfWidth, halfWidth);
         position.Y = Math.Clamp(position.Y, -halfDepth, halfDepth);

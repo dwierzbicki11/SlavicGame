@@ -6,11 +6,14 @@ namespace SlavicGame.Engine.World;
 
 public static class ActorModelMesh
 {
+    public const float AmbientNpcRenderDistance = 95f;
+
     public static void Build(
         WorldState world,
         GlbModel playerModel,
         IReadOnlyDictionary<string, GlbModel> npcModels,
         GlbModel enemyModel,
+        Vector3 viewerPosition,
         double animationSeconds,
         float playerYaw,
         bool includePlayer,
@@ -40,6 +43,13 @@ public static class ActorModelMesh
 
         foreach (var npc in world.NpcWorld.Actors)
         {
+            if (npc.Id.StartsWith("settler-", StringComparison.Ordinal) &&
+                HorizontalDistanceSquared(npc.Position, viewerPosition) >
+                    AmbientNpcRenderDistance * AmbientNpcRenderDistance)
+            {
+                continue;
+            }
+
             var profile = NpcVisualCatalog.For(npc.Id, npc.Role);
             var modelFile = NpcVisualCatalog.ModelFile(npc.Id, npc.Role);
             if (!npcModels.TryGetValue(modelFile, out var npcModel))
@@ -52,9 +62,20 @@ public static class ActorModelMesh
                 Matrix4x4.CreateScale(profile.BodyScale) *
                 Matrix4x4.CreateRotationY(npc.YawRadians) *
                 Matrix4x4.CreateTranslation(npc.Position);
-            var clip = npc.IsMoving
-                ? "Walk"
-                : NpcVisualCatalog.AnimationClip(npc.Activity);
+            var clip = npc.Reaction switch
+            {
+                NpcReactionKind.FleeThreat or
+                NpcReactionKind.AvoidPlayer => "Run",
+
+                NpcReactionKind.GuardThreat => "Walk",
+
+                NpcReactionKind.WatchPlayer => "Idle",
+
+                _ => npc.IsMoving
+                    ? "Walk"
+                    : NpcVisualCatalog.AnimationClip(npc.Activity)
+            };
+
             if (!npcModel.AnimationNames.Contains(clip))
                 clip = npc.IsMoving ? "Walk" : "Idle";
 
@@ -239,6 +260,53 @@ public static class ActorModelMesh
                     indices);
                 return;
 
+            case NpcAccessoryKind.Apron:
+                AddBox(
+                    new Vector3(0f, 0.96f, -0.12f),
+                    new Vector3(0.30f, 0.42f, 0.035f),
+                    transform,
+                    color,
+                    vertices,
+                    indices);
+                return;
+
+            case NpcAccessoryKind.FishingPole:
+                AddRod(
+                    new Vector3(0.44f, 0.55f, 0.10f),
+                    new Vector3(0.52f, 2.35f, 0.04f),
+                    0.018f,
+                    transform,
+                    color,
+                    vertices,
+                    indices);
+                AddRod(
+                    new Vector3(0.52f, 2.35f, 0.04f),
+                    new Vector3(0.74f, 2.52f, 0.02f),
+                    0.012f,
+                    transform,
+                    Vector3.Lerp(color, Vector3.One, 0.18f),
+                    vertices,
+                    indices);
+                return;
+
+            case NpcAccessoryKind.ShoulderBundle:
+                AddBox(
+                    new Vector3(-0.34f, 1.17f, 0.02f),
+                    new Vector3(0.22f, 0.30f, 0.17f),
+                    transform,
+                    color,
+                    vertices,
+                    indices);
+                AddRod(
+                    new Vector3(0.18f, 1.52f, 0.02f),
+                    new Vector3(-0.34f, 1.12f, 0.02f),
+                    0.024f,
+                    transform,
+                    Vector3.Lerp(color, Vector3.One, 0.12f),
+                    vertices,
+                    indices);
+                return;
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(accessory));
         }
@@ -369,6 +437,15 @@ public static class ActorModelMesh
             indices.Add(b);
             indices.Add(a);
         }
+    }
+
+    private static float HorizontalDistanceSquared(
+        Vector3 a,
+        Vector3 b)
+    {
+        var dx = a.X - b.X;
+        var dz = a.Z - b.Z;
+        return dx * dx + dz * dz;
     }
 
     private static float StableAnimationOffset(string id)

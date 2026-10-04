@@ -36,26 +36,30 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ### P3 — content production
 - [x] side-quest production cards per region; R0–R6, 21/21 slotów;
-- [x] regional encounter rosters/tables poza R0 (`design/RegionalEncounterRosters.md`): R1–R6 family-level implementation pass, persistence/filters/QA; final weights, density i placement pozostają playtest/data lockiem;
-- [x] regional vendors/services final pass (`design/RegionalVendorsServices.md`): R0–R6 service footprint, stable IDs, stock profiles, persistence/fail-forward; final prices/restock/signature goods pozostają balance/item/research lockiem;
-- [x] item/equipment/recipe catalogs dla pełnego scope (`design/ItemEquipmentRecipeCatalog.md`): stable families/IDs, equipment mapping, recipe gates, regional source matrix, persistence/QA; final tuning i exact historical assets pozostają lockiem;
-- [ ] dialogue packages po zamknięciu rosterów.
+- [x] regional encounter rosters/tables poza R0 (`design/RegionalEncounterRosters.md`);
+- [x] regional vendors/services final pass (`design/RegionalVendorsServices.md`);
+- [x] item/equipment/recipe catalogs dla pełnego scope (`design/ItemEquipmentRecipeCatalog.md`);
+- [x] dialogue packages implementation contract (`dialogue/FullGameDialoguePackages.md`).
 
 ### P4 — asset i budget lock
 - [x] asset families per region z reuse/LOD/variant strategy na poziomie planowania;
-- [ ] konkretne asset manifests/model/material/animation/audio/VFX records po art/research lockach;
-- [ ] animation/VFX/audio budgets;
-- [ ] streaming i memory budgets;
-- [ ] AI/encounter density budgets;
-- [ ] production estimates zależne od faktycznej przepustowości zespołu.
+- [x] konkretne production asset manifests / stable integration records R0–R6 (`design/ProductionAssetManifests.md`); exact historical-final forms i final art IDs pozostają jawnie research/art lockiem;
+- [x] animation/VFX/audio budget contract (`design/AnimationVfxAudioBudgetContract.md`);
+- [x] streaming i memory budget contract (`design/StreamingMemoryBudgetContract.md`);
+- [x] AI/encounter density budget contract (`design/AiEncounterDensityBudgetContract.md`);
+- [x] production estimates framework (`design/ProductionEstimatesFramework.md`).
 
 ### P5 — playtest/measurement lock
-- [ ] combat/economy/progression tuning;
-- [ ] evidence/reputation thresholds;
-- [ ] traversal/weather/day-night tuning;
-- [ ] measured CPU/GPU/RAM/VRAM/streaming targets;
-- [ ] minimal/recommended hardware po pomiarach;
-- [ ] release criteria evidence.
+- [x] measurement/playtest evidence contract i ledger format (`design/MeasurementPlaytestEvidence.md`);
+- [x] reprodukowalne scenario manifests dla combat/economy/progression i evidence/reputation (`design/BalancePlaytestScenarioManifests.md`); finalne liczby pozostają playtest lockiem;
+- [x] traversal/weather/day-night scenario manifests (`design/TraversalWeatherDayNightScenarioManifests.md`); tuning pozostaje measurement/playtest lockiem;
+- [x] performance/release measurement manifests (`design/PerformanceReleaseMeasurementManifests.md`); targety liczbowe i hardware pozostają measurement lockiem;
+- [ ] combat/economy/progression tuning — wykonać realne scenariusze i zamknąć candidate/locked ranges;
+- [ ] evidence/reputation thresholds — wykonać realne scenariusze i zamknąć candidate/locked thresholds;
+- [ ] traversal/weather/day-night tuning — wykonać scenariusze i zamknąć candidate/locked ranges;
+- [ ] measured CPU/GPU/RAM/VRAM/streaming/AI/AVFX targets z raw captures;
+- [ ] minimal/recommended hardware po pomiarach pełnego manifest setu;
+- [ ] release criteria evidence dla konkretnego candidate SHA.
 
 ## Reguły kolejki
 
@@ -68,4 +72,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P2 jest zamknięte na poziomie wymaganym do implementacji. Encounter rosters, regional vendors/services oraz full-scope item/equipment/recipe catalog mają implementation pass. Następny najmniejszy niezablokowany pakiet P3 to **dialogue packages po zamknięciu rosterów**. P4 może równolegle zacząć manifesty tylko dla rodzin z wystarczającym research/art lockiem.
+P1–P4 mają implementation/planning-level pass. P5 ma wspólny evidence contract oraz reprodukowalne scenario manifests dla gameplay/world i performance/release. Dokumentacyjny kontrakt pomiarów jest zamknięty; następny etap P5 wymaga już **realnego wykonania scenariuszy/profilowania** i zapisania candidate/locked values. Bez rzeczywistych captures nie deklarujemy targetów performance, hardware ani release evidence.

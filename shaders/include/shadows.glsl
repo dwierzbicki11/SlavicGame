@@ -33,23 +33,30 @@ float SampleSunShadow(
     vec2 texel = 1.0 / vec2(
         textureSize(sampler2D(shadowMap, shadowSampler), 0));
 
+    // Four symmetric taps keep a stable soft penumbra while cutting shadow-map
+    // bandwidth by more than half versus the previous 3x3 (9 tap) kernel.
+    // The offsets deliberately straddle the receiver instead of sampling the
+    // centre so thin occluders still contribute to the filtered result.
+    const vec2 offsets[4] = vec2[](
+        vec2(-0.75, -0.75),
+        vec2( 0.75, -0.75),
+        vec2(-0.75,  0.75),
+        vec2( 0.75,  0.75));
+
     float visible = 0.0;
-    for (int y = -1; y <= 1; y++)
+    for (int i = 0; i < 4; i++)
     {
-        for (int x = -1; x <= 1; x++)
-        {
-            float storedDepth = texture(
-                sampler2D(shadowMap, shadowSampler),
-                uv + vec2(x, y) * texel).r;
-            visible += projected.z - bias <= storedDepth
-                ? 1.0
-                : 0.0;
-        }
+        float storedDepth = texture(
+            sampler2D(shadowMap, shadowSampler),
+            uv + offsets[i] * texel).r;
+        visible += projected.z - bias <= storedDepth
+            ? 1.0
+            : 0.0;
     }
 
     // Never turn direct sunlight into pitch black. Indirect ambient light
     // remains the responsibility of the material shader.
-    return mix(0.18, 1.0, visible / 9.0);
+    return mix(0.18, 1.0, visible * 0.25);
 }
 
 #endif

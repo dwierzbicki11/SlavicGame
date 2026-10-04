@@ -192,16 +192,22 @@ Dodatki rozpoznawcze:
 Dodatki są generowane jako bardzo lekka geometria w istniejącym actor mesh passie, więc uczestniczą w tym samym depth/shadow path co postacie i nie wymagają osobnych draw calli.
 
 ### Ambient population
-Żarnowiec otrzymuje dodatkowo 8 mieszkańców:
+Żarnowiec otrzymuje dodatkowo 14 mieszkańców:
 - dwóch rolników;
 - cieślę;
 - garncarza;
 - handlarza;
 - tragarza;
 - starszego mieszkańca;
-- podróżnego.
+- podróżnego;
+- pomocnika kowala;
+- tkaczkę;
+- pasterza;
+- zbieraczkę;
+- rybaka;
+- młodego mieszkańca biegającego z drobnymi sprawami.
 
-Mają osobne pozycje dzienne/nocne, role, proporcje, kolory i zestawy dodatków. W obecnym passie są widoczni i animowani, ale nie dostają fałszywego promptu dialogowego, dopóki nie powstanie dla nich właściwy graph rozmowy.
+Mają osobne pozycje dzienne/nocne, role, proporcje, kolory i zestawy dodatków. Nowe sylwetki wykorzystują dodatkowo lekki proceduralny fartuch, wędkę i tobołek na ramię. W obecnym passie są widoczni i animowani, ale nie dostają fałszywego promptu dialogowego, dopóki nie powstanie dla nich właściwy graph rozmowy.
 
 ### Animation policy
 Wspólny rig zachowuje istniejące klipy. Aktywności typu patrol, noszenie towaru lub przybycie do wsi korzystają z `Walk`; pozostałe prototypowo z `Idle`. Docelowe animacje pracy nadal pozostają P1.
@@ -271,7 +277,7 @@ Każda baza zachowuje własną geometrię i animacje `Idle/Walk`, a istniejące 
 - tempo animacji;
 - lekkie proceduralne dodatki sylwetki.
 
-Modele są ładowane po jednym egzemplarzu na rodzinę i współdzielone przez wiele instancji NPC. Dzięki temu 13 aktywnych mieszkańców nie wymaga 13 kopii danych GLB.
+Modele są ładowane po jednym egzemplarzu na rodzinę i współdzielone przez wiele instancji NPC. Dzięki temu 19 aktywnych NPC nie wymaga 19 kopii danych GLB. Ambientowa geometria mieszkańców jest dodatkowo pomijana poza 95 m od obserwatora.
 
 
 ## Runtime work-animation pass
@@ -296,3 +302,140 @@ Na `Interact` przechodzą m.in.:
 Jeżeli NPC rzeczywiście porusza się w ramach danej aktywności, locomotion ma pierwszeństwo i renderer używa `Walk`. Po zatrzymaniu w punkcie pracy przechodzi na `Interact`.
 
 Wszystkie pięć używanych rodzin NPC GLB jest walidowanych pod kątem obecności `Idle`, `Walk` i `Interact`.
+
+
+## Runtime ambient community dialogue pass
+
+The fourteen ambient settlers are no longer presentation-only actors. They now use the authored `DLG_R0_COMMUNITY` package and expose `E POROZMAWIAJ` through the same proximity contract as core NPCs.
+
+Ambient start-node selection reacts to:
+- current time of day;
+- rain/storm state;
+- active swamp investigation;
+- physical predator resolution;
+- apparition release;
+- complete two-cause resolution.
+
+The lines remain local observations and opinions. They do not grant unique mandatory evidence or mutate quest phase, so ignoring every ambient settler cannot block vertical-slice progression.
+
+Dialogue freeze still affects only the current speaker; every other resident keeps following the local routine system.
+
+
+## Runtime severe-weather routine pass
+
+Ambient settlers now react physically to severe weather instead of only commenting on it.
+
+When the active weather reaches `Storm` (or an equivalent rain intensity >= 0.85):
+- all fourteen ambient Żarnowiec settlers switch from their current work/travel activity to `shelter-storm`;
+- each NPC uses its own short deterministic route toward a nearby sheltered part of the village;
+- residents remain spatially distributed instead of stacking at one shelter point;
+- actor locomotion continues to use existing `Walk`/idle behavior and the same obstacle resolution;
+- core quest NPCs keep their authored schedules so storm behavior cannot silently remove a progression-critical teacher/quest giver.
+
+Ordinary `Rain` does not trigger full evacuation. When severe weather ends, ambient residents return to their normal schedule-selected activities on the next runtime update.
+
+This is intentionally a lightweight situational override rather than a navmesh/crowd simulation.
+
+
+## Runtime population expansion pass
+
+Drugi pass populacji zwiększa ambient Żarnowca z 8 do 14 postaci bez dodawania kolejnych bazowych GLB.
+
+Nowe role:
+- `settler-smith-helper-01` — pomocnik kowala;
+- `settler-weaver-01` — tkaczka;
+- `settler-shepherd-01` — pasterz;
+- `settler-gatherer-01` — zbieraczka;
+- `settler-fisher-01` — rybak pracujący rano przy mokradłach/przeprawie;
+- `settler-youth-01` — młody mieszkaniec roznoszący drobne sprawy po osadzie.
+
+Każda z tych postaci ma własny profil proporcji/palety/akcesoriów, harmonogram, lokalną trasę pracy, reakcję na burzę i opcjonalny graf `DLG_R0_COMMUNITY`. Wszystkie pozostają contentem F/placeholder art do późniejszego research locku ubioru.
+
+
+## Local crowd steering pass
+
+R0 nadal nie używa pełnego navmesha ani fizyki crowd, ale NPC nie mogą już bezkarnie zajmować dokładnie tej samej przestrzeni.
+
+`NpcCrowdSteering` działa po wyliczeniu deterministic routine pose:
+- dwa krótkie przebiegi solvera;
+- minimalny dystans centrum NPC: około 0.76 m;
+- maksymalny korekcyjny push per pass: 0.40 m;
+- korekta po każdym pushu przechodzi ponownie przez `WorldState.ResolveHorizontalPosition`, więc respektuje statyczne przeszkody i granice terenu;
+- ruchomy NPC utrzymuje około 0.72 m przestrzeni od gracza;
+- NPC aktualnie prowadzący dialog jest chroniony i nie jest przesuwany przez crowd solver;
+- fallback dla idealnie nakładających się pozycji jest deterministyczny z ID postaci, bez losowości per-frame.
+
+To pozostaje rozwiązaniem low-cost dla obecnej populacji kilkunastu mieszkańców. Złożoność par to O(n²), ale przy R0 jest to kilkaset prostych testów dystansu na update, bez path query, bez rigid-body solvera i bez navmesh rebuild.
+
+Przejście do spatial grid/navmesh jest wymagane dopiero po pomiarze, jeśli docelowa gęstość regionów przekroczy budżet tego prostego solvera.
+
+
+## Runtime visible-workstation pass
+
+Modele osadników są już połączone z realnymi stanowiskami pracy w świecie. Zamiast odgrywać `Interact` na pustym gruncie, wybrane dzienne aktywności mają teraz własne workstation definitions.
+
+### Stanowiska
+
+Pierwszy pass obejmuje:
+- dwóch rolników — kosz/work sack/hay przy polach;
+- cieślę — stół warsztatowy + siekiera;
+- garncarza — stół + naczynia + gliniany garnek;
+- handlarza — skrzynia i kosz przy rynku;
+- pomocnika kowala — wiadro + narzędzie przy istniejącym kowadle/kuźni;
+- tkaczkę — realne `krosno_r0_01.glb` + taboret;
+- zbieraczkę — stół do sortowania + świeże/suszone zioła;
+- rybaka — ława + zwój liny + pułapka rybacka przy naprawie sieci;
+- zielarkę — stół, kosz i zioła;
+- opiekuna przeprawy — lina i wiadro przy kładce.
+
+### Duty cycle
+
+`NpcWorkstationCatalog` rozdziela aktywność na deterministyczny cykl:
+- większość czasu NPC stoi przy stanowisku, patrzy na właściwy obiekt i używa `Interact`;
+- pozostałą część czasu zachowuje istniejącą krótką trasę `NpcRoutineMotion`.
+
+Nie ma losowego teleportowania. Faza wynika z czasu świata oraz stabilnego hasha NPC/activity.
+
+### Dialogue / weather compatibility
+
+Rozmowa nadal ma pierwszeństwo:
+- aktywny rozmówca zostaje zamrożony w aktualnym miejscu;
+- po dialogu jego harmonogram jest przesuwany tak jak wcześniej.
+
+Storm shelter nadal zastępuje aktywność pracy, więc NPC nie pozostaje przy warsztacie podczas wymuszonego schronienia.
+
+### Performance
+
+Małe workstation props używają short-range cullingu. Nie tworzą nowych animowanych rigów, particle systemów ani dodatkowych render passów.
+
+
+## Runtime situational reactions
+
+Modele i rutyny osadników są już spięte z lekką warstwą reakcji sytuacyjnych.
+
+### Player threat
+Gdy gracz wykonuje atak wręcz albo aktywnie inkantuje czar w pobliżu:
+- zwykły osadnik patrzy na gracza;
+- jeśli gracz podejdzie bardzo blisko podczas ataku, osadnik cofa się i używa ruchowej animacji;
+- `community-guard` nie ucieka — zatrzymuje się i zwraca w stronę gracza.
+
+### Physical threat
+Jeśli żywy przeciwnik znajduje się w aktywnym stanie `Alert`, `Chase` albo `Attack` blisko NPC:
+- cywile przechodzą w `FleeThreat` i odsuwają się od przeciwnika;
+- strażnik przechodzi w `GuardThreat` i podchodzi do kontrolowanego dystansu od zagrożenia.
+
+To nie jest jeszcze pełne combat AI strażnika — `GuardThreat` jest reakcją pozycyjną i wizualną, nie automatycznym zadawaniem obrażeń.
+
+### Dialogue priority
+NPC będący aktywnym rozmówcą jest chroniony przed crowd push oraz reaction override:
+- pozostaje na miejscu;
+- patrzy na gracza;
+- po zamknięciu dialogu wraca do swojej deterministic routine bez skoku czasu.
+
+### Animation mapping
+- `AvoidPlayer` / `FleeThreat` preferują `Run`;
+- `GuardThreat` preferuje `Walk`;
+- `WatchPlayer` używa `Idle`;
+- jeśli GLB nie ma danego clipu, runtime bezpiecznie wraca do `Walk` albo `Idle`.
+
+System pozostaje bez navmesha i używa istniejącego collision resolvera oraz crowd steering.

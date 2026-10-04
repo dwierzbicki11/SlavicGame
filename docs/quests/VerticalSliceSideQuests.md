@@ -90,3 +90,47 @@ Po vertical slice:
 5. Niechciany gość.
 
 Pierwsze trzy można zrobić bez nowej złożonej istoty.
+
+
+## Runtime implementation — side-r0-missing-tools
+
+„Zaginione narzędzia” is now implemented as a small vertical-slice side quest under the stable runtime ID:
+
+`side-r0-missing-tools`
+
+It deliberately does **not** use `SQ_R0_01`, because the production side-quest catalog reserves `SQ_R0_01` for „Złamany bród”.
+
+### Owner
+- giver: `settler-woodworker-01`;
+- quest is optional and has no MQ dependency;
+- ignoring it cannot block `light-over-swamp` or later campaign progression.
+
+### Runtime flow
+1. talk to the woodworker and accept the request;
+2. search the forest worksite near the fallen trunk;
+3. recover the visible `siekiera_r0_01.glb` quest tool;
+4. optionally inspect the worksite context;
+5. return to the woodworker.
+
+### Outcomes
+- `MisplacedConfirmed` — tool + worksite evidence; player correctly concludes there is no theft;
+- `ReturnedUncertain` — tool returned without inventing an explanation;
+- `FalseAccusation` — player accuses someone without evidence.
+
+The quest is intentionally mundane: no supernatural explanation is introduced.
+
+### Prototype rewards
+- careful evidence-based conclusion: 20 Money, +4 old-village reputation, +8 woodworker Trust;
+- uncertain but honest return: 15 Money, +2 reputation, +4 Trust;
+- unsupported accusation: 10 Money, no reputation, -5 Trust.
+
+Values remain playtest-tunable.
+
+### Persistence
+Quest phase/evidence, returned-tool state, outcome flags, reward claim, reputation, relationship and money all use existing save contracts. Reward synchronization is idempotent and cannot pay twice after reload.
+
+### Evidence
+- `side-r0-missing-tools.tool-found` — Observation;
+- `side-r0-missing-tools.worksite-context` — ConfirmedFact that the worksite context does not support theft.
+
+This side quest teaches the same evidence discipline as the main contract on a much smaller non-supernatural problem.

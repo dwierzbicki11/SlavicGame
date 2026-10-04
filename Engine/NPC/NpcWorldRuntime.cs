@@ -10,7 +10,8 @@ public sealed record NpcWorldActor(
     string LocationId,
     Vector3 Position,
     float YawRadians,
-    bool IsMoving);
+    bool IsMoving,
+    NpcReactionKind Reaction = NpcReactionKind.None);
 
 public static class NpcPresentation
 {
@@ -29,18 +30,26 @@ public static class NpcPresentation
         "settler-carrier-01" => "TRAGARZ",
         "settler-elder-01" => "STARSZY MIESZKANIEC",
         "settler-traveler-01" => "PODROZNY",
+        "settler-smith-helper-01" => "POMOCNIK KOWALA",
+        "settler-weaver-01" => "TKACZKA",
+        "settler-shepherd-01" => "PASTERZ",
+        "settler-gatherer-01" => "ZBIERACZKA",
+        "settler-fisher-01" => "RYBAK",
+        "settler-youth-01" => "MLODY MIESZKANIEC",
         _ => id.Replace('-', ' ').ToUpperInvariant()
     };
 
-    public static bool HasDialogue(string id) => id switch
-    {
-        "missing-family" or
-        "crossing-keeper" or
-        "herbalist" or
-        "community-guard" or
-        "shrine-keeper" => true,
-        _ => false
-    };
+    public static bool HasDialogue(string id) =>
+        id.StartsWith("settler-", StringComparison.Ordinal) ||
+        id switch
+        {
+            "missing-family" or
+            "crossing-keeper" or
+            "herbalist" or
+            "community-guard" or
+            "shrine-keeper" => true,
+            _ => false
+        };
 
     public static Vector3 RoleColor(NpcRole role) => role switch
     {
@@ -78,11 +87,17 @@ public sealed class NpcWorldRuntime
             if (slot is null)
                 continue;
 
+            var effectiveActivity =
+                NpcSituationalBehavior.ResolveActivity(
+                    world,
+                    npc,
+                    slot);
+
             var fallback =
                 PoseFor(
                     npc.Id,
                     slot.LocationId,
-                    slot.Activity);
+                    effectiveActivity);
             var speaking =
                 world.Dialogue.IsOpen &&
                 string.Equals(
@@ -127,20 +142,40 @@ public sealed class NpcWorldRuntime
                         routineOffset;
                 }
 
+                var routineTime =
+                    world.Time.TimeOfDayHours -
+                    routineOffset;
+
                 motion = NpcRoutineMotion.Sample(
                     npc.Id,
-                    slot.Activity,
+                    effectiveActivity,
                     fallback,
-                    world.Time.TimeOfDayHours -
-                    routineOffset);
+                    routineTime);
+
+                if (NpcWorkstationCatalog.TrySample(
+                        npc.Id,
+                        effectiveActivity,
+                        routineTime,
+                        out var workstationMotion))
+                {
+                    motion = workstationMotion;
+                }
 
                 _lastRoutineWorldHours[npc.Id] =
                     world.Time.TimeOfDayHours;
             }
 
+            var reaction = NpcReactionSystem.Resolve(
+                world,
+                npc,
+                motion.Position,
+                motion.Forward,
+                motion.IsMoving,
+                speaking);
+
             var horizontal =
                 world.ResolveHorizontalPosition(
-                    motion.Position,
+                    reaction.Position,
                     0.42f);
             var position =
                 new Vector3(
@@ -151,11 +186,10 @@ public sealed class NpcWorldRuntime
                 world.Terrain.SampleHeight(position);
 
             var yaw =
-                motion.IsMoving &&
-                motion.Forward.LengthSquared() > 0.000001f
+                reaction.Forward.LengthSquared() > 0.000001f
                     ? WorldPlacementOrientation.YawFacing(
                         horizontal,
-                        horizontal + motion.Forward)
+                        horizontal + reaction.Forward)
                     : DefaultYaw(
                         npc.Id,
                         slot.LocationId);
@@ -172,12 +206,23 @@ public sealed class NpcWorldRuntime
             _actors.Add(new NpcWorldActor(
                 npc.Id,
                 npc.Role,
-                slot.Activity,
+                effectiveActivity,
                 slot.LocationId,
                 position,
                 yaw,
-                motion.IsMoving && !speaking));
+                reaction.IsMoving && !speaking,
+                reaction.Kind));
         }
+
+        NpcCrowdSteering.Resolve(
+            world,
+            _actors,
+            world.Dialogue.IsOpen
+                ? world.Dialogue.SpeakerId
+                : null);
+
+        foreach (var actor in _actors)
+            _lastPositions[actor.Id] = actor.Position;
     }
 
     public NpcWorldActor? FindNearest(Vector3 position, float maxDistance = 3.8f) =>
@@ -287,6 +332,27 @@ public sealed class NpcWorldRuntime
 
             ("settler-traveler-01", "old-village", "arrive-and-trade") => new(2f, -109f),
             ("settler-traveler-01", "old-village", _) => new(18f, -76f),
+
+            ("settler-smith-helper-01", "old-village", "forge-work") => new(22f, -91f),
+            ("settler-smith-helper-01", "old-village", _) => new(17f, -99f),
+
+            ("settler-weaver-01", "old-village", "weave-work") => new(-17f, -78f),
+            ("settler-weaver-01", "old-village", _) => new(-21f, -94f),
+
+            ("settler-shepherd-01", "old-village", "drive-flock") => new(22f, -71f),
+            ("settler-shepherd-01", "old-village", "graze-flock") => new(30f, -64f),
+            ("settler-shepherd-01", "old-village", _) => new(24f, -80f),
+
+            ("settler-gatherer-01", "old-village", "gather-herbs") => new(-34f, -56f),
+            ("settler-gatherer-01", "old-village", "sort-herbs") => new(7f, -90f),
+            ("settler-gatherer-01", "old-village", _) => new(10f, -98f),
+
+            ("settler-fisher-01", "black-swamp", "river-fishing") => new(111f, 27f),
+            ("settler-fisher-01", "old-village", "mend-nets") => new(20f, -75f),
+            ("settler-fisher-01", "old-village", _) => new(24f, -82f),
+
+            ("settler-youth-01", "old-village", "run-errands") => new(-1f, -84f),
+            ("settler-youth-01", "old-village", _) => new(6f, -96f),
 
             _ => LocationCenter(locationId)
         };

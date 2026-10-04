@@ -16,7 +16,8 @@ public enum WildlifeBehavior
     Wander,
     Flee,
     Fly,
-    Spooked
+    Spooked,
+    Dead
 }
 
 public sealed record WildlifeSpawnDefinition(
@@ -32,7 +33,10 @@ public sealed record WildlifeWorldActor(
     Vector3 Position,
     float YawRadians,
     WildlifeBehavior Behavior,
-    bool IsMoving);
+    bool IsMoving,
+    float Health = 1f,
+    float MaxHealth = 1f,
+    bool Looted = false);
 
 public sealed record WildlifeVisualProfile(
     string ModelFile,
@@ -41,7 +45,8 @@ public sealed record WildlifeVisualProfile(
     float WanderSpeed,
     float FleeSpeed,
     float AlertDistance,
-    float BodyRadius);
+    float BodyRadius,
+    float MaxHealth);
 
 public static class WildlifeCatalog
 {
@@ -55,7 +60,8 @@ public static class WildlifeCatalog
                 WanderSpeed: 1.15f,
                 FleeSpeed: 6.1f,
                 AlertDistance: 18f,
-                BodyRadius: 0.55f),
+                BodyRadius: 0.55f,
+                MaxHealth: 45f),
 
             [WildlifeSpecies.Boar] = new(
                 "boar_animated.glb",
@@ -64,7 +70,8 @@ public static class WildlifeCatalog
                 WanderSpeed: 0.85f,
                 FleeSpeed: 4.4f,
                 AlertDistance: 12f,
-                BodyRadius: 0.60f),
+                BodyRadius: 0.60f,
+                MaxHealth: 65f),
 
             [WildlifeSpecies.Wolf] = new(
                 "wolf_animated.glb",
@@ -73,7 +80,8 @@ public static class WildlifeCatalog
                 WanderSpeed: 1.25f,
                 FleeSpeed: 5.3f,
                 AlertDistance: 15f,
-                BodyRadius: 0.48f),
+                BodyRadius: 0.48f,
+                MaxHealth: 50f),
 
             [WildlifeSpecies.Raven] = new(
                 "raven_animated.glb",
@@ -82,13 +90,23 @@ public static class WildlifeCatalog
                 WanderSpeed: 3.5f,
                 FleeSpeed: 7.5f,
                 AlertDistance: 13f,
-                BodyRadius: 0.20f)
+                BodyRadius: 0.20f,
+                MaxHealth: 12f)
         };
 
     public static WildlifeVisualProfile For(WildlifeSpecies species) =>
         Profiles.TryGetValue(species, out var profile)
             ? profile
             : throw new ArgumentOutOfRangeException(nameof(species));
+
+    public static string DisplayName(WildlifeSpecies species) => species switch
+    {
+        WildlifeSpecies.Deer => "JELEN",
+        WildlifeSpecies.Boar => "DZIK",
+        WildlifeSpecies.Wolf => "WILK",
+        WildlifeSpecies.Raven => "KRUK",
+        _ => species.ToString().ToUpperInvariant()
+    };
 
     public static IReadOnlyCollection<string> RequiredModelFiles { get; } =
         Profiles.Values
@@ -131,6 +149,48 @@ public static class WildlifeLayout
     ];
 }
 
+public sealed record WildlifeSnapshot(
+    string Id,
+    Vector3 Position,
+    float Health,
+    bool Looted);
+
+public sealed record WildlifeLoot(
+    string ItemId,
+    int Quantity);
+
+public static class WildlifeHarvestCatalog
+{
+    public static IReadOnlyList<WildlifeLoot> For(
+        WildlifeSpecies species) => species switch
+    {
+        WildlifeSpecies.Deer =>
+        [
+            new("venison", 3),
+            new("deer-hide", 1)
+        ],
+
+        WildlifeSpecies.Boar =>
+        [
+            new("boar-meat", 3),
+            new("boar-hide", 1)
+        ],
+
+        WildlifeSpecies.Wolf =>
+        [
+            new("wolf-pelt", 1),
+            new("wolf-fang", 2)
+        ],
+
+        WildlifeSpecies.Raven =>
+        [
+            new("raven-feather", 2)
+        ],
+
+        _ => []
+    };
+}
+
 public sealed class WildlifeWorldRuntime
 {
     private sealed class State(WildlifeSpawnDefinition spawn)
@@ -138,6 +198,9 @@ public sealed class WildlifeWorldRuntime
         public WildlifeSpawnDefinition Spawn { get; } = spawn;
         public Vector3 Position;
         public Vector2 LastForward = Vector2.UnitY;
+        public float Health = WildlifeCatalog.For(spawn.Species).MaxHealth;
+        public bool Looted;
+        public double ForcedFleeSeconds;
     }
 
     private readonly Dictionary<string, State> _states =
@@ -208,6 +271,12 @@ public sealed class WildlifeWorldRuntime
         var spawn = state.Spawn;
         var profile = WildlifeCatalog.For(spawn.Species);
 
+        if (state.Health <= 0f)
+            return;
+
+        state.ForcedFleeSeconds =
+            Math.Max(0d, state.ForcedFleeSeconds - deltaSeconds);
+
         var position2 = new Vector2(
             state.Position.X,
             state.Position.Z);
@@ -228,7 +297,9 @@ public sealed class WildlifeWorldRuntime
             return;
         }
 
-        var fleeing = playerDistance < profile.AlertDistance;
+        var fleeing =
+            state.ForcedFleeSeconds > 0d ||
+            playerDistance < profile.AlertDistance;
         Vector2 target;
 
         if (fleeing && playerDistance > 0.001f)
@@ -355,6 +426,134 @@ public sealed class WildlifeWorldRuntime
         state.Position = position;
     }
 
+    public bool TryDamage(
+        WorldState world,
+        string id,
+        float amount)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+        if (!float.IsFinite(amount) || amount <= 0f)
+            return false;
+        if (!_states.TryGetValue(id, out var state) ||
+            state.Health <= 0f)
+        {
+            return false;
+        }
+
+        state.Health = MathF.Max(0f, state.Health - amount);
+        if (state.Health <= 0f)
+        {
+            state.ForcedFleeSeconds = 0d;
+
+            if (state.Spawn.Species == WildlifeSpecies.Raven)
+            {
+                state.Position.Y =
+                    world.Terrain.SampleHeight(state.Position);
+            }
+        }
+        else
+        {
+            state.ForcedFleeSeconds = 4.5d;
+        }
+
+        RebuildActors(world);
+        return true;
+    }
+
+    public WildlifeWorldActor? FindNearestHarvestable(
+        Vector3 position,
+        float maxDistance = 3.2f)
+    {
+        var maxDistanceSquared = maxDistance * maxDistance;
+        WildlifeWorldActor? best = null;
+
+        foreach (var actor in _actors)
+        {
+            if (actor.Behavior != WildlifeBehavior.Dead ||
+                actor.Looted)
+            {
+                continue;
+            }
+
+            var delta = actor.Position - position;
+            delta.Y = 0f;
+            var distanceSquared = delta.LengthSquared();
+            if (distanceSquared > maxDistanceSquared)
+                continue;
+
+            maxDistanceSquared = distanceSquared;
+            best = actor;
+        }
+
+        return best;
+    }
+
+    public bool TryHarvest(
+        WorldState world,
+        string id)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
+
+        if (!_states.TryGetValue(id, out var state) ||
+            state.Health > 0f ||
+            state.Looted)
+        {
+            return false;
+        }
+
+        foreach (var loot in WildlifeHarvestCatalog.For(state.Spawn.Species))
+            world.Progress.Inventory.Add(loot.ItemId, loot.Quantity);
+
+        state.Looted = true;
+        RebuildActors(world);
+        return true;
+    }
+
+    public WildlifeSnapshot[] Capture() =>
+        _states.Values
+            .OrderBy(state => state.Spawn.Id, StringComparer.Ordinal)
+            .Select(state => new WildlifeSnapshot(
+                state.Spawn.Id,
+                state.Position,
+                state.Health,
+                state.Looted))
+            .ToArray();
+
+    public void Restore(
+        WorldState world,
+        IEnumerable<WildlifeSnapshot> snapshots)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(snapshots);
+
+        foreach (var snapshot in snapshots)
+        {
+            if (!_states.TryGetValue(snapshot.Id, out var state))
+                continue;
+
+            var profile = WildlifeCatalog.For(state.Spawn.Species);
+            if (!float.IsFinite(snapshot.Health) ||
+                snapshot.Health < 0f ||
+                snapshot.Health > profile.MaxHealth)
+            {
+                continue;
+            }
+
+            state.Position = snapshot.Position;
+            state.Health = snapshot.Health;
+            state.Looted = snapshot.Looted;
+            state.ForcedFleeSeconds = 0d;
+
+            if (state.Health <= 0f)
+                state.Position.Y =
+                    world.Terrain.SampleHeight(state.Position);
+        }
+
+        RebuildActors(world);
+    }
+
     private void RebuildActors(WorldState world)
     {
         _actors.Clear();
@@ -373,17 +572,20 @@ public sealed class WildlifeWorldRuntime
             var playerDistance =
                 Vector2.Distance(position2, player2);
 
-            var behavior = spawn.Species switch
-            {
-                WildlifeSpecies.Raven when playerDistance < profile.AlertDistance =>
-                    WildlifeBehavior.Spooked,
-                WildlifeSpecies.Raven =>
-                    WildlifeBehavior.Fly,
-                _ when playerDistance < profile.AlertDistance =>
-                    WildlifeBehavior.Flee,
-                _ =>
-                    WildlifeBehavior.Wander
-            };
+            var behavior = state.Health <= 0f
+                ? WildlifeBehavior.Dead
+                : spawn.Species switch
+                {
+                    WildlifeSpecies.Raven when playerDistance < profile.AlertDistance =>
+                        WildlifeBehavior.Spooked,
+                    WildlifeSpecies.Raven =>
+                        WildlifeBehavior.Fly,
+                    _ when state.ForcedFleeSeconds > 0d ||
+                           playerDistance < profile.AlertDistance =>
+                        WildlifeBehavior.Flee,
+                    _ =>
+                        WildlifeBehavior.Wander
+                };
 
             var forward = state.LastForward;
             var yaw =
@@ -399,7 +601,10 @@ public sealed class WildlifeWorldRuntime
                 state.Position,
                 yaw,
                 behavior,
-                true));
+                behavior != WildlifeBehavior.Dead,
+                state.Health,
+                profile.MaxHealth,
+                state.Looted));
         }
     }
 
