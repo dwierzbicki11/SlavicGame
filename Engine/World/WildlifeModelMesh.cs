@@ -45,16 +45,24 @@ public static class WildlifeModelMesh
             var clip = SelectClip(actor);
             if (!model.AnimationNames.Contains(clip))
             {
-                clip = actor.Species == WildlifeSpecies.Raven
-                    ? "Fly"
-                    : "Walk";
+                clip = actor.Behavior == WildlifeBehavior.Dead
+                    ? "Idle"
+                    : actor.Species == WildlifeSpecies.Raven
+                        ? "Fly"
+                        : "Walk";
             }
 
             if (!model.AnimationNames.Contains(clip))
                 clip = model.AnimationNames.FirstOrDefault() ?? "";
 
+            var corpseTilt =
+                actor.Behavior == WildlifeBehavior.Dead
+                    ? Matrix4x4.CreateRotationZ(-1.25f)
+                    : Matrix4x4.Identity;
+
             var transform =
                 Matrix4x4.CreateScale(profile.Scale) *
+                corpseTilt *
                 Matrix4x4.CreateRotationY(actor.YawRadians) *
                 Matrix4x4.CreateTranslation(actor.Position);
 
@@ -88,11 +96,14 @@ public static class WildlifeModelMesh
                     ? "Fly"
                     : "Idle",
 
-            _ => actor.Behavior == WildlifeBehavior.Flee
-                ? "Run"
-                : actor.IsMoving
+            _ => actor.Behavior switch
+            {
+                WildlifeBehavior.Dead => "Death",
+                WildlifeBehavior.Flee => "Run",
+                _ => actor.IsMoving
                     ? "Walk"
                     : "Idle"
+            }
         };
 
     private static float StableAnimationOffset(string id)
