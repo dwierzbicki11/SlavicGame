@@ -69,6 +69,24 @@ internal static class LootContainerDepositRegression
             "Restored deposits return to inventory through the container panel");
         check(loaded.Loot.TransferSelected(loaded, true) == LootContainerResult.Empty && loaded.Progress.Inventory.Count("arrow-basic") == 8,
             "Repeated retrieval does not duplicate stored items");
+
+        loaded.Progress.Inventory.Add("simple-bandage", 2);
+        loaded.Loot.SelectPanel(LootPanel.Inventory);
+        check(loaded.Loot.TransferSelected(loaded, true) == LootContainerResult.Stored &&
+              loaded.Loot.Lines(loaded, LootPanel.Container).Single().ItemId == "arrow-basic",
+            "Inventory selection remains deterministic while preparing bulk retrieval");
+        loaded.Loot.SelectPanel(LootPanel.Inventory);
+        loaded.Loot.MoveSelection(loaded, 1);
+        check(loaded.Loot.TransferSelected(loaded, true) == LootContainerResult.Stored &&
+              loaded.Loot.Lines(loaded, LootPanel.Container).Count == 2,
+            "Runtime container can hold multiple deposited stacks");
+        check(loaded.Loot.TakeAll(loaded) == LootContainerResult.Looted &&
+              loaded.Progress.Inventory.Count("arrow-basic") == 8 && loaded.Progress.Inventory.Count("simple-bandage") == 2 &&
+              loaded.Loot.Lines(loaded, LootPanel.Container).Count == 0 && loaded.Loot.Message.StartsWith("ZABRANO WSZYSTKO", StringComparison.Ordinal),
+            "Runtime TakeAll atomically retrieves every container stack and reports completion");
+        check(loaded.Loot.TakeAll(loaded) == LootContainerResult.Empty && loaded.Progress.Inventory.Count("simple-bandage") == 2,
+            "Runtime TakeAll on an empty container is idempotent");
+
         loaded.Progress.Inventory.Add("simple-bow");
         loaded.Bow.SetAiming(loaded, true);
         check(!loaded.Bow.IsAiming, "Storage UI blocks bow aiming");
