@@ -5,6 +5,7 @@ using SlavicGame.Engine.Assets;
 using SlavicGame.Engine.Diagnostics;
 using SlavicGame.Engine.Windowing;
 using SlavicGame.Engine.Settings;
+using SlavicGame.Engine.Renderer.FidelityFx;
 using SlavicGame.Engine.UI;
 using SlavicGame.Engine.World;
 
@@ -125,6 +126,14 @@ public sealed class VeldridRenderer : IDisposable
             $"Vulkan presentation: requested VSync={vsync}, " +
             $"Veldrid SyncToVerticalBlank={_graphicsDevice.SyncToVerticalBlank}, " +
             $"Mesa override={Environment.GetEnvironmentVariable(PresentationPolicy.MesaPresentModeVariable) ?? "<none>"}.");
+
+        var fidelityFxProbe = FidelityFxRuntimePolicy.Probe();
+        var fidelityFxHandles =
+            FidelityFxVulkanInterop.GetDeviceHandles(_graphicsDevice);
+        EngineLog.Info(
+            $"FidelityFX Vulkan interop: {fidelityFxProbe.Status}; " +
+            $"graphicsQueueFamily={fidelityFxHandles.GraphicsQueueFamilyIndex}. " +
+            fidelityFxProbe.Diagnostic);
 
         var factory = _graphicsDevice.ResourceFactory;
         _commandList = factory.CreateCommandList();
