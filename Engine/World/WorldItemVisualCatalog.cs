@@ -57,7 +57,17 @@ public static class WorldItemVisualCatalog
             new Vector3(0.58f),
             -0.30f,
             new Vector3(0.66f, 0.48f, 0.28f),
-            0.055f)
+            0.055f),
+
+        new(
+            "visual.side.missing-tools.axe",
+            MissingToolsSideQuest.ToolItemId,
+            "models/static/siekiera_r0_01.glb",
+            new Vector3(22f, 0f, 17f),
+            new Vector3(0.82f),
+            0.58f,
+            new Vector3(0.56f, 0.39f, 0.20f),
+            0.075f)
     ];
 
     public static bool IsVisible(
@@ -82,6 +92,13 @@ public static class WorldItemVisualCatalog
 
             "visual.quest.ritual-thread" =>
                 RitualThreadVisible(world),
+
+            "visual.side.missing-tools.axe" =>
+                MissingToolsSideQuest.CanInvestigate(world) &&
+                !world.Progress.HasFlag(
+                    MissingToolsSideQuest.ToolCollectedFlag) &&
+                !world.Progress.Inventory.Contains(
+                    MissingToolsSideQuest.ToolItemId),
 
             _ => false
         };
