@@ -36,7 +36,7 @@ public sealed class ConsumableRuntime
     public string Message { get; private set; } = "";
 
     public ConsumableUseResult TryUseTrackingTonic(
-        World.WorldState world)
+        SlavicGame.Engine.World.WorldState world)
     {
         ArgumentNullException.ThrowIfNull(world);
 
