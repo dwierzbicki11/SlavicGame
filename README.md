@@ -444,3 +444,8 @@ Ground wildlife now leaves transient species-specific tracks on suitable terrain
 ### R0 community dialogue
 
 Żarnowiec's eight ambient settlers are now interactable instead of presentation-only. Their short conversations select world-state variants for daytime/night, rain or storm, the active swamp investigation, predator removal, apparition release and complete resolution, while remaining optional and unable to softlock quest progression.
+
+
+### Settler weather behavior
+
+Żarnowiec's eight ambient settlers now interrupt ordinary work/travel routines during severe storms and move along lightweight deterministic shelter routes. Normal rain leaves routine work intact, core quest NPC schedules are untouched, and residents resume their authored jobs when the storm passes.

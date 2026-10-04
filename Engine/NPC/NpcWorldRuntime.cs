@@ -80,11 +80,17 @@ public sealed class NpcWorldRuntime
             if (slot is null)
                 continue;
 
+            var effectiveActivity =
+                NpcSituationalBehavior.ResolveActivity(
+                    world,
+                    npc,
+                    slot);
+
             var fallback =
                 PoseFor(
                     npc.Id,
                     slot.LocationId,
-                    slot.Activity);
+                    effectiveActivity);
             var speaking =
                 world.Dialogue.IsOpen &&
                 string.Equals(
@@ -131,7 +137,7 @@ public sealed class NpcWorldRuntime
 
                 motion = NpcRoutineMotion.Sample(
                     npc.Id,
-                    slot.Activity,
+                    effectiveActivity,
                     fallback,
                     world.Time.TimeOfDayHours -
                     routineOffset);
@@ -174,7 +180,7 @@ public sealed class NpcWorldRuntime
             _actors.Add(new NpcWorldActor(
                 npc.Id,
                 npc.Role,
-                slot.Activity,
+                effectiveActivity,
                 slot.LocationId,
                 position,
                 yaw,

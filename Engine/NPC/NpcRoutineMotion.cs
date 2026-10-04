@@ -197,8 +197,54 @@ public static class NpcRoutineMotion
                     new Vector2(3f, -75f)
                 ]),
 
+            ("settler-farmer-01", "shelter-storm") => ShelterRoute(
+                new Vector2(-20f, -92f),
+                new Vector2(-25f, -90f)),
+            ("settler-farmer-02", "shelter-storm") => ShelterRoute(
+                new Vector2(-24f, -98f),
+                new Vector2(-27f, -94f)),
+            ("settler-woodworker-01", "shelter-storm") => ShelterRoute(
+                new Vector2(20f, -101f),
+                new Vector2(22f, -96f)),
+            ("settler-potter-01", "shelter-storm") => ShelterRoute(
+                new Vector2(-13f, -90f),
+                new Vector2(-8f, -88f)),
+            ("settler-trader-01", "shelter-storm") => ShelterRoute(
+                new Vector2(8f, -88f),
+                new Vector2(4f, -84f)),
+            ("settler-carrier-01", "shelter-storm") => ShelterRoute(
+                new Vector2(15f, -95f),
+                new Vector2(11f, -91f)),
+            ("settler-elder-01", "shelter-storm") => ShelterRoute(
+                new Vector2(-12f, -86f),
+                new Vector2(-7f, -86f)),
+            ("settler-traveler-01", "shelter-storm") => ShelterRoute(
+                new Vector2(18f, -76f),
+                new Vector2(12f, -80f)),
+
             _ => null
         };
+
+    private static Route ShelterRoute(
+        Vector2 home,
+        Vector2 shelter)
+    {
+        var side = new Vector2(
+            -(shelter.Y - home.Y),
+            shelter.X - home.X);
+
+        if (side.LengthSquared() > 0.000001f)
+            side = Vector2.Normalize(side) * 0.9f;
+
+        return new Route(
+            0.22,
+            [
+                home,
+                Vector2.Lerp(home, shelter, 0.55f),
+                shelter - side,
+                shelter + side
+            ]);
+    }
 
     private static (
         Vector2 Position,
