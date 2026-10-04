@@ -61,7 +61,7 @@ public sealed class PbrModelRenderer : IDisposable
 
         _materialLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             new ResourceLayoutElementDescription(
-                "Material", ResourceKind.UniformBuffer, ShaderStages.Fragment),
+                "Material", ResourceKind.UniformBuffer, ShaderStages.Vertex | ShaderStages.Fragment),
             new ResourceLayoutElementDescription(
                 "BaseColorTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
             new ResourceLayoutElementDescription(
@@ -131,6 +131,7 @@ public sealed class PbrModelRenderer : IDisposable
                     graphicsDevice,
                     factory,
                     model.Materials[materialIndex],
+                    assetGroup.Key,
                     textureQuality);
 
             foreach (var chunkGroup in assetGroup.GroupBy(
@@ -461,6 +462,7 @@ public sealed class PbrModelRenderer : IDisposable
         GraphicsDevice graphicsDevice,
         ResourceFactory factory,
         GlbMaterialData material,
+        string assetPath,
         TextureQuality textureQuality)
     {
         if (_materialLayout is null ||
@@ -474,12 +476,13 @@ public sealed class PbrModelRenderer : IDisposable
         var materialBuffer = factory.CreateBuffer(new BufferDescription(
             MaterialUniform.SizeInBytes,
             BufferUsage.UniformBuffer));
+        var windResponse = FoliageWindResponse(assetPath, material.Name);
         var uniform = new MaterialUniform(
             material.BaseColorFactor,
             new Vector4(
                 Math.Clamp(material.MetallicFactor, 0f, 1f),
                 Math.Clamp(material.RoughnessFactor, 0.04f, 1f),
-                0f,
+                windResponse,
                 0f));
         graphicsDevice.UpdateBuffer(materialBuffer, 0, ref uniform);
         _ownedMaterialBuffers.Add(materialBuffer);
@@ -641,6 +644,29 @@ public sealed class PbrModelRenderer : IDisposable
             BaseColorFactor = baseColorFactor;
             MaterialFactors = materialFactors;
         }
+    }
+
+    private static float FoliageWindResponse(string assetPath, string materialName)
+    {
+        if (!FarVegetationRenderer.IsTreeAsset(assetPath))
+            return 0f;
+
+        var foliageMaterial =
+            materialName.Contains("leaf", StringComparison.OrdinalIgnoreCase) ||
+            materialName.Contains("foliage", StringComparison.OrdinalIgnoreCase) ||
+            materialName.Contains("needle", StringComparison.OrdinalIgnoreCase);
+        if (!foliageMaterial)
+            return 0f;
+
+        var fileName = Path.GetFileNameWithoutExtension(assetPath);
+        if (fileName.StartsWith("brzoza_", StringComparison.OrdinalIgnoreCase))
+            return 1.15f;
+        if (fileName.StartsWith("olsza_", StringComparison.OrdinalIgnoreCase))
+            return 0.92f;
+        if (fileName.StartsWith("sosna_", StringComparison.OrdinalIgnoreCase))
+            return 0.58f;
+
+        return 0.82f;
     }
 
     private static RenderableKind ClassifyAsset(string assetPath)
