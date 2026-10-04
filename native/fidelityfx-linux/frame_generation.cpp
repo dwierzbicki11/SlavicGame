@@ -95,7 +95,7 @@ struct SlavicFgContext {
     }
 };
 
-extern "C" uint32_t slavicFgCreate(
+extern "C" __attribute__((visibility("default"))) uint32_t slavicFgCreate(
     const SlavicFgCreateDesc* desc, SlavicFgContext** outContext)
 {
     if (!desc || !outContext || *outContext ||
@@ -239,6 +239,6 @@ extern "C" uint32_t slavicFgCreate(
     return 0;
 }
 
-extern "C" void slavicFgDestroy(SlavicFgContext* context) {
+extern "C" __attribute__((visibility("default"))) void slavicFgDestroy(SlavicFgContext* context) {
     delete context;
 }
