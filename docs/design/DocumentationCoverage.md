@@ -4,7 +4,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 ## Próg swobodnej implementacji — stan 2026-10-04
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. Asset manifests oraz kontrakty AVFX, streaming/memory i AI/encounter definiują stabilne punkty integracji, degradację i telemetry. Production estimates mają measurement-gated framework. `MeasurementPlaytestEvidence.md` definiuje wspólną provenance/lifecycle dowodu, a `BalancePlaytestScenarioManifests.md` dodaje reprodukowalne scenariusze dla combat, economy/progression i evidence/reputation bez fabrykowania wyników. Implementacja systemów i content pipeline nie musi czekać na dalsze dopisywanie fabuły ani arbitralne limity.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. Asset manifests oraz kontrakty AVFX, streaming/memory i AI/encounter definiują stabilne punkty integracji, degradację i telemetry. Production estimates mają measurement-gated framework. `MeasurementPlaytestEvidence.md` definiuje wspólną provenance/lifecycle dowodu. Reprodukowalne P5 scenariusze istnieją dla combat, economy/progression, evidence/reputation oraz traversal/weather/day-night bez fabrykowania wyników. Implementacja systemów i content pipeline nie musi czekać na dalsze dopisywanie fabuły ani arbitralne limity.
 
 Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line writing/VO/lokalizacja, exact historical-final locators i formy, final art/AVFX/audio IDs/warianty oraz targety performance i estymaty kalendarzowe wymagające pomiarów.
 
@@ -25,12 +25,12 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 | Encounter/AI density | design/EncounterDesign.md + design/RegionalEncounterRosters.md + design/AiEncounterDensityBudgetContract.md | framework + family pass + A0–A3/simulation/admission/telemetry; final density/CPU measurement-gated |
 | NPC/dialog | design/NpcDialogueDesign.md + story/ProductionNpcRoster.md + dialogue/FullGameDialoguePackages.md | R0–R6/campaign package contract implementation-ready; final wording/VO/localization open |
 | Save/content/input/UI | design/SavePersistence.md + content/* + design/ControlsAndInput.md + ui/* | v0.1 implementation contracts |
-| Day/night/weather | world/DayNightEvents.md + WeatherGameplay.md + content/TimeEventFormat.md | behavior + data contract v0.1; P5 traversal/weather scenarios next |
+| Day/night/weather/traversal | world/DayNightEvents.md + WeatherGameplay.md + content/TimeEventFormat.md + design/TraversalWeatherDayNightScenarioManifests.md | behavior/data contract + reproducible P5 scenarios; final tuning open |
 | Architektura/rendering | design/EngineArchitecture.md + technical/RenderingAndPlatform.md + design/StreamingMemoryBudgetContract.md | v0.1 + streaming/residency contract |
 | Animation/VFX/audio budgets | design/AnimationVfxAudioBudgetContract.md + design/ProductionAssetManifests.md | planning v0.1; numeric ceilings open |
 | Streaming/memory budgets | design/StreamingMemoryBudgetContract.md + design/ProductionAssetManifests.md | planning v0.1; numeric RAM/VRAM/IO targets open |
 | AI/encounter budgets | design/AiEncounterDensityBudgetContract.md + design/RegionalEncounterRosters.md | planning v0.1; agent/CPU/query/density targets open |
-| Measurement/playtest evidence | design/MeasurementPlaytestEvidence.md + design/BalancePlaytestScenarioManifests.md + technical/TestingAndPerformance.md | evidence contract + gameplay scenario manifests v0.1; real evidence still required |
+| Measurement/playtest evidence | design/MeasurementPlaytestEvidence.md + design/BalancePlaytestScenarioManifests.md + design/TraversalWeatherDayNightScenarioManifests.md + technical/TestingAndPerformance.md | evidence contract + gameplay/world scenario manifests v0.1; real evidence still required |
 | Production estimates | design/ProductionEstimatesFramework.md + design/ContentProduction.md | framework v0.1; velocity/capacity/person-days/dates measurement-gated |
 | Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md | v0.1; performance measurements open |
 | Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md + ProductionEstimatesFramework.md + MeasurementPlaytestEvidence.md | planning + evidence contract; release evidence and real throughput open |
@@ -49,10 +49,10 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 8. encounter/AI final weights, density, cooldowns, POI placement, group sizes, active-agent limits, update cadence, path/perception ceilings, tuning i rewards;
 9. measured performance targets: AVFX ceilings, RAM/VRAM, streaming IO/prefetch/cell, AI CPU/query/agent budgets i wymagania sprzętowe;
 10. production estimates: velocity/capacity, czasy per domain/class, milestone ranges i release forecast wymagają rzeczywistych ukończonych próbek;
-11. tuning pogody/traversal/day-night oraz jego P5 scenario manifests;
+11. finalne tuning values pogody/traversal/day-night — P5 scenario manifests istnieją, wyniki nie;
 12. nazwy robocze F oraz elementy research/art/playtest/performance lock.
 
-Wspólny format dowodu dla pozycji 1, 7–11 istnieje w `MeasurementPlaytestEvidence.md`; reprodukowalne gameplay scenarios dla combat/economy/progression/evidence/reputation istnieją w `BalancePlaytestScenarioManifests.md`. Nie oznacza to, że wyniki zostały już zmierzone.
+Wspólny format dowodu dla pozycji 1, 7–11 istnieje w `MeasurementPlaytestEvidence.md`; reprodukowalne gameplay/world scenarios istnieją w `BalancePlaytestScenarioManifests.md` i `TraversalWeatherDayNightScenarioManifests.md`. Nie oznacza to, że wyniki zostały już zmierzone.
 
 ## Definicja „pełnej dokumentacji projektu”
 
@@ -60,10 +60,10 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** P1–P4 mają implementation/planning-level pass. P5 ma evidence contract oraz pierwsze reprodukowalne scenario manifests. Research-sensitive szczegóły i liczby wymagające telemetry/playtestów pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** P1–P4 mają implementation/planning-level pass. P5 ma evidence contract oraz reprodukowalne scenario manifests dla głównych domen gameplay/world. Research-sensitive szczegóły i liczby wymagające telemetry/playtestów pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. P5 scenario manifests dla traversal/weather/day-night;
-2. performance/release measurement manifests oraz realne evidence;
-3. realne balance/playtest/performance locks, measured hardware requirements i release evidence.
+1. performance/release measurement manifests;
+2. realne balance/playtest/performance evidence i candidate/locked ranges;
+3. measured hardware requirements oraz release evidence.

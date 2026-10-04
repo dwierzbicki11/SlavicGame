@@ -52,9 +52,11 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 ### P5 — playtest/measurement lock
 - [x] measurement/playtest evidence contract i ledger format (`design/MeasurementPlaytestEvidence.md`);
 - [x] reprodukowalne scenario manifests dla combat/economy/progression i evidence/reputation (`design/BalancePlaytestScenarioManifests.md`); finalne liczby pozostają playtest lockiem;
+- [x] traversal/weather/day-night scenario manifests (`design/TraversalWeatherDayNightScenarioManifests.md`); tuning pozostaje measurement/playtest lockiem;
 - [ ] combat/economy/progression tuning — wykonać realne scenariusze i zamknąć candidate/locked ranges;
 - [ ] evidence/reputation thresholds — wykonać realne scenariusze i zamknąć candidate/locked thresholds;
-- [ ] traversal/weather/day-night scenario manifests i tuning;
+- [ ] traversal/weather/day-night tuning — wykonać scenariusze i zamknąć candidate/locked ranges;
+- [ ] performance/release measurement manifests;
 - [ ] measured CPU/GPU/RAM/VRAM/streaming/AI targets;
 - [ ] minimal/recommended hardware po pomiarach;
 - [ ] release criteria evidence.
@@ -70,4 +72,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P4 mają implementation/planning-level pass. P5 ma wspólny evidence contract oraz reprodukowalne scenariusze dla combat/economy/progression i evidence/reputation. Następny najmniejszy niezablokowany pakiet dokumentacyjny to **scenario manifests dla traversal/weather/day-night**, a następnie performance/release measurement manifests. Faktyczne wartości balansu i thresholdy pozostają otwarte do wykonania realnych playtestów.
+P1–P4 mają implementation/planning-level pass. P5 ma wspólny evidence contract oraz reprodukowalne gameplay scenario manifests dla combat/economy/progression, evidence/reputation i traversal/weather/day-night. Następny najmniejszy niezablokowany pakiet dokumentacyjny to **performance/release measurement manifests**. Faktyczne wartości balansu, thresholdy i targety wydajności pozostają otwarte do wykonania realnych playtestów/profilowania.
