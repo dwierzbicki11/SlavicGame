@@ -501,3 +501,8 @@ The existing chest at the village market now opens with E and shows container an
 ### Enemy hit feedback
 
 The rendered swamp predator now plays its authored Hit clip when damaged, using progress from the actual hit reaction rather than global animation time. The underlying Chase/Attack engagement is retained and its normal clip resumes when recoil ends. Repeated hits restart the reaction; save/load clears transient recoil and defeated enemies remain hidden.
+
+
+### Enemy attack telegraph
+
+The swamp predator commits to a strike direction, winds up for 0.4 seconds, checks melee reach and a frontal sector once at contact, and recovers for 0.8 seconds. Retreating or moving behind the strike avoids it; dealing damage during windup interrupts the pending hit without resetting Chase/Attack engagement. The authored Attack clip follows this timeline and the predator faces its movement/strike direction. Nearby windups show a short warning in the HUD. Save/load discards pending strikes and resumes with recovery.

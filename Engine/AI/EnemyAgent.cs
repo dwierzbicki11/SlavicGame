@@ -32,13 +32,11 @@ public sealed class EnemyAgent : IDamageReceiver
     private const float MoveSpeed = 2.6f;
     private const float ReturnSpeed = 3.0f;
     private const float Damage = 8f;
-    private const float AttackIntervalSeconds = 1.2f;
     private const float AlertSeconds = 0.55f;
     private const float HitReactionSeconds = 0.18f;
 
     private float _patrolSign = 1f;
     private double _alertRemaining;
-    private double _attackCooldown;
     private double _hitReactionRemaining;
     private bool _provokedByDamage;
 
@@ -50,6 +48,9 @@ public sealed class EnemyAgent : IDamageReceiver
     public float MaxHealth { get; } = 60f;
     public float Health { get; private set; } = 60f;
     public EnemyState State { get; private set; } = EnemyState.Patrol;
+    public EnemyAttackController Attack { get; } = new();
+    public Vector3 FacingDirection { get; private set; } = Vector3.UnitX;
+    public bool IsAttackWindingUp => Attack.Phase == EnemyAttackPhase.Windup && !IsHitReacting;
     public bool IsAlive => Health > 0f;
     public bool IsHitReacting => _hitReactionRemaining > 0.0;
     public float HitReactionProgress => IsHitReacting
@@ -80,6 +81,7 @@ public sealed class EnemyAgent : IDamageReceiver
         if (!IsAlive)
         {
             State = EnemyState.Dead;
+            Attack.Reset();
             return;
         }
 
@@ -92,7 +94,8 @@ public sealed class EnemyAgent : IDamageReceiver
             }
         }
 
-        _attackCooldown = Math.Max(0.0, _attackCooldown - deltaSeconds);
+        if (State != EnemyState.Attack && Attack.Phase == EnemyAttackPhase.Recovery)
+            Attack.Advance(deltaSeconds, out _);
 
         var playerDistance = HorizontalDistance(Position, world.PlayerPosition);
         var homeDistance = HorizontalDistance(Position, HomePosition);
@@ -151,16 +154,17 @@ public sealed class EnemyAgent : IDamageReceiver
                     homeDistance > MaxLeashDistance)
                 {
                     State = EnemyState.Return;
+                    Attack.Reset();
                     _provokedByDamage = false;
                 }
-                else if (playerDistance > AttackExitRange)
+                else if (playerDistance > AttackExitRange && Attack.Phase != EnemyAttackPhase.Windup)
                 {
                     State = EnemyState.Chase;
+                    Attack.Advance(deltaSeconds, out _);
                 }
-                else if (_attackCooldown <= 0.0)
+                else
                 {
-                    world.Player.TakeDamage(Damage);
-                    _attackCooldown = AttackIntervalSeconds;
+                    UpdateAttack(world, deltaSeconds, playerDistance);
                 }
                 break;
 
@@ -198,7 +202,8 @@ public sealed class EnemyAgent : IDamageReceiver
         Health = snapshot.Health;
         State = Health <= 0f ? EnemyState.Dead : snapshot.State;
         _alertRemaining = 0;
-        _attackCooldown = State == EnemyState.Attack ? AttackIntervalSeconds : 0;
+        Attack.Reset();
+        if (State == EnemyState.Attack) Attack.Interrupt();
         _hitReactionRemaining = 0;
         _provokedByDamage = false;
     }
@@ -231,12 +236,14 @@ public sealed class EnemyAgent : IDamageReceiver
             State = EnemyState.Dead;
             _alertRemaining = 0;
             _hitReactionRemaining = 0;
+            Attack.Reset();
             _provokedByDamage = false;
             return;
         }
 
         _provokedByDamage = true;
         _hitReactionRemaining = HitReactionSeconds;
+        if (Attack.Phase == EnemyAttackPhase.Windup) Attack.Interrupt();
 
         // A hit can wake or re-alert an enemy, but it must not make an enemy that is
         // already pursuing or attacking forget its engagement and replay Alert.
@@ -247,6 +254,31 @@ public sealed class EnemyAgent : IDamageReceiver
 
         State = EnemyState.Alert;
         _alertRemaining = AlertSeconds;
+    }
+
+    private void UpdateAttack(WorldState world, double deltaSeconds, float playerDistance)
+    {
+        var remaining = deltaSeconds;
+        while (remaining > 0d && world.Player.IsAlive)
+        {
+            if (Attack.Phase == EnemyAttackPhase.Ready)
+            {
+                if (playerDistance > AttackRange) break;
+                var direction = world.PlayerPosition - Position;
+                direction.Y = 0f;
+                if (direction.LengthSquared() > 0.000001f)
+                    FacingDirection = Vector3.Normalize(direction);
+                Attack.TryStart();
+            }
+
+            remaining = Attack.Advance(remaining, out var impact);
+            if (impact && MathF.Abs(world.PlayerPosition.Y - Position.Y) <= Height &&
+                MeleeHitDetection.FindTargets(Position, FacingDirection, AttackExitRange, 55f,
+                    [new MeleeHitCandidate("player", world.PlayerPosition)]).Count != 0)
+            {
+                world.Player.TakeDamage(Damage);
+            }
+        }
     }
 
     private void Patrol(WorldState world, double deltaSeconds)
@@ -272,6 +304,7 @@ public sealed class EnemyAgent : IDamageReceiver
             return;
         }
 
+        FacingDirection = new Vector3(difference.X, 0f, difference.Y) / distance;
         var step = MathF.Min(distance, speed * (float)deltaSeconds);
         var desired = current + difference / distance * step;
         var resolved = world.ResolveHorizontalPosition(desired, Radius);

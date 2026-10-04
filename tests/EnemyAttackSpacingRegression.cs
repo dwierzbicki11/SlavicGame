@@ -12,7 +12,7 @@ internal static class EnemyAttackSpacingRegression
         world.Initialize();
         world.SetPlayerPosition(new Vector3(1.2f, 0f, 0f));
 
-        var enemy = new EnemyAgent("attack-spacing", Vector3.Zero);
+        var enemy = new EnemyAgent("attack-spacing", new Vector3(0f, world.Terrain.SampleHeight(Vector3.Zero), 0f));
 
         // Detection must still respect the alert phase before committing to a chase.
         enemy.Update(world, 0.1);
@@ -30,8 +30,11 @@ internal static class EnemyAttackSpacingRegression
 
         var healthBefore = world.Player.Health;
         enemy.Update(world, 0.01);
-        if (world.Player.Health >= healthBefore)
-            throw new InvalidOperationException("Enemy in Attack did not damage the player.");
+        if (world.Player.Health != healthBefore || !enemy.IsAttackWindingUp)
+            throw new InvalidOperationException("Enemy attack did not telegraph before applying damage.");
+        enemy.Update(world, 0.41);
+        if (world.Player.Health != healthBefore - 8f)
+            throw new InvalidOperationException("Enemy windup did not deliver exactly one hit.");
 
         var healthAfterFirstHit = world.Player.Health;
         enemy.Update(world, 0.5);

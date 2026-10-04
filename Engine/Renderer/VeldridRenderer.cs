@@ -750,6 +750,9 @@ public sealed class VeldridRenderer : IDisposable
             }
             else
             {
+                if (world.Enemies.Any(enemy => enemy.IsAttackWindingUp &&
+                    Vector3.DistanceSquared(enemy.Position, world.PlayerPosition) < 36f))
+                    AddGameplayText("PRZECIWNIK: ZAMACH - WYJDZ Z ZASIEGU", 18, 386, displayWidth - 36);
                 var currentSpellLearned = SlavicGame.Engine.Magic.SpellLessons.IsLearned(world, world.Magic.Current.Id);
                 AddGameplayText(
                     currentSpellLearned
