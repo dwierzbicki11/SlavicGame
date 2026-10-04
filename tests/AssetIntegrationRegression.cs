@@ -13,12 +13,14 @@ internal static class AssetIntegrationRegression
         var enemyPath = Path.Combine(assetsRoot, "models", "animated", "swamp_predator_animated.glb");
         var palisadePath = Path.Combine(assetsRoot, "models", "static", "village_walls", "palisade_straight.glb");
         var grassClutterPath = Path.Combine(assetsRoot, "models", "static", "ground_clutter", "grass_tuft.glb");
+        var oakPath = Path.Combine(assetsRoot, "models", "static", "dab_stary_r0_01.glb");
 
         check(File.Exists(housePath), "R0 house GLB is copied into test runtime");
         check(File.Exists(playerPath), "Animated player GLB is copied into test runtime");
         check(File.Exists(enemyPath), "Animated predator GLB is copied into test runtime");
         check(File.Exists(palisadePath), "Village palisade GLB is copied into test runtime");
         check(File.Exists(grassClutterPath), "Ground clutter GLB is copied into test runtime");
+        check(File.Exists(oakPath), "Tree GLB is copied into test runtime");
 
         var terrainMaterials = new[]
         {
@@ -84,6 +86,16 @@ internal static class AssetIntegrationRegression
                 material.NormalImage is { Length: > 0 } ||
                 material.MetallicRoughnessImage is { Length: > 0 }),
             "Tracked R0 house exposes embedded PBR texture data");
+
+        var oak = GlbModel.Load(oakPath);
+        var oakPbr = oak.BuildPbrMesh(Matrix4x4.Identity, sourceIsZUp: true);
+        check(oakPbr.Materials.Any(material =>
+                material.Name.Contains("leaf", StringComparison.OrdinalIgnoreCase)) &&
+              oakPbr.Materials.Any(material =>
+                material.Name.Contains("wood", StringComparison.OrdinalIgnoreCase)),
+            "Tree GLB preserves separate foliage and wood material names for wind rendering");
+        check(oakPbr.DrawRanges.Select(range => range.MaterialIndex).Distinct().Count() >= 2,
+            "Tree GLB keeps foliage and trunk in separate render material ranges");
 
         var player = GlbModel.Load(playerPath);
         check(player.AnimationNames.Contains("Idle") &&
