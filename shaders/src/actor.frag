@@ -37,25 +37,27 @@ void main()
     float daylight = max(Lighting.x, 0.02);
 
     vec3 sunColor = SunColorTime.rgb;
-    float cloudShadow = mix(
-        1.0,
-        CloudShadowFactor(
+    float cloudShadow = 1.0;
+    if (GraphicsFeatures0.y > 0.5)
+    {
+        cloudShadow = CloudShadowFactor(
             fsin_WorldPosition,
             sunDirection,
             SkyWeather.w,
             SkyWeather.z,
-            SkyWeather.x),
-        GraphicsFeatures0.y);
-    float geometryShadow = mix(
-        1.0,
-        SampleSunShadow(
+            SkyWeather.x);
+    }
+    float geometryShadow = 1.0;
+    if (GraphicsFeatures0.z > 0.5)
+    {
+        geometryShadow = SampleSunShadow(
             ShadowMap,
             ShadowSampler,
             LightViewProjection,
             fsin_WorldPosition,
             normal,
-            sunDirection),
-        GraphicsFeatures0.z);
+            sunDirection);
+    }
     float directShadow = cloudShadow * geometryShadow;
     float nightFactor = clamp(CelestialParameters.x, 0.0, 1.0);
 

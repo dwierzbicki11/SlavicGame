@@ -883,6 +883,10 @@ public sealed class VeldridRenderer : IDisposable
 
         var screenSize = new Vector4(displayWidth, displayHeight, 0, 0);
         var celestial = CelestialLighting.Evaluate(world.Time, world.Weather);
+        var shadowEnabled =
+            settings.SunShadows &&
+            celestial.SunIntensity > 0.02f &&
+            celestial.SunDirection.Y > 0.02f;
         var lightning = WeatherVisuals.LightningFlash(
             world.Weather,
             animationSeconds);
@@ -920,7 +924,7 @@ public sealed class VeldridRenderer : IDisposable
         var graphicsFeatures0 = new Vector4(
             settings.VolumetricClouds ? 1f : 0f,
             settings.CloudShadows ? 1f : 0f,
-            settings.SunShadows ? 1f : 0f,
+            shadowEnabled ? 1f : 0f,
             settings.Fog ? 1f : 0f);
         var graphicsFeatures1 = new Vector4(
             settings.Sun ? 1f : 0f,
@@ -963,19 +967,14 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.UpdateBuffer(_hudVertexBuffer, 0, _hudVertices.ToArray());
         }
 
-        _shadows.UpdateLight(
-            _commandList,
-            camera.Position,
-            celestial.SunDirection);
-        _shadows.BeginDepthPass(_commandList);
-
-        var shadowEnabled =
-            settings.SunShadows &&
-            celestial.SunIntensity > 0.02f &&
-            celestial.SunDirection.Y > 0.02f;
-
         if (shadowEnabled)
         {
+            _shadows.UpdateLight(
+                _commandList,
+                camera.Position,
+                celestial.SunDirection);
+            _shadows.BeginDepthPass(_commandList);
+
             _terrain.RenderShadow(
                 _commandList,
                 _shadows.TerrainPipeline,
