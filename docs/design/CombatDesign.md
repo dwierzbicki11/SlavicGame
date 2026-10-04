@@ -58,6 +58,30 @@ Unik:
 
 I-frames nie są jeszcze zatwierdzone.
 
+### Runtime uniku
+
+Spacja + WASD wykonuje krótki unik względem kamery; bez WASD gracz cofa się.
+Kierunek zostaje ustalony na początku, a kamera nadal reaguje na mysz.
+
+| Parametr | Wartość prototypowa |
+|---|---|
+| Koszt staminy | 20, płatne raz przy rozpoczęciu |
+| Ruch | 3 m w 0,25 s na suchym podłożu |
+| Recovery | 0,55 s po ruchu; kolejny unik po 0,8 s |
+| Kolizje | Istniejące przeszkody, granice mapy i wysokość terenu |
+
+Ruch jest dzielony na małe kroki także przy długiej klatce. Płytka woda
+stosuje istniejącą karę prędkości, a głęboka woda blokuje unik. Podczas ruchu
+nie można rozpocząć melee, czaru ani rytuału. Trwający melee, inkantacja,
+rytuał, UI i cinematic blokują rozpoczęcie uniku. Aim/Draw łuku zostaje
+anulowane bez zużycia strzały, zanim release w tej klatce może wystrzelić.
+Po ruchu można ponownie celować i normalnie chodzić, mimo cooldownu uniku.
+
+HUD pokazuje binding, koszt, brak staminy i odnowienie. Unik unika zamachu
+przez przemieszczenie poza obszar trafienia; nie przyznaje i-frames.
+Save/load usuwa przejściowy ruch i cooldown, zachowując zapisaną pozycję
+i staminę. Parametry wymagają ręcznego playtestu.
+
 ## Broń
 
 Planowane kategorie:

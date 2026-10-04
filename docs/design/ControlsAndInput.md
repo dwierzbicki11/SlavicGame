@@ -4,6 +4,7 @@
 
 - WASD — ruch;
 - Left Shift — sprint;
+- Spacja + WASD — unik w wybranym kierunku; bez WASD — unik w tył;
 - mouse — kamera;
 - F11 — fullscreen;
 - Escape — wyjście.

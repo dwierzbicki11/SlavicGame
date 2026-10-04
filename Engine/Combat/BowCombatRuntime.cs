@@ -91,6 +91,7 @@ public sealed class BowCombatRuntime
             aiming &&
             world.Progress.Inventory.Contains(BowItemId) &&
             world.Player.IsAlive &&
+            !world.Dodge.IsActive &&
             !world.Magic.IsCasting &&
             !world.Rituals.IsPerforming &&
             !world.Cinematics.IsPlaying &&

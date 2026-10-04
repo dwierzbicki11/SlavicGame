@@ -26,7 +26,8 @@ public sealed class PlayerMeleeCombat
     {
         ArgumentNullException.ThrowIfNull(world);
 
-        if (world.Cinematics.IsPlaying ||
+        if (world.Dodge.IsActive ||
+            world.Cinematics.IsPlaying ||
             world.Rituals.IsPerforming ||
             world.Magic.IsCasting ||
             !world.Player.IsAlive)

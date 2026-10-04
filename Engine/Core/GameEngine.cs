@@ -130,6 +130,7 @@ public sealed class GameEngine : IDisposable
             {
                 if (_world.Cinematics.IsPlaying)
                 {
+                    _world.Dodge.Cancel();
                     _world.Bow.SetAiming(_world, false);
                     if (_window.ConsumeKeyPress(Key.Escape) || _window.ConsumeKeyPress(Key.Space))
                         _world.Cinematics.Finish(_world);
@@ -146,6 +147,7 @@ public sealed class GameEngine : IDisposable
                          !_world.Loot.IsOpen &&
                          _window.ConsumeKeyPress(Key.Escape))
                 {
+                    _world.Dodge.Cancel();
                     _world.Bow.SetAiming(_world, false);
                     _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
                     TryAutosave("pause");
@@ -183,7 +185,10 @@ public sealed class GameEngine : IDisposable
                             _world.Cinematics.TryStart(_world, CinematicPlayer.Shrine);
                     }
                     if (_world.Cinematics.IsPlaying)
+                    {
+                        _world.Dodge.Cancel();
                         _camera.SetCinematicPose(_world.Cinematics.CameraPosition, _world.Cinematics.CameraTarget);
+                    }
 
                     _playTimeSeconds += _time.DeltaSeconds;
                     _autosaveSeconds += _time.DeltaSeconds;
@@ -435,6 +440,9 @@ public sealed class GameEngine : IDisposable
 
     private void HandleInput(double deltaSeconds)
     {
+        var dodgePressed = _window.ConsumeKeyPress(Key.Space);
+        if (SlavicGame.Engine.Combat.PlayerDodge.MovementBlocked(_world))
+            _world.Dodge.Cancel();
         if (_world.Loot.IsOpen)
         {
             _world.Bow.SetAiming(_world, false);
@@ -537,6 +545,7 @@ public sealed class GameEngine : IDisposable
         }
 
         if (_window.ConsumeKeyPress(Key.K) &&
+            !_world.Dodge.IsActive &&
             !_world.Rituals.IsPerforming &&
             !_world.Magic.IsCasting &&
             !_world.Cinematics.IsPlaying)
@@ -554,6 +563,7 @@ public sealed class GameEngine : IDisposable
         }
 
         if (_window.ConsumeKeyPress(Key.T) &&
+            !_world.Dodge.IsActive &&
             !_world.Rituals.IsPerforming &&
             !_world.Magic.IsCasting &&
             !_world.Cinematics.IsPlaying)
@@ -577,6 +587,7 @@ public sealed class GameEngine : IDisposable
             _world.SpellLearning.TryLearnCurrent(_world);
 
         if (_window.ConsumeKeyPress(Key.E) &&
+            !_world.Dodge.IsActive &&
             !_world.Rituals.IsPerforming &&
             !_world.Magic.IsCasting &&
             !_world.Cinematics.IsPlaying)
@@ -612,7 +623,7 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        if (_window.ConsumeKeyPress(Key.F) && !_world.Rituals.IsPerforming)
+        if (_window.ConsumeKeyPress(Key.F) && !dodgePressed && !_world.Rituals.IsPerforming)
         {
             var spell = _world.Magic.Current;
             if (_world.Magic.TryStart(_world, _camera.GetLookDirection()))
@@ -621,12 +632,33 @@ public sealed class GameEngine : IDisposable
             }
         }
 
-        if (_window.ConsumeKeyPress(Key.R) && !_world.Rituals.IsPerforming)
+        if (_window.ConsumeKeyPress(Key.R) && !dodgePressed && !_world.Rituals.IsPerforming)
             _world.Rituals.TryStart(_world);
+
+        if (_window.ConsumeKeyPress(Key.C) && !_world.Dodge.IsActive && !_world.Rituals.IsPerforming)
+        {
+            _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
+            if (_world.Cinematics.IsPlaying) return;
+        }
 
         _world.Bow.SetAiming(
             _world,
             _window.IsRightMouseDown);
+
+        var canMove = !SlavicGame.Engine.Combat.PlayerDodge.MovementBlocked(_world);
+        var input = new PlayerInput(
+            canMove && _window.IsKeyDown(Key.W),
+            canMove && _window.IsKeyDown(Key.S),
+            canMove && _window.IsKeyDown(Key.D),
+            canMove && _window.IsKeyDown(Key.A),
+            canMove &&
+                !_world.Bow.IsAiming &&
+                _window.IsKeyDown(Key.ShiftLeft),
+            _window.MouseDelta,
+            canMove && dodgePressed);
+        // Dodge cancels draw before this frame's mouse press/release can fire a weapon.
+        PlayerController.Update(_world, _camera, input, deltaSeconds);
+        if (_inputDiagnostics) LogInput(input, deltaSeconds);
 
         _camera.FieldOfView =
             MathF.PI / 180f *
@@ -650,29 +682,6 @@ public sealed class GameEngine : IDisposable
         {
             _world.Melee.TryStart(_world);
         }
-
-        if (_window.ConsumeKeyPress(Key.C) && !_world.Rituals.IsPerforming)
-        {
-            _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
-            if (_world.Cinematics.IsPlaying) return;
-        }
-        var canMove =
-            !_world.Magic.IsCasting &&
-            !_world.Rituals.IsPerforming &&
-            !_world.Dialogue.IsOpen &&
-            !_world.Vendors.IsOpen &&
-            !_world.Crafting.IsOpen;
-        var input = new PlayerInput(
-            canMove && _window.IsKeyDown(Key.W),
-            canMove && _window.IsKeyDown(Key.S),
-            canMove && _window.IsKeyDown(Key.D),
-            canMove && _window.IsKeyDown(Key.A),
-            canMove &&
-                !_world.Bow.IsAiming &&
-                _window.IsKeyDown(Key.ShiftLeft),
-            _window.MouseDelta);
-        PlayerController.Update(_world, _camera, input, deltaSeconds);
-        if (_inputDiagnostics) LogInput(input, deltaSeconds);
     }
 
     private static VoiceRequest BuildSpellVoiceRequest(SlavicGame.Engine.Magic.CastSpell spell)

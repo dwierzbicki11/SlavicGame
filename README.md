@@ -335,7 +335,7 @@ dotnet run --project SlavicGame.csproj
 dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
 ```
 
-Controls: WASD move, left Shift sprint (consumes stamina), mouse rotate camera, F11 toggle fullscreen, Escape exit.
+Controls: WASD move, left Shift sprint (consumes stamina), Space + WASD dodge (20 stamina; Space alone dodges backward), mouse rotate camera, F11 toggle fullscreen, Escape pause.
 
 The third-person camera adapts its height to the rendered terrain, keeping a 0.5-unit ground clearance. A ridge between the player and camera shortens the camera boom; the constraint is also applied after smoothing so movement and rotation cannot interpolate the camera into the ground.
 
@@ -506,3 +506,7 @@ The rendered swamp predator now plays its authored Hit clip when damaged, using 
 ### Enemy attack telegraph
 
 The swamp predator commits to a strike direction, winds up for 0.4 seconds, checks melee reach and a frontal sector once at contact, and recovers for 0.8 seconds. Retreating or moving behind the strike avoids it; dealing damage during windup interrupts the pending hit without resetting Chase/Attack engagement. The authored Attack clip follows this timeline and the predator faces its movement/strike direction. Nearby windups show a short warning in the HUD. Save/load discards pending strikes and resumes with recovery.
+
+### Player dodge
+
+Press Space with WASD to dodge in a camera-relative direction, or Space alone to retreat. A dodge spends 20 stamina once, moves three metres over 0.25 seconds on dry ground, then has 0.55 seconds of recovery before another dodge. Small movement steps respect static collisions even in long frames; terrain and map bounds remain authoritative. Dodge cancels bow draw without using ammunition and blocks weapon/cast starts during its movement. It is unavailable during melee, casting, rituals, UI, cinematics or deep wading. The HUD shows cost, availability and recovery. Avoidance is positional, without invulnerability; loading clears the transient dodge.
