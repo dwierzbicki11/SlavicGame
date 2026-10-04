@@ -54,6 +54,8 @@ compile_shader "$SRC_DIR/shadow_depth.vert" "$OUT_DIR/shadow_depth.vert.spv" ver
 compile_shader "$SRC_DIR/shadow_depth.frag" "$OUT_DIR/shadow_depth.frag.spv" frag
 compile_shader "$SRC_DIR/present.vert"      "$OUT_DIR/present.vert.spv"      vert
 compile_shader "$SRC_DIR/present.frag"      "$OUT_DIR/present.frag.spv"      frag
+compile_shader "$SRC_DIR/motion_vectors.vert" "$OUT_DIR/motion_vectors.vert.spv" vert
+compile_shader "$SRC_DIR/motion_vectors.frag" "$OUT_DIR/motion_vectors.frag.spv" frag
 compile_shader "$SRC_DIR/postprocess.vert"  "$OUT_DIR/postprocess.vert.spv"  vert
 compile_shader "$SRC_DIR/postprocess.frag"  "$OUT_DIR/postprocess.frag.spv"  frag
 compile_shader "$SRC_DIR/bloom.vert"        "$OUT_DIR/bloom.vert.spv"        vert
