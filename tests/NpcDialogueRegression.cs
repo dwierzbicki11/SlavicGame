@@ -236,16 +236,106 @@ internal static class NpcDialogueRegression
             NpcVisualCatalog.AnimationClip("rest") == "Idle",
             "NPC activity catalog maps work, travel and rest to distinct authored clips");
 
+        var communityIds = new[]
+        {
+            "settler-farmer-01",
+            "settler-farmer-02",
+            "settler-woodworker-01",
+            "settler-potter-01",
+            "settler-trader-01",
+            "settler-carrier-01",
+            "settler-elder-01",
+            "settler-traveler-01"
+        };
+
+        check(communityIds.All(id =>
+                NpcPresentation.HasDialogue(id) &&
+                CommunityDialogueCatalog.HasGraph(id)),
+            "All eight R0 ambient settlers expose authored community dialogue graphs");
+
+        world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
+        world.Time.SetTimeOfDay(10);
+        quest.SetPhase(QuestPhase.Investigation);
+        world.NpcWorld.Update(world);
+
         var ambient = world.NpcWorld.Find("settler-farmer-02")
             ?? throw new Exception("Ambient settler not present");
         world.SetPlayerPosition(ambient.Position);
         world.NpcWorld.Update(world);
 
-        check(!NpcPresentation.HasDialogue(ambient.Id) &&
-              string.IsNullOrWhiteSpace(
-                  world.NpcWorld.HudPrompt(world.PlayerPosition)) &&
-              !world.Dialogue.TryStartNearest(world),
-            "Ambient settlers do not expose fake dialogue prompts before authored graphs exist");
+        check(
+            world.NpcWorld.HudPrompt(world.PlayerPosition)
+                .Contains("POROZMAWIAJ", StringComparison.Ordinal) &&
+            world.Dialogue.TryStartNearest(world) &&
+            world.Dialogue.SpeakerId == ambient.Id &&
+            world.Dialogue.CurrentNode?.Id == "com.farmer02.quest",
+            "Ambient settler becomes interactable and reacts to an active swamp investigation");
+        world.Dialogue.Close();
+
+        quest.SetPhase(QuestPhase.Offered);
+        world.Weather.SetCondition(WeatherKind.Rain, immediate: true);
+        world.NpcWorld.Update(world);
+        ambient = world.NpcWorld.Find("settler-farmer-02")
+            ?? throw new Exception("Ambient settler disappeared in rain");
+        world.SetPlayerPosition(ambient.Position);
+        world.NpcWorld.Update(world);
+
+        check(world.Dialogue.Start(world, ambient.Id) &&
+              world.Dialogue.CurrentNode?.Id == "com.farmer02.rain" &&
+              world.Dialogue.CurrentNode.Text.Contains("deszcz", StringComparison.OrdinalIgnoreCase),
+            "Community dialogue reacts to current rain without changing quest state");
+        world.Dialogue.Close();
+
+        world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
+        world.Time.SetTimeOfDay(22);
+        world.NpcWorld.Update(world);
+        var elder = world.NpcWorld.Find("settler-elder-01")
+            ?? throw new Exception("Ambient elder not present at night");
+        world.SetPlayerPosition(elder.Position);
+        world.NpcWorld.Update(world);
+
+        check(world.Dialogue.Start(world, elder.Id) &&
+              world.Dialogue.CurrentNode?.Id == "com.elder.night",
+            "Community dialogue has a dedicated night fallback");
+        world.Dialogue.Close();
+
+        world.Time.SetTimeOfDay(10);
+        quest.SetPhase(QuestPhase.Resolved);
+        world.Progress.SetFlag(VerticalSliceRituals.ReleasedFlag);
+        world.NpcWorld.Update(world);
+        var trader = world.NpcWorld.Find("settler-trader-01")
+            ?? throw new Exception("Ambient trader not present");
+        world.SetPlayerPosition(trader.Position);
+        world.NpcWorld.Update(world);
+
+        check(world.Dialogue.Start(world, trader.Id) &&
+              world.Dialogue.CurrentNode?.Id == "com.trader.apparition-gone",
+            "Resolved apparition changes community dialogue even while physical danger remains");
+        world.Dialogue.Close();
+
+        SwampPredatorEncounter.MarkKilled(world);
+        world.NpcWorld.Update(world);
+        trader = world.NpcWorld.Find("settler-trader-01")
+            ?? throw new Exception("Ambient trader disappeared after predator resolution");
+        world.SetPlayerPosition(trader.Position);
+        world.NpcWorld.Update(world);
+
+        check(world.Dialogue.Start(world, trader.Id) &&
+              world.Dialogue.CurrentNode?.Id == "com.trader.safe",
+            "Community dialogue distinguishes full two-cause resolution from apparition-only closure");
+        world.Dialogue.Close();
+
+        foreach (var id in communityIds)
+        {
+            var graph = CommunityDialogueCatalog.TryGetGraph(id, out var communityGraph)
+                ? communityGraph
+                : throw new Exception($"Missing community graph for {id}");
+
+            check(
+                graph.GetNode(CommunityDialogueCatalog.SelectStartNode(world, id))
+                    .Choices.Count > 0,
+                $"Community graph {id} always exposes a safe exit choice");
+        }
 
         world.SetPlayerPosition(Vector3.Zero);
         world.NpcWorld.Update(world);
