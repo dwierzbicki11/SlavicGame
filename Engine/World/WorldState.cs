@@ -24,6 +24,7 @@ public sealed class WorldState
     public SlavicGame.Engine.Magic.SpellLearningSystem SpellLearning { get; } = new();
     public SlavicGame.Engine.Magic.RitualExecution Rituals { get; } = new();
     public SlavicGame.Engine.Combat.PlayerMeleeCombat Melee { get; } = new();
+    public SlavicGame.Engine.Combat.BowCombatRuntime Bow { get; } = new();
     public VerticalSliceQuestInteractions QuestInteractions { get; } = new();
     public CinematicPlayer Cinematics { get; } = new();
     public SwampApparitionRuntime Apparition { get; } = new();
@@ -33,6 +34,7 @@ public sealed class WorldState
     public DialogueRuntime Dialogue { get; } = new();
     public VendorRuntime Vendors { get; } = new();
     public CraftingRuntime Crafting { get; } = new();
+    public LootContainerRuntime Loot { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
     public WaterInteractionState WaterInteraction { get; } = new();
@@ -252,6 +254,7 @@ public sealed class WorldState
         Footprints.Update(this, deltaSeconds);
         Apparition.Update(this, deltaSeconds);
         EnvironmentInteractions.Update(this);
+        Loot.Update(this);
         SpellLearning.Update(this);
         SpellLearning.RefreshMessage(this);
         QuestInteractions.Update(this);

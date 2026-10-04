@@ -44,6 +44,9 @@ public sealed class LootContainerInteractionState
         if (remaining.Count == 0)
             return LootContainerResult.Empty;
 
+        // Preflight every destination before mutating either side.
+        foreach (var pair in remaining)
+            _ = checked(inventory.Count(pair.Key) + pair.Value);
         foreach (var pair in remaining)
             inventory.Add(pair.Key, pair.Value);
 

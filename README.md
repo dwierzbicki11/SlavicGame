@@ -484,3 +484,15 @@ The herbalist now exposes a playable alchemy station while on duty. Press **K** 
 ### NPC reactions
 
 R0 settlers now react to immediate danger: civilians watch or move away from player attacks, flee engaged enemies, and the community guard faces or moves toward threats instead of fleeing. Dialogue speakers remain protected from reaction overrides.
+
+### Wildlife hunting
+
+Ground wildlife is now huntable with the existing light melee system. Deer, boar and wolves have prototype health, flee for several seconds after a wound, become persistent carcasses when killed, and expose a one-time contextual E harvest interaction. Harvested carcasses disappear from rendering, and wildlife health/position/loot state survives save/load. Ravens remain ambient for ground melee and are reserved for future ranged hunting.
+### Bow hunting
+
+The vertical slice now includes a physical projectile bow. Hold RMB to aim, hold LMB to draw and release LMB to fire. Arrow speed and damage scale with draw time, gravity affects the flight path, targets are hit by segment collision, terrain arrows can be recovered with E, and wildlife wounds, carcasses and harvested loot share the existing save/load state. Aiming uses the existing R0 bow/arrow models and a lightweight reticle while projectiles remain consolidated in the actor render path.
+
+
+### Market chest storage
+
+The existing chest at the village market now opens with E and shows container and inventory panels. A/D selects the panel, W/S selects an item, E moves one item, Shift+E moves the selected stack, and Escape closes the panel. Deposited contents persist in the full game save. Storage cancels bow aiming and closes when the player leaves its reach.

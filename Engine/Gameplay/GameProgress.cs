@@ -13,6 +13,7 @@ public sealed class GameProgress
 
     public PlayerProfile Profile { get; } = new();
     public InventoryState Inventory { get; } = new();
+    public SlavicGame.Engine.Interaction.LootContainerInteractionState LootContainers { get; } = new();
     public QuestJournal Quests { get; } = new();
     public ReputationSystem Reputation { get; } = new();
     public DivineRelationshipSystem DivineRelationships { get; } = new();

@@ -42,6 +42,8 @@ public sealed class VeldridRenderer : IDisposable
     private Shader[]? _hudShaders;
     private GlbModel? _playerModel;
     private GlbModel? _enemyModel;
+    private GlbModel? _bowModel;
+    private GlbModel? _arrowModel;
     private readonly Dictionary<string, GlbModel> _npcModels =
         new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _wildlifeModels =
@@ -123,6 +125,8 @@ public sealed class VeldridRenderer : IDisposable
         var assetsRoot = Path.Combine(AppContext.BaseDirectory, "assets");
         _playerModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "player_hunter_animated.glb"));
         _enemyModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", "swamp_predator_animated.glb"));
+        _bowModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "static", "luk_r0_01.glb"));
+        _arrowModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "static", "strzala_r0_01.glb"));
 
         _npcModels.Clear();
         foreach (var modelFile in world.Npcs
@@ -449,6 +453,16 @@ public sealed class VeldridRenderer : IDisposable
                 220f),
             ref actorVertices,
             ref actorIndices);
+        BowPresentationMesh.Append(
+            world,
+            _bowModel!,
+            _arrowModel!,
+            camera.Position,
+            camera.GetLookDirection(),
+            camera.GetMoveRight(),
+            camera.Mode == CameraMode.FirstPerson,
+            ref actorVertices,
+            ref actorIndices);
         WorldItemModelMesh.Append(
             world,
             _worldItemModels,
@@ -505,6 +519,39 @@ public sealed class VeldridRenderer : IDisposable
                 AddHudQuad(0, displayHeight - 85, displayWidth, 85, new Vector4(0, 0, 0, 1));
                 AddGameplayText(world.Cinematics.Subtitle, 18, displayHeight - 66, displayWidth - 36);
                 AddGameplayText("SPACJA / ESC - POMIN", 18, displayHeight - 32, displayWidth - 36);
+            }
+            else if (world.Loot.IsOpen)
+            {
+                var panelWidth = MathF.Min(960f, displayWidth - 32f);
+                var panelHeight = MathF.Min(460f, displayHeight - 32f);
+                var left = (displayWidth - panelWidth) * 0.5f;
+                var top = (displayHeight - panelHeight) * 0.5f;
+                var half = panelWidth * 0.5f;
+                AddHudQuad(left, top, panelWidth, panelHeight, new Vector4(0.02f, 0.025f, 0.018f, 0.96f));
+                AddGameplayText("KUFER NA RYNKU", left + 18, top + 16, panelWidth - 36);
+                var visibleRows = Math.Max(1, (int)((panelHeight - 165f) / 26f));
+                foreach (var side in new[] { SlavicGame.Engine.Gameplay.LootPanel.Container, SlavicGame.Engine.Gameplay.LootPanel.Inventory })
+                {
+                    var columnLeft = left + (side == SlavicGame.Engine.Gameplay.LootPanel.Container ? 0f : half);
+                    var active = world.Loot.Panel == side;
+                    AddGameplayText((active ? "> " : "  ") + (side == SlavicGame.Engine.Gameplay.LootPanel.Container ? "KUFER [A]" : "EKWIPUNEK [D]"),
+                        columnLeft + 18, top + 48, half - 36);
+                    var lines = world.Loot.Lines(world, side);
+                    var start = active ? Math.Max(0, world.Loot.SelectedIndex - visibleRows + 1) : 0;
+                    if (lines.Count == 0) AddGameplayText("PUSTO", columnLeft + 18, top + 82, half - 36);
+                    for (var i = start; i < Math.Min(lines.Count, start + visibleRows); i++)
+                    {
+                        var line = lines[i];
+                        var text = (active && i == world.Loot.SelectedIndex ? "> " : "  ") +
+                            SlavicGame.Engine.Gameplay.LootContainerRuntime.DisplayName(line.ItemId) + $" x{line.Quantity}";
+                        var maxChars = Math.Max(4, (int)((half - 36f) / 4.8f));
+                        if (text.Length > maxChars) text = text[..(maxChars - 3)] + "...";
+                        AddGameplayText(text, columnLeft + 18, top + 82 + (i - start) * 26f, half - 36);
+                    }
+                }
+                AddGameplayText(world.Loot.Message, left + 18, top + panelHeight - 72, panelWidth - 36);
+                AddGameplayText("A/D PANEL  W/S WYBOR  E PRZENIES 1", left + 18, top + panelHeight - 46, panelWidth - 36);
+                AddGameplayText("SHIFT+E CALY STOS  ESC ZAMKNIJ", left + 18, top + panelHeight - 22, panelWidth - 36);
             }
             else if (world.Crafting.IsOpen)
             {
@@ -722,6 +769,12 @@ public sealed class VeldridRenderer : IDisposable
                     world.EnvironmentInteractions.Current?.Prompt;
 
                 if (string.IsNullOrWhiteSpace(interactionText))
+                    interactionText = world.Bow.RetrievalPrompt(world);
+
+                if (string.IsNullOrWhiteSpace(interactionText) && world.Loot.CanOpenNearest(world))
+                    interactionText = "E OTWORZ KUFER";
+
+                if (string.IsNullOrWhiteSpace(interactionText))
                     interactionText = world.NpcWorld.HudPrompt(world.PlayerPosition);
 
                 if (string.IsNullOrWhiteSpace(interactionText))
@@ -751,7 +804,13 @@ public sealed class VeldridRenderer : IDisposable
                 if (!string.IsNullOrWhiteSpace(interactionText))
                     AddGameplayText(interactionText, 18, 242, displayWidth - 36);
 
-                AddGameplayText(world.Melee.Message, 18, 266, displayWidth - 36);
+                AddGameplayText(
+                    world.Bow.IsAiming
+                        ? world.Bow.HudText(world)
+                        : world.Melee.Message,
+                    18,
+                    266,
+                    displayWidth - 36);
 
                 var predatorEncounter = world.Progress.Encounters.Get(
                     SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
@@ -790,6 +849,24 @@ public sealed class VeldridRenderer : IDisposable
                         wildlifeTrackStatus,
                         18,
                         338,
+                        displayWidth - 36);
+                }
+
+                if (world.Bow.IsAiming)
+                {
+                    var reticleX = displayWidth * 0.5f;
+                    var reticleY = displayHeight * 0.5f;
+                    var reticle = new Vector4(0.92f, 0.92f, 0.86f, 0.92f);
+
+                    AddHudQuad(reticleX - 13f, reticleY - 1f, 9f, 2f, reticle);
+                    AddHudQuad(reticleX + 4f, reticleY - 1f, 9f, 2f, reticle);
+                    AddHudQuad(reticleX - 1f, reticleY - 13f, 2f, 9f, reticle);
+                    AddHudQuad(reticleX - 1f, reticleY + 4f, 2f, 9f, reticle);
+
+                    AddGameplayText(
+                        world.Bow.Message,
+                        18,
+                        362,
                         displayWidth - 36);
                 }
             }
