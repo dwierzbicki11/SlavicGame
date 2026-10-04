@@ -22,7 +22,9 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS prepare_sdk.py
     "${FFX_SDK_ROOT}/sdk/src/backends/vk/ffx_vk.cpp")
 file(GLOB_RECURSE FSR_SHADER_DEPS CONFIGURE_DEPENDS
     "${FFX_SDK_ROOT}/sdk/include/FidelityFX/gpu/*.h"
-    "${FFX_SDK_ROOT}/sdk/src/backends/vk/shaders/fsr3upscaler/*.glsl")
+    "${FFX_SDK_ROOT}/sdk/src/backends/vk/shaders/fsr3upscaler/*.glsl"
+    "${FFX_SDK_ROOT}/sdk/src/backends/vk/shaders/frameinterpolation/*.glsl"
+    "${FFX_SDK_ROOT}/sdk/src/backends/vk/shaders/opticalflow/*.glsl")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/fsr_shaders.cpp"
     COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/compile_shaders.py"
         --sdk "${FFX_SDK_ROOT}" --output "${CMAKE_CURRENT_BINARY_DIR}"
