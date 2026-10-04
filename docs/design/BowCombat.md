@@ -132,17 +132,11 @@ Ammo jest zdejmowane dokładnie przy Release, nie przy Aim/Draw.
 Każda wypuszczona strzała ma własną pozycję, velocity, gravity, damage i lifetime.
 Symulacja dzieli frame na kroki do około 1/90 s, więc szybka strzała nie jest frame-dependent hitscanem.
 
-Collision obejmuje teren, żywego przeciwnika i ambient wildlife.
+Collision obejmuje teren, bryły przeszkód, żywego przeciwnika i żywe wildlife.
 Trafienie EnemyAgent korzysta z normalnego damage/aggro path. Trafienie swamp-predator może domknąć jego istniejący encounter.
 
 ### Hunting wildlife
-Pierwszy prototype health:
-- raven: 10;
-- deer: 45;
-- wolf: 50;
-- boar: 70.
-
-Terminalny kill zapisuje `wildlife.dead.<id>` jako world flag. Zwierzę nie jest renderowane ani ponownie trafialne po save/load. Partial wildlife damage nie jest jeszcze zapisywany.
+Łuk korzysta z `WildlifeWorldRuntime.TryDamage`, tak samo jak melee. Zdrowie pochodzi z WildlifeCatalog (raven 12, deer 45, wolf 50, boar 65). Rany wywołują ucieczkę; śmierć pozostawia tuszę, którą można zebrać przez E dokładnie raz. Zdrowie, pozycja i zużycie łupu przetrwają save/load. Dopiero zebrana tusza znika z renderowania.
 
 ### Retrieval
 Strzała trafiająca teren zostaje jako recoverable world arrow:

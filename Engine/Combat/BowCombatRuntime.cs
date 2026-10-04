@@ -114,6 +114,7 @@ public sealed class BowCombatRuntime
     {
         ArgumentNullException.ThrowIfNull(world);
 
+        if (IsAiming) SetAiming(world, true);
         if (!IsAiming || IsDrawing)
             return false;
 
@@ -142,6 +143,7 @@ public sealed class BowCombatRuntime
     {
         ArgumentNullException.ThrowIfNull(world);
 
+        if (IsAiming) SetAiming(world, true);
         if (!IsAiming || !IsDrawing)
             return false;
 

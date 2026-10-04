@@ -200,6 +200,7 @@ internal static class BowCombatRegression
         var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
         wounded.Wildlife.TryDamage(wounded, deer.Id, 20f);
         var origin = deer.Position + Vector3.UnitY * WildlifeCatalog.For(deer.Species).BodyRadius * 0.72f - Vector3.UnitZ * 2f;
+        wounded.SetPlayerPosition(origin);
         wounded.Bow.SetAiming(wounded, true);
         wounded.Bow.TryStartDraw(wounded);
         wounded.Bow.Update(wounded, 1.3);
@@ -207,6 +208,17 @@ internal static class BowCombatRegression
         wounded.Bow.Update(wounded, 0.15);
         check(wounded.Wildlife.Actors.Single(actor => actor.Id == deer.Id).Health == 0f,
             "Melee wounds and bow hits use one shared wildlife health pool");
+
+        var wallWorld = WorldGenerator.Generate();
+        var wall = wallWorld.Obstacles.First(item => item.Id == "village-hut-a");
+        var wallOrigin = wall.Position + new Vector3(0f, wall.Height * 0.5f, -wall.HalfSize.Y - 2f);
+        wallWorld.Bow.SetAiming(wallWorld, true);
+        wallWorld.Bow.TryStartDraw(wallWorld);
+        wallWorld.Bow.Update(wallWorld, 1.3);
+        wallWorld.Bow.TryRelease(wallWorld, wallOrigin, Vector3.UnitZ);
+        wallWorld.Bow.Update(wallWorld, 0.1);
+        check(wallWorld.Bow.Projectiles.Count == 0 && wallWorld.Bow.RecoverableArrows.Count == 1,
+            "Obstacle volumes stop arrows before they pass through a hut");
 
         var blocked = WorldGenerator.Generate();
         blocked.Bow.SetAiming(blocked, true);
@@ -216,6 +228,13 @@ internal static class BowCombatRegression
         check(!blocked.Bow.TryRelease(blocked, blocked.PlayerPosition, Vector3.UnitZ) &&
               blocked.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == ammo,
             "Cancelled draw cannot fire or spend ammo on a later release");
+        blocked.Bow.SetAiming(blocked, true);
+        blocked.Bow.TryStartDraw(blocked);
+        blocked.Progress.Inventory.Remove(BowCombatRuntime.BowItemId);
+        check(!blocked.Bow.TryRelease(blocked, blocked.PlayerPosition, Vector3.UnitZ) &&
+              blocked.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == ammo,
+            "Losing the equipped bow cancels draw before spending ammo");
+        blocked.Progress.Inventory.Add(BowCombatRuntime.BowItemId);
         blocked.Bow.SetAiming(blocked, true);
         blocked.Bow.TryStartDraw(blocked);
         blocked.Bow.TryRelease(blocked, blocked.PlayerPosition + Vector3.UnitY * 100f, Vector3.UnitZ);
