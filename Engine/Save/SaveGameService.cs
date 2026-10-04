@@ -86,6 +86,7 @@ public static class SaveGameService
             throw new NotSupportedException($"Unsupported save version {snapshot.Version}.");
 
         world.Magic.Restore(snapshot.Magic);
+        world.Bow.ResetTransient();
         world.Cinematics.Reset();
         world.SetPlayerPosition(new System.Numerics.Vector3(snapshot.PlayerPosition.X, snapshot.PlayerPosition.Y, snapshot.PlayerPosition.Z));
         world.Time.SetTimeOfDay(snapshot.TimeOfDayHours);
