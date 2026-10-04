@@ -35,6 +35,7 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
     private readonly VkQueueSubmit _queueSubmit;
     private readonly nint[] _commandBuffers = new nint[RingSize];
     private readonly ulong[] _fences = new ulong[RingSize];
+    private readonly bool[] _pending = new bool[RingSize];
 
     private ulong _commandPool;
     private int _slot;
@@ -156,7 +157,7 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         var fence = _fences[_slot];
-        Check(
+        if (_pending[_slot]) Check(
             _waitForFences(
                 _device,
                 1,
@@ -164,9 +165,7 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
                 1,
                 ulong.MaxValue),
             "vkWaitForFences");
-        Check(
-            _resetFences(_device, 1, ref fence),
-            "vkResetFences");
+        _pending[_slot] = false;
 
         var commandBuffer = _commandBuffers[_slot];
         Check(
@@ -204,6 +203,11 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
                 CommandBuffers = commandBufferMemory
             };
 
+            // Reset only when the command buffer is ready for submission.
+            // Recording/dispatch failure must not leave cleanup waiting on
+            // an unsignaled fence which was never submitted to the GPU.
+            var fence = _fences[_slot];
+            Check(_resetFences(_device, 1, ref fence), "vkResetFences");
             Check(
                 _queueSubmit(
                     _queue,
@@ -211,6 +215,7 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
                     ref submit,
                     _fences[_slot]),
                 "vkQueueSubmit");
+            _pending[_slot] = true;
         }
         finally
         {
@@ -226,7 +231,7 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
         for (var i = 0; i < RingSize; i++)
         {
             var fence = _fences[i];
-            if (fence == 0)
+            if (fence == 0 || !_pending[i])
                 continue;
             Check(
                 _waitForFences(
@@ -236,6 +241,7 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
                     1,
                     ulong.MaxValue),
                 "vkWaitForFences");
+            _pending[i] = false;
         }
     }
 
@@ -287,7 +293,7 @@ internal sealed class FidelityFxVulkanCommands : IDisposable
             var fence = _fences[i];
             if (fence != 0)
             {
-                _waitForFences(
+                if (_pending[i]) _waitForFences(
                     _device,
                     1,
                     ref fence,
