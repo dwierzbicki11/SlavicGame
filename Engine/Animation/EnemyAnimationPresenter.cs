@@ -66,9 +66,14 @@ public sealed class EnemyAnimationPresenter
         _ => "Idle"
     };
 
-    public static float ClipTimeFor(EnemyAgent enemy, float worldAnimationTime, float hitClipDuration)
+    public static float ClipTimeFor(EnemyAgent enemy, float worldAnimationTime, float hitClipDuration, float attackClipDuration = 0f)
     {
-        if (!enemy.IsHitReacting || !enemy.IsAlive) return worldAnimationTime;
+        if (!enemy.IsHitReacting || !enemy.IsAlive)
+        {
+            if (enemy.IsAlive && enemy.State == EnemyState.Attack && float.IsFinite(attackClipDuration) && attackClipDuration > 0f)
+                return MathF.Min(enemy.Attack.AnimationProgress * attackClipDuration, MathF.BitDecrement(attackClipDuration));
+            return worldAnimationTime;
+        }
         if (!float.IsFinite(hitClipDuration) || hitClipDuration <= 0f) return 0f;
         // Reaction plays once from the hit; global animation time would sample an arbitrary pose.
         return MathF.Min(enemy.HitReactionProgress * hitClipDuration, MathF.BitDecrement(hitClipDuration));

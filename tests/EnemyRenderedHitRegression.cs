@@ -26,7 +26,7 @@ internal static class EnemyRenderedHitRegression
         var duration = model.AnimationDuration("Hit");
         check(duration > 0f && MathF.Abs(enemy.HitReactionProgress - 0.5f) < 0.01f,
             "Hit animation progress follows the active reaction window");
-        var expected = model.BuildMesh(Matrix4x4.CreateTranslation(enemy.Position), "Hit", duration * enemy.HitReactionProgress, true);
+        var expected = model.BuildMesh(Matrix4x4.CreateRotationY(MathF.Atan2(-enemy.FacingDirection.Z, enemy.FacingDirection.X)) * Matrix4x4.CreateTranslation(enemy.Position), "Hit", duration * enemy.HitReactionProgress, true);
         var rendered = Render(123.45);
         var suffix = rendered.Skip(rendered.Length - expected.Positions.Length).Select(vertex => vertex.Position).ToArray();
         check(suffix.SequenceEqual(expected.Positions),
@@ -35,7 +35,7 @@ internal static class EnemyRenderedHitRegression
         var otherSuffix = atOtherWorldTime.Skip(atOtherWorldTime.Length - expected.Positions.Length).Select(vertex => vertex.Position);
         check(otherSuffix.SequenceEqual(suffix),
             "Hit pose is anchored to impact time instead of global looping animation time");
-        var running = model.BuildMesh(Matrix4x4.CreateTranslation(enemy.Position), "Run", 123.45f, true);
+        var running = model.BuildMesh(Matrix4x4.CreateRotationY(MathF.Atan2(-enemy.FacingDirection.Z, enemy.FacingDirection.X)) * Matrix4x4.CreateTranslation(enemy.Position), "Run", 123.45f, true);
         check(!suffix.SequenceEqual(running.Positions) && suffix.All(position =>
                 float.IsFinite(position.X) && float.IsFinite(position.Y) && float.IsFinite(position.Z)),
             "Hit renders a visibly different finite pose from the Run clip");
@@ -45,10 +45,24 @@ internal static class EnemyRenderedHitRegression
             "A repeated hit restarts the rendered reaction while preserving Chase");
         enemy.Update(world, 0.181);
         rendered = Render(123.45);
-        running = model.BuildMesh(Matrix4x4.CreateTranslation(enemy.Position), "Run", 123.45f, true);
+        running = model.BuildMesh(Matrix4x4.CreateRotationY(MathF.Atan2(-enemy.FacingDirection.Z, enemy.FacingDirection.X)) * Matrix4x4.CreateTranslation(enemy.Position), "Run", 123.45f, true);
         check(!enemy.IsHitReacting && EnemyAnimationPresenter.ClipFor(enemy) == "Run" &&
               rendered.Skip(rendered.Length - running.Positions.Length).Select(vertex => vertex.Position).SequenceEqual(running.Positions),
             "Production mesh resumes Run after the hit reaction expires");
+
+        world.SetPlayerPosition(enemy.Position + Vector3.UnitZ * 1.2f);
+        enemy.Restore(new EnemySnapshot(enemy.Id, enemy.Position, enemy.Health, EnemyState.Chase));
+        enemy.Update(world, 0d);
+        enemy.Update(world, 0.2);
+        var attackTime = EnemyAnimationPresenter.ClipTimeFor(enemy, 123.45f, 0f, model.AnimationDuration("Attack"));
+        var attackPose = model.BuildMesh(Matrix4x4.CreateRotationY(MathF.Atan2(-enemy.FacingDirection.Z, enemy.FacingDirection.X)) * Matrix4x4.CreateTranslation(enemy.Position),
+            "Attack", attackTime, true);
+        rendered = Render(123.45);
+        check(enemy.IsAttackWindingUp && rendered.Skip(rendered.Length - attackPose.Positions.Length)
+            .Select(vertex => vertex.Position).SequenceEqual(attackPose.Positions),
+            "Production mesh samples attack progress during the telegraphed windup");
+        check(MathF.Abs(attackTime - 0.175f) < 0.01f && Vector3.Dot(enemy.FacingDirection, Vector3.UnitZ) > 0.99f,
+            "Attack animation contact is timed to damage and the predator faces its committed strike");
 
         enemy.Restore(new EnemySnapshot(enemy.Id, enemy.Position, enemy.Health, EnemyState.Attack));
         enemy.TakeDamage(1f);

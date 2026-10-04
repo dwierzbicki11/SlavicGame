@@ -124,12 +124,15 @@ public static class ActorModelMesh
             var clipTime = EnemyAnimationPresenter.ClipTimeFor(
                 enemy,
                 time,
-                enemy.IsHitReacting ? enemyModel.AnimationDuration("Hit") : 0f);
-            var transform = Matrix4x4.CreateTranslation(enemy.Position);
+                enemy.IsHitReacting ? enemyModel.AnimationDuration("Hit") : 0f,
+                enemy.State == EnemyState.Attack ? enemyModel.AnimationDuration("Attack") : 0f);
+            // This quadruped is authored with its head along source/engine +X.
+            var yaw = MathF.Atan2(-enemy.FacingDirection.Z, enemy.FacingDirection.X);
+            var transform = Matrix4x4.CreateRotationY(yaw) * Matrix4x4.CreateTranslation(enemy.Position);
             Append(
                 enemyModel.BuildMesh(transform, clip, clipTime, sourceIsZUp: true),
-                enemy.State == EnemyState.Attack
-                    ? new Vector3(0.62f, 0.12f, 0.08f)
+                enemy.IsAttackWindingUp
+                    ? new Vector3(0.72f, 0.38f, 0.08f)
                     : new Vector3(0.30f, 0.20f, 0.13f),
                 vertexList,
                 indexList);
