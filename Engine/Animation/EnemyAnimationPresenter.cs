@@ -34,7 +34,13 @@ public sealed class EnemyAnimationPresenter
     {
         ArgumentNullException.ThrowIfNull(enemy);
 
-        var state = !enemy.IsAlive || enemy.State == EnemyState.Dead
+        StateMachine.Play(StateFor(enemy));
+    }
+
+    public static string StateFor(EnemyAgent enemy)
+    {
+        ArgumentNullException.ThrowIfNull(enemy);
+        return !enemy.IsAlive || enemy.State == EnemyState.Dead
             ? Dead
             : enemy.IsHitReacting
                 ? HitReact
@@ -48,6 +54,23 @@ public sealed class EnemyAnimationPresenter
                     _ => Patrol
                 };
 
-        StateMachine.Play(state);
+    }
+
+    public static string ClipFor(EnemyAgent enemy) => StateFor(enemy) switch
+    {
+        HitReact => "Hit",
+        Chase => "Run",
+        Attack => "Attack",
+        Patrol or Return => "Walk",
+        Dead => "Death",
+        _ => "Idle"
+    };
+
+    public static float ClipTimeFor(EnemyAgent enemy, float worldAnimationTime, float hitClipDuration)
+    {
+        if (!enemy.IsHitReacting || !enemy.IsAlive) return worldAnimationTime;
+        if (!float.IsFinite(hitClipDuration) || hitClipDuration <= 0f) return 0f;
+        // Reaction plays once from the hit; global animation time would sample an arbitrary pose.
+        return MathF.Min(enemy.HitReactionProgress * hitClipDuration, MathF.BitDecrement(hitClipDuration));
     }
 }

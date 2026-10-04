@@ -52,6 +52,9 @@ public sealed class EnemyAgent : IDamageReceiver
     public EnemyState State { get; private set; } = EnemyState.Patrol;
     public bool IsAlive => Health > 0f;
     public bool IsHitReacting => _hitReactionRemaining > 0.0;
+    public float HitReactionProgress => IsHitReacting
+        ? Math.Clamp(1f - (float)(_hitReactionRemaining / HitReactionSeconds), 0f, 1f)
+        : 0f;
 
     public EnemyAgent(string id, Vector3 homePosition)
     {

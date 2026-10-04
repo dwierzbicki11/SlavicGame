@@ -51,6 +51,14 @@ public sealed class GlbModel
     private readonly GlbMaterialData[] _materials;
 
     public IReadOnlyCollection<string> AnimationNames => _animations.Keys;
+
+    public float AnimationDuration(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return _animations.TryGetValue(name, out var clip)
+            ? clip.Duration
+            : throw new KeyNotFoundException($"Animation '{name}' is not present in this GLB.");
+    }
     public IReadOnlyList<GlbMaterialData> Materials => _materials;
     public bool HasAuthoredNormals =>
         _meshes.SelectMany(mesh => mesh).All(primitive => primitive.Normals is { Length: > 0 });

@@ -1,5 +1,6 @@
 using System.Numerics;
 using SlavicGame.Engine.AI;
+using SlavicGame.Engine.Animation;
 using SlavicGame.Engine.Assets;
 
 namespace SlavicGame.Engine.World;
@@ -119,18 +120,14 @@ public static class ActorModelMesh
             if (!enemy.IsAlive)
                 continue;
 
-            var clip = enemy.State switch
-            {
-                EnemyState.Chase => "Run",
-                EnemyState.Attack => "Attack",
-                EnemyState.Return => "Walk",
-                EnemyState.Patrol => "Walk",
-                EnemyState.Alert => "Idle",
-                _ => "Idle"
-            };
+            var clip = EnemyAnimationPresenter.ClipFor(enemy);
+            var clipTime = EnemyAnimationPresenter.ClipTimeFor(
+                enemy,
+                time,
+                enemy.IsHitReacting ? enemyModel.AnimationDuration("Hit") : 0f);
             var transform = Matrix4x4.CreateTranslation(enemy.Position);
             Append(
-                enemyModel.BuildMesh(transform, clip, time, sourceIsZUp: true),
+                enemyModel.BuildMesh(transform, clip, clipTime, sourceIsZUp: true),
                 enemy.State == EnemyState.Attack
                     ? new Vector3(0.62f, 0.12f, 0.08f)
                     : new Vector3(0.30f, 0.20f, 0.13f),

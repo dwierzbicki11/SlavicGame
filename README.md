@@ -496,3 +496,8 @@ The vertical slice now includes a physical projectile bow. Hold RMB to aim, hold
 ### Market chest storage
 
 The existing chest at the village market now opens with E and shows container and inventory panels. A/D selects the panel, W/S selects an item, E moves one item, Shift+E moves the selected stack, and Escape closes the panel. Deposited contents persist in the full game save. Storage cancels bow aiming and closes when the player leaves its reach.
+
+
+### Enemy hit feedback
+
+The rendered swamp predator now plays its authored Hit clip when damaged, using progress from the actual hit reaction rather than global animation time. The underlying Chase/Attack engagement is retained and its normal clip resumes when recoil ends. Repeated hits restart the reaction; save/load clears transient recoil and defeated enemies remain hidden.
