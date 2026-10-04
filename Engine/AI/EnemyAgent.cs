@@ -266,10 +266,7 @@ public sealed class EnemyAgent : IDamageReceiver
             if (Attack.Phase == EnemyAttackPhase.Ready)
             {
                 if (playerDistance > AttackRange) break;
-                var direction = world.PlayerPosition - Position;
-                direction.Y = 0f;
-                if (direction.LengthSquared() > 0.000001f)
-                    FacingDirection = Vector3.Normalize(direction);
+                LockFacingTowards(world.PlayerPosition);
                 Attack.TryStart();
             }
 
@@ -281,6 +278,16 @@ public sealed class EnemyAgent : IDamageReceiver
                 world.Player.TakeDamage(Damage);
             }
         }
+    }
+
+    private void LockFacingTowards(Vector3 target)
+    {
+        var direction = target - Position;
+        direction.Y = 0f;
+        if (!IsFinite(direction) || direction.LengthSquared() <= 0.000001f)
+            return;
+
+        FacingDirection = Vector3.Normalize(direction);
     }
 
     private void Patrol(WorldState world, double deltaSeconds)
