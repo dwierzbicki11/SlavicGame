@@ -4,6 +4,9 @@
 #include <ffx_api/ffx_upscale.h>
 #include <ffx_api/vk/ffx_api_vk.h>
 #include <FidelityFX/host/ffx_fsr3upscaler.h>
+#include <FidelityFX/host/ffx_fsr3.h>
+#include <FidelityFX/host/ffx_frameinterpolation.h>
+#include <FidelityFX/host/ffx_opticalflow.h>
 #include <FidelityFX/host/backends/vk/ffx_vk.h>
 #include <cstdlib>
 #include <memory>
@@ -41,6 +44,18 @@ uint32_t result(FfxErrorCode code) {
 
 extern "C" __attribute__((visibility("default"))) uint32_t slavicFsrLinuxVersion() {
     return 0x030104;
+}
+
+// Stage-1 Frame Generation capability proof. Calling all three version entry
+// points makes the linker prove that the full FSR3, Frame Interpolation and
+// Optical Flow components are present in this provider. Dispatch is enabled in
+// later stages only after their Vulkan shader permutations are embedded.
+extern "C" __attribute__((visibility("default"))) uint32_t slavicFsrFrameGenerationComponents() {
+    uint32_t components = 0;
+    if (ffxFsr3GetEffectVersion() != 0) components |= 1u;
+    if (ffxFrameInterpolationGetEffectVersion() != 0) components |= 2u;
+    if (ffxOpticalflowGetEffectVersion() != 0) components |= 4u;
+    return components;
 }
 extern "C" __attribute__((visibility("default"))) size_t slavicFsrAbiLayout(uint32_t entry) {
     switch(entry) {
