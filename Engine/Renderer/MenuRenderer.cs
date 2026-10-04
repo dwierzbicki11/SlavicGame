@@ -104,7 +104,7 @@ public sealed class MenuRenderer : IDisposable
         commandList.UpdateBuffer(
             _vertexBuffer,
             0,
-            _vertices.ToArray());
+            System.Runtime.InteropServices.CollectionsMarshal.AsSpan(_vertices));
 
         commandList.SetPipeline(_pipeline);
         commandList.SetGraphicsResourceSet(0, _set);
