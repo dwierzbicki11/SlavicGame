@@ -46,6 +46,8 @@ public sealed class VeldridRenderer : IDisposable
         new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _wildlifeModels =
         new(StringComparer.Ordinal);
+    private readonly Dictionary<string, GlbModel> _bestiaryModels =
+        new(StringComparer.Ordinal);
     private readonly Dictionary<string, GlbModel> _worldItemModels =
         new(StringComparer.Ordinal);
 
@@ -173,6 +175,34 @@ public sealed class VeldridRenderer : IDisposable
             }
 
             _wildlifeModels[modelFile] = model;
+        }
+
+        _bestiaryModels.Clear();
+        foreach (var definition in BestiaryVisualCatalog.Definitions)
+        {
+            var monsterPath = Path.Combine(
+                assetsRoot,
+                "models",
+                "animated",
+                definition.ModelFile);
+            if (!File.Exists(monsterPath))
+            {
+                throw new FileNotFoundException(
+                    $"Required bestiary model '{definition.ModelFile}' was not found.",
+                    monsterPath);
+            }
+
+            var model = GlbModel.Load(monsterPath);
+            var missingClips = definition.RequiredClips
+                .Where(clip => !model.AnimationNames.Contains(clip))
+                .ToArray();
+            if (missingClips.Length > 0)
+            {
+                throw new InvalidDataException(
+                    $"Bestiary model '{definition.ModelFile}' is missing clips: {string.Join(", ", missingClips)}.");
+            }
+
+            _bestiaryModels[definition.ModelFile] = model;
         }
 
         _worldItemModels.Clear();
@@ -350,7 +380,7 @@ public sealed class VeldridRenderer : IDisposable
         EngineLog.Info(
             $"Animated actor models loaded: player clips={_playerModel.AnimationNames.Count}, " +
             $"NPC models={_npcModels.Count}, wildlife models={_wildlifeModels.Count}, " +
-            $"enemy clips={_enemyModel.AnimationNames.Count}.");
+            $"bestiary models={_bestiaryModels.Count}, enemy clips={_enemyModel.AnimationNames.Count}.");
         EngineLog.Info("HUD renderer initialized.");
     }
 
@@ -1125,6 +1155,7 @@ public sealed class VeldridRenderer : IDisposable
         _actorShaders = null;
         _playerModel = null;
         _enemyModel = null;
+        _bestiaryModels.Clear();
         _worldItemModels.Clear();
         _hudPipeline = null;
         _hudSet = null;

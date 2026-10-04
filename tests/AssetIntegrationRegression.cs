@@ -443,6 +443,35 @@ internal static class AssetIntegrationRegression
                 !geometry.Positions.SequenceEqual(playerGeometry.Positions)),
             "NPC models are not all copies of the player hunter geometry");
 
+        check(BestiaryVisualCatalog.Definitions.Count == 5 &&
+              BestiaryVisualCatalog.RequiredModelFiles.Count == 5,
+            "Animated bestiary catalog exposes five distinct monster families");
+
+        foreach (var definition in BestiaryVisualCatalog.Definitions)
+        {
+            var bestiaryPath = Path.Combine(
+                assetsRoot,
+                "models",
+                "animated",
+                definition.ModelFile);
+            check(File.Exists(bestiaryPath),
+                $"Bestiary model asset exists: {definition.ModelFile}");
+
+            var bestiaryModel = GlbModel.Load(bestiaryPath);
+            check(definition.RequiredClips.All(clip =>
+                    bestiaryModel.AnimationNames.Contains(clip)),
+                $"Bestiary model {definition.ModelFile} exposes the full humanoid combat clip set");
+
+            var bestiaryGeometry = bestiaryModel.BuildMesh(
+                Matrix4x4.CreateScale(definition.Scale),
+                "Idle",
+                0.35f,
+                sourceIsZUp: true);
+            check(bestiaryGeometry.Positions.Length > 0 &&
+                  bestiaryGeometry.Indices.Length > 0,
+                $"Bestiary model {definition.Id} produces renderable animated geometry");
+        }
+
         void CheckFacing(string id, Vector2 target)
         {
             var model = world.Models.Single(item =>
