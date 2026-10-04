@@ -22,6 +22,7 @@ public sealed class FrontendController
         SettingCategory.Display,
         SettingCategory.Graphics,
         SettingCategory.PostProcessing,
+        SettingCategory.Audio,
         SettingCategory.Controls
     ];
 
@@ -303,6 +304,7 @@ public sealed class FrontendController
             SettingCategory.Controls => "STEROWANIE",
             SettingCategory.Graphics => "GRAFIKA",
             SettingCategory.PostProcessing => "EFEKTY",
+            SettingCategory.Audio => "DZWIEK",
             _ => category.ToString().ToUpperInvariant()
         };
 }

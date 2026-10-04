@@ -39,7 +39,8 @@ public sealed class RiverAmbienceService : IDisposable
         Vector3 listener,
         double deltaSeconds,
         bool enabled,
-        float splashIntensity = 0f)
+        float splashIntensity = 0f,
+        float volume = 1f)
     {
         if (_disposed || _player is null)
             return;
@@ -52,7 +53,10 @@ public sealed class RiverAmbienceService : IDisposable
 
         var distance = RiverAmbienceSynthesizer.DistanceToRiver(listener);
         var attenuation = RiverAmbienceSynthesizer.Attenuation(distance);
-        var targetVolume = attenuation * 0.34f;
+        var targetVolume =
+            attenuation *
+            0.34f *
+            Math.Clamp(volume, 0f, 1f);
 
         if (targetVolume <= 0.012f)
         {

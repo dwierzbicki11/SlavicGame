@@ -11,7 +11,7 @@
     <Compile Include="../Engine/Animation/*.cs" Link="Animation/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Assets/*.cs" Link="Assets/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Audio/*.cs"
-             Exclude="../Engine/Audio/SdlPcmPlayer.cs;../Engine/Audio/VoiceOverService.cs;../Engine/Audio/RiverAmbienceService.cs"
+             Exclude="../Engine/Audio/SdlPcmPlayer.cs;../Engine/Audio/VoiceOverService.cs;../Engine/Audio/RiverAmbienceService.cs;../Engine/Audio/AudioDirector.cs"
              Link="Audio/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Combat/*.cs" Link="Combat/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Dialogue/*.cs" Link="Dialogue/%(Filename)%(Extension)" />
@@ -41,6 +41,9 @@
     <Compile Include="../Engine/Renderer/TemporalFrameState.cs" Link="TemporalFrameState.cs" />
     <Compile Include="../Engine/Renderer/DynamicMotionHistory.cs" Link="DynamicMotionHistory.cs" />
     <Compile Include="../Engine/Renderer/WorldModelRenderPolicy.cs" Link="WorldModelRenderPolicy.cs" />
+    <Content Include="../assets/audio/**/*.wav"
+             Link="assets/audio/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../assets/models/**/*.glb"
              Link="assets/models/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />

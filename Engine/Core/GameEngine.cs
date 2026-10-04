@@ -26,6 +26,7 @@ public sealed class GameEngine : IDisposable
     private readonly SaveSlotService _saveSlots = new();
     private VoiceOverService? _voice;
     private RiverAmbienceService? _riverAmbience;
+    private AudioDirector? _audio;
     private readonly VoiceUsageScope _voiceUsage = VoiceUsage.FromEnvironment();
 
     private bool _initialized;
@@ -82,6 +83,7 @@ public sealed class GameEngine : IDisposable
         EngineLog.Info("Starting SlavicGame engine.");
         _voice ??= VoiceOverService.CreateFromEnvironment();
         _riverAmbience ??= RiverAmbienceService.TryCreate();
+        _audio ??= AudioDirector.TryCreate();
         _renderer.Initialize(
             _window,
             _world,
@@ -151,6 +153,7 @@ public sealed class GameEngine : IDisposable
                     _world.Bow.SetAiming(_world, false);
                     _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
                     TryAutosave("pause");
+                    _audio?.PlayUi("ui.back", _settings);
                     _frontend.OpenMainMenu();
                     _window.SetMouseCapture(false);
                 }
@@ -204,6 +207,7 @@ public sealed class GameEngine : IDisposable
                 switch (action)
                 {
                     case FrontendAction.StartGame:
+                        _audio?.PlayUi("ui.confirm", _settings);
                         _world.Cinematics.TryStart(_world, CinematicPlayer.Arrival);
                         if (_world.Cinematics.IsPlaying)
                             _camera.SetCinematicPose(_world.Cinematics.CameraPosition, _world.Cinematics.CameraTarget);
@@ -212,6 +216,7 @@ public sealed class GameEngine : IDisposable
                         break;
 
                     case FrontendAction.ContinueGame:
+                        _audio?.PlayUi("ui.confirm", _settings);
                         if (_saveSlots.TryLoadLatest(_world, out var loaded) &&
                             loaded is not null)
                         {
@@ -235,6 +240,7 @@ public sealed class GameEngine : IDisposable
                         break;
 
                     case FrontendAction.SettingsChanged:
+                        _audio?.PlayUi("ui.confirm", _settings);
                         ApplySettings();
                         _settingsStore.Save(_settings);
                         break;
@@ -253,11 +259,18 @@ public sealed class GameEngine : IDisposable
 
             SyncCinematicVoice();
 
+            _audio?.Update(
+                _world,
+                _time.DeltaSeconds,
+                _frontend.IsPlaying,
+                _settings);
+
             _riverAmbience?.Update(
                 _world.PlayerPosition,
                 _time.DeltaSeconds,
                 _frontend.IsPlaying,
-                _world.WaterInteraction.SplashPulse);
+                _world.WaterInteraction.SplashPulse,
+                _settings.MasterVolume * _settings.AmbienceVolume);
 
             var menuView = _frontend.IsPlaying
                 ? null
@@ -407,6 +420,13 @@ public sealed class GameEngine : IDisposable
             _camera.Mode = _settings.Camera == CameraPreference.FirstPerson
                 ? CameraMode.FirstPerson
                 : CameraMode.ThirdPerson;
+
+            if (_voice is not null)
+            {
+                _voice.Gain =
+                    _settings.MasterVolume *
+                    _settings.VoiceVolume;
+            }
 
             EngineLog.Info(
                 $"Settings applied: output={outputWidth}x{outputHeight}, " +
@@ -594,6 +614,12 @@ public sealed class GameEngine : IDisposable
             if (!handled)
                 handled = _world.Loot.TryOpenNearest(_world);
 
+            if (handled)
+                _audio?.PlayEffect(
+                    "interaction.pickup",
+                    _settings,
+                    0.55f);
+
             if (!handled)
                 _world.Dialogue.TryStartNearest(_world);
         }
@@ -611,12 +637,17 @@ public sealed class GameEngine : IDisposable
             var spell = _world.Magic.Current;
             if (_world.Magic.TryStart(_world, _camera.GetLookDirection()))
             {
+                _audio?.PlayEffect("magic.cast", _settings);
                 _voice?.Speak(BuildSpellVoiceRequest(spell));
             }
         }
 
         if (_window.ConsumeKeyPress(Key.R) && !jumpPressed && !dodgePressed && !_world.Rituals.IsPerforming)
-            _world.Rituals.TryStart(_world);
+        {
+            var ritual = _world.Rituals.TryStart(_world);
+            if (ritual.Started)
+                _audio?.PlayEffect("ritual.start", _settings);
+        }
 
         if (_window.ConsumeKeyPress(Key.C) && !jumpPressed && !_world.Dodge.IsActive && !_world.Rituals.IsPerforming)
         {
@@ -641,7 +672,10 @@ public sealed class GameEngine : IDisposable
             canMove && dodgePressed,
             canMove && jumpPressed);
         // Dodge cancels draw before this frame's mouse press/release can fire a weapon.
+        var wasAirborne = _world.Jump.IsAirborne;
         PlayerController.Update(_world, _camera, input, deltaSeconds);
+        if (jumpPressed && !wasAirborne && _world.Jump.IsAirborne)
+            _audio?.PlayEffect("jump", _settings);
         if (_inputDiagnostics) LogInput(input, deltaSeconds);
 
         _camera.FieldOfView =
@@ -651,20 +685,27 @@ public sealed class GameEngine : IDisposable
 
         if (_world.Bow.IsAiming)
         {
-            if (_window.ConsumeLeftMousePress())
-                _world.Bow.TryStartDraw(_world);
+            if (_window.ConsumeLeftMousePress() &&
+                _world.Bow.TryStartDraw(_world))
+            {
+                _audio?.PlayEffect("bow.draw", _settings);
+            }
 
             if (_window.ConsumeLeftMouseRelease())
             {
-                _world.Bow.TryRelease(
+                if (_world.Bow.TryRelease(
                     _world,
                     _camera.Position,
-                    _camera.GetLookDirection());
+                    _camera.GetLookDirection()))
+                {
+                    _audio?.PlayEffect("bow.release", _settings);
+                }
             }
         }
-        else if (_window.ConsumeLeftMousePress())
+        else if (_window.ConsumeLeftMousePress() &&
+                 _world.Melee.TryStart(_world))
         {
-            _world.Melee.TryStart(_world);
+            _audio?.PlayEffect("melee.swing", _settings);
         }
     }
 
@@ -789,6 +830,7 @@ public sealed class GameEngine : IDisposable
         _disposed = true;
         try
         {
+            _audio?.Dispose();
             _riverAmbience?.Dispose();
             _voice?.Dispose();
             _renderer.Dispose();
