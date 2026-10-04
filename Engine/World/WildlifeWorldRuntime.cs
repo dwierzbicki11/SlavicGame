@@ -99,6 +99,15 @@ public static class WildlifeCatalog
             ? profile
             : throw new ArgumentOutOfRangeException(nameof(species));
 
+    public static string DisplayName(WildlifeSpecies species) => species switch
+    {
+        WildlifeSpecies.Deer => "JELEN",
+        WildlifeSpecies.Boar => "DZIK",
+        WildlifeSpecies.Wolf => "WILK",
+        WildlifeSpecies.Raven => "KRUK",
+        _ => species.ToString().ToUpperInvariant()
+    };
+
     public static IReadOnlyCollection<string> RequiredModelFiles { get; } =
         Profiles.Values
             .Select(profile => profile.ModelFile)
