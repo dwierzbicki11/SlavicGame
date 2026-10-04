@@ -19,7 +19,7 @@ internal static class PlayerDodgeRegression
         var start = world.PlayerPosition;
         PlayerController.Update(world, camera, Idle with { Forward = true, DodgePressed = true }, 0.1);
         check(world.Dodge.IsActive && Near(Travel(world, start), 1.2f) && world.Player.Stamina == 80f,
-            "Space starts a directional dodge and pays stamina once without walking or sprinting on top");
+            "Alt starts a directional dodge and pays stamina once without walking or sprinting on top");
         check(!world.Dodge.TryStart(world, Vector3.UnitX) && world.Player.Stamina == 80f,
             "Repeated dodge requests during movement cannot charge stamina again");
         PlayerController.Update(world, camera, Idle, 0.15);
@@ -34,7 +34,7 @@ internal static class PlayerDodgeRegression
         PlayerController.Update(world, camera, Idle with { DodgePressed = true }, 0.25);
         check(Near(Travel(world, start), 3f) &&
               Vector3.Dot(HorizontalDirection(world.PlayerPosition - start), camera.GetMoveForward()) < -0.99f,
-            "Space without movement performs a backward dodge relative to the camera");
+            "Alt without movement performs a backward dodge relative to the camera");
 
         world = WorldGenerator.Generate(); camera = new Camera3D(); start = world.PlayerPosition;
         PlayerController.Update(world, camera,

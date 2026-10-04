@@ -7,6 +7,7 @@ namespace SlavicGame.Engine.Input;
 
 public static class PlayerController
 {
+    private const double MaxAirMovementStep = 1.0 / 120.0;
     public static void Update(WorldState world, Camera3D camera, PlayerInput input, double deltaSeconds)
     {
         if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0d) return;
@@ -16,6 +17,7 @@ public static class PlayerController
         if (!world.Player.IsAlive)
         {
             world.Dodge.Reset();
+            world.Jump.Update(world, deltaSeconds);
             world.Player.UpdateStamina(false, deltaSeconds);
             camera.Follow(world.PlayerPosition, (float)deltaSeconds, world.Terrain);
             return;
@@ -29,12 +31,13 @@ public static class PlayerController
         if (PlayerDodge.MovementBlocked(world)) move = Vector3.Zero;
 
         var isMoving = move.LengthSquared() > 0.001f;
+        if (input.JumpPressed) world.Jump.TryStart(world);
         if (input.DodgePressed)
             world.Dodge.TryStart(world, isMoving ? move : -camera.GetMoveForward());
 
         var dodgeSeconds = world.Dodge.Update(world, deltaSeconds);
         var movementSeconds = Math.Max(0d, deltaSeconds - dodgeSeconds);
-        var waterDepth = WaterInteractionState.DepthAt(
+        var waterDepth = world.Jump.IsAirborne ? 0f : WaterInteractionState.DepthAt(
             world,
             world.PlayerPosition);
         var waterSpeedMultiplier =
@@ -47,27 +50,43 @@ public static class PlayerController
             world.Player.CanSprint &&
             WaterInteractionState.CanSprintAtDepth(waterDepth);
 
+        var jumpSeconds = 0d;
         if (isMoving)
         {
             move = Vector3.Normalize(move);
             var speed = (sprinting ? 9f : 5f) * waterSpeedMultiplier;
-            world.SetPlayerPosition(
-                world.PlayerPosition +
-                move * speed * (float)movementSeconds);
+            if (world.Jump.IsAirborne)
+            {
+                // Advance horizontal travel and gravity together. Comparing the first
+                // vertical step against the whole frame's uphill endpoint lands too early.
+                while (jumpSeconds < movementSeconds - 0.000000001)
+                {
+                    var step = Math.Min(MaxAirMovementStep, movementSeconds - jumpSeconds);
+                    world.MovePlayerPosition(world.PlayerPosition + move * speed * (float)step);
+                    world.Jump.Update(world, step);
+                    jumpSeconds += step;
+                }
+            }
+            else
+            {
+                world.MovePlayerPosition(world.PlayerPosition + move * speed * (float)movementSeconds);
+            }
         }
 
-        var currentVelocity =
+        var currentVelocity = world.Jump.IsAirborne ? Vector3.Zero :
             WaterInteractionState.CurrentVelocityAt(
                 world,
                 world.PlayerPosition);
         if (currentVelocity.LengthSquared() > 0.000001f)
         {
-            world.SetPlayerPosition(
+            world.MovePlayerPosition(
                 world.PlayerPosition +
                 currentVelocity * (float)deltaSeconds);
         }
 
-        var finalWaterDepth =
+        world.Jump.Update(world, Math.Max(0d, deltaSeconds - jumpSeconds));
+
+        var finalWaterDepth = world.Jump.IsAirborne ? 0f :
             WaterInteractionState.DepthAt(
                 world,
                 world.PlayerPosition);

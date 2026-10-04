@@ -107,7 +107,8 @@ Pierwszy grywalny runtime łuku jest podpięty do vertical slice.
 - **LMB press + hold** podczas Aim — Draw;
 - **LMB release** — Release;
 - puszczenie RMB podczas Draw — Cancel bez utraty ammo;
-- **Space + WASD** — unik, który anuluje Aim/Draw bez utraty ammo; bez WASD unik w tył;
+- **Left Alt + WASD** — unik, który anuluje Aim/Draw bez utraty ammo; bez WASD unik w tył;
+- **Space** — skok; Aim/Draw pozostaje aktywne;
 - **E** przy strzale wbitej w teren — odzyskanie `arrow-basic`.
 
 Poza Aim LMB nadal uruchamia melee.

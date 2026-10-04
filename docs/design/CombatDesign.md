@@ -60,7 +60,7 @@ I-frames nie są jeszcze zatwierdzone.
 
 ### Runtime uniku
 
-Spacja + WASD wykonuje krótki unik względem kamery; bez WASD gracz cofa się.
+Left Alt + WASD wykonuje krótki unik względem kamery; bez WASD gracz cofa się.
 Kierunek zostaje ustalony na początku, a kamera nadal reaguje na mysz.
 
 | Parametr | Wartość prototypowa |
@@ -76,11 +76,22 @@ nie można rozpocząć melee, czaru ani rytuału. Trwający melee, inkantacja,
 rytuał, UI i cinematic blokują rozpoczęcie uniku. Aim/Draw łuku zostaje
 anulowane bez zużycia strzały, zanim release w tej klatce może wystrzelić.
 Po ruchu można ponownie celować i normalnie chodzić, mimo cooldownu uniku.
+Unik pozostaje niedostępny w powietrzu aż do lądowania po skoku.
 
 HUD pokazuje binding, koszt, brak staminy i odnowienie. Unik unika zamachu
 przez przemieszczenie poza obszar trafienia; nie przyznaje i-frames.
 Save/load usuwa przejściowy ruch i cooldown, zachowując zapisaną pozycję
 i staminę. Parametry wymagają ręcznego playtestu.
+
+### Skok
+
+Spacja wykonuje skok bez kosztu staminy. Impuls 6,5 m/s i grawitacja 16 m/s²
+dają około 1,32 m wysokości i 0,81 s lotu na płaskim podłożu. Ruch poziomy
+i kamera pozostają aktywne, a istniejące przeszkody nadal blokują przejście.
+Nie można wykonać drugiego skoku w powietrzu. Skok jest blokowany podczas
+uniku, melee, inkantacji, rytuału, UI, cinematic i głębokiego brodzenia.
+Skok zachowuje Aim/Draw łuku. Zapis w powietrzu jest wczytywany na podłożu
+z wyzerowaną prędkością pionową. Pauza zatrzymuje fizykę skoku.
 
 ## Broń
 

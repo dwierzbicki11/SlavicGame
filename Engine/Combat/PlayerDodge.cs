@@ -29,7 +29,7 @@ public sealed class PlayerDodge
         ArgumentNullException.ThrowIfNull(world);
         direction.Y = 0f;
         var lengthSquared = direction.LengthSquared();
-        if (CooldownRemaining > Epsilon || MovementBlocked(world) ||
+        if (CooldownRemaining > Epsilon || MovementBlocked(world) || world.Jump.IsAirborne ||
             world.Melee.Controller.State != MeleeAttackState.Free ||
             !WaterInteractionState.CanSprintAtDepth(WaterInteractionState.DepthAt(world, world.PlayerPosition)) ||
             !float.IsFinite(direction.X) || !float.IsFinite(direction.Z) ||
@@ -82,6 +82,7 @@ public sealed class PlayerDodge
 
     public string HudText(WorldState world)
     {
+        if (world.Jump.IsAirborne) return "SKOK / LEWY ALT UNIK PO LADOWANIU";
         if (IsActive) return "UNIK";
         if (CooldownRemaining > Epsilon) return $"UNIK / ODNOWIENIE {CooldownRemaining:0.0} S";
         if (MovementBlocked(world) || world.Melee.Controller.State != MeleeAttackState.Free)
@@ -89,7 +90,7 @@ public sealed class PlayerDodge
         if (!WaterInteractionState.CanSprintAtDepth(WaterInteractionState.DepthAt(world, world.PlayerPosition)))
             return "UNIK NIEDOSTEPNY W GLEBOKIEJ WODZIE";
         return world.Player.Stamina < StaminaCost
-            ? "SPACJA UNIK / ZA MALO STAMINY (20)"
-            : "SPACJA + WASD UNIK / KOSZT 20 STAMINY";
+            ? "SPACJA SKOK / LEWY ALT UNIK: ZA MALO STAMINY (20)"
+            : "SPACJA SKOK / LEWY ALT + WASD UNIK / 20 STAMINY";
     }
 }

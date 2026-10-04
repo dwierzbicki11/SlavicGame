@@ -47,7 +47,7 @@ public sealed class CinematicPlayer
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(definition);
 
-        if (IsPlaying || !world.Player.IsAlive || world.Magic.IsCasting ||
+        if (IsPlaying || world.Jump.IsAirborne || !world.Player.IsAlive || world.Magic.IsCasting ||
             world.Rituals.IsPerforming ||
             world.Progress.HasFlag("cinematic.seen." + definition.Id))
             return false;

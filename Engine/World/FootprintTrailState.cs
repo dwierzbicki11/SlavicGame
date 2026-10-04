@@ -42,6 +42,13 @@ public sealed class FootprintTrailState
         AgeExisting(world, (float)deltaSeconds);
 
         var position = world.PlayerPosition;
+        if (world.Jump.IsAirborne)
+        {
+            _previousPosition = position;
+            _hasPrevious = true;
+            _distanceAccumulator = 0f;
+            return;
+        }
         if (!_hasPrevious)
         {
             Reset(position);

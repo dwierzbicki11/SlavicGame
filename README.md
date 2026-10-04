@@ -335,7 +335,7 @@ dotnet run --project SlavicGame.csproj
 dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
 ```
 
-Controls: WASD move, left Shift sprint (consumes stamina), Space + WASD dodge (20 stamina; Space alone dodges backward), mouse rotate camera, F11 toggle fullscreen, Escape pause.
+Controls: WASD move, left Shift sprint (consumes stamina), Space jump, left Alt + WASD dodge (20 stamina; Alt alone dodges backward), mouse rotate camera, F11 toggle fullscreen, Escape pause.
 
 The third-person camera adapts its height to the rendered terrain, keeping a 0.5-unit ground clearance. A ridge between the player and camera shortens the camera boom; the constraint is also applied after smoothing so movement and rotation cannot interpolate the camera into the ground.
 
@@ -509,4 +509,8 @@ The swamp predator commits to a strike direction, winds up for 0.4 seconds, chec
 
 ### Player dodge
 
-Press Space with WASD to dodge in a camera-relative direction, or Space alone to retreat. A dodge spends 20 stamina once, moves three metres over 0.25 seconds on dry ground, then has 0.55 seconds of recovery before another dodge. Small movement steps respect static collisions even in long frames; terrain and map bounds remain authoritative. Dodge cancels bow draw without using ammunition and blocks weapon/cast starts during its movement. It is unavailable during melee, casting, rituals, UI, cinematics or deep wading. The HUD shows cost, availability and recovery. Avoidance is positional, without invulnerability; loading clears the transient dodge.
+Press left Alt with WASD to dodge in a camera-relative direction, or Alt alone to retreat. A dodge spends 20 stamina once, moves three metres over 0.25 seconds on dry ground, then has 0.55 seconds of recovery before another dodge. Small movement steps respect static collisions even in long frames; terrain and map bounds remain authoritative. Dodge cancels bow draw without using ammunition and blocks weapon/cast starts during its movement. It is unavailable while airborne, during melee, casting, rituals, UI, cinematics or deep wading. The HUD shows cost, availability and recovery. Avoidance is positional, without invulnerability; loading clears the transient dodge.
+
+### Player jump
+
+Space now jumps, with a 6.5 m/s launch impulse and 16 m/s² gravity (about 1.32 m of height and 0.81 s of flight on level ground). Horizontal movement, mouse look and bow aim/draw remain available. There is no double jump or jump stamina cost. Existing horizontal obstacle collisions and terrain landing remain authoritative; physics also keeps falling when a gameplay UI opens, and pause freezes the flight. Teleporting or loading a save clears vertical velocity and places the player on the terrain.
