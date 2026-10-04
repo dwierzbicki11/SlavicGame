@@ -47,7 +47,11 @@ public sealed class FarVegetationRenderer : IDisposable
             new VertexElementDescription(
                 "ColorType",
                 VertexElementSemantic.Color,
-                VertexElementFormat.Float4));
+                VertexElementFormat.Float4),
+            new VertexElementDescription(
+                "WindPhase",
+                VertexElementSemantic.TextureCoordinate,
+                VertexElementFormat.Float1));
 
         _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
@@ -179,7 +183,7 @@ public sealed class FarVegetationRenderer : IDisposable
 
         EngineLog.Info(
             $"Far vegetation impostors initialized: {TreeCount} trees, " +
-            $"{_batches.Count} spatial batches, 3 crossed cards/tree.");
+            $"{_batches.Count} spatial batches, 4 crossed cards/tree with wind.");
     }
 
     public void Render(
@@ -244,14 +248,21 @@ public sealed class FarVegetationRenderer : IDisposable
         float species,
         float yaw)
     {
-        for (var plane = 0; plane < 3; plane++)
+        var windPhase =
+            basePosition.X * 0.137f +
+            basePosition.Z * 0.173f +
+            yaw * 1.91f;
+
+        for (var plane = 0; plane < 4; plane++)
         {
-            var angle = yaw + plane * MathF.PI / 3f;
+            var angle = yaw + plane * MathF.PI / 4f;
             var axis = new Vector3(
                 MathF.Cos(angle),
                 0f,
                 MathF.Sin(angle));
-            var half = axis * (width * 0.5f);
+            var silhouetteScale =
+                0.94f + 0.06f * MathF.Sin(windPhase + plane * 1.73f);
+            var half = axis * (width * 0.5f * silhouetteScale);
 
             var bottomLeft = basePosition - half;
             var bottomRight = basePosition + half;
@@ -264,19 +275,23 @@ public sealed class FarVegetationRenderer : IDisposable
             vertices.Add(new ProxyVertex(
                 bottomLeft,
                 new Vector2(0f, 0f),
-                colorType));
+                colorType,
+                windPhase));
             vertices.Add(new ProxyVertex(
                 bottomRight,
                 new Vector2(1f, 0f),
-                colorType));
+                colorType,
+                windPhase));
             vertices.Add(new ProxyVertex(
                 topRight,
                 new Vector2(1f, 1f),
-                colorType));
+                colorType,
+                windPhase));
             vertices.Add(new ProxyVertex(
                 topLeft,
                 new Vector2(0f, 1f),
-                colorType));
+                colorType,
+                windPhase));
 
             indices.Add(start + 0);
             indices.Add(start + 1);
@@ -346,20 +361,23 @@ public sealed class FarVegetationRenderer : IDisposable
     [StructLayout(LayoutKind.Sequential)]
     private readonly struct ProxyVertex
     {
-        public const uint SizeInBytes = 36;
+        public const uint SizeInBytes = 40;
 
         public readonly Vector3 Position;
         public readonly Vector2 TexCoord;
         public readonly Vector4 ColorType;
+        public readonly float WindPhase;
 
         public ProxyVertex(
             Vector3 position,
             Vector2 texCoord,
-            Vector4 colorType)
+            Vector4 colorType,
+            float windPhase)
         {
             Position = position;
             TexCoord = texCoord;
             ColorType = colorType;
+            WindPhase = windPhase;
         }
     }
 
