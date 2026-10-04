@@ -4,7 +4,7 @@ Stan roboczy v0.1. Dokument odpowiada na pytanie: **co już ma własną specyfik
 
 ## Próg swobodnej implementacji — stan 2026-10-04
 
-Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. Asset manifests oraz kontrakty AVFX, streaming/memory i AI/encounter definiują stabilne punkty integracji, degradację i telemetry. Production estimates mają measurement-gated framework. `MeasurementPlaytestEvidence.md` definiuje wspólną provenance/lifecycle dowodu. Reprodukowalne P5 scenariusze istnieją dla combat, economy/progression, evidence/reputation, traversal/weather/day-night oraz performance/release bez fabrykowania wyników. Implementacja systemów i content pipeline nie musi czekać na dalsze dopisywanie fabuły ani arbitralne limity.
+Projekt ma pełny szkielet designu i author truth, production bibles R0–R6, production cards MQ00–MQ56 oraz 21/21 side-quest cards. Encountery, regionalne usługi, item/equipment/recipe i dialogue package contract mają implementation-level pass. Asset manifests oraz kontrakty AVFX, streaming/memory i AI/encounter definiują stabilne punkty integracji, degradację i telemetry. Production estimates mają measurement-gated framework. `MeasurementPlaytestEvidence.md` definiuje wspólną provenance/lifecycle dowodu. Reprodukowalne P5 scenariusze istnieją dla combat, economy/progression, evidence/reputation, traversal/weather/day-night oraz performance/release bez fabrykowania wyników. `technical/P5CaptureArtifactFormat.md` definiuje machine-readable raw capture package i walidację, więc implementacja recordera nie wymaga dalszego projektowania formatu. Implementacja systemów i content pipeline nie musi czekać na dalsze dopisywanie fabuły ani arbitralne limity.
 
 Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line writing/VO/lokalizacja, exact historical-final locators i formy, final art/AVFX/audio IDs/warianty oraz targety performance i estymaty kalendarzowe wymagające pomiarów.
 
@@ -30,9 +30,9 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 | Animation/VFX/audio budgets | design/AnimationVfxAudioBudgetContract.md + design/ProductionAssetManifests.md | planning v0.1; numeric ceilings open |
 | Streaming/memory budgets | design/StreamingMemoryBudgetContract.md + design/ProductionAssetManifests.md | planning v0.1; numeric RAM/VRAM/IO targets open |
 | AI/encounter budgets | design/AiEncounterDensityBudgetContract.md + design/RegionalEncounterRosters.md | planning v0.1; agent/CPU/query/density targets open |
-| Measurement/playtest evidence | design/MeasurementPlaytestEvidence.md + design/BalancePlaytestScenarioManifests.md + design/TraversalWeatherDayNightScenarioManifests.md + design/PerformanceReleaseMeasurementManifests.md + technical/TestingAndPerformance.md | evidence contract + gameplay/world/performance/release manifests v0.1; real evidence still required |
+| Measurement/playtest evidence | design/MeasurementPlaytestEvidence.md + design/P5EvidenceLedger.md + design/BalancePlaytestScenarioManifests.md + design/TraversalWeatherDayNightScenarioManifests.md + design/PerformanceReleaseMeasurementManifests.md + technical/P5CaptureArtifactFormat.md | evidence lifecycle + central ledger + scenario manifests + raw capture schema v0.1; real evidence still required |
 | Production estimates | design/ProductionEstimatesFramework.md + design/ContentProduction.md | framework v0.1; velocity/capacity/person-days/dates measurement-gated |
-| Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md + design/PerformanceReleaseMeasurementManifests.md | v0.1 + reproducible profiling manifests; measured targets open |
+| Testy/logging/debug | technical/TestingAndPerformance.md + LoggingPolicy.md + DeveloperOverlay.md + design/PerformanceReleaseMeasurementManifests.md + technical/P5CaptureArtifactFormat.md | v0.1 + reproducible profiling manifests + machine-readable capture contract; measured targets open |
 | Produkcja/release | design/ContentProduction.md + ReleaseCriteria.md + ScopeBoundaries.md + ProductionEstimatesFramework.md + MeasurementPlaytestEvidence.md + PerformanceReleaseMeasurementManifests.md | planning + evidence/manifests; release evidence and real throughput open |
 | Material culture research | research/material-culture/* + research/cultures/* | family-level production research PASS v0.1; exact locators per asset |
 | Asset/content families full game | design/ProductionContentCatalog.md + design/RegionalContentAssetCatalog.md + design/ProductionAssetManifests.md | R0–R6 concrete stable manifest records v0.1; final forms/art/performance lock open |
@@ -47,13 +47,13 @@ Nie oznacza to production lock. Otwarte pozostają finalny balans, finalne line 
 6. finalne modele/materials/textures, warianty i konkretne animation/audio/VFX records/art IDs;
 7. item/equipment/recipe final stats/value/weight/durability, drop rates, quantities/craft time, botanika i culture-specific goods;
 8. encounter/AI final weights, density, cooldowns, POI placement, group sizes, active-agent limits, update cadence, path/perception ceilings, tuning i rewards;
-9. measured performance targets: frame-time, AVFX ceilings, RAM/VRAM, streaming IO/prefetch/cell, AI CPU/query/agent budgets i wymagania sprzętowe — manifesty pomiarowe istnieją, captures nie;
+9. measured performance targets: frame-time, AVFX ceilings, RAM/VRAM, streaming IO/prefetch/cell, AI CPU/query/agent budgets i wymagania sprzętowe — manifesty pomiarowe i capture format istnieją, captures nie;
 10. production estimates: velocity/capacity, czasy per domain/class, milestone ranges i release forecast wymagają rzeczywistych ukończonych próbek;
 11. finalne tuning values pogody/traversal/day-night — P5 scenario manifests istnieją, wyniki nie;
 12. release evidence dla konkretnego candidate SHA, w tym hardware qualification, save/fail-forward i long-session stability;
 13. nazwy robocze F oraz elementy research/art/playtest/performance lock.
 
-Wspólny format dowodu istnieje w `MeasurementPlaytestEvidence.md`; reprodukowalne gameplay/world scenarios istnieją w `BalancePlaytestScenarioManifests.md` i `TraversalWeatherDayNightScenarioManifests.md`, a performance/release w `PerformanceReleaseMeasurementManifests.md`. Nie oznacza to, że wyniki zostały już zmierzone.
+Wspólny format dowodu istnieje w `MeasurementPlaytestEvidence.md`; ledger w `P5EvidenceLedger.md`; reprodukowalne gameplay/world scenarios w `BalancePlaytestScenarioManifests.md` i `TraversalWeatherDayNightScenarioManifests.md`, performance/release w `PerformanceReleaseMeasurementManifests.md`, a raw capture package w `technical/P5CaptureArtifactFormat.md`. Nie oznacza to, że wyniki zostały już zmierzone.
 
 ## Definicja „pełnej dokumentacji projektu”
 
@@ -61,10 +61,11 @@ Dokumentacja jest kompletna produkcyjnie dopiero, gdy każdy system ma owner/spe
 
 ### Aktualna ocena
 
-**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** P1–P4 mają implementation/planning-level pass. P5 ma evidence contract oraz reprodukowalne scenario manifests dla głównych domen gameplay/world i performance/release. Dokumentacyjna specyfikacja pomiarów jest gotowa; dalszy production lock zależy już od realnych uruchomień, playtestów i profiler captures. Research-sensitive szczegóły i liczby wymagające telemetry/playtestów pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
+**Próg wstępnej kompletności wystarczającej do swobodnego programowania jest osiągnięty.** P1–P4 mają implementation/planning-level pass. P5 ma evidence lifecycle, centralny ledger, reprodukowalne scenario manifests i machine-readable capture schema. Dokumentacyjna specyfikacja pomiarów jest gotowa; dalszy production lock zależy już od implementacji recordera/collectorów, realnych uruchomień, playtestów i profiler captures. Research-sensitive szczegóły i liczby wymagające telemetry/playtestów pozostają jawnie zablokowane zamiast być zgadywane. Nie deklarujemy jeszcze pełnej dokumentacji produkcyjnej.
 
 ## Kolejny priorytet
 
-1. wykonać realne balance/traversal/performance scenario runs i zapisać MEASURED/CANDIDATE evidence;
-2. na ich podstawie zamknąć measured CPU/GPU/RAM/VRAM/streaming/AI/AVFX targets oraz gameplay thresholds;
-3. zakwalifikować minimal/recommended hardware i zebrać release evidence dla konkretnego candidate SHA.
+1. zaimplementować minimalny P5 recorder/validator zgodnie z `technical/P5CaptureArtifactFormat.md`;
+2. wykonać realne balance/traversal/performance scenario runs i zapisać MEASURED/CANDIDATE evidence;
+3. na ich podstawie zamknąć measured CPU/GPU/RAM/VRAM/streaming/AI/AVFX targets oraz gameplay thresholds;
+4. zakwalifikować minimal/recommended hardware i zebrać release evidence dla konkretnego candidate SHA.
