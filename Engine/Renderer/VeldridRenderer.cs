@@ -403,6 +403,7 @@ public sealed class VeldridRenderer : IDisposable
             _playerModel,
             _npcModels,
             _enemyModel,
+            camera.Position,
             animationSeconds,
             camera.Yaw,
             camera.Mode != CameraMode.FirstPerson,
