@@ -47,7 +47,7 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 - [x] animation/VFX/audio budget contract (`design/AnimationVfxAudioBudgetContract.md`): cost/priority classes, reuse, fallback/degradation i measurement gate bez wymyślonych limitów liczbowych;
 - [x] streaming i memory budget contract (`design/StreamingMemoryBudgetContract.md`): residency M0–M4, pressure states, lifecycle/fallback, R0–R6 measurement scenarios i telemetry; limity MB/GB pozostają measurement lockiem;
 - [x] AI/encounter density budget contract (`design/AiEncounterDensityBudgetContract.md`): A0–A3, simulation zones, admission/pressure policy, R0–R6 scenarios i telemetry; liczby agentów/CPU/density pozostają measurement lockiem;
-- [ ] production estimates zależne od faktycznej przepustowości zespołu.
+- [x] production estimates framework (`design/ProductionEstimatesFramework.md`): E0–E4, throughput baseline, estimate states, capacity/dependency forecasting i re-estimation; osobodni/terminy pozostają measurement lockiem do czasu zebrania realnych próbek.
 
 ### P5 — playtest/measurement lock
 - [ ] combat/economy/progression tuning;
@@ -68,4 +68,4 @@ Na tym poziomie można swobodnie implementować kolejne systemy. Otwarte locki s
 
 ## Następny element
 
-P1–P3 mają implementation-level pass. P4 ma concrete asset manifests oraz kontrakty AVFX/audio, streaming/memory i AI/encounter density. Następny najmniejszy niezablokowany pakiet to **P4: production estimates framework zależny od faktycznej przepustowości zespołu** — bez wymyślania osobodni i terminów. Następnie P5: playtest/measurement locks i release evidence.
+P1–P4 mają implementation/planning-level pass. Następny etap to **P5: playtest/measurement locks**. Najmniejszy niezablokowany pakiet dokumentacyjny to measurement/playtest evidence contract i ledger: wspólny format zapisu prób, build/scenario/hardware, wyniku, acceptance oraz powiązania z otwartymi lockami. Same wartości balansu i performance pozostają otwarte do czasu realnych testów.
