@@ -11,7 +11,8 @@ public sealed record LootContainerDefinition(
 
 public sealed record LootContainerSnapshot(
     string TargetId,
-    LootStack[] RemainingContents);
+    LootStack[] RemainingContents,
+    bool CompletionEventEmitted = false);
 
 public enum LootContainerResult
 {
@@ -30,6 +31,7 @@ public enum LootContainerResult
 public sealed class LootContainerInteractionState
 {
     private readonly Dictionary<string, Dictionary<string, int>> _remaining = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _completedQuestEvents = new(StringComparer.Ordinal);
 
     public LootContainerResult LootAll(
         InteractionTarget target,
@@ -51,7 +53,7 @@ public sealed class LootContainerInteractionState
             inventory.Add(pair.Key, pair.Value);
 
         remaining.Clear();
-        EmitCompletedQuestEvent(container, questEvent);
+        EmitCompletedQuestEventOnce(container, questEvent);
         return LootContainerResult.Looted;
     }
 
@@ -84,7 +86,7 @@ public sealed class LootContainerInteractionState
             remaining[itemId] = left;
 
         if (remaining.Count == 0)
-            EmitCompletedQuestEvent(container, questEvent);
+            EmitCompletedQuestEventOnce(container, questEvent);
 
         return LootContainerResult.Looted;
     }
@@ -134,13 +136,15 @@ public sealed class LootContainerInteractionState
                 pair.Key,
                 pair.Value.OrderBy(item => item.Key, StringComparer.Ordinal)
                     .Select(item => new LootStack(item.Key, item.Value))
-                    .ToArray()))
+                    .ToArray(),
+                _completedQuestEvents.Contains(pair.Key)))
             .ToArray();
 
     public void Restore(IEnumerable<LootContainerSnapshot> snapshots)
     {
         ArgumentNullException.ThrowIfNull(snapshots);
         _remaining.Clear();
+        _completedQuestEvents.Clear();
 
         foreach (var snapshot in snapshots)
         {
@@ -157,6 +161,8 @@ public sealed class LootContainerInteractionState
             }
 
             _remaining.Add(snapshot.TargetId, contents);
+            if (snapshot.CompletionEventEmitted)
+                _completedQuestEvents.Add(snapshot.TargetId);
         }
     }
 
@@ -175,12 +181,15 @@ public sealed class LootContainerInteractionState
                container.Contents is not null;
     }
 
-    private static void EmitCompletedQuestEvent(
+    private void EmitCompletedQuestEventOnce(
         LootContainerDefinition container,
         Action<string>? questEvent)
     {
-        if (!string.IsNullOrWhiteSpace(container.QuestEventId))
-            questEvent?.Invoke(container.QuestEventId);
+        if (questEvent is null || string.IsNullOrWhiteSpace(container.QuestEventId) ||
+            !_completedQuestEvents.Add(container.TargetId))
+            return;
+
+        questEvent(container.QuestEventId);
     }
 
     private Dictionary<string, int> GetOrCreate(LootContainerDefinition container)
