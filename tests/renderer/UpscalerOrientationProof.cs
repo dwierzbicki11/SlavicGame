@@ -27,7 +27,7 @@ internal static class UpscalerOrientationProof
             PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
         using var view = factory.CreateTextureView(source);
         using var output = factory.CreateTexture(TextureDescription.Texture2D(1366, 768, 1, 1,
-            PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.RenderTarget));
+            PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.RenderTarget | TextureUsage.Sampled));
         using var target = factory.CreateFramebuffer(new FramebufferDescription(null, output));
         using var staging = factory.CreateTexture(TextureDescription.Texture2D(1366, 768, 1, 1,
             output.Format, TextureUsage.Staging));
@@ -69,7 +69,18 @@ internal static class UpscalerOrientationProof
             PixelFormat.R8_UNorm, TextureUsage.Sampled));
         scaler.EnsureFsr3Output(1366, 768);
         int count = checked((int)(width * height));
-        device.UpdateTexture(depth, Enumerable.Repeat(0.5f, count).ToArray(), 0, 0, 0, width, height, 1, 0, 0);
+        // Clear a real depth attachment; Veldrid's buffer upload uses a color
+        // aspect and is invalid for D32 textures under Vulkan validation.
+        using var depthTarget = factory.CreateFramebuffer(new FramebufferDescription(depth));
+        using (var clear = factory.CreateCommandList())
+        {
+            clear.Begin();
+            clear.SetFramebuffer(depthTarget);
+            clear.ClearDepthStencil(0.5f);
+            clear.End();
+            device.SubmitCommands(clear);
+            device.WaitForIdle();
+        }
         device.UpdateTexture(motion, new byte[count * 4], 0, 0, 0, width, height, 1, 0, 0);
         device.UpdateTexture(reactive, new byte[count], 0, 0, 0, width, height, 1, 0, 0);
         for (uint frame = 0; frame < 2; frame++)
@@ -89,9 +100,15 @@ internal static class UpscalerOrientationProof
             using var commands = factory.CreateCommandList();
             commands.Begin();
             scaler.Present(commands, target, mode, 0.2f, input);
-            commands.CopyTexture(output, staging);
             commands.End();
             device.SubmitCommands(commands);
+            // End the raster command list before the readback so framebuffer
+            // final-layout transitions cannot follow the transfer operation.
+            using var copy = factory.CreateCommandList();
+            copy.Begin();
+            copy.CopyTexture(output, staging);
+            copy.End();
+            device.SubmitCommands(copy);
             device.WaitForIdle();
             var map = device.Map<byte>(staging, MapMode.Read);
             try
