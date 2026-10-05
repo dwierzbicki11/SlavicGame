@@ -54,6 +54,7 @@ internal static class PresentationProof
             };
             byte[]? lastGenerated = null;
             byte[]? lastReal = null;
+            byte[]? previousReal = null;
             void RenderFrame(int frame, bool expectPair)
             {
                 window.PumpEvents();
@@ -89,14 +90,16 @@ internal static class PresentationProof
                 var pixels = copies.Select(copy => ReadBytes(device, copy)).ToArray();
                 foreach (var copy in copies) copy.Dispose();
                 copies.Clear();
-                Check(pixels.All(p => p.Max() - p.Min() > 16), "Presented images contain the rendered scene and UI");
+                Check(pixels.All(p => RgbRange(p) > 16), "Presented RGB contains nonconstant rendered scene and UI");
                 lastGenerated = expectPair ? pixels[0] : null;
+                previousReal = lastReal;
                 lastReal = pixels[^1];
             }
             RenderFrame(0, false);
             for (int frame = 1; frame <= 12; frame++) RenderFrame(frame, true);
-            Check(Difference(lastGenerated!, lastReal!) > 0.00001,
-                "The actual generated swapchain image differs from the adjacent real image after AMD optical-flow warmup");
+            Check(Difference(previousReal!, lastReal!) > 0.0001 &&
+                Difference(lastGenerated!, lastReal!) > 0.00001 && Difference(lastGenerated!, previousReal!) > 0.00001,
+                "The actual generated swapchain RGB responds to scene movement and differs from both adjacent real images after AMD optical-flow warmup");
             Check(fg.DispatchCount == 13 && presenter.RenderedCount == 13 && presenter.GeneratedCount == 12 &&
                 presenter.PresentedCount == 25, "13 rendered/AMD-dispatched scene frames produce 25 accepted WSI presentations");
             renderer.ResetTemporalHistory();
@@ -133,6 +136,12 @@ internal static class PresentationProof
         finally { device.Unmap(staging); }
     }
 
+    private static int RgbRange(byte[] pixels)
+    {
+        var rgb = pixels.Where((_, i) => i % 4 != 3);
+        return rgb.Max() - rgb.Min();
+    }
+
     private static double Difference(byte[] a, byte[] b) =>
-        a.Zip(b, (x, y) => Math.Abs(x - y) / 255.0).Average();
+        a.Zip(b, (x, y) => Math.Abs(x - y) / 255.0).Where((_, i) => i % 4 != 3).Average();
 }

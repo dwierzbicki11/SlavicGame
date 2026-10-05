@@ -52,6 +52,12 @@ internal static class LootContainerDepositRegression
         try { state.LootAll(target with { Id = "bulk" }, bulk, bulkInventory); } catch (OverflowException) { overflow = true; }
         check(overflow && bulkInventory.Count("a") == 0 && bulkInventory.Count("z") == int.MaxValue && state.Remaining(bulk).Count == 2, "TakeAll overflow preflight prevents partial duplication");
 
+        check(LootInputRouter.Resolve(false, false, false, false, false, true, false, false) == LootCommand.TransferOne, "Loot input routes E-style transfer to one item");
+        check(LootInputRouter.Resolve(false, false, false, false, false, true, true, false) == LootCommand.TransferStack, "Loot input routes modified transfer to the whole stack");
+        check(LootInputRouter.Resolve(false, false, false, false, false, true, true, true) == LootCommand.TakeAll, "Take All wins over transfer so one key frame cannot perform two mutations");
+        check(LootInputRouter.Resolve(true, false, false, false, false, true, true, true) == LootCommand.Close, "Close has highest loot input priority and cannot mutate inventory while dismissing UI");
+        check(LootInputRouter.Resolve(false, false, false, false, false, false, false, false) is null, "Idle loot input emits no command");
+
         var world = WorldGenerator.Generate();
         var chest = LootContainerRuntime.Position(world);
         check(chest is not null && !world.Loot.TryOpenNearest(world), "Storage is tied to an existing model and cannot open at a distance");

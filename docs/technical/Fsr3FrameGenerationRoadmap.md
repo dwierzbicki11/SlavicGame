@@ -14,6 +14,10 @@ opening another. Do not depend on retained local files.
 Active stage: **3 — presentation and spacing**, branch
 `fsr3/fg-presentation`, based on current main
 `91172e7dc1e4a8ac008b4998acaf58facecffd7f` (stage 2 merged).
+Continue [PR #331](https://github.com/dwierzbicki11/SlavicGame/pull/331), initial
+head `fd8128409ca92bf880d0f2c7e734530b4632707f`. Current main
+`1cf73b03b1c510428ba60e7db504c0e4b55577a8` adds independent loot input routing;
+it is incorporated without renderer conflicts.
 Stages 0–2 are complete; continue this presentation branch before opening
 another FG PR. The adapter uses #319's validated managed runtime; do not
 restore the superseded duplicate #306 ABI.

@@ -39,7 +39,8 @@ internal sealed class FrameGenerationPresenter
         // Otherwise a slow frame feeds its own delay into the next frame and
         // progressively lowers the render rate. A user limit denotes rendered
         // frames; two output slots fit within its requested interval.
-        var workInterval = Math.Max(0.002, frameDeltaSeconds - _pacingSeconds);
+        var interval = double.IsFinite(frameDeltaSeconds) && frameDeltaSeconds > 0 ? frameDeltaSeconds : 1.0 / 60;
+        var workInterval = Math.Max(0.002, interval - _pacingSeconds);
         if (renderedFrameLimit > 0) workInterval = Math.Max(workInterval, 1.0 / renderedFrameLimit);
         _minimumSpacing = Math.Clamp(workInterval * 0.5, 0.001, 0.05);
         _pacingSeconds = 0;
