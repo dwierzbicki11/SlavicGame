@@ -12,9 +12,10 @@ Actions, and this file on the active branch. Continue the active PR before
 opening another. Do not depend on retained local files.
 
 Active stage: **6 — final validation and user build instructions**, branch
-`fsr3/fg-final-validation`, based on current main after stage 5 merge.
-Stages 0–5 are complete. This stage adds the explicit production OFF-startup
-proof, final Linux/Windows instructions and exact-head validation evidence.
+`fsr3/fg-final-validation`, [PR #337](https://github.com/dwierzbicki11/SlavicGame/pull/337),
+based on current main after stage 5 merge. Stages 0–5 are complete. Stage 6
+implementation proof is green; this final documentation-only evidence commit
+must also receive exact-head Linux/Windows CI before merge.
 
 Stage 5 merged through [PR #336](https://github.com/dwierzbicki11/SlavicGame/pull/336)
 as `ccf1eee9361da3822a518c43814b09d6da1c1c43`. Its exact-head
@@ -244,7 +245,7 @@ ABI. No other automation is modified.
 - Blocker: none.
 - Next: stage 6.
 
-## 6. Final validation and user build instructions — active
+## 6. Final validation and user build instructions — complete pending merge
 
 - Dependencies: all prior stages merged.
 - Exit criterion: real scene motion/interpolation, frame order/count, distinct
@@ -259,11 +260,20 @@ ABI. No other automation is modified.
   install/build the source provider, choose FSR3, choose Frame Generation ON,
   restart. Windows is explicitly temporal-FSR3-only for now and reports FG as
   unavailable.
-- Blocker: exact-head stage-6 CI. This environment has no `/dev/dri` physical
-  GPU; lavapipe validates Vulkan execution/presentation and lifecycle, not Vega
-  7 performance, physical scanout cadence or visual quality.
-- Next: merge this stage only after Linux/Windows CI and zero-error Vulkan
-  validation; then execute the physical scenario below without inventing FPS.
+- Implementation evidence: [PR #337](https://github.com/dwierzbicki11/SlavicGame/pull/337),
+  implementation head `f216becdeb3351e9aba3d5d5c1d6684e4e46c9d6`,
+  [CI 37311113522](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37311113522)
+  Linux/Windows green. Linux reports **1277 regression checks**, two complete
+  **47-check** scene proofs, explicit
+  `Saved/default Frame Generation OFF creates no FG runtime or special presenter`,
+  a **335-check** actual SDL/Vulkan presentation proof and **zero Vulkan
+  validation errors**.
+- Remaining merge gate: exact-head CI for this evidence-only documentation
+  commit. This environment has no `/dev/dri` physical GPU; lavapipe validates
+  Vulkan execution/presentation and lifecycle, not Vega 7 performance,
+  physical scanout cadence or visual quality.
+- Next: after exact-head CI, merge #337 and verify final main CI; then execute
+  the physical scenario below without inventing FPS.
 
 ## Reproducible Linux Mint / Ryzen 5 5600G (Vega 7) scenario
 
