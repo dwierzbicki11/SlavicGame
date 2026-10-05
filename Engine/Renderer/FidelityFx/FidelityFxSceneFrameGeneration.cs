@@ -112,6 +112,10 @@ internal sealed class FidelityFxSceneFrameGeneration : IDisposable
             vk.OverrideImageLayout(depth, 5);
             vk.OverrideImageLayout(motion, 5);
             vk.OverrideImageLayout(_output, 1);
+            // A cached Veldrid resource set may already expect this layout;
+            // changing only the tracker does not record the AMD write-to-draw
+            // dependency. Queue the real barrier before the WSI consumer.
+            vk.TransitionImageLayout(_output, 5);
         }
     }
 

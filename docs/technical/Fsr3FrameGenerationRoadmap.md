@@ -206,6 +206,16 @@ before later UI/presentation changes. No other automation is modified.
   This is not a passing window proof. The Linux Actions job installs Xvfb/SDL,
   requires the X11 driver and runs the same production-window executable under
   Khronos validation. No tests are skipped or weakened to bypass this limit.
+- First window CI: [run 37285910143](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37285910143)
+  at initial head completes all 244 window assertions, with 17 real + 14
+  generated = 31 accepted presentations for each VSync mode. Its validation
+  gate correctly fails on 138 layout errors, so it is not completion evidence.
+  The generated image needs an explicit GENERAL-to-SHADER_READ barrier after
+  native AMD writes even when Veldrid's cached resource set expects sampling.
+  Also Veldrid End skipped the framebuffer's final layout after CopyTexture
+  closed the render pass. End now restores the final layout after such copies,
+  including PRESENT_SRC for the exact swapchain readback proof. Both actual
+  barriers are repaired; validation filtering remains unchanged.
 - Blocker: compile and execute the new presentation proof, inspect all Vulkan
   validation output, then require green Linux/Windows CI on the exact PR head.
 - Next: continue this branch; repair observed runtime/CI errors before merge.

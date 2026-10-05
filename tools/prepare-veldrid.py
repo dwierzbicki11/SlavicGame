@@ -196,6 +196,28 @@ namespace Veldrid
     public class BackendInfoVulkan''')
     path.write_text(text)
     prepare_swapchain()
+
+    path = OUTPUT / 'src/Veldrid/Vk/VkCommandList.cs'
+    text = path.read_text(encoding='utf-8-sig')
+    text = replace_once(text, '''            if (_activeRenderPass != VkRenderPass.Null)
+            {
+                EndCurrentRenderPass();
+                _currentFramebuffer.TransitionToFinalLayout(_cb);
+            }
+
+            vkEndCommandBuffer(_cb);''', '''            if (_activeRenderPass != VkRenderPass.Null)
+            {
+                EndCurrentRenderPass();
+            }
+            // CopyTexture may have ended the render pass and transitioned
+            // its image to TRANSFER_SRC. End still owes the framebuffer's
+            // final layout, especially PRESENT_SRC before queue presentation.
+            _currentFramebuffer?.TransitionToFinalLayout(_cb);
+
+            VkResult endResult = vkEndCommandBuffer(_cb);
+            if (endResult != VkResult.Success)
+                throw new VeldridException("Vulkan command buffer end failed: " + endResult);''')
+    path.write_text(text)
     shutil.copyfile(SOURCE / 'LICENSE', OUTPUT / 'LICENSE')
 
     # Upstream creates RGBA16F for an RG16F description. Besides invalid AMD
