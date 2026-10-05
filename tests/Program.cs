@@ -45,6 +45,7 @@ WeatherVisualRegression.Run(Check);
 CampfireInteractionRegression.Run(Check);
 FootprintTrailRegression.Run(Check);
 NpcDialogueRegression.Run(Check);
+PolishTextRenderingRegression.Run(Check);
 NpcWeatherBehaviorRegression.Run(Check);
 NpcCrowdSteeringRegression.Run(Check);
 NpcReactionRegression.Run(Check);

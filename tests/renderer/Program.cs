@@ -179,6 +179,7 @@ using (var renderer = new VeldridRenderer())
         "Expired FG context disables only FG while native FSR3 keeps rendering");
     Check(Read<Rgba16>(device, target.Color).All(p => p.Finite), "FG failure preserves real output and HUD");
 }
+checks += PolishTextProof.Run(device);
 Console.WriteLine($"Scene FG runtime proof: {checks} checks passed; real renderer GPU frames, movement, separate UI inputs, reset/resize, FSR1/FSR3 and failure isolation. Extra swapchain presentation is not part of this stage.");
 
 static double Difference(Rgba16[] a, Rgba16[] b) => a.Zip(b,
