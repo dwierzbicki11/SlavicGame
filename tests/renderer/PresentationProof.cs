@@ -182,14 +182,16 @@ internal static class PresentationProof
             renderer.Render(world, camera, 60, 23.0 / 60, 1.0 / 60, settings, null);
             Check(
                 renderer.FrameGenerationScene is null &&
-                renderer.FramePresenter is null &&
+                ReferenceEquals(renderer.FramePresenter, presenter) &&
                 renderer.FrameGenerationDiagnostic.Contains(
                     "disabled",
                     StringComparison.OrdinalIgnoreCase),
-                "FG runtime failure disposes the special presenter and leaves ordinary presentation active");
+                "FG runtime failure disables interpolation while retaining the synchronized WSI presenter");
             Check(
-                events.Count == beforeFailureEvents && window.Exists,
-                "Fallback no longer routes real frames through the disposed FG presenter");
+                events.Count == beforeFailureEvents + 1 &&
+                events[^1].Kind == PresentedFrameKind.Rendered &&
+                window.Exists,
+                "FG failure falls back to one semaphore-synchronized rendered presentation");
 
             Console.WriteLine($"WSI proof VSync={vsync}: rendered={presenter.RenderedCount}, generated={presenter.GeneratedCount}, presented={presenter.PresentedCount}; physical scanout/FPS quality is not measured by this software-Vulkan test.");
             renderer.BeforeFramePresentation = null;
