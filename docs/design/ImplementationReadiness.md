@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ33. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ34. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -22,27 +22,29 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 - [x] MQ30 „Pustkowie Pierwszego Progu” — scalone po zielonym CI.
 - [x] MQ31 „Archiwum popiołu” — scalone po zielonym CI.
 - [x] MQ32 „Noc Zamkniętego Progu” — scalone po zielonym CI.
-- [x] MQ33 „Rozwierający” — stance/outcome Wszebora, fail-forward data package i handoff do MQ34 — scalone po zielonym CI.
+- [x] MQ33 „Rozwierający” — scalone po zielonym CI.
+- [x] MQ34 „Trzy projekty” — trzy trwałe modele, lead do Nawii i handoff do MQ40 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ34 „Trzy projekty” — IMPLEMENTED, oczekuje na CI/merge
+### MQ40 „Droga umarłych” — IMPLEMENTED, oczekuje na CI/merge
 
-Kontrakt z `docs/quests/MainQuestCardsAct3.md`:
+Kontrakt z `docs/quests/MainQuestCardsAct4.md`:
 
-1. wejście po `MQ33_COMPLETE`;
-2. trzy niezależne trwałe modele: twarde Zamknięcie, rozproszona przebudowa/stabilizacja i Rozwarcie;
-3. krytyczne streszczenie każdego modelu jest dostępne z trwałego stanu kampanii niezależnie od opcjonalnych notatek;
-4. runtime nie oznacza żadnego modelu jako prawdziwego i nie wykonuje finałowego wyboru;
-5. ukończenie wymaga wszystkich trzech modeli, zapisuje `MQ34_COMPLETE` i `ACT4_NAVIA_LEAD_AVAILABLE`;
-6. handoff do MQ40 następuje dokładnie raz, z persistence/save-load i idempotencją.
+1. wejście po `MQ34_COMPLETE` i trwałym leadzie do Nawii;
+2. przejście do Nawii przez stabilny próg oraz trwały `MQ40_ENTERED_NAVIA`;
+3. obserwacja podstawowych reguł Nawii bez przedwczesnego ujawniania natury Splotu;
+4. idempotentne ustanowienie trwałej kotwicy powrotnej `MQ40_RETURN_ANCHOR_SET`;
+5. krytyczne instrukcje progu mają recovery niezależne od opcjonalnego przewodnika;
+6. trop do dwóch podobnych ech domyka krytyczne beaty i zapisuje `MQ40_COMPLETE`;
+7. handoff do MQ41 następuje dokładnie raz, z persistence/save-load i idempotencją.
 
-## Kolejka po MQ34
+## Kolejka po MQ40
 
-Po pełnym zakończeniu MQ34 należy ponownie przeanalizować aktualny `main`, trzy dokumenty kolejki/coverage/readiness oraz kartę Aktu IV. MQ40 może rozpocząć się wyłącznie po zielonym CI i merge MQ34 oraz ponownym potwierdzeniu readiness.
+Po pełnym zakończeniu MQ40 należy ponownie przeanalizować aktualny `main`, trzy dokumenty kolejki/coverage/readiness oraz kartę Aktu IV. MQ41 może rozpocząć się wyłącznie po zielonym CI i merge MQ40 oraz ponownym potwierdzeniu readiness.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ34: finalne line writing, presentation, autorzy/zwolennicy i szczegółowe koszty pozostają content/VO lockiem tam, gdzie dokumentacja nie ustala ich jednoznacznie.
-- MQ34: optional notes zwiększają szczegółowość, ale nie mogą usuwać żadnego modelu z krytycznego porównania.
-- MQ34: prawdziwość modeli i metafizyczna odpowiedź pozostają zablokowane do Aktu IV; runtime zapisuje wyłącznie wiedzę gracza o trzech projektach i lead do Nawii.
+- MQ40: finalny staging przejścia, wygląd Nawii, przewodnik i line writing pozostają content/art/VO lockiem.
+- MQ40: recovery instrukcji może być prezentowane przez Journal lub znaki przy progu; runtime zapisuje jedynie trwały fakt odzyskania instrukcji.
+- MQ40: obserwacja reguł Nawii nie może ujawniać pełnej natury Splotu przed MQ43.
