@@ -4,6 +4,7 @@ using SlavicGame.Engine.Core;
 using SlavicGame.Engine.Renderer;
 using SlavicGame.Engine.Renderer.FidelityFx;
 using SlavicGame.Engine.Settings;
+using SlavicGame.Engine.UI;
 using SlavicGame.Engine.Windowing;
 using SlavicGame.Engine.World;
 using Veldrid;
@@ -55,16 +56,21 @@ internal static class PresentationProof
             byte[]? lastGenerated = null;
             byte[]? lastReal = null;
             byte[]? previousReal = null;
-            void RenderFrame(int frame, bool expectPair)
+            void RenderFrame(
+                int frame,
+                bool expectPair,
+                MenuView? menu = null,
+                float? cameraX = null)
             {
                 window.PumpEvents();
                 Check(window.Exists, "Actual SDL/Vulkan window remains open");
-                camera.SetCinematicPose(new Vector3(frame * 0.3f, ground + 7, -66),
-                    new Vector3(frame * 0.3f, ground + 2, -87));
+                var x = cameraX ?? frame * 0.3f;
+                camera.SetCinematicPose(new Vector3(x, ground + 7, -66),
+                    new Vector3(x, ground + 2, -87));
                 world.Update(1.0 / 60);
                 var simulationTime = world.Time.TimeOfDayHours;
                 var before = events.Count;
-                renderer.Render(world, camera, 60, frame / 60.0, 1.0 / 60, settings, null);
+                renderer.Render(world, camera, 60, frame / 60.0, 1.0 / 60, settings, menu);
                 Check(world.Time.TimeOfDayHours == simulationTime, "Extra presentation does not update simulation again");
                 var output = events.Skip(before).ToArray();
                 Check(output.Length == (expectPair ? 2 : 1) &&
@@ -117,6 +123,72 @@ internal static class PresentationProof
                 "Real swapchain recreation reacquires new images and safely resumes AMD presentation");
             Check(presenter.RenderedCount == 17 && presenter.GeneratedCount == 14 && presenter.PresentedCount == 31,
                 "WSI counts include reset and resize without double-counting rendered frames");
+
+            var menu = new MenuView(
+                "FG UI LIFECYCLE",
+                "PREPARE ONCE DRAW TWICE",
+                [],
+                [new MenuPanelView(
+                    "PANEL",
+                    [new MenuItemView("VISIBLE ON BOTH FRAMES", null, true)])],
+                "FOOTER");
+            var prepareBefore = renderer.MenuPrepareCount;
+            var drawBefore = renderer.MenuDrawCount;
+            RenderFrame(17, false, menu);
+            RenderFrame(18, true, menu);
+            Check(
+                renderer.MenuPrepareCount - prepareBefore == 2 &&
+                renderer.MenuDrawCount - drawBefore == 3,
+                "Menu geometry uploads once per simulation frame and the paired frame reuses it for generated plus rendered UI");
+            RenderFrame(19, false);
+            RenderFrame(20, true);
+            Check(
+                presenter.RenderedCount == 21 &&
+                presenter.GeneratedCount == 16 &&
+                presenter.PresentedCount == 37,
+                "Pause/menu enter and resume each suppress one stale interpolation and recover on the next frame");
+
+            RenderFrame(21, false, cameraX: 50f);
+            RenderFrame(22, true, cameraX: 50.3f);
+            Check(
+                presenter.RenderedCount == 23 &&
+                presenter.GeneratedCount == 17,
+                "Large camera cut automatically resets FG history and resumes interpolation on the following frame");
+
+            // Expire the real generator while WSI presentation is active.
+            // The renderer must tear down the special presenter as well and
+            // fall back to ordinary rendering instead of leaving the swapchain
+            // in FG presentation mode.
+            fg.Dispose();
+            window.PumpEvents();
+            camera.SetCinematicPose(
+                new Vector3(50.6f, ground + 7, -66),
+                new Vector3(50.6f, ground + 2, -87));
+            world.Update(1.0 / 60);
+            var beforeFailureEvents = events.Count;
+            renderer.Render(world, camera, 60, 23.0 / 60, 1.0 / 60, settings, null);
+            Check(
+                renderer.FrameGenerationScene is null &&
+                ReferenceEquals(renderer.FramePresenter, presenter) &&
+                renderer.FrameGenerationDiagnostic.Contains(
+                    "disabled",
+                    StringComparison.OrdinalIgnoreCase),
+                "FG runtime failure disables interpolation while retaining the synchronized WSI presenter");
+            Check(
+                events.Count == beforeFailureEvents + 1 &&
+                events[^1].Kind == PresentedFrameKind.Rendered &&
+                window.Exists,
+                "FG failure falls back to one semaphore-synchronized rendered presentation");
+            // The capture hook still runs for the fallback frame. This manual
+            // failure path intentionally bypasses RenderFrame(), so retire its
+            // staging copy here instead of leaking a Vulkan child object into
+            // device destruction.
+            Check(
+                copies.Count == 1,
+                "FG failure fallback still captures exactly one real swapchain image");
+            foreach (var copy in copies) copy.Dispose();
+            copies.Clear();
+
             Console.WriteLine($"WSI proof VSync={vsync}: rendered={presenter.RenderedCount}, generated={presenter.GeneratedCount}, presented={presenter.PresentedCount}; physical scanout/FPS quality is not measured by this software-Vulkan test.");
             renderer.BeforeFramePresentation = null;
         }

@@ -35,6 +35,11 @@ public sealed class VeldridRenderer : IDisposable
     private bool _ownsDevice = true;
     private ulong _sceneFrameId;
     private UpscalerMode? _previousUpscaler;
+    private bool? _previousMenuVisible;
+    private bool _hasPreviousCameraState;
+    private Vector3 _previousCameraPosition;
+    private Vector3 _previousCameraTarget;
+    private float _previousCameraFov;
     private GraphicsDevice? _graphicsDevice;
     private CommandList? _commandList;
     private DeviceBuffer? _projectionBuffer;
@@ -84,6 +89,8 @@ public sealed class VeldridRenderer : IDisposable
     private Framebuffer OutputFramebuffer => _offscreenTarget ?? GraphicsDevice.SwapchainFramebuffer;
     internal FidelityFxSceneFrameGeneration? FrameGenerationScene => _frameGeneration;
     internal FrameGenerationPresenter? FramePresenter => _framePresenter;
+    internal ulong MenuPrepareCount => _menu.PrepareCount;
+    internal ulong MenuDrawCount => _menu.DrawCount;
     // Runtime proof copies the very swapchain image submitted to WSI. Ordinary
     // gameplay leaves this hook null and performs no staging copy/readback.
     internal Action<CommandList, Framebuffer, PresentedFrameKind, ulong>? BeforeFramePresentation { get; set; }
@@ -593,10 +600,42 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         var sceneFrameId = _sceneFrameId++;
-        _framePresenter?.BeginFrame(frameDeltaSeconds, GraphicsQualityCatalog.FrameRate(settings.FpsLimit));
+
+        var menuVisible = menuView is not null;
+        if (_previousMenuVisible is { } previousMenuVisible &&
+            previousMenuVisible != menuVisible)
+        {
+            // Pause/menu transitions can skip or stall simulation frames. Do
+            // not interpolate across that discontinuity.
+            ResetTemporalHistory();
+        }
+        _previousMenuVisible = menuVisible;
+
         if (_previousUpscaler is { } previous && previous != settings.Upscaler)
             ResetTemporalHistory();
         _previousUpscaler = settings.Upscaler;
+
+        if (_hasPreviousCameraState &&
+            (Vector3.DistanceSquared(
+                 _previousCameraPosition,
+                 camera.Position) > 64f ||
+             Vector3.DistanceSquared(
+                 _previousCameraTarget,
+                 camera.Target) > 64f ||
+             MathF.Abs(_previousCameraFov - camera.FieldOfView) > 0.20f))
+        {
+            // Teleports, hard cinematic cuts and large FOV jumps have no
+            // meaningful motion-vector history.
+            ResetTemporalHistory();
+        }
+        _previousCameraPosition = camera.Position;
+        _previousCameraTarget = camera.Target;
+        _previousCameraFov = camera.FieldOfView;
+        _hasPreviousCameraState = true;
+
+        _framePresenter?.BeginFrame(
+            frameDeltaSeconds,
+            GraphicsQualityCatalog.FrameRate(settings.FpsLimit));
 
         var framebuffer = _resolutionScaler.SceneFramebuffer;
         var width = Math.Max(1u, framebuffer.Width);
@@ -1419,6 +1458,10 @@ public sealed class VeldridRenderer : IDisposable
             }
         }
 
+        // Build/upload menu geometry once. The same immutable GPU data is
+        // then drawn on the generated and rendered presentations.
+        _menu.Prepare(_commandList, displayWidth, displayHeight, menuView);
+
         var paired = _offscreenTarget is null && _framePresenter is not null &&
             _frameGeneration is { HasGeneratedFrame: true };
         if (paired)
@@ -1458,7 +1501,7 @@ public sealed class VeldridRenderer : IDisposable
                 _commandList.SetVertexBuffer(0, _hudVertexBuffer);
                 _commandList.Draw((uint)_hudVertices.Count);
             }
-            _menu.Render(_commandList, displayWidth, displayHeight, menuView);
+            _menu.Draw(_commandList);
         }
     }
 
@@ -1468,6 +1511,7 @@ public sealed class VeldridRenderer : IDisposable
         _dynamicMotionHistory.Reset();
         _frameGeneration?.RequestReset();
         _framePresenter?.ResetPacing();
+        _hasPreviousCameraState = false;
     }
 
     private void DisableSceneFrameGeneration(Exception exception)
@@ -1477,6 +1521,12 @@ public sealed class VeldridRenderer : IDisposable
         // the output. The upscaler context and its setting stay independent.
         _frameGeneration?.Dispose();
         _frameGeneration = null;
+        // Keep the already-created WSI presenter for the rest of this
+        // renderer session. It now presents rendered-only frames through the
+        // same semaphore-correct submit/present path. Switching back to plain
+        // SwapBuffers mid-session would change synchronization models while
+        // previous presentation work can still be owned by the present engine.
+        // The presenter is disabled only at renderer shutdown/restart.
         _temporalInputsEnabled = FidelityFxStartupPolicy.NeedsTemporalInputs(
             TemporalInputPolicy.IsEnabled(), _fsr3Requested, _fsr3DisabledAfterError);
         EngineLog.Warn(FrameGenerationDiagnostic);
@@ -1765,8 +1815,12 @@ public sealed class VeldridRenderer : IDisposable
         if (_graphicsDevice is null)
             return;
 
+        var changed =
+            _graphicsDevice.SyncToVerticalBlank != enabled;
         PresentationPolicy.Apply(enabled);
         _graphicsDevice.SyncToVerticalBlank = enabled;
+        if (changed)
+            ResetTemporalHistory();
     }
 
     public void Resize(uint width, uint height)
@@ -1794,6 +1848,8 @@ public sealed class VeldridRenderer : IDisposable
 
         _frameGeneration?.Dispose();
         _frameGeneration = null;
+        _framePresenter?.Dispose();
+        _framePresenter = null;
 
         _sky.Dispose();
         _menu.Dispose();

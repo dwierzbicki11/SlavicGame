@@ -14,13 +14,14 @@ internal readonly record struct FramePresentation(ulong SceneFrameId, PresentedF
 /// here. CPU deadlines keep immediate-mode output from collapsing into a
 /// back-to-back pair; FIFO additionally enforces the display's VSync cadence.
 /// </summary>
-internal sealed class FrameGenerationPresenter
+internal sealed class FrameGenerationPresenter : IDisposable
 {
     private readonly BackendInfoVulkan _vk;
     private readonly Swapchain _swapchain;
     private long _lastPresentation;
     private double _pacingSeconds;
     private double _minimumSpacing;
+    private bool _disposed;
     internal ulong RenderedCount { get; private set; }
     internal ulong GeneratedCount { get; private set; }
     internal ulong PresentedCount => RenderedCount + GeneratedCount;
@@ -35,6 +36,7 @@ internal sealed class FrameGenerationPresenter
 
     internal void BeginFrame(double frameDeltaSeconds, int renderedFrameLimit)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         // Exclude this presenter's preceding CPU delay from the estimate.
         // Otherwise a slow frame feeds its own delay into the next frame and
         // progressively lowers the render rate. A user limit denotes rendered
@@ -48,6 +50,7 @@ internal sealed class FrameGenerationPresenter
 
     internal bool Submit(CommandList commands, PresentedFrameKind kind, ulong sceneFrameId, bool paired)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         // Pace both boundaries of a pair, including real(n-1) -> generated(n).
         // Late render/GPU work may miss a deadline; never catch up by bursting.
         if (paired && _lastPresentation != 0)
@@ -74,7 +77,20 @@ internal sealed class FrameGenerationPresenter
 
     internal void ResetPacing()
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         _lastPresentation = 0;
         _pacingSeconds = 0;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        // Disable the special acquire/submit/present path before the generator
+        // or renderer falls back to ordinary SwapBuffers. This matters after an
+        // FG runtime failure as well as during shutdown.
+        _vk.ConfigureFrameGenerationPresentation(_swapchain, false);
+        _lastPresentation = 0;
+        _pacingSeconds = 0;
+        _disposed = true;
     }
 }
