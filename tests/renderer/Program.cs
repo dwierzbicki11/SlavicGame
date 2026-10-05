@@ -57,12 +57,17 @@ using (var renderer = new VeldridRenderer())
     Check(!fg.HasGeneratedFrame && fg.LastFrameId == 0, "First actual scene frame initializes AMD history");
     Rgba16[] previous = Read<Rgba16>(device, fg.HudlessColor);
     Rgba16[] current = previous;
-    for (int frame = 1; frame <= 4; frame++)
+    // AMD's first ten frames favor game motion during optical-flow warmup.
+    // Cross that boundary with moving geometry and validate every result.
+    const int movingFrames = 12;
+    for (int frame = 1; frame <= movingFrames; frame++)
     {
         Pose(frame * 0.3f);
         Render(frame);
         Check(fg.HasGeneratedFrame && fg.LastFrameId == (ulong)frame,
             "Actual moving scene generates consecutive frame " + frame);
+        Check(Read<Rgba16>(device, fg.GeneratedColor).All(p => p.Finite),
+            "Actual moving scene interpolation has finite RGB on frame " + frame);
         previous = current;
         current = Read<Rgba16>(device, fg.HudlessColor);
     }
@@ -98,38 +103,38 @@ using (var renderer = new VeldridRenderer())
     // Freeze camera/animation and change only the separately drawn menu.
     var menu = new MenuView("FG UI EXCLUSION", "SCENE INPUT TEST", [],
         [new MenuPanelView("PANEL", [new MenuItemView("VISIBLE UI", null, true)])], "FOOTER");
-    Render(4, menu);
+    Render(movingFrames, menu);
     var withMenuScene = Read<Rgba16>(device, fg.HudlessColor);
     var withMenuDisplay = Read<Rgba16>(device, target.Color);
     Check(Difference(withMenuScene, current) < 0.000001 && Difference(withMenuDisplay, displayed) > 0.001,
         "Menu changes the displayed frame while leaving HUD-free FG scene pixels unchanged");
     renderer.ResetTemporalHistory();
-    Render(5);
-    Check(!fg.HasGeneratedFrame && fg.LastFrameId == 6, "Camera/history reset suppresses interpolation without rewinding frame IDs");
-    Render(6);
-    Check(fg.HasGeneratedFrame && fg.LastFrameId == 7, "Real scene FG recovers after camera/history reset");
+    Render(movingFrames + 1);
+    Check(!fg.HasGeneratedFrame && fg.LastFrameId == movingFrames + 2, "Camera/history reset suppresses interpolation without rewinding frame IDs");
+    Render(movingFrames + 2);
+    Check(fg.HasGeneratedFrame && fg.LastFrameId == movingFrames + 3, "Real scene FG recovers after camera/history reset");
 
     using var resized = new Target(device, 800, 450);
     renderer.SetOffscreenTarget(resized.Framebuffer);
     settings.Upscaler = UpscalerMode.Fsr1;
-    Render(7);
+    Render(movingFrames + 3);
     Check(!fg.HasGeneratedFrame && fg.HudlessColor.Width == 800 && fg.HudlessColor.Height == 450 &&
         renderer.SceneDepth!.Width == 640 && renderer.SceneMotion!.Height == 360,
         "Display resize captures FSR1 EASU/RCAS at display size with separate render-size depth/motion");
-    Render(8);
+    Render(movingFrames + 4);
     Check(fg.HasGeneratedFrame && Read<Rgba16>(device, fg.GeneratedColor).All(p => p.Finite),
         "FG recovers with spatial FSR1 instead of depending on a temporal upscaler");
     renderer.SetRenderResolution(720, 405);
-    Render(9);
+    Render(movingFrames + 5);
     Check(!fg.HasGeneratedFrame && renderer.SceneDepth!.Width == 720 && renderer.SceneMotion!.Height == 405,
         "Render-resolution change recreates temporal inputs and suppresses stale interpolation");
-    Render(10);
+    Render(movingFrames + 6);
     Check(fg.HasGeneratedFrame, "Changed render-size scene restores FG on the next actual frame");
     renderer.SetOffscreenTarget(target.Framebuffer);
     renderer.SetRenderResolution(640, 360);
-    Render(11);
+    Render(movingFrames + 7);
     Check(!fg.HasGeneratedFrame && fg.HudlessColor.Width == 640, "Shrinking output and render size safely rebuilds FG history");
-    Render(12);
+    Render(movingFrames + 8);
     Check(fg.HasGeneratedFrame, "Shrunk scene resumes real interpolation");
     var ownedColor = fg.GeneratedColor;
     // Leave real submitted GPU work pending at cleanup; production Dispose
@@ -151,6 +156,7 @@ using (var renderer = new VeldridRenderer())
     renderer.Render(world, camera, 60, 1.0 / 60, 1.0 / 60, settings, null);
     Check(renderer.NativeUpscalerReady && fg.HasGeneratedFrame,
         "Actual renderer orders native FSR3 upscale then HUD-free capture then AMD FG");
+    Check(Read<Rgba16>(device, fg.HudlessColor).All(p => p.Finite), "FSR3 HUD-free scene readback is valid");
     Check(Read<Rgba16>(device, fg.GeneratedColor).All(p => p.Finite), "FSR3 plus FG scene readback is valid");
     // Expire the real context to exercise error isolation, without a fake
     // generator or synthetic successful dispatch.

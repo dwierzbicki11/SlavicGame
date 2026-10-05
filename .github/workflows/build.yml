@@ -81,4 +81,9 @@ jobs:
           export SLAVICGAME_TEST_FSR3_NATIVE=1
           export VK_ICD_FILENAMES="$(find /usr/share/vulkan/icd.d -name '*lvp*' -print -quit)"
           test -n "$VK_ICD_FILENAMES"
-          dotnet run --project tests/renderer/SlavicGame.RendererTests.csproj --configuration Release
+          dotnet build tests/renderer/SlavicGame.RendererTests.csproj --configuration Release
+          # Each process covers pending-work cleanup and two renderer lifetimes.
+          # Fail immediately on either run; do not retry a failing proof.
+          for attempt in 1 2; do
+            dotnet tests/renderer/bin/Release/net11.0/SlavicGame.RendererTests.dll
+          done

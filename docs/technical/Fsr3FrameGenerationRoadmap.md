@@ -13,7 +13,9 @@ opening another. Do not depend on retained local files.
 
 Active stage: **2 — actual HUD-free scene input**, branch
 `fsr3/fg-scene-input`, based on current main
-`4055b885800d51a5e956732e5e81dac38e0b3f5b`. PR #306 is merged. Continue
+`4055b885800d51a5e956732e5e81dac38e0b3f5b`,
+[PR #324](https://github.com/dwierzbicki11/SlavicGame/pull/324).
+Initial head: `b17a1c8658c1948051ddd89da1271d5335b222ae`. PR #306 is merged. Continue
 this stage's PR before starting presentation work. Its adapter uses #319's
 validated managed runtime; do not restore the superseded duplicate #306 ABI.
 
@@ -91,21 +93,37 @@ before later UI/presentation changes. No other automation is modified.
   images, real geometry depth/camera velocity, menu exclusion, resets, grow/
   shrink and render-size changes, spatial FSR1, native FSR3 and failure isolation.
   CI runs this proof on Linux; existing Linux/Windows regressions remain required.
-- Initial runtime finding: actual scene/depth/motion are finite, but the native
-  generated image had 2087 nonfinite pixels at 640x360. Constant-image tests
-  did not detect this. Investigation isolated the issue before color inpainting.
-  The SDK optical-flow vector-field filter also divides a zero-weight average and
-  evaluates `pow(negative dot product, 1.25)` before clamping. An auditable,
-  generated-include Linux adaptation guards both operations, preserving AMD's
-  interpolation and valid filter weights. No copied-frame or lerp FG substitute
-  is used. These guards have not removed the 2087-pixel failure; the remaining
-  cause must be isolated from intermediate native resources. The pinned SDK
-  checkout is unmodified; its license is retained.
-- Evidence: native Release build / smoke passed; Release game and renderer-test
-  builds passed. Full moving-scene runtime is being rerun after the numerical
-  repair. PR/head and final Linux/Windows CI must be recorded before completion.
-- Blocker: complete the moving-scene runtime checks, fix any failures, run full
-  regressions and obtain green CI on the exact merge head.
+- Runtime defect and repair: the initial actual scene had finite inputs but
+  2087 NaN RGB pixels at 640x360. Intermediate readback found every inpainting
+  pyramid mip had zero support; AMD's normalization then divided by zero.
+  SPIR-V reflection had classified Vulkan 1.0 `Uniform + BufferBlock` SSBOs as
+  constant buffers, and did not distinguish `NonWritable` storage reads from
+  writes. Reflection now recognizes both Vulkan 1.0 and 1.1 storage encodings
+  and maps the SDK's read/write counters correctly. A CTest compiles real GLSL
+  for both API targets and verifies distinct constant/read/write descriptors.
+  The generated-header include path is corrected. Auditable optical-flow
+  guards avoid zero-weight division and negative fractional powers; the
+  original AMD interpolation and color inpainting run without debug overrides.
+  The pinned SDK checkout and AMD license remain intact.
+- Local evidence (2026-10-05): native Release build, descriptor-contract CTest
+  and GPU smoke pass; Release game/renderer-test builds pass. Full scene proof
+  passes **47 checks**, including 12 moving frames beyond AMD's ten-frame
+  warmup, finite generated pixels on every frame, actual depth/motion, HUD/menu
+  exclusion, reset, 640x360 → 800x450, render 720x405 → 640x360, FSR1/FSR3,
+  pending-work cleanup and FG-only failure isolation. At frame 12 mean RGB
+  differences were 0.0171683 between input frames, 0.0104042 generated/current,
+  and 0.0105229 generated/previous. Existing regressions pass **1259 checks**.
+  This is software Vulkan (llvmpipe LLVM 20.1.2 / Mesa 25.2.8), with no physical
+  GPU or extra swapchain presentation proof. One earlier local process exited
+  with SIGSEGV; four subsequent complete processes passed all 47 checks. CI
+  runs two fresh scene-proof processes and fails on either failure, with no
+  success-by-retry. Fresh CI is required before merging.
+- Initial CI: [run 37270745485](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37270745485),
+  exact initial head above: Windows green; Linux scene proof failed on the
+  2087-pixel assertion. The assertions were preserved and extended. Final fix
+  revision and Linux/Windows CI are recorded in this PR before merge.
+- Blocker: green Linux/Windows CI on the exact repaired head,
+  followed by merge. Stage 2 has no generated-frame presentation gate.
 - Next: continue this branch's tests/PR; only after merge, stage 3 presentation.
 
 ## 3. Presentation and spacing — pending
