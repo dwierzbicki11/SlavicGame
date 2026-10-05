@@ -18,6 +18,17 @@ fixes that one mapping, making motion-vector views and staging copies use the
 same four-byte pixel format. The compiler and Vulkan validation check this
 through actual rendered motion and readback.
 
+The presentation patch exposes a checked submit/present endpoint with a
+render-finished semaphore per acquired image and host-fence acquisition. It
+retains old swapchains/semaphores across recreation until a new presentation
+has completed, and avoids MAILBOX while FG is active. The renderer's window
+proof captures the actual images handed to WSI and validates order, spacing,
+reset and resize with VSync off/on. Swapchain images include optional transfer
+source usage only if the surface advertises it, for that GPU readback proof.
+The semaphore-reuse and recreation rules follow the Khronos Vulkan Guide and
+swapchain-recreation sample. Terminal shutdown retains the conventional
+unextended-Vulkan WaitIdle path; ordinary resize uses reacquisition evidence.
+
 All original Vulkan, D3D11, OpenGL and Metal sources and pinned native binding
 versions are retained. StartupUtilities and ImageSharp remain the official
 4.9.0 packages and reference the same Veldrid assembly identity. The local

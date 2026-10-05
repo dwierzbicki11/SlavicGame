@@ -11,14 +11,12 @@ Start from current `main`, inspect open renderer/FG PRs and their exact heads,
 Actions, and this file on the active branch. Continue the active PR before
 opening another. Do not depend on retained local files.
 
-Active stage: **2 — actual HUD-free scene input**, branch
-`fsr3/fg-scene-input`, based on current main
-`667091dc94b55d20cd86d80be197f17da08ef45f` (loot UI commands merged; no
-overlapping renderer changes),
-[PR #324](https://github.com/dwierzbicki11/SlavicGame/pull/324).
-Initial head: `b17a1c8658c1948051ddd89da1271d5335b222ae`. PR #306 is merged. Continue
-this stage's PR before starting presentation work. Its adapter uses #319's
-validated managed runtime; do not restore the superseded duplicate #306 ABI.
+Active stage: **3 — presentation and spacing**, branch
+`fsr3/fg-presentation`, based on current main
+`91172e7dc1e4a8ac008b4998acaf58facecffd7f` (stage 2 merged).
+Stages 0–2 are complete; continue this presentation branch before opening
+another FG PR. The adapter uses #319's validated managed runtime; do not
+restore the superseded duplicate #306 ABI.
 
 Graphics Loop's `perf/menu-retired-buffer` was at
 `8e467a13b7fb23c2b1acabb59bd9548bc566adbd` when checked on 2026-10-05.
@@ -70,7 +68,7 @@ before later UI/presentation changes. No other automation is modified.
   separate from scene/FG compute, so scene wiring must not be mistaken for
   extra-frame presentation. Keep Graphics Loop's MenuRenderer work separate.
 
-## 2. Actual HUD-free scene input — active, runtime/CI gate
+## 2. Actual HUD-free scene input — complete
 
 - Dependencies: stage 1 merged.
 - Exit criterion: renderer supplies display-resolution scene color, render
@@ -151,17 +149,26 @@ before later UI/presentation changes. No other automation is modified.
   transition; and stops calling optional debug-utils labels whose instance
   extension was not enabled. Six additional scene submissions without
   intermediate readbacks expose view retirement hidden by readback fences.
-  Local Release builds, both native CTests, all 1261 regressions on current\n  main, and two complete 47-check scene
+  Local Release builds, both native CTests, all 1261 regressions on current
+  main, and two complete 47-check scene
   processes now pass with zero Khronos validation errors, including the six
   pending submissions without readback. Exact-head Linux/Windows CI is still
   required before merge. No physical GPU or swapchain-presentation evidence yet.
-- Blocker: verify all format/layout/lifetime repairs with
-  actual renderer GPU execution, zero Vulkan validation errors, and green
-  Linux/Windows CI on the exact final head, followed by merge. Stage 2 has no
-  generated-frame presentation gate.
-- Next: continue this branch's tests/PR; only after merge, stage 3 presentation.
+- Final evidence: [PR #324](https://github.com/dwierzbicki11/SlavicGame/pull/324),
+  exact head `3583254590fc11388d4cb70c80fcf578233172c6`,
+  [CI 37279361654](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37279361654)
+  Linux/Windows green. Logs confirm both native CTests, all 1261 regressions,
+  and two complete 47-check scene processes with zero validation errors.
+  Motion difference 0.0171683, generated/current 0.0109382,
+  generated/previous 0.0109037. Merged on 2026-10-05 as
+  `91172e7dc1e4a8ac008b4998acaf58facecffd7f`;
+  [main CI 37279976589](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37279976589)
+  is also green on Linux/Windows.
+- Blocker: none for scene generation. No extra presentation or physical GPU
+  performance/quality evidence is claimed by this stage.
+- Next: stage 3 actual window presentation.
 
-## 3. Presentation and spacing — pending
+## 3. Presentation and spacing — active, runtime/CI gate
 
 - Dependencies: stage 2 merged.
 - Exit criterion: real swapchain acquire/submit/present shows interpolated then
@@ -169,9 +176,35 @@ before later UI/presentation changes. No other automation is modified.
   Simulation/input advance once per rendered frame. No per-frame device idle.
 - Evidence required: count/order of actual presented frames, moving image,
   reset suppression and pacing timestamps, runtime SHA/PR and Linux/Windows CI.
-- Blocker: no generated-frame presentation in main.
-- Next: choose and implement the presentation path around actual Veldrid
-  swapchain ownership; do not merely present two frames back to back.
+- Implementation checkpoint: the Veldrid source patch adds a checked combined
+  submit/present endpoint. The final draw signals a per-swapchain-image binary
+  semaphore; present waits on it, including when graphics/present queues differ.
+  Acquisition completes through the existing host fence. Resize retains old
+  swapchains/semaphores until the first new present is proven complete by
+  reacquiring that image, following the Khronos recreation sample. FG uses
+  FIFO for VSync and IMMEDIATE where supported without VSync, avoiding MAILBOX
+  replacement of intermediate frames. There is no ordinary-frame device idle.
+  Renderer composes AMD's generated image then the real image into two actual
+  acquired images, drawing the same current HUD/menu separately. The pacer
+  enforces half-frame deadlines with monotonic timestamps; its preceding wait
+  is excluded from the cadence estimate. Simulation/input run once per scene.
+  This conservative CPU pacing adds latency; no performance gain is claimed.
+- Runtime executable: `tests/renderer` with `--presentation` creates real SDL
+  windows and Vulkan swapchains, moves the production scene, records accepted
+  vkQueuePresentKHR outputs, copies those very images before presentation,
+  and checks order/count, distinct interpolation, spacing, reset and resize
+  with VSync off/on. Xvfb/lavapipe validates WSI execution, not physical scanout
+  or Vega 7 FPS. Existing offscreen proofs and Windows CI remain required.
+- Local checkpoint (2026-10-05): Release game and renderer-proof compilation
+  pass. Local WSI execution is blocked before Vulkan surface creation because
+  the sandbox prohibits X11 listening sockets: Xvfb reports "Cannot establish
+  any listening sockets" and SDL falls back to its offscreen video driver.
+  This is not a passing window proof. The Linux Actions job installs Xvfb/SDL,
+  requires the X11 driver and runs the same production-window executable under
+  Khronos validation. No tests are skipped or weakened to bypass this limit.
+- Blocker: compile and execute the new presentation proof, inspect all Vulkan
+  validation output, then require green Linux/Windows CI on the exact PR head.
+- Next: continue this branch; repair observed runtime/CI errors before merge.
 
 ## 4. UI composition and resource/history lifecycle — pending
 
@@ -203,7 +236,7 @@ before later UI/presentation changes. No other automation is modified.
   required Linux/Windows CI is green on final main. AMD licenses retained.
 - Evidence required: runtime logs/artifacts, final SHA/PR/CI and an explicit
   distinction between software-Vulkan proof and physical-GPU validation.
-- Blocker: stages 2–5 incomplete. This environment has no `/dev/dri` physical
+- Blocker: stages 3–5 incomplete. This environment has no `/dev/dri` physical
   GPU; lavapipe validates Vulkan execution, not Vega 7 performance or quality.
 - Next: use the available runtime tests, then execute the physical scenario
   below when the final FG option exists. Do not invent FPS or claim completion
