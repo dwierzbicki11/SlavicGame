@@ -97,6 +97,8 @@ public sealed class VeldridRenderer : IDisposable
     internal Texture? SceneDepth => _resolutionScaler.SampleableDepthTexture;
     internal Texture? SceneMotion => _motionVectors.IsInitialized ? _motionVectors.MotionVectorTexture : null;
     internal bool NativeUpscalerReady => _fsr3Upscaler is { IsReady: true } && !_fsr3DisabledAfterError;
+    internal bool FrameGenerationActive =>
+        _frameGeneration is not null && _framePresenter is not null;
     internal string FrameGenerationDiagnostic { get; private set; } = "Scene FG validation was not requested.";
 
     // An externally owned framebuffer drives the complete production renderer
