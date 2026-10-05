@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <ffx_api/ffx_upscale.h>
 
@@ -68,6 +69,8 @@ uint32_t slavicFgCreate(const SlavicFgCreateDesc* desc, SlavicFgContext** contex
 uint32_t slavicFgPrepare(SlavicFgContext* context, const SlavicFgPrepareDesc* desc);
 uint32_t slavicFgDispatch(SlavicFgContext* context, const SlavicFgDispatchDesc* desc);
 void slavicFgDestroy(SlavicFgContext* context);
+uint32_t slavicFgIsSupported(void* vkPhysicalDevice);
+size_t slavicFgAbiLayout(uint32_t entry);
 
 #ifdef __cplusplus
 }

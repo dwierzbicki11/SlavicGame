@@ -25,3 +25,4 @@ native/fidelityfx/*.so
 native/fidelityfx/*.dll
 native/fidelityfx/AMD-LICENSE.txt
 native/fidelityfx-linux/__pycache__/
+tests/native/fidelityfx/*.so

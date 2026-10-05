@@ -34,6 +34,7 @@ MagicCinematicRegression.Run(Check);
 FidelityFxStartupRegression.Run(Check);
 FidelityFxFenceRegression.Run(Check);
 FidelityFxNativeRegression.Run(Check);
+FidelityFxFrameGenerationRegression.Run(Check);
 VerticalSliceQuestInteractionRegression.Run(Check);
 SwampPredatorEncounterRegression.Run(Check);
 SwampApparitionRegression.Run(Check);

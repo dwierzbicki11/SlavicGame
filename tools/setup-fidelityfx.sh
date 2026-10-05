@@ -41,6 +41,8 @@ cmake -S "$ROOT_DIR/native/fidelityfx-linux" -B "$BUILD_DIR" \
 cmake --build "$BUILD_DIR" --parallel 4
 if [[ "$RUN_TESTS" == 1 ]]; then
     ctest --test-dir "$BUILD_DIR" --output-on-failure
+    mkdir -p "$ROOT_DIR/tests/native/fidelityfx"
+    cp "$BUILD_DIR/libslavic_fg_fixture.so" "$ROOT_DIR/tests/native/fidelityfx/libslavic_fg_fixture.so"
 fi
 mkdir -p "$ROOT_DIR/native/fidelityfx"
 cp "$BUILD_DIR/libslavic_fsr3_vk.so" "$ROOT_DIR/native/fidelityfx/libslavic_fsr3_vk.so"
