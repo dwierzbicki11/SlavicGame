@@ -33,6 +33,25 @@ Aktualny prototyp obsługuje:
 - podstawową zmianę oświetlenia;
 - HUD.
 
+## Tekst dialogów i menu
+
+`BitmapFont` jest wspólnym fontem bitmapowym dla HUD-u, dialogów, odpowiedzi
+i menu. Obsługuje `ą ć ę ł ń ó ś ź ż` (także wielkie litery), bez zamiany na
+ASCII. Zachowuje dotychczasowy styl wersalików i odstęp sześciu kolumn.
+Akcenty zajmują dwie dodatkowe linie nad siedmioliniowym korpusem, ogonki
+dwie pod nim; tło dialogu obejmuje pełne granice glifów. Normalizacja Unicode
+NFC zapewnia identyczny pomiar i obraz dla znaków prekomponowanych oraz
+sekwencji ze znakami łączącymi. Font nie wymaga dodatkowych assetów ani bibliotek.
+
+Regresje CPU w `PolishTextRenderingRegression` sprawdzają wszystkie polskie
+glify i teksty/odpowiedzi osiągalnych węzłów rzeczywistych dialogów.
+`PolishTextProof` w `tests/renderer` uruchamia produkcyjny `VeldridRenderer`,
+otwiera dialog rodziny zaginionego i wybiera pytanie o pamiątkę. Odczyt obrazu
+Vulkan weryfikuje piksele akcentów, ogonków i odpowiedzi oraz wszystkie
+dziewięć liter w menu, w tym rozróżnienie Ź/Ż i równoważność NFC/NFD.
+Test uruchamia się razem z istniejącym scene proof w Linux CI; regresje CPU
+i build działają w Linux/Windows CI. Nie jest to pomiar wydajności fizycznego GPU.
+
 ## Docelowe warstwy
 
 1. resource management;

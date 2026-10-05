@@ -1689,18 +1689,22 @@ public sealed class VeldridRenderer : IDisposable
 
     private void AddGameplayText(string text, float x, float y, float availableWidth)
     {
-        var scale = Math.Clamp(availableWidth / Math.Max(1, text.Length * 6f), 0.8f, 2f);
-        AddHudQuad(x - 4, y - 4, text.Length * 6f * scale + 8, 7 * scale + 8, new Vector4(0, 0, 0, 0.7f));
-        foreach (var character in text.ToUpperInvariant())
+        var preparedText = BitmapFont.Prepare(text);
+        var width = preparedText.Length * BitmapFont.Advance;
+        var scale = Math.Clamp(availableWidth / Math.Max(1, width), 0.8f, 2f);
+        var (top, bottom) = BitmapFont.VerticalBounds(preparedText);
+        AddHudQuad(x - 4, y + top * scale - 4, width * scale + 8,
+            (bottom - top) * scale + 8, new Vector4(0, 0, 0, 0.7f));
+        foreach (var character in preparedText)
         {
-            if (MenuRenderer.Font.TryGetValue(character, out var glyph))
-                for (var row = 0; row < 7; row++)
-                for (var col = 0; col < 5; col++)
-                    if ((glyph[row] & (1 << (4 - col))) != 0)
+            if (BitmapFont.Glyphs.TryGetValue(character, out var glyph))
+                for (var row = 0; row < glyph.Rows.Length; row++)
+                for (var col = 0; col < BitmapFont.Width; col++)
+                    if ((glyph.Rows[row] & (1 << (BitmapFont.Width - 1 - col))) != 0)
                     {
                         // HUD quads have one-pixel padding, compensate for text spacing.
                         var color = new Vector4(0.9f, 0.93f, 1f, 1f);
-                        var px = x + col * scale; var py = y + row * scale;
+                        var px = x + col * scale; var py = y + (glyph.TopOffset + row) * scale;
                         _hudVertices.Add(new HudVertex(new Vector2(px, py), color));
                         _hudVertices.Add(new HudVertex(new Vector2(px + scale, py), color));
                         _hudVertices.Add(new HudVertex(new Vector2(px + scale, py + scale), color));
@@ -1708,7 +1712,7 @@ public sealed class VeldridRenderer : IDisposable
                         _hudVertices.Add(new HudVertex(new Vector2(px + scale, py + scale), color));
                         _hudVertices.Add(new HudVertex(new Vector2(px, py + scale), color));
                     }
-            x += 6 * scale;
+            x += BitmapFont.Advance * scale;
         }
     }
 
