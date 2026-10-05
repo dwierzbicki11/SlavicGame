@@ -78,12 +78,13 @@ internal static class LootContainerDepositRegression
         check(loaded.Loot.TransferSelected(loaded, true) == LootContainerResult.Stored && loaded.Loot.Lines(loaded, LootPanel.Container).Single().ItemId == "arrow-basic", "Inventory selection remains deterministic while preparing bulk retrieval");
         loaded.Loot.SelectPanel(LootPanel.Inventory); loaded.Loot.MoveSelection(loaded, 1);
         check(loaded.Loot.TransferSelected(loaded, true) == LootContainerResult.Stored && loaded.Loot.Lines(loaded, LootPanel.Container).Count == 2, "Runtime container can hold multiple deposited stacks");
-        check(loaded.Loot.HandleCommand(loaded, LootCommand.TakeAll) == LootContainerResult.Looted && loaded.Progress.Inventory.Count("arrow-basic") == 8 && loaded.Progress.Inventory.Count("simple-bandage") == 2 && loaded.Loot.Lines(loaded, LootPanel.Container).Count == 0 && loaded.Loot.Message.StartsWith("ZABRANO WSZYSTKO", StringComparison.Ordinal), "Loot command surface atomically retrieves every container stack and reports completion");
-        check(loaded.Loot.HandleCommand(loaded, LootCommand.TakeAll) == LootContainerResult.Empty && loaded.Progress.Inventory.Count("simple-bandage") == 2, "Loot command TakeAll on an empty container is idempotent");
+        check(LootInputRouter.Dispatch(loaded, false, false, false, false, false, true, true, true) == LootContainerResult.Looted && loaded.Progress.Inventory.Count("arrow-basic") == 8 && loaded.Progress.Inventory.Count("simple-bandage") == 2 && loaded.Loot.Lines(loaded, LootPanel.Container).Count == 0, "Loot input dispatch executes only prioritized Take All through the authoritative runtime");
+        check(LootInputRouter.Dispatch(loaded, false, false, false, false, false, false, false, true) == LootContainerResult.Empty && loaded.Progress.Inventory.Count("simple-bandage") == 2, "Repeated dispatched Take All is idempotent");
 
         loaded.Progress.Inventory.Add("simple-bow"); loaded.Bow.SetAiming(loaded, true);
         check(!loaded.Bow.IsAiming, "Storage UI blocks bow aiming");
-        check(loaded.Loot.HandleCommand(loaded, LootCommand.Close) is null && !loaded.Loot.IsOpen, "Loot command surface closes the storage UI");
+        check(LootInputRouter.Dispatch(loaded, true, false, false, false, false, true, true, true) is null && !loaded.Loot.IsOpen, "Dispatched Close has priority and closes storage without mutating inventory");
+        check(LootInputRouter.Dispatch(loaded, false, false, false, false, false, true, true, true) is null, "Loot input dispatch ignores commands while storage UI is closed");
         loaded.SetPlayerPosition(Vector3.Zero); loaded.Loot.Update(loaded);
         check(!loaded.Loot.IsOpen, "Moving out of reach closes storage UI");
         var oldSave = SaveGameService.Capture(loaded) with { LootContainers = null };

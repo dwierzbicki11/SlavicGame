@@ -1,3 +1,6 @@
+using SlavicGame.Engine.Interaction;
+using SlavicGame.Engine.World;
+
 namespace SlavicGame.Engine.Gameplay;
 
 /// <summary>
@@ -24,5 +27,39 @@ public static class LootInputRouter
         if (next) return LootCommand.Next;
         if (transfer) return transferStack ? LootCommand.TransferStack : LootCommand.TransferOne;
         return null;
+    }
+
+    /// <summary>
+    /// Resolves and executes one input frame through the authoritative loot runtime.
+    /// This is the integration seam for window/gamepad adapters: callers cannot accidentally
+    /// perform multiple inventory mutations from simultaneous keys in a single frame.
+    /// </summary>
+    public static LootContainerResult? Dispatch(
+        WorldState world,
+        bool close,
+        bool containerPanel,
+        bool inventoryPanel,
+        bool previous,
+        bool next,
+        bool transfer,
+        bool transferStack,
+        bool takeAll)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        if (!world.Loot.IsOpen) return null;
+
+        var command = Resolve(
+            close,
+            containerPanel,
+            inventoryPanel,
+            previous,
+            next,
+            transfer,
+            transferStack,
+            takeAll);
+
+        return command is null
+            ? null
+            : world.Loot.HandleCommand(world, command.Value);
     }
 }
