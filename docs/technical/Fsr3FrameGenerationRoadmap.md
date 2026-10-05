@@ -11,18 +11,20 @@ Start from current `main`, inspect open renderer/FG PRs and their exact heads,
 Actions, and this file on the active branch. Continue the active PR before
 opening another. Do not depend on retained local files.
 
-Active stage: **5 — saved production setting**, branch `fsr3/fg-setting`,
-[PR #336](https://github.com/dwierzbicki11/SlavicGame/pull/336), based on
-current main after stage 4 merge. Stages 0–4 are complete. The shipping setting
-remains default OFF and must distinguish a saved request from actual runtime
-state (active, restart required, unavailable, failed). Continue #336 before
-opening another FG PR.
+Active stage: **6 — final validation and user build instructions**, branch
+`fsr3/fg-final-validation`, based on current main after stage 5 merge.
+Stages 0–5 are complete. This stage adds the explicit production OFF-startup
+proof, final Linux/Windows instructions and exact-head validation evidence.
 
-Stage 4 merged through [PR #335](https://github.com/dwierzbicki11/SlavicGame/pull/335)
-as `a34573c23f307bd8947d2ee8a9c99abf67beaa71`. Its exact-head
-Linux/Windows CI is green and includes zero-error Vulkan synchronization
-validation. The adapter uses #319's validated managed runtime; do not restore
-the superseded duplicate #306 ABI. No other automation is modified.
+Stage 5 merged through [PR #336](https://github.com/dwierzbicki11/SlavicGame/pull/336)
+as `ccf1eee9361da3822a518c43814b09d6da1c1c43`. Its exact-head
+[CI 37308987683](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37308987683)
+is green on Linux/Windows: **1277 regressions**, two **47-check** scene proofs,
+a **334-check** real-window presentation proof and **zero Vulkan validation
+errors**. The shipping setting defaults OFF and distinguishes saved request
+from active/restart-required/unavailable/failed runtime state. The adapter uses
+#319's validated managed runtime; do not restore the superseded duplicate #306
+ABI. No other automation is modified.
 
 ## 0. Existing generator and managed command ring — complete
 
@@ -219,7 +221,7 @@ the superseded duplicate #306 ABI. No other automation is modified.
 - Blocker: none.
 - Next: stage 5.
 
-## 5. Working saved FG option — active
+## 5. Working saved FG option — complete
 
 - Dependencies: stage 4 merged.
 - Implementation on PR #336: persisted `GameSettings.FrameGeneration`,
@@ -232,13 +234,17 @@ the superseded duplicate #306 ABI. No other automation is modified.
   failed FG request does not disable native FSR3 upscaling or normal rendering.
 - The real-window proof clears the developer FG environment switch and enables
   FG through the same saved-option startup path used by the game.
-- Exit criterion: frontend/persistence regressions, legacy-default OFF,
-  supported runtime ON, unavailable/failure status, actual presented frame
-  counts, fallback, Linux/Windows CI on the exact final head, then merge #336.
-- Blocker: exact-head CI after stage-4 merge.
-- Next: complete #336; then stage 6.
+- Evidence: [PR #336](https://github.com/dwierzbicki11/SlavicGame/pull/336),
+  exact head `0f870dfcdd3ae5557ec02942f0106f6f6a2caea4`,
+  [CI 37308987683](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37308987683)
+  Linux/Windows green. Linux reports **1277 checks passed**, two **47-check**
+  scene proofs, a **334-check** actual SDL/Vulkan presentation proof and
+  **zero Vulkan validation errors**. Merged as
+  `ccf1eee9361da3822a518c43814b09d6da1c1c43`.
+- Blocker: none.
+- Next: stage 6.
 
-## 6. Final validation and user build instructions — pending
+## 6. Final validation and user build instructions — active
 
 - Dependencies: all prior stages merged.
 - Exit criterion: real scene motion/interpolation, frame order/count, distinct
@@ -246,11 +252,18 @@ the superseded duplicate #306 ABI. No other automation is modified.
   required Linux/Windows CI is green on final main. AMD licenses retained.
 - Evidence required: runtime logs/artifacts, final SHA/PR/CI and an explicit
   distinction between software-Vulkan proof and physical-GPU validation.
-- Blocker: stages 3–5 incomplete. This environment has no `/dev/dri` physical
-  GPU; lavapipe validates Vulkan execution, not Vega 7 performance or quality.
-- Next: use the available runtime tests, then execute the physical scenario
-  below when the final FG option exists. Do not invent FPS or claim completion
-  from constant-color offscreen output.
+- Current implementation adds a real production-default OFF startup proof with
+  the developer FG override cleared: no generator and no special WSI presenter
+  may be allocated until the saved setting requests FG.
+- Documentation and setup helpers now describe the shipping Linux enable path:
+  install/build the source provider, choose FSR3, choose Frame Generation ON,
+  restart. Windows is explicitly temporal-FSR3-only for now and reports FG as
+  unavailable.
+- Blocker: exact-head stage-6 CI. This environment has no `/dev/dri` physical
+  GPU; lavapipe validates Vulkan execution/presentation and lifecycle, not Vega
+  7 performance, physical scanout cadence or visual quality.
+- Next: merge this stage only after Linux/Windows CI and zero-error Vulkan
+  validation; then execute the physical scenario below without inventing FPS.
 
 ## Reproducible Linux Mint / Ryzen 5 5600G (Vega 7) scenario
 
@@ -270,7 +283,7 @@ The Veldrid source patch prepares automatically from its pinned commit;
 details and offline-source override are in `third_party/veldrid/README.md`.
 Do not set a lavapipe ICD override for the physical test. Capture device/driver,
 creation-version/features diagnostics, resolution, render scale and settings.
-After stage 5, compare FG off/on while moving through the village/forest and
+Compare FG off/on while moving through the village/forest and
 turning the camera. Record rendered and presented FPS separately, cadence,
 input response, moving silhouettes/vegetation, disocclusions and UI clarity.
 Repeat with VSync on/off, FSR3 and ordinary scaling, resolution/fullscreen
