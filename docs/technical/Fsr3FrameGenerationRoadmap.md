@@ -11,7 +11,8 @@ Start from current `main`, inspect open renderer/FG PRs and their exact heads,
 Actions, and this file on the active branch. Continue the active PR before
 opening another. Do not depend on retained local files.
 
-Current stage: **1 — production Vulkan 1.1 device creation**, PR **#306**,
+Next stage: **2 — actual HUD-free scene input**, after PR **#306** merges.
+Until #306 is merged, finish stage 1 on its existing
 branch `render/fsr3-frame-generation-runtime`. It has been synchronized with
 main `8e467a13b7fb23c2b1acabb59bd9548bc566adbd` (PR #319). The older #306
 wrapper/ABI is superseded by the validated #319 managed runtime; do not restore
@@ -33,7 +34,7 @@ lifetime policy. Recheck this before later HUD/presentation changes.
 - Blocker: none for offscreen generation; production instance was Vulkan 1.0.
 - Next: stage 1; do not reimplement this foundation.
 
-## 1. Production Vulkan 1.1 and enabled device features — active
+## 1. Production Vulkan 1.1 and enabled device features — verified, merge gate #306
 
 - Dependencies: stage 0.
 - Implementation: a pinned source build of Veldrid 4.9.0 adds instance-version
@@ -49,13 +50,21 @@ lifetime policy. Recheck this before later HUD/presentation changes.
   actual 1.1 Veldrid FG dispatch/readback, moving asymmetric input, API/feature
   rejection and unchanged upscaling on 1.0 and 1.1; green Linux/Windows CI;
   merge PR #306.
-- Evidence: local Release game/test builds and native `ctest` pass. Production
-  Veldrid device generation/readback passes on lavapipe, including the moving
-  image and orientation checks; 1259 regression checks pass. Upscaling passes
-  on both Vulkan 1.0 and the production 1.1 factory. PR #306's final head and CI must be recorded in its reviewable
-  description before merge; the previous #306 CI does not validate this code.
-- Blocker: awaiting fresh Linux/Windows CI and merge on the exact PR head.
-- Next: finish those checks and merge; then start stage 2 on the merged head.
+- Evidence: implementation head `c8360ec0177ad2a97bf2b5582065ecf3d28efbff`,
+  source tree `5283d970dfeba313045128baf10bd316d4a36e60`.
+  [Linux/Windows CI](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37267965134)
+  is green on that exact head. The Linux job logs confirm the pinned source
+  build, real production-device moving-image FG, orientation, API/feature
+  rejection and all **1259 checks passed**. Upscaling readback passes on both
+  1.0 and 1.1. Local Release builds and native `ctest` also pass.
+- Completion gate: no implementation blocker remains. The final documentation
+  revision must also have green Linux/Windows checks; merging PR #306 then
+  completes this stage. Check its merged state and current head/CI before
+  advancing; use the final PR checks for the documentation revision's SHA.
+- Next: after merge, stage 2. Veldrid's layout transitions submit on the same
+  graphics queue without device-idle waits. Its swapchain presentation is
+  separate from scene/FG compute, so scene wiring must not be mistaken for
+  extra-frame presentation. Keep Graphics Loop's MenuRenderer work separate.
 
 ## 2. Actual HUD-free scene input — pending
 
@@ -66,7 +75,7 @@ lifetime policy. Recheck this before later HUD/presentation changes.
   consumer; no per-frame device-idle. FG remains independent of upscaling.
 - Evidence required: actual renderer frames with movement, nonconstant output,
   resets, output lifetime, resize, failure isolation. Record SHA/PR/CI here.
-- Blocker: stage 1 not yet merged; prior #306 adapter used obsolete ABI and
+- Blocker: requires PR #306 merge; the prior #306 adapter used obsolete ABI and
   tied FG to the FSR3 upscaler, so it is not an acceptable completed stage.
 - Next: implement a Veldrid texture/layout adapter for FidelityFxFrameGeneration
   and a HUD-free display-color path for all supported scene upscaling modes.
