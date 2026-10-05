@@ -35,6 +35,8 @@
     <Compile Include="../Engine/Settings/*.cs" Link="Settings/%(Filename)%(Extension)" />
     <Compile Include="../Engine/World/*.cs" Link="World/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Core/GameTime.cs" Link="GameTime.cs" />
+    <Compile Include="../Engine/Core/EngineConfig.cs" Link="EngineConfig.cs" />
+    <Compile Include="../Engine/Window/GameWindow.cs" Link="Window/GameWindow.cs" />
     <Compile Include="../Engine/Diagnostics/*.cs" Link="Diagnostics/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Renderer/Camera3D.cs" Link="Camera3D.cs" />
     <Compile Include="../Engine/Renderer/BitmapFont.cs" Link="BitmapFont.cs" />
