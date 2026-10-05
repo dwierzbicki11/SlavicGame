@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ42. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ43. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -27,27 +27,28 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 - [x] MQ40 „Droga umarłych” — scalone po zielonym CI.
 - [x] MQ41 „Dwa echa” — scalone po zielonym CI.
 - [x] MQ42 „Ten, który pozostał” — Parent B/skip, persistence i handoff do MQ43 — scalone po zielonym CI.
+- [x] MQ43 „Czwarta nie jest miejscem” — reveal Splotu, recovery i handoff do MQ44 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ43 „Czwarta nie jest miejscem” — IMPLEMENTED, oczekuje na CI/merge
+### MQ44 „Powrót z wiedzą” — IMPLEMENTED, oczekuje na CI/merge
 
 Kontrakt z `docs/quests/MainQuestCardsAct4.md`:
 
-1. wejście wyłącznie po ukończeniu MQ42;
-2. wejście w niestabilny wzorzec zapisuje trwały stan;
-3. obserwacja złamania zwykłych reguł przestrzeni wymaga wejścia we wzorzec;
-4. pełny reveal Splotu wymaga także `MQ41_NAVIA_SPLOT_DISTINCTION`;
-5. przerwana prezentacja może zostać wznowiona z trwałych obserwacji bez ponownego naliczania konsekwencji;
-6. `MQ43_SPLOT_TRUTH_KNOWN` jest trwałe przez save/load i nie może powstać przed spełnieniem gatingu;
-7. completion zapisuje `MQ43_COMPLETE` i oferuje MQ44 dokładnie raz, bez resetowania późniejszego postępu.
+1. wejście wymaga `MQ43_COMPLETE`, `MQ43_SPLOT_TRUTH_KNOWN` i trwałej kotwicy powrotnej MQ40;
+2. powrót do Jawii zapisuje `MQ44_RETURNED_TO_JAWIA`;
+3. eskalacja kryzysu następuje dopiero po powrocie i zapisuje `MQ44_CRISIS_ESCALATED`;
+4. regionalne wiadomości mogą różnić treść/zasoby, ale krytyczna synteza potrzeb finału ma fallback niezależny od konkretnego posłańca;
+5. `MQ44_FINAL_NEEDS_KNOWN` jest trwałe przez save/load;
+6. completion zapisuje `MQ44_COMPLETE` i oferuje MQ50 dokładnie raz, bez resetowania późniejszego postępu;
+7. ścieżki MQ42 Parent B i skip muszą obie prowadzić przez MQ44 bez softlocka.
 
-## Kolejka po MQ43
+## Kolejka po MQ44
 
-Po pełnym zakończeniu MQ43 należy ponownie przeanalizować aktualny `main`, WorkQueue, Coverage, ten dokument oraz kartę Aktu IV. MQ44 może rozpocząć się wyłącznie po zielonym CI i merge MQ43 oraz ponownym potwierdzeniu readiness.
+Po pełnym zakończeniu MQ44 należy ponownie przeanalizować aktualny `main`, WorkQueue, Coverage, ten dokument oraz kartę Aktu V. MQ50 może rozpocząć się wyłącznie po zielonym CI i merge MQ44 oraz ponownym potwierdzeniu readiness.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ43: staging niestabilnego wzorca, finalne line writing i AVFX pozostają content/art/VO lockiem.
-- MQ43: runtime zapisuje author-truth reveal jako trwały fakt systemowy; nie wybiera za gracza architektury finału E1–E5.
-- MQ43: checkpoint/recovery dotyczy prezentacji revealu i nie może duplikować trwałych konsekwencji.
+- MQ44: konkretne regionalne wiadomości, posłańcy, line writing i staging pozostają content/VO lockiem; runtime zachowuje krytyczny fallback.
+- MQ44: warianty regionalne zmieniają treść i zasoby, nie fakt odblokowania Aktu V.
+- MQ44: finalne wartości zasobów i balansu pozostają playtest/measurement lockiem.
