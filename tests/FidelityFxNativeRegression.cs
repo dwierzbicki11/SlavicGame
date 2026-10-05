@@ -40,6 +40,12 @@ internal static class FidelityFxNativeRegression
         // and command ring as the game, with an asymmetric image readback.
         VulkanRuntimeCompatibility.EnsureInitialized();
         using var device = GraphicsDevice.CreateVulkan(new GraphicsDeviceOptions());
+        RunOnDevice(device, check);
+    }
+
+    internal static void RunOnDevice(GraphicsDevice device, Action<bool, string> check)
+    {
+        string diagnostic;
         check(FidelityFxUpscaler.TryCreate(device, 128, 128, out var upscaler, out diagnostic), diagnostic);
         using var fsr = upscaler!;
         RunDispatch(device, fsr, 64, 64, check);

@@ -125,10 +125,16 @@ public sealed class VeldridRenderer : IDisposable
             PreferDepthRangeZeroToOne = true,
         };
 
-        _graphicsDevice = VeldridStartup.CreateGraphicsDevice(
-            window.NativeWindow,
-            options,
-            GraphicsBackend.Vulkan);
+        _graphicsDevice = VulkanDeviceFactory.Create(options, new SwapchainDescription(
+            VeldridStartup.GetSwapchainSource(window.NativeWindow),
+            (uint)window.NativeWindow.Width, (uint)window.NativeWindow.Height,
+            options.SwapchainDepthFormat, options.SyncToVerticalBlank, options.SwapchainSrgbFormat));
+
+        var vkInfo = _graphicsDevice.GetVulkanInfo();
+        EngineLog.Info($"Vulkan creation: instance=0x{vkInfo.InstanceApiVersion:X}, " +
+            $"physicalDevice=0x{vkInfo.PhysicalDeviceApiVersion:X}, " +
+            $"shaderStorageImageExtendedFormats={vkInfo.ShaderStorageImageExtendedFormatsEnabled}; " +
+            (VulkanDeviceFactory.FrameGenerationUnavailableReason(vkInfo) ?? "FG creation prerequisites enabled."));
 
         EngineLog.Info(
             $"Vulkan presentation: requested VSync={vsync}, " +

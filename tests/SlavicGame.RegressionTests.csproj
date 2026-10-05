@@ -7,7 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Veldrid" Version="4.9.0" />
+    <ProjectReference Include="../third_party/veldrid/Veldrid.csproj" />
     <Compile Include="../Engine/AI/*.cs" Link="AI/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Animation/*.cs" Link="Animation/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Assets/*.cs" Link="Assets/%(Filename)%(Extension)" />
@@ -40,6 +40,7 @@
     <Compile Include="../Engine/Renderer/CelestialLighting.cs" Link="CelestialLighting.cs" />
     <Compile Include="../Engine/Renderer/PresentationPolicy.cs" Link="PresentationPolicy.cs" />
     <Compile Include="../Engine/Renderer/VulkanRuntimeCompatibility.cs" Link="VulkanRuntimeCompatibility.cs" />
+    <Compile Include="../Engine/Renderer/VulkanDeviceFactory.cs" Link="VulkanDeviceFactory.cs" />
     <Compile Include="../Engine/Renderer/TemporalFrameState.cs" Link="TemporalFrameState.cs" />
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxStartupPolicy.cs" Link="FidelityFxStartupPolicy.cs" />
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxVulkanCommands.cs" Link="FidelityFxVulkanCommands.cs" />

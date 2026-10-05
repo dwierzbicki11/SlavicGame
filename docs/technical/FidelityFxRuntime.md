@@ -116,15 +116,22 @@ change. The next consecutive successful dispatch becomes eligible again.
 
 Optical-flow shaders require Vulkan 1.1 / SPIR-V 1.3. The managed runtime
 rejects a requested Vulkan 1.0 instance even if the physical GPU advertises
-a newer version. Veldrid 4.9 currently requests Vulkan 1.0, so this runtime
-is deliberately not called by the game renderer yet. The native test fixture
+a newer version. The pinned Veldrid 4.9 source patch lets the production Linux
+factory request Vulkan 1.1 and records that actual instance version and enabled
+storage feature. A 1.0 loader/ICD remains usable with FG unavailable; Windows
+keeps its existing instance contract. The native test fixture
 creates a Vulkan 1.1 device; C# performs the actual context creation, prepare,
 dispatch and queue submission, and tests read back known color at two sizes
 plus a shrink, history resets and fence-ring reuse. The fixture is test-only
 and is not copied into the game's native runtime directory.
 
-Remaining stages are Vulkan 1.1 device creation in the renderer, generated-frame
-presentation and pacing, independent HUD composition, then an in-game FG
+The production-device regression additionally runs actual FG with a moving,
+asymmetric image through the same factory as the renderer and rejects a 1.0
+instance or a supported-but-disabled storage feature. Upscaling is checked on
+both 1.0 and 1.1 devices. See `Fsr3FrameGenerationRoadmap.md` for stage status.
+
+Remaining stages are actual scene wiring, generated-frame presentation and
+pacing, independent HUD composition, then an in-game FG
 setting after those paths are validated. Offscreen checks establish ABI and
 GPU dispatch correctness for the test scene, not FG visual quality or FPS on
 a physical GPU.

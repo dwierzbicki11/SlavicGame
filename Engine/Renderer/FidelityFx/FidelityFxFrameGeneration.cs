@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Veldrid;
 
 namespace SlavicGame.Engine.Renderer.FidelityFx;
 
@@ -55,6 +56,26 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
 
     public bool IsReady => _context != 0 && !_disposed;
 
+    public static bool TryCreate(GraphicsDevice device,
+        out FidelityFxFrameGeneration? generator, out string diagnostic)
+    {
+        generator = null;
+        if (device.BackendType != GraphicsBackend.Vulkan)
+        {
+            diagnostic = "FSR3 FG requires a Vulkan device.";
+            return false;
+        }
+        var info = device.GetVulkanInfo();
+        var reason = VulkanDeviceFactory.FrameGenerationUnavailableReason(info);
+        if (reason is not null)
+        {
+            diagnostic = reason;
+            return false;
+        }
+        return TryCreate(FidelityFxVulkanInterop.GetDeviceHandles(device),
+            info.InstanceApiVersion, out generator, out diagnostic);
+    }
+
     public static bool TryCreate(
         FidelityFxVulkanDeviceHandles handles,
         uint requestedVulkanVersion,
@@ -63,7 +84,8 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
     {
         generator = null;
         // Use the instance's requested API version, not the driver's advertised
-        // version: Veldrid 4.9 currently creates Vulkan 1.0 instances.
+        // version. The raw-handle entry point is for externally owned devices
+        // whose creator guarantees the extended storage feature is enabled.
         if (requestedVulkanVersion < MinimumVulkanVersion)
         {
             diagnostic = "FSR3 FG requires a Vulkan 1.1 instance; upscaling remains available.";
