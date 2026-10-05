@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ40. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ41. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -24,28 +24,29 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 - [x] MQ32 „Noc Zamkniętego Progu” — scalone po zielonym CI.
 - [x] MQ33 „Rozwierający” — scalone po zielonym CI.
 - [x] MQ34 „Trzy projekty” — scalone po zielonym CI.
-- [x] MQ40 „Droga umarłych” — wejście do Nawii, kotwica powrotna, recovery i handoff do MQ41 — scalone po zielonym CI.
+- [x] MQ40 „Droga umarłych” — scalone po zielonym CI.
+- [x] MQ41 „Dwa echa” — oba echa, operacyjne rozróżnienie Nawia/Splot, recovery i handoff do MQ42 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ41 „Dwa echa” — IMPLEMENTED, oczekuje na CI/merge
+### MQ42 „Ten, który pozostał” — IMPLEMENTED, oczekuje na CI/merge
 
 Kontrakt z `docs/quests/MainQuestCardsAct4.md`:
 
-1. wejście wyłącznie po `MQ40_COMPLETE`;
-2. oba echa mogą zostać znalezione w dowolnej kolejności i są zapisywane trwale;
-3. operacyjna różnica Nawia/Splot wymaga obu ech oraz minimum dwóch niezależnych różnic;
-4. porównanie w Journal zapisuje `MQ41_NAVIA_SPLOT_DISTINCTION`, bez ujawniania pełnej definicji Czwartej Sfery;
-5. pominięte obserwacje mają recovery zapisujące te same trwałe evidence flags;
-6. completion wymaga porównania i rozróżnienia, po czym zapisuje `MQ41_COMPLETE`;
-7. MQ42 jest oferowane dokładnie raz, z persistence/save-load i idempotencją.
+1. wejście wyłącznie po `MQ41_COMPLETE`;
+2. ścieżka spotkania wymaga znalezienia Parent B, weryfikacji tożsamości i decyzji relacji/obietnicy;
+3. alternatywna ścieżka skip zapisuje `MQ42_SKIPPED` i nie tworzy fałszywego spotkania;
+4. `MQ42_PARENT_B_DECISION` i `MQ42_SKIPPED` są wzajemnie wykluczające;
+5. obie legalne ścieżki zapisują `MQ42_COMPLETE` i oferują MQ43 dokładnie raz;
+6. save/load zachowuje evidence, wybór i completion, a ponowne completion nie resetuje postępu MQ43;
+7. brak Parent B nie blokuje głównego reveal — pełna prawda Splotu pozostaje w MQ43.
 
-## Kolejka po MQ41
+## Kolejka po MQ42
 
-Po pełnym zakończeniu MQ41 należy ponownie przeanalizować aktualny `main`, WorkQueue, Coverage, ten dokument oraz kartę Aktu IV. MQ42 może rozpocząć się wyłącznie po zielonym CI i merge MQ41 oraz ponownym potwierdzeniu readiness.
+Po pełnym zakończeniu MQ42 należy ponownie przeanalizować aktualny `main`, WorkQueue, Coverage, ten dokument oraz kartę Aktu IV. MQ43 może rozpocząć się wyłącznie po zielonym CI i merge MQ42 oraz ponownym potwierdzeniu readiness.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ41: wygląd obu ech, staging obserwacji i finalne line writing pozostają content/art/VO lockiem.
-- MQ41: recovery może być środowiskowym śladem lub zapisem w pobliżu; runtime zapisuje ten sam trwały fakt evidence.
-- MQ41: rozróżnienie jest wyłącznie operacyjne; pełna natura Splotu pozostaje zablokowana do MQ43.
+- MQ42: wygląd/staging Parent B i finalne line writing pozostają content/art/VO lockiem.
+- MQ42: konkretna treść decyzji relacji/obietnicy może zostać rozwinięta później; runtime zapisuje trwały fakt podjęcia decyzji bez zgadywania wariantów prezentacyjnych.
+- MQ42 nie może zastąpić MQ43 jako źródła pełnej prawdy Splotu.
