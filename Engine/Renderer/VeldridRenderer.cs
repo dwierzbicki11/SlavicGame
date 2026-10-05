@@ -1521,8 +1521,12 @@ public sealed class VeldridRenderer : IDisposable
         // the output. The upscaler context and its setting stay independent.
         _frameGeneration?.Dispose();
         _frameGeneration = null;
-        _framePresenter?.Dispose();
-        _framePresenter = null;
+        // Keep the already-created WSI presenter for the rest of this
+        // renderer session. It now presents rendered-only frames through the
+        // same semaphore-correct submit/present path. Switching back to plain
+        // SwapBuffers mid-session would change synchronization models while
+        // previous presentation work can still be owned by the present engine.
+        // The presenter is disabled only at renderer shutdown/restart.
         _temporalInputsEnabled = FidelityFxStartupPolicy.NeedsTemporalInputs(
             TemporalInputPolicy.IsEnabled(), _fsr3Requested, _fsr3DisabledAfterError);
         EngineLog.Warn(FrameGenerationDiagnostic);
