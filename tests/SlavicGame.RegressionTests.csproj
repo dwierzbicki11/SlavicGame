@@ -46,10 +46,13 @@
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxVulkanDeviceHandles.cs" Link="FidelityFxVulkanDeviceHandles.cs" />
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxNativeLibrary.cs" Link="FidelityFxNativeLibrary.cs" />
     <Compile Include="../Engine/Renderer/FidelityFx/FfxApiInterop.cs" Link="FfxApiInterop.cs" />
+    <Compile Include="../Engine/Renderer/FidelityFx/FgApiInterop.cs" Link="FgApiInterop.cs" />
+    <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxFrameGeneration.cs" Link="FidelityFxFrameGeneration.cs" />
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxUpscaler.cs" Link="FidelityFxUpscaler.cs" />
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxVulkanInterop.cs" Link="FidelityFxVulkanInterop.cs" />
     <Content Include="../native/fidelityfx/*.so" Link="native/fidelityfx/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="native/fidelityfx/*.so" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="../Engine/Renderer/DynamicMotionHistory.cs" Link="DynamicMotionHistory.cs" />
     <Compile Include="../Engine/Renderer/WorldModelRenderPolicy.cs" Link="WorldModelRenderPolicy.cs" />
     <Content Include="../assets/audio/**/*.wav"
