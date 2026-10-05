@@ -117,13 +117,31 @@ before later UI/presentation changes. No other automation is modified.
   GPU or extra swapchain presentation proof. One earlier local process exited
   with SIGSEGV; four subsequent complete processes passed all 47 checks. CI
   runs two fresh scene-proof processes and fails on either failure, with no
-  success-by-retry. Fresh CI is required before merging.
+  success-by-retry. Fresh CI reproduced SIGSEGV despite the successful local
+  processes; those passes alone do not close the lifecycle gate.
 - Initial CI: [run 37270745485](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37270745485),
   exact initial head above: Windows green; Linux scene proof failed on the
   2087-pixel assertion. The assertions were preserved and extended. Final fix
   revision and Linux/Windows CI are recorded in this PR before merge.
-- Blocker: green Linux/Windows CI on the exact repaired head,
-  followed by merge. Stage 2 has no generated-frame presentation gate.
+- Repaired-reflection head: `53ef553a1d4fe66002385748616561a0ba13122b`;
+  [CI 37274239005](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37274239005):
+  Windows, native CTests and 1259 regressions pass, but Linux's scene proof
+  crashes after the 800x450 FSR1 recovery while changing render size. Local
+  reproduction also crashes on the second renderer's initialization. A native
+  trace places the fault (address 0x40) in lavapipe's GPU worker. Vulkan
+  validation identifies `vkDestroyImage-image-01000`: RecreateSceneTarget
+  creates a color image, queues its initialization clear, then immediately
+  deletes it in the single-sample branch and creates another. The repair
+  allocates exactly one color image with its final sampling usage, preserving
+  MSAA behavior. Validation also reports SPIR-V 1.5 on a Vulkan 1.1 instance;
+  scene shader compilation now targets 1.0, including the old-device fallback.
+  CI enables Khronos validation and rejects every validation error in both
+  complete scene-proof processes. These latest fixes still need runtime/CI
+  validation; do not merge the known-red 53ef553 revision.
+- Blocker: verify the initialization/lifetime and shader-target repairs with
+  actual renderer GPU execution, zero Vulkan validation errors, and green
+  Linux/Windows CI on the exact final head, followed by merge. Stage 2 has no
+  generated-frame presentation gate.
 - Next: continue this branch's tests/PR; only after merge, stage 3 presentation.
 
 ## 3. Presentation and spacing — pending

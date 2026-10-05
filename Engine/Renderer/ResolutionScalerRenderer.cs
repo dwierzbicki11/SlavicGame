@@ -450,7 +450,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
             mipLevels: 1,
             arrayLayers: 1,
             _colorFormat,
-            TextureUsage.RenderTarget,
+            multisampled ? TextureUsage.RenderTarget
+                : TextureUsage.RenderTarget | TextureUsage.Sampled,
             _sceneSampleCount));
 
         var depthUsage = TextureUsage.DepthStencil;
@@ -481,15 +482,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
         }
         else
         {
-            // Single-sample target is directly sampleable after the scene pass.
-            _colorTexture.Dispose();
-            _colorTexture = factory.CreateTexture(TextureDescription.Texture2D(
-                width,
-                height,
-                mipLevels: 1,
-                arrayLayers: 1,
-                _colorFormat,
-                TextureUsage.RenderTarget | TextureUsage.Sampled));
+            // Create once: Veldrid queues initialization clears. Disposing a
+            // just-created replacement here would free an image still in use.
             _resolvedColorTexture = _colorTexture;
         }
 
