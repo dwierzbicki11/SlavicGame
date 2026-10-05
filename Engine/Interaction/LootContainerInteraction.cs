@@ -185,11 +185,11 @@ public sealed class LootContainerInteractionState
         LootContainerDefinition container,
         Action<string>? questEvent)
     {
-        if (string.IsNullOrWhiteSpace(container.QuestEventId) ||
+        if (questEvent is null || string.IsNullOrWhiteSpace(container.QuestEventId) ||
             !_completedQuestEvents.Add(container.TargetId))
             return;
 
-        questEvent?.Invoke(container.QuestEventId);
+        questEvent(container.QuestEventId);
     }
 
     private Dictionary<string, int> GetOrCreate(LootContainerDefinition container)
