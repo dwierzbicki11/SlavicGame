@@ -26,4 +26,6 @@ if ($size -lt 1000000) {
 
 Write-Host "[FidelityFX] Installed official amd_fidelityfx_vk.dll ($size bytes)"
 Write-Host "[FidelityFX] Target: $target"
-Write-Host "[FidelityFX] Build the game again, then select UPSCALER -> FSR3 in the graphics menu. SLAVICGAME_FSR3=1 remains a developer override."
+Write-Host "[FidelityFX] Build the game again, then select UPSCALER -> FSR3 in the graphics menu."
+Write-Host "[FidelityFX] Windows currently supports temporal FSR3 only; Frame Generation is Linux/Vulkan-only and will report unavailable on Windows."
+Write-Host "[FidelityFX] SLAVICGAME_FSR3=1 remains a temporal-upscaler developer override."

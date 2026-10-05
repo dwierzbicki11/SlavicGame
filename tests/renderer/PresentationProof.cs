@@ -25,6 +25,40 @@ internal static class PresentationProof
             checks++;
             Console.WriteLine("PASS: " + message);
         }
+
+        // Production default must remain a true no-FG startup. This is not a
+        // settings-only assertion: create the actual SDL/Vulkan renderer with
+        // the developer override cleared and verify that neither interpolation
+        // nor the special WSI presenter is allocated.
+        using (var offWindow = new GameWindow(new EngineConfig
+        {
+            Width = 640,
+            Height = 360,
+            Fullscreen = false,
+            VSync = false,
+            WindowTitle = "SlavicGame FG OFF startup proof"
+        }))
+        {
+            var offWorld = new WorldState();
+            offWorld.Initialize();
+            using var offRenderer = new VeldridRenderer();
+            offRenderer.Initialize(
+                offWindow,
+                offWorld,
+                false,
+                TextureQuality.Low,
+                MsaaQuality.Off,
+                UpscalerMode.Bilinear,
+                frameGenerationEnabled: false);
+            Check(
+                offRenderer.FrameGenerationScene is null &&
+                offRenderer.FramePresenter is null &&
+                offRenderer.FrameGenerationDiagnostic.Contains(
+                    "disabled",
+                    StringComparison.OrdinalIgnoreCase),
+                "Saved/default Frame Generation OFF creates no FG runtime or special presenter");
+        }
+
         foreach (var vsync in new[] { false, true })
         {
             using var window = new GameWindow(new EngineConfig { Width = 640, Height = 360,

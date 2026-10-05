@@ -2,9 +2,11 @@
 
 SlavicGame integrates AMD FidelityFX Super Resolution 3.1.4 temporal
 upscaling for Vulkan on Windows and Linux. It is selectable in the in-game
-UPSCALER setting as FSR3. Frame generation can dispatch to offscreen images
-through the Linux native and C# runtimes; extra frames are not yet presented
-by the game.
+UPSCALER setting as FSR3. Production Frame Generation is available on
+Linux/Vulkan through the source-built FidelityFX provider: the game generates
+an interpolated scene frame, presents it before the matching rendered frame,
+and composites the current HUD/menu separately on both presentations. The
+saved Frame Generation setting defaults to OFF.
 
 ## Pinned SDK
 
@@ -34,10 +36,13 @@ ffxQuery and ffxConfigure before the renderer may advertise FSR3.
 
 Run `powershell -ExecutionPolicy Bypass -File tools/setup-fidelityfx.ps1`.
 The helper downloads AMD's official signed v1.1.4 Vulkan provider directly
-into `native/fidelityfx/`. Build again after installing it, then select **FSR3** in the graphics settings.
+into `native/fidelityfx/`. Build again after installing it, then select
+**FSR3** in the graphics settings. Windows currently supports the temporal
+upscaler only; the production Frame Generation bridge is Linux-only and an FG
+request is reported as unavailable rather than silently pretending to run.
 `SLAVICGAME_FSR3=1` (PowerShell: `$env:SLAVICGAME_FSR3='1'`) remains a
-developer override that forces the temporal path regardless of the saved menu
-selection.
+developer override that forces the temporal upscaler path regardless of the
+saved menu selection.
 
 When FSR3 is selected on Windows or Linux with a loadable provider, scene
 MSAA is disabled for that run: FSR supplies temporal AA and needs single-sample
@@ -59,7 +64,8 @@ builds `libslavic_fsr3_vk.so` from the pinned AMD sources and installs it under
 sudo apt install git cmake g++ python3 libvulkan-dev glslang-tools mesa-vulkan-drivers
 bash tools/setup-fidelityfx.sh --test
 ./run.sh
-# Then choose UPSCALER -> FSR3 in the graphics menu.
+# Choose UPSCALER -> FSR3.
+# Choose FRAME GENERATION -> ON, then restart the game.
 ```
 
 Build the game again after installing the provider so the `.so` and AMD license
@@ -128,22 +134,32 @@ and is not copied into the game's native runtime directory.
 The production-device regression additionally runs actual FG with a moving,
 asymmetric image through the same factory as the renderer and rejects a 1.0
 instance or a supported-but-disabled storage feature. Upscaling is checked on
-both 1.0 and 1.1 devices. See `Fsr3FrameGenerationRoadmap.md` for stage status.
+both 1.0 and 1.1 devices. The real-window proof additionally exercises
+swapchain acquire/submit/present, generated-before-rendered ordering, pacing,
+pause/menu transitions, camera cuts, resize, VSync off/on, failure fallback
+and the saved production ON/OFF path. See
+`Fsr3FrameGenerationRoadmap.md` for the exact PR/CI evidence.
 
-Remaining stages are actual scene wiring, generated-frame presentation and
-pacing, independent HUD composition, then an in-game FG
-setting after those paths are validated. Offscreen checks establish ABI and
-GPU dispatch correctness for the test scene, not FG visual quality or FPS on
-a physical GPU.
+These automated checks establish real Vulkan execution and presentation on
+Mesa lavapipe. They do not establish physical-monitor cadence, input feel,
+visual quality or FPS on a Ryzen 5 5600G/Vega 7; those remain real-hardware
+validation tasks.
 
 ## UI behavior
 
-The graphics menu exposes **BILINEAR**, **FSR1** and **FSR3**. Switching the
-upscaler is marked as requiring a restart because temporal FSR changes the
-startup MSAA/depth policy and creates native FidelityFX resources.
+The graphics menu exposes **BILINEAR**, **FSR1** and **FSR3**, plus
+**FRAME GENERATION**. Both the upscaler and FG switches are marked as requiring
+a restart because they change startup Vulkan/FidelityFX resources.
 
-If the FSR3 provider is unavailable, context creation fails or a dispatch fails,
-the renderer falls back to the existing FSR1 presentation path for that run.
-The saved FSR3 preference is preserved so it can become active after the native
-provider is installed. The environment override remains available for
-diagnostics and CI.
+Frame Generation runtime state is deliberately separate from the saved request:
+**OFF**, **ON (RESTART)**, **ON**, **NIEDOST.** and **BLAD** distinguish a
+pending setting from an actually active, unavailable or failed runtime. Runtime
+status is transient and is not written to `settings.json`.
+
+If the FSR3 upscaler provider is unavailable, context creation fails or an
+upscale dispatch fails, the renderer falls back to the existing FSR1
+presentation path for that run. If Frame Generation is rejected or fails,
+normal rendering and the selected upscaler continue; an already-active
+semaphore-correct presenter remains in rendered-only mode until renderer
+restart/shutdown. Saved preferences are preserved. Environment overrides remain
+developer/CI diagnostics, not the shipping enable path.

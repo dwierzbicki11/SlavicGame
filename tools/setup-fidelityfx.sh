@@ -47,4 +47,5 @@ fi
 mkdir -p "$ROOT_DIR/native/fidelityfx"
 cp "$BUILD_DIR/libslavic_fsr3_vk.so" "$ROOT_DIR/native/fidelityfx/libslavic_fsr3_vk.so"
 cp "$ROOT_DIR/native/fidelityfx-linux/AMD-LICENSE.txt" "$ROOT_DIR/native/fidelityfx/AMD-LICENSE.txt"
-echo "[FidelityFX] Native Linux FSR 3.1.4 installed. Build the game again, then select UPSCALER -> FSR3 in the graphics menu."
+echo "[FidelityFX] Native Linux FSR 3.1.4 + Frame Generation installed."
+echo "[FidelityFX] Build/run the game, select UPSCALER -> FSR3 and FRAME GENERATION -> ON, then restart the game."
