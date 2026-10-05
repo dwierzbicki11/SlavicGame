@@ -106,7 +106,7 @@ public sealed class EnemyAgent : IDamageReceiver
         switch (State)
         {
             case EnemyState.Patrol:
-                if (world.Player.IsAlive && playerDistance <= DetectionRange)
+                if (world.Player.IsAlive && playerDistance <= DetectionRange && HasLineOfSight(world, world.PlayerPosition))
                 {
                     State = EnemyState.Alert;
                     _alertRemaining = AlertSeconds;
@@ -248,8 +248,6 @@ public sealed class EnemyAgent : IDamageReceiver
         _hitReactionRemaining = HitReactionSeconds;
         if (Attack.Phase == EnemyAttackPhase.Windup) Attack.Interrupt();
 
-        // A hit can wake or re-alert an enemy, but it must not make an enemy that is
-        // already pursuing or attacking forget its engagement and replay Alert.
         if (State is EnemyState.Chase or EnemyState.Attack)
         {
             return;
@@ -279,6 +277,46 @@ public sealed class EnemyAgent : IDamageReceiver
                 world.Player.TakeDamage(Damage);
             }
         }
+    }
+
+    private bool HasLineOfSight(WorldState world, Vector3 target)
+    {
+        var start = new Vector2(Position.X, Position.Z);
+        var end = new Vector2(target.X, target.Z);
+        foreach (var obstacle in world.Obstacles)
+        {
+            var min = new Vector2(obstacle.Position.X, obstacle.Position.Z) - obstacle.HalfSize;
+            var max = new Vector2(obstacle.Position.X, obstacle.Position.Z) + obstacle.HalfSize;
+            if (SegmentIntersectsBox(start, end, min, max))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool SegmentIntersectsBox(Vector2 start, Vector2 end, Vector2 min, Vector2 max)
+    {
+        var direction = end - start;
+        var tMin = 0f;
+        var tMax = 1f;
+
+        if (!ClipAxis(start.X, direction.X, min.X, max.X, ref tMin, ref tMax)) return false;
+        if (!ClipAxis(start.Y, direction.Y, min.Y, max.Y, ref tMin, ref tMax)) return false;
+        return tMax >= tMin;
+    }
+
+    private static bool ClipAxis(float origin, float direction, float min, float max, ref float tMin, ref float tMax)
+    {
+        if (MathF.Abs(direction) <= 0.000001f)
+            return origin >= min && origin <= max;
+
+        var inverse = 1f / direction;
+        var near = (min - origin) * inverse;
+        var far = (max - origin) * inverse;
+        if (near > far) (near, far) = (far, near);
+        tMin = MathF.Max(tMin, near);
+        tMax = MathF.Min(tMax, far);
+        return tMin <= tMax;
     }
 
     private void LockFacingTowards(Vector3 target)
