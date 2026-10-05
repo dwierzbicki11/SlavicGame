@@ -29,7 +29,6 @@ public sealed class VeldridRenderer : IDisposable
     private readonly FarVegetationRenderer _farVegetation = new();
 
     private FidelityFxUpscaler? _fsr3Upscaler;
-    private FidelityFxFrameGenerator? _fsr3FrameGenerator;
     private GraphicsDevice? _graphicsDevice;
     private CommandList? _commandList;
     private DeviceBuffer? _projectionBuffer;
@@ -67,8 +66,6 @@ public sealed class VeldridRenderer : IDisposable
     private bool _fsr3Requested;
     private bool _fsr3ForcedByEnvironment;
     private bool _fsr3DisabledAfterError;
-    private bool _fsr3FgRequested;
-    private bool _fsr3FgDisabledAfterError;
     private uint _actorIndexCount;
     private uint _actorVertexCapacity;
     private uint _actorIndexCapacity;
@@ -128,10 +125,16 @@ public sealed class VeldridRenderer : IDisposable
             PreferDepthRangeZeroToOne = true,
         };
 
-        _graphicsDevice = VeldridStartup.CreateGraphicsDevice(
-            window.NativeWindow,
-            options,
-            GraphicsBackend.Vulkan);
+        _graphicsDevice = VulkanDeviceFactory.Create(options, new SwapchainDescription(
+            VeldridStartup.GetSwapchainSource(window.NativeWindow),
+            (uint)window.NativeWindow.Width, (uint)window.NativeWindow.Height,
+            options.SwapchainDepthFormat, options.SyncToVerticalBlank, options.SwapchainSrgbFormat));
+
+        var vkInfo = _graphicsDevice.GetVulkanInfo();
+        EngineLog.Info($"Vulkan creation: instance=0x{vkInfo.InstanceApiVersion:X}, " +
+            $"physicalDevice=0x{vkInfo.PhysicalDeviceApiVersion:X}, " +
+            $"shaderStorageImageExtendedFormats={vkInfo.ShaderStorageImageExtendedFormatsEnabled}; " +
+            (VulkanDeviceFactory.FrameGenerationUnavailableReason(vkInfo) ?? "FG creation prerequisites enabled."));
 
         EngineLog.Info(
             $"Vulkan presentation: requested VSync={vsync}, " +
@@ -143,9 +146,6 @@ public sealed class VeldridRenderer : IDisposable
         _fsr3Requested =
             upscalerMode == UpscalerMode.Fsr3 ||
             _fsr3ForcedByEnvironment;
-        _fsr3FgRequested =
-            _fsr3Requested &&
-            FidelityFxFrameGeneratorPolicy.IsRequested();
         var effectiveMsaa = FidelityFxStartupPolicy.EffectiveMsaa(
             msaaQuality,
             _fsr3Requested,
@@ -359,32 +359,6 @@ public sealed class VeldridRenderer : IDisposable
                     outputWidth,
                     outputHeight);
                 EngineLog.Info(fsr3Diagnostic);
-
-                if (_fsr3FgRequested)
-                {
-                    if (FidelityFxFrameGenerator.TryCreate(
-                            _graphicsDevice,
-                            _resolutionScaler.Width,
-                            _resolutionScaler.Height,
-                            outputWidth,
-                            outputHeight,
-                            out _fsr3FrameGenerator,
-                            out var fgDiagnostic))
-                    {
-                        EngineLog.Info(
-                            fgDiagnostic +
-                            " Generated frames are validation-only and are " +
-                            "not presented yet.");
-                    }
-                    else
-                    {
-                        _fsr3FgDisabledAfterError = true;
-                        EngineLog.Warn(
-                            "FSR3 Frame Generation stayed disabled; " +
-                            "FSR3 upscaling remains active: " +
-                            fgDiagnostic);
-                    }
-                }
             }
             else
             {
@@ -1336,35 +1310,6 @@ public sealed class VeldridRenderer : IDisposable
                     camera.FieldOfView,
                     settings.FsrSharpness);
 
-                if (_fsr3FgRequested &&
-                    !_fsr3FgDisabledAfterError &&
-                    _fsr3FrameGenerator is not null)
-                {
-                    try
-                    {
-                        _fsr3FrameGenerator.Dispatch(
-                            fsrDepth,
-                            _motionVectors.MotionVectorTexture,
-                            _resolutionScaler.Fsr3OutputTexture,
-                            temporalFrame,
-                            camera,
-                            (float)Math.Max(
-                                0.00001,
-                                frameDeltaSeconds));
-                    }
-                    catch (Exception fgException)
-                    {
-                        // FG is deliberately isolated from the production
-                        // upscaler. Never sacrifice a valid FSR3 frame because
-                        // experimental interpolation failed.
-                        _fsr3FgDisabledAfterError = true;
-                        EngineLog.Warn(
-                            "FSR3 Frame Generation offscreen dispatch failed; " +
-                            "disabling FG only for this run: " +
-                            fgException.Message);
-                    }
-                }
-
                 _commandList.Begin();
                 _resolutionScaler.Present(
                     _commandList,
@@ -1739,8 +1684,6 @@ public sealed class VeldridRenderer : IDisposable
         _menu.Dispose();
         _postProcess.Dispose();
         _bloom.Dispose();
-        _fsr3FrameGenerator?.Dispose();
-        _fsr3FrameGenerator = null;
         _fsr3Upscaler?.Dispose();
         _fsr3Upscaler = null;
         _reactiveMask.Dispose();

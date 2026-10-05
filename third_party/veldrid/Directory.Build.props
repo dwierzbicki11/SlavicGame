@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Version>4.9.0</Version>
+    <AssemblyVersion>4.9.0.0</AssemblyVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <LangVersion>8.0</LangVersion>
+    <DefineConstants>$(DefineConstants);VALIDATE_USAGE</DefineConstants>
+    <PinnedSourceRoot>$(MSBuildThisFileDirectory)../../.cache/veldrid-4.9.0-patched/src</PinnedSourceRoot>
+    <VeldridPython Condition="'$(OS)' == 'Windows_NT'">python</VeldridPython>
+    <VeldridPython Condition="'$(OS)' != 'Windows_NT'">python3</VeldridPython>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,16 @@
+<Project>
+  <Target Name="PreparePinnedVeldridSources" BeforeTargets="PrepareForBuild">
+    <Exec Command="$(VeldridPython) &quot;$(MSBuildThisFileDirectory)../../tools/prepare-veldrid.py&quot;" />
+    <ItemGroup>
+      <Compile Include="$(PinnedSourceRoot)/$(MSBuildProjectName)/**/*.cs" />
+      <EmbeddedResource Include="$(PinnedSourceRoot)/Veldrid/MTL/EmbeddedShaders/MTL_UnalignedBufferCopy_macOS.metallib"
+                        Condition="'$(MSBuildProjectName)' == 'Veldrid'">
+        <LogicalName>MTL_UnalignedBufferCopy_macOS</LogicalName>
+      </EmbeddedResource>
+      <EmbeddedResource Include="$(PinnedSourceRoot)/Veldrid/MTL/EmbeddedShaders/MTL_UnalignedBufferCopy_iOS.metallib"
+                        Condition="'$(MSBuildProjectName)' == 'Veldrid'">
+        <LogicalName>MTL_UnalignedBufferCopy_iOS</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+</Project>

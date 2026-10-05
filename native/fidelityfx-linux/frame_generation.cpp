@@ -10,6 +10,7 @@
 #include <FidelityFX/host/backends/vk/ffx_vk.h>
 
 #include <cstdlib>
+#include <cstddef>
 #include <cstring>
 #include <cwchar>
 #include <new>
@@ -132,6 +133,25 @@ struct SlavicFgContext {
     }
 };
 
+extern "C" __attribute__((visibility("default"))) uint32_t slavicFgIsSupported(void* physicalDevice) {
+    if (!physicalDevice) return 0;
+    auto physical = reinterpret_cast<VkPhysicalDevice>(physicalDevice);
+    VkPhysicalDeviceProperties properties{};
+    vkGetPhysicalDeviceProperties(physical, &properties);
+    if (properties.apiVersion < VK_API_VERSION_1_1) return 0;
+    VkPhysicalDeviceFeatures features{};
+    vkGetPhysicalDeviceFeatures(physical, &features);
+    if (!features.shaderStorageImageExtendedFormats) return 0;
+    VkPhysicalDeviceSubgroupProperties subgroup{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES};
+    VkPhysicalDeviceProperties2 properties2{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+    properties2.pNext = &subgroup;
+    vkGetPhysicalDeviceProperties2(physical, &properties2);
+    constexpr VkSubgroupFeatureFlags required = VK_SUBGROUP_FEATURE_BASIC_BIT |
+        VK_SUBGROUP_FEATURE_ARITHMETIC_BIT;
+    return (subgroup.supportedStages & VK_SHADER_STAGE_COMPUTE_BIT) &&
+        (subgroup.supportedOperations & required) == required ? 1u : 0u;
+}
+
 extern "C" __attribute__((visibility("default"))) uint32_t slavicFgCreate(
     const SlavicFgCreateDesc* desc, SlavicFgContext** outContext)
 {
@@ -140,6 +160,9 @@ extern "C" __attribute__((visibility("default"))) uint32_t slavicFgCreate(
         !desc->maxRenderWidth || !desc->maxRenderHeight ||
         !desc->displayWidth || !desc->displayHeight)
         return static_cast<uint32_t>(FFX_ERROR_INVALID_ARGUMENT);
+
+    if (!slavicFgIsSupported(desc->vkPhysicalDevice))
+        return static_cast<uint32_t>(FFX_ERROR_BACKEND_API_ERROR);
 
     auto* context = new (std::nothrow) SlavicFgContext();
     if (!context)
@@ -445,4 +468,16 @@ extern "C" __attribute__((visibility("default"))) uint32_t slavicFgDispatch(
 
 extern "C" __attribute__((visibility("default"))) void slavicFgDestroy(SlavicFgContext* context) {
     delete context;
+}
+
+// FG has an independent ABI contract: an older upscaler-only provider remains
+// valid for FSR3, while the managed FG loader rejects absent/mismatched exports.
+extern "C" __attribute__((visibility("default"))) size_t slavicFgAbiLayout(uint32_t entry) {
+    const size_t layout[] = {
+        1, sizeof(SlavicFgCreateDesc), sizeof(SlavicFgPrepareDesc),
+        sizeof(SlavicFgDispatchDesc), offsetof(SlavicFgPrepareDesc, frameId),
+        offsetof(SlavicFgPrepareDesc, cameraPosition),
+        offsetof(SlavicFgDispatchDesc, frameId), offsetof(SlavicFgDispatchDesc, reset)
+    };
+    return entry < sizeof(layout) / sizeof(layout[0]) ? layout[entry] : 0;
 }

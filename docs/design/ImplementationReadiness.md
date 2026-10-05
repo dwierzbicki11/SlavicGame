@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ32. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ40. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -21,29 +21,31 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 - [x] MQ25 „Archiwum bez jednego języka” — scalone po zielonym CI.
 - [x] MQ30 „Pustkowie Pierwszego Progu” — scalone po zielonym CI.
 - [x] MQ31 „Archiwum popiołu” — scalone po zielonym CI.
-- [x] MQ32 „Noc Zamkniętego Progu” — kategorie evidence, niezależne provenance, sprzeczności, recovery i handoff do MQ33 — scalone po zielonym CI.
+- [x] MQ32 „Noc Zamkniętego Progu” — scalone po zielonym CI.
+- [x] MQ33 „Rozwierający” — scalone po zielonym CI.
+- [x] MQ34 „Trzy projekty” — scalone po zielonym CI.
+- [x] MQ40 „Droga umarłych” — wejście do Nawii, kotwica powrotna, recovery i handoff do MQ41 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ33 „Rozwierający” — IMPLEMENTED, oczekuje na CI/merge
+### MQ41 „Dwa echa” — IMPLEMENTED, oczekuje na CI/merge
 
-Kontrakt z `docs/quests/MainQuestCardsAct3.md`:
+Kontrakt z `docs/quests/MainQuestCardsAct4.md`:
 
-1. wejście po `MQ32_COMPLETE`;
-2. jawny zapis stanowiska/stance Wszebora bez traktowania testimony jako author truth;
-3. trwały outcome konfrontacji dla wariantów rozmowy, zerwania, czasowego układu, walki lub ucieczki;
-4. pakiet danych dla MQ34 jest dostępny niezależnie od relacji i wyniku; przy braku danych bezpośrednich używany jest zabezpieczony recovery record;
-5. `WSZEBOR_POSITION_KNOWN`, `MQ33_COMPLETE`, persistence/idempotencja i handoff do MQ34;
-6. outcome pozostaje trwały dla późniejszego MQ52.
+1. wejście wyłącznie po `MQ40_COMPLETE`;
+2. oba echa mogą zostać znalezione w dowolnej kolejności i są zapisywane trwale;
+3. operacyjna różnica Nawia/Splot wymaga obu ech oraz minimum dwóch niezależnych różnic;
+4. porównanie w Journal zapisuje `MQ41_NAVIA_SPLOT_DISTINCTION`, bez ujawniania pełnej definicji Czwartej Sfery;
+5. pominięte obserwacje mają recovery zapisujące te same trwałe evidence flags;
+6. completion wymaga porównania i rozróżnienia, po czym zapisuje `MQ41_COMPLETE`;
+7. MQ42 jest oferowane dokładnie raz, z persistence/save-load i idempotencją.
 
-Runtime nie rozstrzyga prawdziwości interpretacji Wszebora, jego przeżycia ani finalnej treści dialogów. Stance i outcome są zapisywane jawnie przez warstwę content/dialogue, a nie zgadywane z fabuły.
+## Kolejka po MQ41
 
-## Kolejka po MQ33
-
-Po pełnym zakończeniu MQ33 należy ponownie przeanalizować aktualny `main`, trzy dokumenty kolejki/coverage/readiness oraz karty Aktu III. MQ34 może rozpocząć się wyłącznie po zielonym CI i merge MQ33 oraz ponownym potwierdzeniu readiness.
+Po pełnym zakończeniu MQ41 należy ponownie przeanalizować aktualny `main`, WorkQueue, Coverage, ten dokument oraz kartę Aktu IV. MQ42 może rozpocząć się wyłącznie po zielonym CI i merge MQ41 oraz ponownym potwierdzeniu readiness.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ33: finalne line writing, presentation i dokładne argumenty Wszebora pozostają content/VO lockiem.
-- MQ33: runtime przechowuje stance/outcome, ale nie interpretuje testimony jako author truth.
-- MQ33: zabezpieczony zapis/pośrednik jest recovery dla danych MQ34; kampania nie wymaga przeżycia, przyjaźni ani współpracy Wszebora.
+- MQ41: wygląd obu ech, staging obserwacji i finalne line writing pozostają content/art/VO lockiem.
+- MQ41: recovery może być środowiskowym śladem lub zapisem w pobliżu; runtime zapisuje ten sam trwały fakt evidence.
+- MQ41: rozróżnienie jest wyłącznie operacyjne; pełna natura Splotu pozostaje zablokowana do MQ43.

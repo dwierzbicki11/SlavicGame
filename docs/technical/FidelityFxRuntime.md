@@ -2,7 +2,9 @@
 
 SlavicGame integrates AMD FidelityFX Super Resolution 3.1.4 temporal
 upscaling for Vulkan on Windows and Linux. It is selectable in the in-game
-UPSCALER setting as FSR3. Frame generation is not implemented.
+UPSCALER setting as FSR3. Frame generation can dispatch to offscreen images
+through the Linux native and C# runtimes; extra frames are not yet presented
+by the game.
 
 ## Pinned SDK
 
@@ -69,7 +71,8 @@ override the source/build cache paths.
 
 The bridge implements the upscale create/destroy/dispatch API subset used by
 the renderer. Unsupported queries, configuration extensions and frame
-generation are rejected. The loader checks its FSR version and native structure
+generation through that five-function upscale API are rejected. FG instead uses
+the independent `slavicFgCreate/Prepare/Dispatch/Destroy` bridge. The loader checks its FSR version and native structure
 sizes/offsets against C# marshalling before enabling Linux dispatch.
 
 The embedded shaders use FP32 and AMD's shared-memory SPD variant, compiled for
@@ -88,6 +91,50 @@ orientation, context growth and history reset. Mesa lavapipe runs these tests
 without a window or physical GPU. These checks do not establish in-game FPS or
 visual quality on a Vega 7; real-hardware validation is still required before
 making FSR3 the default in any graphics preset.
+
+## Frame generation stages
+
+The Linux provider links AMD Frame Interpolation and Optical Flow and executes
+their real GPU passes. `FidelityFxFrameGeneration` now consumes that bridge
+from C#, validates the separate FG ABI and owns a three-slot Vulkan command
+ring. It submits prepare, optical flow and interpolation on the supplied
+graphics queue, without waiting for device idle each frame. Context recreation
+and disposal wait for its submitted work before releasing native resources.
+
+Inputs are HUD-free color at display resolution and depth/motion at render
+resolution; all input images must be shader-read-only, with the output in
+GENERAL. The caller owns texture lifetimes and layout tracking and submits on
+the render thread. Device creation must enable `shaderStorageImageExtendedFormats`;
+both the current Veldrid device factory and the fixture enable that core feature.
+Physical-device Vulkan version, compute subgroup arithmetic and extended
+storage-format support are checked before FG allocates resources. Camera vectors
+come from the inverse view matrix, motion vectors are converted from UV to
+render pixels, and jitter follows the same Y convention as the upscaler.
+The returned interpolation eligibility is false after startup, explicit or
+camera-history reset, a nonconsecutive frame ID, or any render/display size
+change. The next consecutive successful dispatch becomes eligible again.
+
+Optical-flow shaders require Vulkan 1.1 / SPIR-V 1.3. The managed runtime
+rejects a requested Vulkan 1.0 instance even if the physical GPU advertises
+a newer version. The pinned Veldrid 4.9 source patch lets the production Linux
+factory request Vulkan 1.1 and records that actual instance version and enabled
+storage feature. A 1.0 loader/ICD remains usable with FG unavailable; Windows
+keeps its existing instance contract. The native test fixture
+creates a Vulkan 1.1 device; C# performs the actual context creation, prepare,
+dispatch and queue submission, and tests read back known color at two sizes
+plus a shrink, history resets and fence-ring reuse. The fixture is test-only
+and is not copied into the game's native runtime directory.
+
+The production-device regression additionally runs actual FG with a moving,
+asymmetric image through the same factory as the renderer and rejects a 1.0
+instance or a supported-but-disabled storage feature. Upscaling is checked on
+both 1.0 and 1.1 devices. See `Fsr3FrameGenerationRoadmap.md` for stage status.
+
+Remaining stages are actual scene wiring, generated-frame presentation and
+pacing, independent HUD composition, then an in-game FG
+setting after those paths are validated. Offscreen checks establish ABI and
+GPU dispatch correctness for the test scene, not FG visual quality or FPS on
+a physical GPU.
 
 ## UI behavior
 

@@ -1,0 +1,27 @@
+# Pinned Veldrid Vulkan creation patch
+
+SlavicGame builds Veldrid 4.9.0 from the exact upstream release commit
+`a121087cadf38755f28c397a5b3c42ff1c559a19`. `tools/prepare-veldrid.py` fetches
+that source into `.cache`, checks the commit and clean worktree, then applies
+three small source changes in a separate generated directory. No upstream
+repository or installed NuGet package is modified. The script rejects drift.
+
+The patch adds the requested instance API version to `VulkanDeviceOptions`,
+explicit optional storage-feature selection, and creation metadata exposed by
+`BackendInfoVulkan`. It also checks instance/device creation errors in Release;
+upstream's `CheckResult` is compiled out there. A typed instance error permits
+retrying an incompatible old ICD with Vulkan 1.0 before any device exists.
+
+All original Vulkan, D3D11, OpenGL and Metal sources and pinned native binding
+versions are retained. StartupUtilities and ImageSharp remain the official
+4.9.0 packages and reference the same Veldrid assembly identity. The local
+source projects target the game's .NET 11 version.
+
+Build prerequisites are .NET 11, Git and Python 3 (`python` on Windows,
+`python3` on Linux). A clean `dotnet build SlavicGame.csproj -c Release` prepares
+the dependency automatically; the first build needs GitHub access. The cache
+can be removed and reconstructed. `SLAVICGAME_VELDRID_SOURCE` may name a clean
+local checkout of the same pinned release for an offline build.
+
+The original MIT license is retained in `LICENSE` and copied to published game
+output under `licenses/Veldrid-LICENSE.txt`.

@@ -1,40 +1,22 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace SlavicGame.Engine.Renderer.FidelityFx;
 
-internal static class FidelityFxFrameGenerationNative
-{
-    public const uint JitterMotionVectors = 1u << 2;
-    public const uint BackBufferTransferSrgb = 0u;
-}
-
+// Matches frame_generation.h. All fields are blittable, including the native
+// uint32_t reset flag; no per-dispatch unmanaged allocation is needed.
 [StructLayout(LayoutKind.Sequential)]
 internal struct SlavicFgCreateDesc
 {
-    public nint VkDevice;
-    public nint VkPhysicalDevice;
-    public nint VkDeviceProcAddr;
+    public nint Device;
+    public nint PhysicalDevice;
+    public nint DeviceProcAddr;
     public uint MaxRenderWidth;
     public uint MaxRenderHeight;
     public uint DisplayWidth;
     public uint DisplayHeight;
     public uint BackBufferFormat;
     public uint Flags;
-}
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct SlavicFgFloat3
-{
-    public float X;
-    public float Y;
-    public float Z;
-
-    public SlavicFgFloat3(float x, float y, float z)
-    {
-        X = x;
-        Y = y;
-        Z = z;
-    }
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -55,10 +37,10 @@ internal struct SlavicFgPrepareDesc
     public float ViewSpaceToMetersFactor;
     public float CameraFovAngleVertical;
     public ulong FrameId;
-    public SlavicFgFloat3 CameraPosition;
-    public SlavicFgFloat3 CameraUp;
-    public SlavicFgFloat3 CameraRight;
-    public SlavicFgFloat3 CameraForward;
+    public Vector3 CameraPosition;
+    public Vector3 CameraUp;
+    public Vector3 CameraRight;
+    public Vector3 CameraForward;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -77,18 +59,15 @@ internal struct SlavicFgDispatchDesc
 
 [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 internal delegate uint SlavicFgCreateDelegate(
-    ref SlavicFgCreateDesc description,
-    out nint context);
+    in SlavicFgCreateDesc descriptor, ref nint context);
 
 [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 internal delegate uint SlavicFgPrepareDelegate(
-    nint context,
-    ref SlavicFgPrepareDesc description);
+    nint context, in SlavicFgPrepareDesc descriptor);
 
 [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 internal delegate uint SlavicFgDispatchDelegate(
-    nint context,
-    ref SlavicFgDispatchDesc description);
+    nint context, in SlavicFgDispatchDesc descriptor);
 
 [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 internal delegate void SlavicFgDestroyDelegate(nint context);

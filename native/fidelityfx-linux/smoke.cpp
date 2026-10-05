@@ -32,9 +32,9 @@ struct Test {
     VkDeviceMemory stagingMemory{};
     ffxContext context{};
     SlavicFgContext* fg{};
-    Test() {
+    explicit Test(bool createFg = true) {
         VkApplicationInfo application{VK_STRUCTURE_TYPE_APPLICATION_INFO};
-        application.apiVersion = VK_API_VERSION_1_2;
+        application.apiVersion = VK_API_VERSION_1_1;
         VkInstanceCreateInfo create{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
         create.pApplicationInfo = &application;
         check(vkCreateInstance(&create, nullptr, &instance));
@@ -66,6 +66,7 @@ struct Test {
         check(vkCreateDevice(physical, &deviceCreate, nullptr, &device));
         vkGetDeviceQueue(device, family, 0, &queue);
 
+        if (createFg) {
         SlavicFgCreateDesc fgCreate{};
         fgCreate.vkDevice = device;
         fgCreate.vkPhysicalDevice = physical;
@@ -80,6 +81,7 @@ struct Test {
         if (fgRc != 0 || !fg)
             throw std::runtime_error("FSR3 FG context creation failed " + std::to_string(fgRc));
         std::cout << "PASS FSR3 FG context/resources/pipelines create" << std::endl;
+        }
 
         VkCommandPoolCreateInfo pools{VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
         pools.queueFamilyIndex = family; pools.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -315,6 +317,13 @@ struct Test {
         return value&0x8000 ? -result : result;
     }
     void readback(Image output) {
+        // Repeated readbacks reuse this fixture without losing the previous
+        // staging allocation. Queue work is complete before replacing it.
+        check(vkQueueWaitIdle(queue));
+        if (staging) vkDestroyBuffer(device, staging, nullptr);
+        if (stagingMemory) vkFreeMemory(device, stagingMemory, nullptr);
+        staging = VK_NULL_HANDLE;
+        stagingMemory = VK_NULL_HANDLE;
         if (staging) { vkDestroyBuffer(device,staging,nullptr); vkFreeMemory(device,stagingMemory,nullptr); }
         VkDeviceSize size=output.w*output.h*8;
         VkBufferCreateInfo create{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
@@ -346,6 +355,7 @@ struct Test {
                 throw std::runtime_error("FSR output does not reconstruct the known input color");
     }
 };
+#ifndef SLAVIC_FG_FIXTURE_ONLY
 int main() {
     try {
         if (slavicFsrFrameGenerationComponents() != 7u)
@@ -359,3 +369,4 @@ int main() {
     }
     catch(const std::exception& error) { std::cerr << error.what() << std::endl; return 1; }
 }
+#endif
