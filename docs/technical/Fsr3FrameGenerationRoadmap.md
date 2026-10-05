@@ -216,6 +216,14 @@ before later UI/presentation changes. No other automation is modified.
   closed the render pass. End now restores the final layout after such copies,
   including PRESENT_SRC for the exact swapchain readback proof. Both actual
   barriers are repaired; validation filtering remains unchanged.
+- Layout-fix head `cd5089b7b179362234549851e1ed0da2ee5ab4a8`,
+  [CI 37286517321](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37286517321):
+  Windows, both CTests, 1266 current-main regressions and both scene proofs
+  pass. Window assertions also pass; validation finds 124 errors from the
+  upstream barrier helper's missing TRANSFER_SRC-to-PRESENT branch (zero
+  stage masks in Release). The pinned patch adds that transfer-read barrier,
+  makes GENERAL-to-sample transitions include AMD compute writes, and rejects
+  unknown transitions in Release instead of emitting invalid zero masks.
 - Blocker: compile and execute the new presentation proof, inspect all Vulkan
   validation output, then require green Linux/Windows CI on the exact PR head.
 - Next: continue this branch; repair observed runtime/CI errors before merge.

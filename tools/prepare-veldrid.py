@@ -218,6 +218,47 @@ namespace Veldrid
             if (endResult != VkResult.Success)
                 throw new VeldridException("Vulkan command buffer end failed: " + endResult);''')
     path.write_text(text)
+
+    path = OUTPUT / 'src/Veldrid/Vk/VulkanUtil.cs'
+    text = path.read_text(encoding='utf-8-sig')
+    text = replace_once(text, '''            else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferRead;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.Transfer;
+                dstStageFlags = VkPipelineStageFlags.FragmentShader;
+            }''', '''            else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
+            {
+                // GENERAL may contain native AMD compute writes as well as
+                // transfers. Make those writes visible to the actual sampler.
+                barrier.srcAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.AllCommands;
+                dstStageFlags = VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.ComputeShader;
+            }''')
+    text = replace_once(text, '''            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.General)
+            {
+                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.FragmentShader;
+                dstStageFlags = VkPipelineStageFlags.ComputeShader;
+            }''', '''            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.General)
+            {
+                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead | VkAccessFlags.ShaderWrite;
+                srcStageFlags = VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.ComputeShader;
+                dstStageFlags = VkPipelineStageFlags.ComputeShader;
+            }''')
+    text = replace_once(text, '''            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.PresentSrcKHR)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferWrite;''', '''            else if ((oldLayout == VkImageLayout.TransferDstOptimal || oldLayout == VkImageLayout.TransferSrcOptimal)
+                && newLayout == VkImageLayout.PresentSrcKHR)
+            {
+                barrier.srcAccessMask = oldLayout == VkImageLayout.TransferDstOptimal
+                    ? VkAccessFlags.TransferWrite : VkAccessFlags.TransferRead;''')
+    text = replace_once(text, '                Debug.Fail("Invalid image layout transition.");',
+                        '                throw new VeldridException("Unsupported Vulkan image layout transition: " + oldLayout + " -> " + newLayout);')
+    path.write_text(text)
     shutil.copyfile(SOURCE / 'LICENSE', OUTPUT / 'LICENSE')
 
     # Upstream creates RGBA16F for an RG16F description. Besides invalid AMD
