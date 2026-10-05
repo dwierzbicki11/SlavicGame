@@ -203,6 +203,13 @@ public static class SettingsCatalog
                 s.Upscaler = CycleEnum(s.Upscaler, direction),
             RequiresRestart: true),
         new(
+            "frame-generation",
+            SettingCategory.PostProcessing,
+            "FRAME GENERATION",
+            s => s.FrameGeneration ? "ON" : "OFF",
+            (s, _) => s.FrameGeneration = !s.FrameGeneration,
+            RequiresRestart: true),
+        new(
             "fsr-quality",
             SettingCategory.PostProcessing,
             "FSR TRYB",
