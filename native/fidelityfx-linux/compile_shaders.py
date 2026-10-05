@@ -179,6 +179,7 @@ def main():
         command = [
             args.compiler, '-V', '--target-env', target_env,
             '-S', 'comp', '-Os',
+            '-I' + str(out / 'include/FidelityFX/gpu'),
             '-I' + str(gpu),
         ]
         command += ['-D' + d for d in common + defines]

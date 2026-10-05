@@ -26,6 +26,26 @@ for filename, old, new in context_headers:
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists() or path.read_text() != header:
         path.write_text(header)
+# Opposing optical-flow vectors are normal at disocclusions. The SDK's GLSL
+# port raises their negative dot product to the fractional power 1.25 before
+# clamping, and divides the first average by zero when all weights are zero.
+# Both operations can produce NaN, which then poisons packed vector fields
+# and the interpolated scene. Preserve AMD's filter on valid weights; zero
+# support contributes zero, and negative agreement contributes zero weight.
+# Apply only to generated shader includes, never to the pinned SDK checkout.
+filename = 'ffx_frameinterpolation_optical_flow_vector_field.h'
+header = (sdk / 'sdk/include/FidelityFX/gpu/frameinterpolation' / filename).read_text()
+old = '    fOpticalFlowVector3x3Avg /= sw;'
+assert header.count(old) == 1, 'Unexpected optical-flow averaging site'
+header = header.replace(old, '''    if (sw > FFX_FRAMEINTERPOLATION_EPSILON)
+        fOpticalFlowVector3x3Avg /= sw;''')
+old = 'ffxPow(dot(fOpticalFlowVector3x3Avg, vs), 1.25f)'
+assert header.count(old) == 1, 'Unexpected optical-flow directional weight'
+header = header.replace(old, 'ffxPow(ffxMax(0.0f, dot(fOpticalFlowVector3x3Avg, vs)), 1.25f)')
+path = output / 'include/FidelityFX/gpu/frameinterpolation' / filename
+path.parent.mkdir(parents=True, exist_ok=True)
+if not path.exists() or path.read_text() != header:
+    path.write_text(header)
 source = (sdk / 'sdk/src/backends/vk/ffx_vk.cpp').read_text()
 # EffectContext has alignas(32), but the upstream scratch layout aligns slices
 # to only four bytes. Optimized GCC uses aligned stores and can crash. Align

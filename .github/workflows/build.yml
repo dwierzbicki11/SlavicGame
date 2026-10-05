@@ -74,3 +74,11 @@ jobs:
             test -n "$VK_ICD_FILENAMES"
           fi
           dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
+      - name: Run real renderer scene FG proof
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          export SLAVICGAME_TEST_FSR3_NATIVE=1
+          export VK_ICD_FILENAMES="$(find /usr/share/vulkan/icd.d -name '*lvp*' -print -quit)"
+          test -n "$VK_ICD_FILENAMES"
+          dotnet run --project tests/renderer/SlavicGame.RendererTests.csproj --configuration Release

@@ -11,16 +11,16 @@ Start from current `main`, inspect open renderer/FG PRs and their exact heads,
 Actions, and this file on the active branch. Continue the active PR before
 opening another. Do not depend on retained local files.
 
-Next stage: **2 — actual HUD-free scene input**, after PR **#306** merges.
-Until #306 is merged, finish stage 1 on its existing
-branch `render/fsr3-frame-generation-runtime`. It has been synchronized with
-main `8e467a13b7fb23c2b1acabb59bd9548bc566adbd` (PR #319). The older #306
-wrapper/ABI is superseded by the validated #319 managed runtime; do not restore
-the duplicate ABI structs. Stage 2 will adapt the game to that current runtime.
+Active stage: **2 — actual HUD-free scene input**, branch
+`fsr3/fg-scene-input`, based on current main
+`4055b885800d51a5e956732e5e81dac38e0b3f5b`. PR #306 is merged. Continue
+this stage's PR before starting presentation work. Its adapter uses #319's
+validated managed runtime; do not restore the superseded duplicate #306 ABI.
 
-Graphics Loop currently works on `perf/menu-retired-buffer` and MenuRenderer
-buffer retirement. FG stage 1 does not edit MenuRenderer or its resource
-lifetime policy. Recheck this before later HUD/presentation changes.
+Graphics Loop's `perf/menu-retired-buffer` was at
+`8e467a13b7fb23c2b1acabb59bd9548bc566adbd` when checked on 2026-10-05.
+Its MenuRenderer work is not edited by this stage. Recheck the branch/open PRs
+before later UI/presentation changes. No other automation is modified.
 
 ## 0. Existing generator and managed command ring — complete
 
@@ -34,7 +34,7 @@ lifetime policy. Recheck this before later HUD/presentation changes.
 - Blocker: none for offscreen generation; production instance was Vulkan 1.0.
 - Next: stage 1; do not reimplement this foundation.
 
-## 1. Production Vulkan 1.1 and enabled device features — verified, merge gate #306
+## 1. Production Vulkan 1.1 and enabled device features — complete
 
 - Dependencies: stage 0.
 - Implementation: a pinned source build of Veldrid 4.9.0 adds instance-version
@@ -57,28 +57,56 @@ lifetime policy. Recheck this before later HUD/presentation changes.
   build, real production-device moving-image FG, orientation, API/feature
   rejection and all **1259 checks passed**. Upscaling readback passes on both
   1.0 and 1.1. Local Release builds and native `ctest` also pass.
-- Completion gate: no implementation blocker remains. The final documentation
-  revision must also have green Linux/Windows checks; merging PR #306 then
-  completes this stage. Check its merged state and current head/CI before
-  advancing; use the final PR checks for the documentation revision's SHA.
-- Next: after merge, stage 2. Veldrid's layout transitions submit on the same
+- Final head: `68147474d465a6e737e48532e9f4bb508bcbfd9f`,
+  [Linux/Windows CI](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37268267371)
+  green on that exact head. Merged PR #306 as
+  `4055b885800d51a5e956732e5e81dac38e0b3f5b` on 2026-10-05.
+- Blocker: none for stage 1.
+- Next: stage 2. Veldrid's layout transitions submit on the same
   graphics queue without device-idle waits. Its swapchain presentation is
   separate from scene/FG compute, so scene wiring must not be mistaken for
   extra-frame presentation. Keep Graphics Loop's MenuRenderer work separate.
 
-## 2. Actual HUD-free scene input — pending
+## 2. Actual HUD-free scene input — active, runtime/CI gate
 
 - Dependencies: stage 1 merged.
 - Exit criterion: renderer supplies display-resolution scene color, render
   depth/motion, layouts/formats, camera/jitter, monotonic 64-bit frame ID and
   frame time to the #319 runtime. Same graphics queue orders scene → FG →
   consumer; no per-frame device-idle. FG remains independent of upscaling.
-- Evidence required: actual renderer frames with movement, nonconstant output,
-  resets, output lifetime, resize, failure isolation. Record SHA/PR/CI here.
-- Blocker: requires PR #306 merge; the prior #306 adapter used obsolete ABI and
-  tied FG to the FSR3 upscaler, so it is not an acceptable completed stage.
-- Next: implement a Veldrid texture/layout adapter for FidelityFxFrameGeneration
-  and a HUD-free display-color path for all supported scene upscaling modes.
+- Implementation: `FidelityFxSceneFrameGeneration` owns RGBA16F display-sized
+  scene/generated images, adapts actual Veldrid depth/motion/layouts to #319,
+  and retires images only after producer/consumer completion. VeldridRenderer
+  orders scene → optional native upscale → HUD-free spatial/display capture →
+  AMD FG → real-frame scene composition → HUD/menu on the same graphics queue.
+  64-bit scene IDs advance once per renderer call; camera/history, upscale-mode
+  and render/display-size changes reset FG. Failures disable only FG.
+- Developer validation: `SLAVICGAME_FSR3_FG_SCENE=1` dispatches FG on actual
+  game scene frames. This is deliberately **offscreen generation**, not a
+  shipping FG setting or extra-frame presentation. Default rendering is unchanged.
+- Runtime executable: `tests/renderer/SlavicGame.RendererTests.csproj` references
+  the game assembly and runs the full production scene/HUD renderer into an
+  externally owned framebuffer. Only the window/acquire/present endpoint is
+  absent. Checks include movement, interpolation distinct from both adjacent
+  images, real geometry depth/camera velocity, menu exclusion, resets, grow/
+  shrink and render-size changes, spatial FSR1, native FSR3 and failure isolation.
+  CI runs this proof on Linux; existing Linux/Windows regressions remain required.
+- Initial runtime finding: actual scene/depth/motion are finite, but the native
+  generated image had 2087 nonfinite pixels at 640x360. Constant-image tests
+  did not detect this. Investigation isolated the issue before color inpainting.
+  The SDK optical-flow vector-field filter also divides a zero-weight average and
+  evaluates `pow(negative dot product, 1.25)` before clamping. An auditable,
+  generated-include Linux adaptation guards both operations, preserving AMD's
+  interpolation and valid filter weights. No copied-frame or lerp FG substitute
+  is used. These guards have not removed the 2087-pixel failure; the remaining
+  cause must be isolated from intermediate native resources. The pinned SDK
+  checkout is unmodified; its license is retained.
+- Evidence: native Release build / smoke passed; Release game and renderer-test
+  builds passed. Full moving-scene runtime is being rerun after the numerical
+  repair. PR/head and final Linux/Windows CI must be recorded before completion.
+- Blocker: complete the moving-scene runtime checks, fix any failures, run full
+  regressions and obtain green CI on the exact merge head.
+- Next: continue this branch's tests/PR; only after merge, stage 3 presentation.
 
 ## 3. Presentation and spacing — pending
 
@@ -137,6 +165,7 @@ glslang-tools and vulkan-tools. Clone current main, then run:
 bash tools/setup-fidelityfx.sh --test
 dotnet build SlavicGame.csproj -c Release
 SLAVICGAME_TEST_FSR3_NATIVE=1 dotnet run --project tests/SlavicGame.RegressionTests.csproj -c Release
+SLAVICGAME_TEST_FSR3_NATIVE=1 dotnet run --project tests/renderer/SlavicGame.RendererTests.csproj -c Release
 vulkaninfo --summary
 dotnet run --project SlavicGame.csproj -c Release
 ```
