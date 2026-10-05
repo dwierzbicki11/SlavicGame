@@ -11,16 +11,19 @@ Start from current `main`, inspect open renderer/FG PRs and their exact heads,
 Actions, and this file on the active branch. Continue the active PR before
 opening another. Do not depend on retained local files.
 
-Next stage: **2 — actual HUD-free scene input**, after PR **#306** merges.
-Until #306 is merged, finish stage 1 on its existing
-branch `render/fsr3-frame-generation-runtime`. It has been synchronized with
-main `8e467a13b7fb23c2b1acabb59bd9548bc566adbd` (PR #319). The older #306
-wrapper/ABI is superseded by the validated #319 managed runtime; do not restore
-the duplicate ABI structs. Stage 2 will adapt the game to that current runtime.
+Active stage: **2 — actual HUD-free scene input**, branch
+`fsr3/fg-scene-input`, based on current main
+`667091dc94b55d20cd86d80be197f17da08ef45f` (loot UI commands merged; no
+overlapping renderer changes),
+[PR #324](https://github.com/dwierzbicki11/SlavicGame/pull/324).
+Initial head: `b17a1c8658c1948051ddd89da1271d5335b222ae`. PR #306 is merged. Continue
+this stage's PR before starting presentation work. Its adapter uses #319's
+validated managed runtime; do not restore the superseded duplicate #306 ABI.
 
-Graphics Loop currently works on `perf/menu-retired-buffer` and MenuRenderer
-buffer retirement. FG stage 1 does not edit MenuRenderer or its resource
-lifetime policy. Recheck this before later HUD/presentation changes.
+Graphics Loop's `perf/menu-retired-buffer` was at
+`8e467a13b7fb23c2b1acabb59bd9548bc566adbd` when checked on 2026-10-05.
+Its MenuRenderer work is not edited by this stage. Recheck the branch/open PRs
+before later UI/presentation changes. No other automation is modified.
 
 ## 0. Existing generator and managed command ring — complete
 
@@ -34,7 +37,7 @@ lifetime policy. Recheck this before later HUD/presentation changes.
 - Blocker: none for offscreen generation; production instance was Vulkan 1.0.
 - Next: stage 1; do not reimplement this foundation.
 
-## 1. Production Vulkan 1.1 and enabled device features — verified, merge gate #306
+## 1. Production Vulkan 1.1 and enabled device features — complete
 
 - Dependencies: stage 0.
 - Implementation: a pinned source build of Veldrid 4.9.0 adds instance-version
@@ -57,28 +60,106 @@ lifetime policy. Recheck this before later HUD/presentation changes.
   build, real production-device moving-image FG, orientation, API/feature
   rejection and all **1259 checks passed**. Upscaling readback passes on both
   1.0 and 1.1. Local Release builds and native `ctest` also pass.
-- Completion gate: no implementation blocker remains. The final documentation
-  revision must also have green Linux/Windows checks; merging PR #306 then
-  completes this stage. Check its merged state and current head/CI before
-  advancing; use the final PR checks for the documentation revision's SHA.
-- Next: after merge, stage 2. Veldrid's layout transitions submit on the same
+- Final head: `68147474d465a6e737e48532e9f4bb508bcbfd9f`,
+  [Linux/Windows CI](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37268267371)
+  green on that exact head. Merged PR #306 as
+  `4055b885800d51a5e956732e5e81dac38e0b3f5b` on 2026-10-05.
+- Blocker: none for stage 1.
+- Next: stage 2. Veldrid's layout transitions submit on the same
   graphics queue without device-idle waits. Its swapchain presentation is
   separate from scene/FG compute, so scene wiring must not be mistaken for
   extra-frame presentation. Keep Graphics Loop's MenuRenderer work separate.
 
-## 2. Actual HUD-free scene input — pending
+## 2. Actual HUD-free scene input — active, runtime/CI gate
 
 - Dependencies: stage 1 merged.
 - Exit criterion: renderer supplies display-resolution scene color, render
   depth/motion, layouts/formats, camera/jitter, monotonic 64-bit frame ID and
   frame time to the #319 runtime. Same graphics queue orders scene → FG →
   consumer; no per-frame device-idle. FG remains independent of upscaling.
-- Evidence required: actual renderer frames with movement, nonconstant output,
-  resets, output lifetime, resize, failure isolation. Record SHA/PR/CI here.
-- Blocker: requires PR #306 merge; the prior #306 adapter used obsolete ABI and
-  tied FG to the FSR3 upscaler, so it is not an acceptable completed stage.
-- Next: implement a Veldrid texture/layout adapter for FidelityFxFrameGeneration
-  and a HUD-free display-color path for all supported scene upscaling modes.
+- Implementation: `FidelityFxSceneFrameGeneration` owns RGBA16F display-sized
+  scene/generated images, adapts actual Veldrid depth/motion/layouts to #319,
+  and retires images only after producer/consumer completion. VeldridRenderer
+  orders scene → optional native upscale → HUD-free spatial/display capture →
+  AMD FG → real-frame scene composition → HUD/menu on the same graphics queue.
+  64-bit scene IDs advance once per renderer call; camera/history, upscale-mode
+  and render/display-size changes reset FG. Failures disable only FG.
+- Developer validation: `SLAVICGAME_FSR3_FG_SCENE=1` dispatches FG on actual
+  game scene frames. This is deliberately **offscreen generation**, not a
+  shipping FG setting or extra-frame presentation. Default rendering is unchanged.
+- Runtime executable: `tests/renderer/SlavicGame.RendererTests.csproj` references
+  the game assembly and runs the full production scene/HUD renderer into an
+  externally owned framebuffer. Only the window/acquire/present endpoint is
+  absent. Checks include movement, interpolation distinct from both adjacent
+  images, real geometry depth/camera velocity, menu exclusion, resets, grow/
+  shrink and render-size changes, spatial FSR1, native FSR3 and failure isolation.
+  CI runs this proof on Linux; existing Linux/Windows regressions remain required.
+- Runtime defect and repair: the initial actual scene had finite inputs but
+  2087 NaN RGB pixels at 640x360. Intermediate readback found every inpainting
+  pyramid mip had zero support; AMD's normalization then divided by zero.
+  SPIR-V reflection had classified Vulkan 1.0 `Uniform + BufferBlock` SSBOs as
+  constant buffers, and did not distinguish `NonWritable` storage reads from
+  writes. Reflection now recognizes both Vulkan 1.0 and 1.1 storage encodings
+  and maps the SDK's read/write counters correctly. A CTest compiles real GLSL
+  for both API targets and verifies distinct constant/read/write descriptors.
+  The generated-header include path is corrected. Auditable optical-flow
+  guards avoid zero-weight division and negative fractional powers; the
+  original AMD interpolation and color inpainting run without debug overrides.
+  The pinned SDK checkout and AMD license remain intact.
+- Local evidence (2026-10-05): native Release build, descriptor-contract CTest
+  and GPU smoke pass; Release game/renderer-test builds pass. Full scene proof
+  passes **47 checks**, including 12 moving frames beyond AMD's ten-frame
+  warmup, finite generated pixels on every frame, actual depth/motion, HUD/menu
+  exclusion, reset, 640x360 → 800x450, render 720x405 → 640x360, FSR1/FSR3,
+  pending-work cleanup and FG-only failure isolation. At frame 12 mean RGB
+  differences were 0.0171683 between input frames, 0.0104042 generated/current,
+  and 0.0105229 generated/previous. Existing regressions pass **1259 checks**.
+  This is software Vulkan (llvmpipe LLVM 20.1.2 / Mesa 25.2.8), with no physical
+  GPU or extra swapchain presentation proof. One earlier local process exited
+  with SIGSEGV; four subsequent complete processes passed all 47 checks. CI
+  runs two fresh scene-proof processes and fails on either failure, with no
+  success-by-retry. Fresh CI reproduced SIGSEGV despite the successful local
+  processes; those passes alone do not close the lifecycle gate.
+- Initial CI: [run 37270745485](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37270745485),
+  exact initial head above: Windows green; Linux scene proof failed on the
+  2087-pixel assertion. The assertions were preserved and extended. Final fix
+  revision and Linux/Windows CI are recorded in this PR before merge.
+- Repaired-reflection head: `53ef553a1d4fe66002385748616561a0ba13122b`;
+  [CI 37274239005](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37274239005):
+  Windows, native CTests and 1259 regressions pass, but Linux's scene proof
+  crashes after the 800x450 FSR1 recovery while changing render size. Local
+  reproduction also crashes on the second renderer's initialization. A native
+  trace places the fault (address 0x40) in lavapipe's GPU worker. Vulkan
+  validation identifies `vkDestroyImage-image-01000`: RecreateSceneTarget
+  creates a color image, queues its initialization clear, then immediately
+  deletes it in the single-sample branch and creates another. The repair
+  allocates exactly one color image with its final sampling usage, preserving
+  MSAA behavior. Validation also reports SPIR-V 1.5 on a Vulkan 1.1 instance;
+  scene shader compilation now targets 1.0, including the old-device fallback.
+- Validation follow-up: head `171ccf462d8e497b888eb011fee50933253f5e12`,
+  [CI 37276450036](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37276450036),
+  completes both 47-check scene processes and Linux/Windows jobs. It is **not
+  mergeable evidence**: validation logs report invalid motion formats, view
+  retirement and FSR3 output layout. The shell log gate incorrectly accepted
+  `rg: command not found` inside an `if`. A Python gate now fails on every
+  validation error or a missing completed proof; its rejection was verified
+  against the recorded failing log. No assertions or validation errors are
+  excluded. The branch additionally repairs Veldrid's RG16F-to-RGBA16F mapping,
+  which both created invalid AMD views and overran the RG16F staging buffer;
+  retains prepare's views without advancing the SDK ring a second time in the
+  same submitted FG frame; queues an explicit native FSR3 write-to-sample
+  transition; and stops calling optional debug-utils labels whose instance
+  extension was not enabled. Six additional scene submissions without
+  intermediate readbacks expose view retirement hidden by readback fences.
+  Local Release builds, both native CTests, all 1261 regressions on current\n  main, and two complete 47-check scene
+  processes now pass with zero Khronos validation errors, including the six
+  pending submissions without readback. Exact-head Linux/Windows CI is still
+  required before merge. No physical GPU or swapchain-presentation evidence yet.
+- Blocker: verify all format/layout/lifetime repairs with
+  actual renderer GPU execution, zero Vulkan validation errors, and green
+  Linux/Windows CI on the exact final head, followed by merge. Stage 2 has no
+  generated-frame presentation gate.
+- Next: continue this branch's tests/PR; only after merge, stage 3 presentation.
 
 ## 3. Presentation and spacing — pending
 
@@ -137,6 +218,7 @@ glslang-tools and vulkan-tools. Clone current main, then run:
 bash tools/setup-fidelityfx.sh --test
 dotnet build SlavicGame.csproj -c Release
 SLAVICGAME_TEST_FSR3_NATIVE=1 dotnet run --project tests/SlavicGame.RegressionTests.csproj -c Release
+SLAVICGAME_TEST_FSR3_NATIVE=1 dotnet run --project tests/renderer/SlavicGame.RendererTests.csproj -c Release
 vulkaninfo --summary
 dotnet run --project SlavicGame.csproj -c Release
 ```

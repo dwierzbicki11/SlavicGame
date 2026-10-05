@@ -29,6 +29,11 @@ public sealed class VeldridRenderer : IDisposable
     private readonly FarVegetationRenderer _farVegetation = new();
 
     private FidelityFxUpscaler? _fsr3Upscaler;
+    private FidelityFxSceneFrameGeneration? _frameGeneration;
+    private Framebuffer? _offscreenTarget;
+    private bool _ownsDevice = true;
+    private ulong _sceneFrameId;
+    private UpscalerMode? _previousUpscaler;
     private GraphicsDevice? _graphicsDevice;
     private CommandList? _commandList;
     private DeviceBuffer? _projectionBuffer;
@@ -74,6 +79,40 @@ public sealed class VeldridRenderer : IDisposable
 
     public GraphicsDevice GraphicsDevice =>
         _graphicsDevice ?? throw new InvalidOperationException("Renderer has not been initialized.");
+
+    private Framebuffer OutputFramebuffer => _offscreenTarget ?? GraphicsDevice.SwapchainFramebuffer;
+    internal FidelityFxSceneFrameGeneration? FrameGenerationScene => _frameGeneration;
+    internal Texture? SceneDepth => _resolutionScaler.SampleableDepthTexture;
+    internal Texture? SceneMotion => _motionVectors.IsInitialized ? _motionVectors.MotionVectorTexture : null;
+    internal bool NativeUpscalerReady => _fsr3Upscaler is { IsReady: true } && !_fsr3DisabledAfterError;
+    internal string FrameGenerationDiagnostic { get; private set; } = "Scene FG validation was not requested.";
+
+    // An externally owned framebuffer drives the complete production renderer
+    // without an OS window. Only the final SwapBuffers operation is omitted.
+    internal void InitializeOffscreen(GraphicsDevice device, Framebuffer target, WorldState world,
+        TextureQuality textureQuality, MsaaQuality msaa, UpscalerMode upscaler)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_initialized) throw new InvalidOperationException("Renderer is already initialized.");
+        _graphicsDevice = device;
+        _offscreenTarget = target;
+        _ownsDevice = false;
+        try
+        {
+            InitializeSceneResources(world, textureQuality, msaa, upscaler);
+            _initialized = true;
+        }
+        catch { Dispose(); throw; }
+    }
+
+    internal void SetOffscreenTarget(Framebuffer target)
+    {
+        if (_offscreenTarget is null) throw new InvalidOperationException("Renderer owns a window swapchain.");
+        if (!target.OutputDescription.Equals(_offscreenTarget.OutputDescription))
+            throw new ArgumentException("Replacement output must retain the framebuffer formats.", nameof(target));
+        _offscreenTarget = target;
+        ResetTemporalHistory();
+    }
 
     public void Initialize(
         GameWindow window,
@@ -130,6 +169,15 @@ public sealed class VeldridRenderer : IDisposable
             (uint)window.NativeWindow.Width, (uint)window.NativeWindow.Height,
             options.SwapchainDepthFormat, options.SyncToVerticalBlank, options.SwapchainSrgbFormat));
 
+        InitializeSceneResources(world, textureQuality, msaaQuality, upscalerMode);
+    }
+
+    private void InitializeSceneResources(WorldState world, TextureQuality textureQuality,
+        MsaaQuality msaaQuality, UpscalerMode upscalerMode)
+    {
+        var device = GraphicsDevice;
+        _graphicsDevice = device;
+
         var vkInfo = _graphicsDevice.GetVulkanInfo();
         EngineLog.Info($"Vulkan creation: instance=0x{vkInfo.InstanceApiVersion:X}, " +
             $"physicalDevice=0x{vkInfo.PhysicalDeviceApiVersion:X}, " +
@@ -137,8 +185,8 @@ public sealed class VeldridRenderer : IDisposable
             (VulkanDeviceFactory.FrameGenerationUnavailableReason(vkInfo) ?? "FG creation prerequisites enabled."));
 
         EngineLog.Info(
-            $"Vulkan presentation: requested VSync={vsync}, " +
-            $"Veldrid SyncToVerticalBlank={_graphicsDevice.SyncToVerticalBlank}, " +
+            "Vulkan presentation: " +
+            $"Veldrid SyncToVerticalBlank={(_offscreenTarget is null && device.SyncToVerticalBlank)}, " +
             $"Mesa override={Environment.GetEnvironmentVariable(PresentationPolicy.MesaPresentModeVariable) ?? "<none>"}.");
 
         var fidelityFxProbe = FidelityFxRuntimePolicy.Probe();
@@ -146,13 +194,19 @@ public sealed class VeldridRenderer : IDisposable
         _fsr3Requested =
             upscalerMode == UpscalerMode.Fsr3 ||
             _fsr3ForcedByEnvironment;
+        if (FidelityFxSceneFrameGeneration.IsSceneValidationRequested())
+        {
+            FidelityFxSceneFrameGeneration.TryCreate(device, out _frameGeneration, out var fgDiagnostic);
+            FrameGenerationDiagnostic = fgDiagnostic;
+            EngineLog.Info("FG scene validation: " + fgDiagnostic);
+        }
         var effectiveMsaa = FidelityFxStartupPolicy.EffectiveMsaa(
             msaaQuality,
-            _fsr3Requested,
+            _fsr3Requested || _frameGeneration is not null,
             OperatingSystem.IsWindows() || OperatingSystem.IsLinux(),
             fidelityFxProbe.IsAvailable);
         if (effectiveMsaa != msaaQuality)
-            EngineLog.Info("FSR3 uses temporal anti-aliasing; scene MSAA disabled for this run.");
+            EngineLog.Info("Native temporal inputs require single-sample scene depth; MSAA disabled for this run.");
         var fidelityFxHandles =
             FidelityFxVulkanInterop.GetDeviceHandles(_graphicsDevice);
         EngineLog.Info(
@@ -299,14 +353,14 @@ public sealed class VeldridRenderer : IDisposable
 
         _resolutionScaler.Initialize(
             _graphicsDevice,
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription,
-            _graphicsDevice.SwapchainFramebuffer.Width,
-            _graphicsDevice.SwapchainFramebuffer.Height,
+            OutputFramebuffer.OutputDescription,
+            OutputFramebuffer.Width,
+            OutputFramebuffer.Height,
             effectiveMsaa);
 
         _temporalInputsEnabled =
             TemporalInputPolicy.IsEnabled() ||
-            _fsr3Requested;
+            _fsr3Requested || _frameGeneration is not null;
         if (_temporalInputsEnabled &&
             _resolutionScaler.SampleableDepthView is { } temporalDepth &&
             _resolutionScaler.SampleableDepthTexture is { } temporalDepthTexture)
@@ -344,9 +398,9 @@ public sealed class VeldridRenderer : IDisposable
             _reactiveMask.IsInitialized)
         {
             var outputWidth =
-                Math.Max(1u, _graphicsDevice.SwapchainFramebuffer.Width);
+                Math.Max(1u, OutputFramebuffer.Width);
             var outputHeight =
-                Math.Max(1u, _graphicsDevice.SwapchainFramebuffer.Height);
+                Math.Max(1u, OutputFramebuffer.Height);
 
             if (FidelityFxUpscaler.TryCreate(
                     _graphicsDevice,
@@ -367,7 +421,7 @@ public sealed class VeldridRenderer : IDisposable
                     "FSR3 request fell back to the normal presentation path: " +
                     fsr3Diagnostic);
                 _temporalInputsEnabled = FidelityFxStartupPolicy.NeedsTemporalInputs(
-                    TemporalInputPolicy.IsEnabled(), _fsr3Requested, fsrFailed: true);
+                    TemporalInputPolicy.IsEnabled(), _fsr3Requested, fsrFailed: true) || _frameGeneration is not null;
             }
         }
 
@@ -463,7 +517,7 @@ public sealed class VeldridRenderer : IDisposable
 
         _menu.Initialize(
             _graphicsDevice,
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription);
+            OutputFramebuffer.OutputDescription);
 
         var hudVertexLayout = new VertexLayoutDescription(
             new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float2),
@@ -481,7 +535,7 @@ public sealed class VeldridRenderer : IDisposable
             PrimitiveTopology.TriangleList,
             new ShaderSetDescription(new[] { hudVertexLayout }, _hudShaders),
             new[] { _hudLayout },
-            _graphicsDevice.SwapchainFramebuffer.OutputDescription));
+            OutputFramebuffer.OutputDescription));
 
         EngineLog.Info($"Veldrid renderer initialized with {_graphicsDevice.BackendType}.");
         EngineLog.Info($"Graphics device: {_graphicsDevice.DeviceName}.");
@@ -525,11 +579,16 @@ public sealed class VeldridRenderer : IDisposable
             throw new InvalidOperationException("Renderer has not been initialized.");
         }
 
-        var swapchainFramebuffer = _graphicsDevice.SwapchainFramebuffer;
+        var swapchainFramebuffer = OutputFramebuffer;
         if (swapchainFramebuffer is null)
         {
             return;
         }
+
+        var sceneFrameId = _sceneFrameId++;
+        if (_previousUpscaler is { } previous && previous != settings.Upscaler)
+            ResetTemporalHistory();
+        _previousUpscaler = settings.Upscaler;
 
         var framebuffer = _resolutionScaler.SceneFramebuffer;
         var width = Math.Max(1u, framebuffer.Width);
@@ -1280,8 +1339,11 @@ public sealed class VeldridRenderer : IDisposable
                 _postProcess.OutputTexture;
         }
 
-        if (fsr3Active &&
-            _fsr3Upscaler is not null &&
+        var displaySource = presentationSource;
+        var displayUpscaler = spatialFallbackUpscaler;
+        var displaySharpness = settings.FsrSharpness;
+        var fgActive = _frameGeneration is not null && _motionVectors.IsInitialized;
+        if ((fsr3Active || fgActive) &&
             _resolutionScaler.SampleableDepthTexture is { } fsrDepth)
         {
             // Submit all scene, motion, reactive, bloom and post-process work
@@ -1289,64 +1351,68 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.End();
             _graphicsDevice.SubmitCommands(_commandList);
 
-            try
+            if (fsr3Active && _fsr3Upscaler is not null)
             {
-                _resolutionScaler.EnsureFsr3Output(
-                    displayWidth,
-                    displayHeight);
-                _fsr3Upscaler.EnsureOutputSize(
-                    displayWidth,
-                    displayHeight);
-                _fsr3Upscaler.Dispatch(
-                    presentationTexture,
-                    fsrDepth,
-                    _motionVectors.MotionVectorTexture,
-                    _reactiveMask.MaskTexture,
-                    _resolutionScaler.Fsr3OutputTexture,
-                    temporalFrame,
-                    (float)Math.Max(0.00001, frameDeltaSeconds),
-                    camera.NearPlane,
-                    camera.FarPlane,
-                    camera.FieldOfView,
-                    settings.FsrSharpness);
-
-                _commandList.Begin();
-                _resolutionScaler.Present(
-                    _commandList,
-                    swapchainFramebuffer,
-                    UpscalerMode.Bilinear,
-                    0f,
-                    _resolutionScaler.Fsr3OutputView);
+                try
+                {
+                    _resolutionScaler.EnsureFsr3Output(displayWidth, displayHeight);
+                    _fsr3Upscaler.EnsureOutputSize(displayWidth, displayHeight);
+                    _fsr3Upscaler.Dispatch(
+                        presentationTexture, fsrDepth, _motionVectors.MotionVectorTexture,
+                        _reactiveMask.MaskTexture, _resolutionScaler.Fsr3OutputTexture,
+                        temporalFrame, (float)Math.Max(0.00001, frameDeltaSeconds),
+                        camera.NearPlane, camera.FarPlane, camera.FieldOfView, settings.FsrSharpness);
+                    displaySource = _resolutionScaler.Fsr3OutputView;
+                    displayUpscaler = UpscalerMode.Bilinear;
+                    displaySharpness = 0f;
+                }
+                catch (Exception exception)
+                {
+                    _fsr3DisabledAfterError = true;
+                    _temporalInputsEnabled = FidelityFxStartupPolicy.NeedsTemporalInputs(
+                        TemporalInputPolicy.IsEnabled(), _fsr3Requested, fsrFailed: true) || _frameGeneration is not null;
+                    ResetTemporalHistory();
+                    temporalFrame = temporalFrame with { ResetHistory = true };
+                    EngineLog.Warn("Native FSR3 dispatch failed; disabling it for this run: " + exception.Message);
+                }
             }
-            catch (Exception exception)
-            {
-                _fsr3DisabledAfterError = true;
-                _temporalInputsEnabled = FidelityFxStartupPolicy.NeedsTemporalInputs(
-                    TemporalInputPolicy.IsEnabled(), _fsr3Requested, fsrFailed: true);
-                _temporalFrame.Reset();
-                _dynamicMotionHistory.Reset();
-                EngineLog.Warn(
-                    "Native FSR3 dispatch failed; disabling it for this run: " +
-                    exception.Message);
 
+            try { _frameGeneration?.EnsureDisplaySize(displayWidth, displayHeight); }
+            catch (Exception exception) { DisableSceneFrameGeneration(exception); }
+            _commandList.Begin();
+            if (_frameGeneration is { } fgScene)
+            {
+                Exception? fgFailure = null;
+                try
+                {
+                    _resolutionScaler.CaptureDisplayColor(_commandList, fgScene.HudlessFramebuffer,
+                        displayUpscaler, displaySharpness, displaySource);
+                }
+                catch (Exception exception) { fgFailure = exception; }
+                _commandList.End();
+                _graphicsDevice.SubmitCommands(_commandList);
+                if (fgFailure is null)
+                {
+                    try
+                    {
+                        fgScene.Dispatch(fsrDepth, _motionVectors.MotionVectorTexture,
+                            temporalFrame, sceneFrameId, (float)Math.Max(0.00001, frameDeltaSeconds),
+                            camera.NearPlane, camera.FarPlane, camera.FieldOfView);
+                        // The real displayed frame uses exactly the image FG
+                        // consumed. HUD/menu are drawn only after this pass.
+                        displaySource = fgScene.HudlessView;
+                        displayUpscaler = UpscalerMode.Bilinear;
+                        displaySharpness = 0f;
+                    }
+                    catch (Exception exception) { fgFailure = exception; }
+                }
+                if (fgFailure is not null) DisableSceneFrameGeneration(fgFailure);
                 _commandList.Begin();
-                _resolutionScaler.Present(
-                    _commandList,
-                    swapchainFramebuffer,
-                    spatialFallbackUpscaler,
-                    settings.FsrSharpness,
-                    presentationSource);
             }
         }
-        else
-        {
-            _resolutionScaler.Present(
-                _commandList,
-                swapchainFramebuffer,
-                spatialFallbackUpscaler,
-                settings.FsrSharpness,
-                presentationSource);
-        }
+
+        _resolutionScaler.Present(_commandList, swapchainFramebuffer,
+            displayUpscaler, displaySharpness, displaySource);
 
         if (_hudVertices.Count > 0)
         {
@@ -1365,7 +1431,26 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.End();
 
         _graphicsDevice.SubmitCommands(_commandList);
-        _graphicsDevice.SwapBuffers();
+        if (_offscreenTarget is null) _graphicsDevice.SwapBuffers();
+    }
+
+    internal void ResetTemporalHistory()
+    {
+        _temporalFrame.Reset();
+        _dynamicMotionHistory.Reset();
+        _frameGeneration?.RequestReset();
+    }
+
+    private void DisableSceneFrameGeneration(Exception exception)
+    {
+        FrameGenerationDiagnostic = "Scene FG disabled: " + exception.Message;
+        // Finish all native writes and renderer consumers before releasing
+        // the output. The upscaler context and its setting stay independent.
+        _frameGeneration?.Dispose();
+        _frameGeneration = null;
+        _temporalInputsEnabled = FidelityFxStartupPolicy.NeedsTemporalInputs(
+            TemporalInputPolicy.IsEnabled(), _fsr3Requested, _fsr3DisabledAfterError);
+        EngineLog.Warn(FrameGenerationDiagnostic);
     }
 
     private void EnsureDynamicMotionCapacity(int vertexCount)
@@ -1593,8 +1678,7 @@ public sealed class VeldridRenderer : IDisposable
             checked((uint)Math.Max(1, width)),
             checked((uint)Math.Max(1, height)));
 
-        _temporalFrame.Reset();
-        _dynamicMotionHistory.Reset();
+        ResetTemporalHistory();
         if (_temporalInputsEnabled &&
             _motionVectors.IsInitialized &&
             _resolutionScaler.SampleableDepthView is { } temporalDepth &&
@@ -1664,8 +1748,7 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         _graphicsDevice.ResizeMainWindow(width, height);
-        _temporalFrame.Reset();
-        _dynamicMotionHistory.Reset();
+        ResetTemporalHistory();
     }
 
     public void Dispose()
@@ -1679,6 +1762,9 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         _graphicsDevice.WaitForIdle();
+
+        _frameGeneration?.Dispose();
+        _frameGeneration = null;
 
         _sky.Dispose();
         _menu.Dispose();
@@ -1741,7 +1827,7 @@ public sealed class VeldridRenderer : IDisposable
         _actorIndexBuffer = null;
         _dynamicMotionVertexBuffer = null;
         _commandList?.Dispose();
-        _graphicsDevice.Dispose();
+        if (_ownsDevice) _graphicsDevice.Dispose();
 
         _commandList = null;
         _graphicsDevice = null;

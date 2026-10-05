@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="renderer/**/*.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <ProjectReference Include="../third_party/veldrid/Veldrid.csproj" />
     <Compile Include="../Engine/AI/*.cs" Link="AI/%(Filename)%(Extension)" />

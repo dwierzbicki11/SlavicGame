@@ -62,6 +62,7 @@ def bindings(data):
     if words[0] != 0x07230203:
         raise ValueError('Invalid SPIR-V magic')
     names, decorations, types, constants, variables = {}, {}, {}, {}, []
+    non_writable_members = {}
     i = 5
     while i < len(words):
         n, op = words[i] >> 16, words[i] & 65535
@@ -71,8 +72,13 @@ def bindings(data):
         if op == 5:  # OpName
             names[a[0]] = struct.pack(
                 '<%dI' % (len(a) - 1), *a[1:]).split(b'\0')[0].decode()
-        elif op == 71 and a[1] in (33, 34):  # Binding / DescriptorSet
-            decorations.setdefault(a[0], {})[a[1]] = a[2]
+        elif op == 71:  # OpDecorate
+            if a[1] in (33, 34):  # Binding / DescriptorSet
+                decorations.setdefault(a[0], {})[a[1]] = a[2]
+            elif a[1] in (2, 3, 24):  # Block / BufferBlock / NonWritable
+                decorations.setdefault(a[0], {})[a[1]] = True
+        elif op == 72 and a[2] == 24:  # OpMemberDecorate NonWritable
+            non_writable_members.setdefault(a[0], set()).add(a[1])
         elif op in (25, 26, 27, 28, 29, 30, 32):
             types[a[0]] = (op, a[1:])
         elif op == 43:
@@ -95,11 +101,23 @@ def bindings(data):
         op, typ = types[base]
         if op == 28:
             count = constants[typ[1]]
-            op, typ = types[typ[0]]
+            base = typ[0]
+            op, typ = types[base]
+        read_only = (dec.get(24) or decorations.get(base, {}).get(24) or
+                     (op == 30 and len(non_writable_members.get(base, ())) == len(typ)))
         if storage == 2 and op == 30:
-            group = 'cbv'
+            # Vulkan 1.0 encodes SSBOs as Uniform + BufferBlock. Treating
+            # these as constant buffers misbinds AMD's counters and prevents
+            # its SPD pyramids from running.
+            block = decorations.get(base, {})
+            if block.get(3):
+                group = 'srvBuffer' if read_only else 'uavBuffer'
+            elif block.get(2):
+                group = 'cbv'
+            else:
+                raise ValueError('Uniform struct without a block decoration')
         elif storage == 12:
-            group = 'uavBuffer'
+            group = 'srvBuffer' if read_only else 'uavBuffer'
         elif storage == 0 and op == 26:
             group = 'sampler'
         elif storage == 0 and op == 25:
@@ -179,6 +197,7 @@ def main():
         command = [
             args.compiler, '-V', '--target-env', target_env,
             '-S', 'comp', '-Os',
+            '-I' + str(args.output / 'include/FidelityFX/gpu'),
             '-I' + str(gpu),
         ]
         command += ['-D' + d for d in common + defines]

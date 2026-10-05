@@ -109,6 +109,15 @@ namespace Veldrid
         public bool ShaderStorageImageExtendedFormatsEnabled => _gd.ShaderStorageImageExtendedFormatsEnabled;''')
     path.write_text(text)
     shutil.copyfile(SOURCE / 'LICENSE', OUTPUT / 'LICENSE')
+
+    # Upstream creates RGBA16F for an RG16F description. Besides invalid AMD
+    # views, this doubles GPU readback size over the staging buffer allocation.
+    path = OUTPUT / 'src/Veldrid/Vk/VkFormats.VdToVkPixelFormat.cs'
+    text = path.read_text(encoding='utf-8-sig')
+    text = replace_once(text, '''                case PixelFormat.R16_G16_Float:
+                    return VkFormat.R16g16b16a16Sfloat;''', '''                case PixelFormat.R16_G16_Float:
+                    return VkFormat.R16g16Sfloat;''')
+    path.write_text(text)
     (OUTPUT / 'stamp').write_text(FINGERPRINT)
 
 

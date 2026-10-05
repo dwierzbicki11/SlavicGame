@@ -26,7 +26,59 @@ for filename, old, new in context_headers:
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists() or path.read_text() != header:
         path.write_text(header)
+# Opposing optical-flow vectors are normal at disocclusions. The SDK's GLSL
+# port raises their negative dot product to the fractional power 1.25 before
+# clamping, and divides the first average by zero when all weights are zero.
+# Both operations can produce NaN, which then poisons packed vector fields
+# and the interpolated scene. Preserve AMD's filter on valid weights; zero
+# support contributes zero, and negative agreement contributes zero weight.
+# Apply only to generated shader includes, never to the pinned SDK checkout.
+filename = 'ffx_frameinterpolation_optical_flow_vector_field.h'
+header = (sdk / 'sdk/include/FidelityFX/gpu/frameinterpolation' / filename).read_text()
+old = '    fOpticalFlowVector3x3Avg /= sw;'
+assert header.count(old) == 1, 'Unexpected optical-flow averaging site'
+header = header.replace(old, '''    if (sw > FFX_FRAMEINTERPOLATION_EPSILON)
+        fOpticalFlowVector3x3Avg /= sw;''')
+old = 'ffxPow(dot(fOpticalFlowVector3x3Avg, vs), 1.25f)'
+assert header.count(old) == 1, 'Unexpected optical-flow directional weight'
+header = header.replace(old, 'ffxPow(ffxMax(0.0f, dot(fOpticalFlowVector3x3Avg, vs)), 1.25f)')
+path = output / 'include/FidelityFX/gpu/frameinterpolation' / filename
+path.parent.mkdir(parents=True, exist_ok=True)
+if not path.exists() or path.read_text() != header:
+    path.write_text(header)
 source = (sdk / 'sdk/src/backends/vk/ffx_vk.cpp').read_text()
+# The SDK treats each unregister as a frame boundary. FI prepare and dispatch
+# are two operations in ONE submitted frame; retiring twice can destroy views
+# still referenced by a pending command buffer. Only interpolation advances
+# the SDK's four-slot view ring. The caller's three-slot fence ring waits for
+# that frame before its views can be retired. The flag belongs to this backend
+# scratch allocation, not global state, and is cleared after prepare, on error
+# as well as success. It never suppresses barriers or resource unregistering.
+old = '    uint32_t maxEffectContexts;'
+assert source.count(old) == 1
+source = source.replace(old, old + '\n    bool slavicPrepareDispatch;')
+old = '''    // destroy the views of the next frame
+    effectContext.frameIndex = (effectContext.frameIndex + 1) % FFX_MAX_QUEUED_FRAMES;'''
+assert source.count(old) == 1
+source = source.replace(old, '''    if (backendContext->slavicPrepareDispatch)
+        return FFX_OK;
+
+''' + old)
+source += '''
+// Linux provider owns submissions and fences; prepare is not a frame boundary.
+static_assert(FFX_MAX_QUEUED_FRAMES >= 4, "Three submitted frames need four view slots");
+void slavicFfxSetPrepareDispatchVK(FfxInterface* backend, bool preparing)
+{
+    static_cast<BackendContext_VK*>(backend->scratchBuffer)->slavicPrepareDispatch = preparing;
+}
+'''
+# The API does not pass the enabled instance-extension list to this backend.
+# A nonnull loader function is not proof VK_EXT_debug_utils was enabled.
+# Keep optional native markers disabled until that contract exists.
+for name in ['vkCmdBeginDebugUtilsLabelEXT', 'vkCmdEndDebugUtilsLabelEXT']:
+    old = f'        backendContext->vkFunctionTable.{name} = (PFN_{name})vkDeviceContext->vkDeviceProcAddr(backendContext->device, "{name}");'
+    assert source.count(old) == 1, f'Unexpected debug marker load site: {name}'
+    source = source.replace(old, f'        backendContext->vkFunctionTable.{name} = nullptr;')
 # EffectContext has alignas(32), but the upstream scratch layout aligns slices
 # to only four bytes. Optimized GCC uses aligned stores and can crash. Align
 # the allocation and every slice consistently in both sizing and mapping.

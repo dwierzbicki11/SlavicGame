@@ -33,10 +33,12 @@ compile_shader() {
 
     echo "[shader] $source -> $output"
 
+    # Scene shaders also run on the Vulkan 1.0 fallback device. Native optical
+    # flow is compiled separately for 1.1 and gated by creation capabilities.
     if [[ "$COMPILER" == "glslc" ]]; then
-        glslc             --target-env=vulkan1.2             -O             "$source"             -o "$output"
+        glslc             --target-env=vulkan1.0             -O             "$source"             -o "$output"
     else
-        glslangValidator             -V             --target-env vulkan1.2             -S "$stage"             "$source"             -o "$output"
+        glslangValidator             -V             --target-env vulkan1.0             -S "$stage"             "$source"             -o "$output"
     fi
 }
 

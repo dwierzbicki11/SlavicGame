@@ -41,7 +41,7 @@ jobs:
       - name: Build and validate native Linux FSR3
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install -y cmake g++ libvulkan-dev mesa-vulkan-drivers
+          sudo apt-get install -y cmake g++ libvulkan-dev mesa-vulkan-drivers vulkan-validationlayers
           bash -n tools/setup-fidelityfx.sh
           python3 -m py_compile native/fidelityfx-linux/compile_shaders.py native/fidelityfx-linux/prepare_sdk.py
           export VK_ICD_FILENAMES="$(find /usr/share/vulkan/icd.d -name '*lvp*' -print -quit)"
@@ -74,3 +74,18 @@ jobs:
             test -n "$VK_ICD_FILENAMES"
           fi
           dotnet run --project tests/SlavicGame.RegressionTests.csproj --configuration Release
+      - name: Run real renderer scene FG proof
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          export SLAVICGAME_TEST_FSR3_NATIVE=1
+          export VK_ICD_FILENAMES="$(find /usr/share/vulkan/icd.d -name '*lvp*' -print -quit)"
+          test -n "$VK_ICD_FILENAMES"
+          dotnet build tests/renderer/SlavicGame.RendererTests.csproj --configuration Release
+          export VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation
+          # Each process covers pending-work cleanup and two renderer lifetimes.
+          # Fail immediately on either run; do not retry a failing proof.
+          for attempt in 1 2; do
+            dotnet tests/renderer/bin/Release/net11.0/SlavicGame.RendererTests.dll 2>&1 | tee "scene-fg-proof-$attempt.log"
+            python3 tools/check-vulkan-validation.py "scene-fg-proof-$attempt.log"
+          done

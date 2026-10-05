@@ -39,6 +39,9 @@ public sealed class ResolutionScalerRenderer : IDisposable
     private Pipeline? _easuPipeline;
     private Pipeline? _easuSwapchainPipeline;
     private Pipeline? _rcasPipeline;
+    private Pipeline? _captureBilinearPipeline;
+    private Pipeline? _captureEasuPipeline;
+    private Pipeline? _captureRcasPipeline;
 
     private Shader[]? _bilinearShaders;
     private Shader[]? _easuShaders;
@@ -243,6 +246,30 @@ public sealed class ResolutionScalerRenderer : IDisposable
         UpscalerMode upscaler,
         float fsrSharpness,
         TextureView? sourceOverride = null)
+        => PresentCore(commandList, swapchainFramebuffer, upscaler, fsrSharpness,
+            sourceOverride, capture: false);
+
+    /// <summary>Uses the same spatial filter and UV convention before UI.
+    /// The FG scene target is single-sample RGBA16F without a depth attachment.</summary>
+    internal void CaptureDisplayColor(CommandList commands, Framebuffer target,
+        UpscalerMode upscaler, float sharpness, TextureView source)
+    {
+        if (target.OutputDescription.ColorAttachments[0].Format != PixelFormat.R16_G16_B16_A16_Float ||
+            target.OutputDescription.DepthAttachment is not null ||
+            target.OutputDescription.SampleCount != TextureSampleCount.Count1)
+            throw new ArgumentException("FG capture requires a color-only RGBA16F framebuffer.", nameof(target));
+        if (_graphicsDevice is null) throw new InvalidOperationException("Scaler is not initialized.");
+        _captureBilinearPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
+            _bilinearShaders!, _bilinearLayout!, target.OutputDescription);
+        _captureEasuPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
+            _easuShaders!, _easuLayout!, target.OutputDescription);
+        _captureRcasPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
+            _rcasShaders!, _rcasLayout!, target.OutputDescription);
+        PresentCore(commands, target, upscaler, sharpness, source, capture: true);
+    }
+
+    private void PresentCore(CommandList commandList, Framebuffer swapchainFramebuffer,
+        UpscalerMode upscaler, float fsrSharpness, TextureView? sourceOverride, bool capture)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(commandList);
@@ -281,14 +308,15 @@ public sealed class ResolutionScalerRenderer : IDisposable
                 swapchainFramebuffer,
                 outputWidth,
                 outputHeight,
-                fsrSharpness);
+                fsrSharpness,
+                capture);
             return;
         }
 
         commandList.SetFramebuffer(swapchainFramebuffer);
         commandList.SetFullViewports();
         commandList.SetFullScissorRects();
-        commandList.SetPipeline(_bilinearPipeline);
+        commandList.SetPipeline(capture ? _captureBilinearPipeline! : _bilinearPipeline);
         commandList.SetGraphicsResourceSet(0, _bilinearSet);
         commandList.Draw(3);
     }
@@ -298,7 +326,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
         Framebuffer swapchainFramebuffer,
         uint outputWidth,
         uint outputHeight,
-        float sharpness)
+        float sharpness,
+        bool capture)
     {
         if (_easuSet is null ||
             _easuConstants is null)
@@ -321,7 +350,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
             commandList.SetFramebuffer(swapchainFramebuffer);
             commandList.SetFullViewports();
             commandList.SetFullScissorRects();
-            commandList.SetPipeline(_easuSwapchainPipeline);
+            commandList.SetPipeline(capture ? _captureEasuPipeline! : _easuSwapchainPipeline);
             commandList.SetGraphicsResourceSet(0, _easuSet);
             commandList.Draw(3);
             return;
@@ -349,7 +378,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
         commandList.SetFramebuffer(swapchainFramebuffer);
         commandList.SetFullViewports();
         commandList.SetFullScissorRects();
-        commandList.SetPipeline(_rcasPipeline);
+        commandList.SetPipeline(capture ? _captureRcasPipeline! : _rcasPipeline);
         commandList.SetGraphicsResourceSet(0, _rcasSet);
         commandList.Draw(3);
     }
@@ -421,7 +450,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
             mipLevels: 1,
             arrayLayers: 1,
             _colorFormat,
-            TextureUsage.RenderTarget,
+            multisampled ? TextureUsage.RenderTarget
+                : TextureUsage.RenderTarget | TextureUsage.Sampled,
             _sceneSampleCount));
 
         var depthUsage = TextureUsage.DepthStencil;
@@ -452,15 +482,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
         }
         else
         {
-            // Single-sample target is directly sampleable after the scene pass.
-            _colorTexture.Dispose();
-            _colorTexture = factory.CreateTexture(TextureDescription.Texture2D(
-                width,
-                height,
-                mipLevels: 1,
-                arrayLayers: 1,
-                _colorFormat,
-                TextureUsage.RenderTarget | TextureUsage.Sampled));
+            // Create once: Veldrid queues initialization clears. Disposing a
+            // just-created replacement here would free an image still in use.
             _resolvedColorTexture = _colorTexture;
         }
 
@@ -686,6 +709,12 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
     public void Dispose()
     {
+        _captureBilinearPipeline?.Dispose();
+        _captureEasuPipeline?.Dispose();
+        _captureRcasPipeline?.Dispose();
+        _captureBilinearPipeline = null;
+        _captureEasuPipeline = null;
+        _captureRcasPipeline = null;
         if (_disposed) return;
         _disposed = true;
 

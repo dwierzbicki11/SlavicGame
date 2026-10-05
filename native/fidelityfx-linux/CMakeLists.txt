@@ -29,7 +29,7 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/fsr_shaders.cpp"
     COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/compile_shaders.py"
         --sdk "${FFX_SDK_ROOT}" --output "${CMAKE_CURRENT_BINARY_DIR}"
         --compiler "${GLSLANG_VALIDATOR}"
-    DEPENDS ${FSR_SHADER_DEPS} compile_shaders.py VERBATIM)
+    DEPENDS ${FSR_SHADER_DEPS} compile_shaders.py prepare_sdk.py VERBATIM)
 add_library(slavic_fsr3_vk SHARED bridge.cpp frame_generation.cpp "${CMAKE_CURRENT_BINARY_DIR}/fsr_shaders.cpp"
     "${FFX_SDK_ROOT}/sdk/src/components/fsr3upscaler/ffx_fsr3upscaler.cpp"
     "${FFX_SDK_ROOT}/sdk/src/components/fsr3/ffx_fsr3.cpp"
@@ -51,6 +51,9 @@ target_link_options(slavic_fsr3_vk PRIVATE -Wl,--no-undefined)
 set_target_properties(slavic_fsr3_vk PROPERTIES CXX_VISIBILITY_PRESET hidden)
 include(CTest)
 if(BUILD_TESTING)
+    add_test(NAME spirv_descriptor_contract
+        COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/test_shader_bindings.py"
+            --compiler "${GLSLANG_VALIDATOR}")
     add_library(slavic_fg_fixture SHARED managed_fixture.cpp)
     target_include_directories(slavic_fg_fixture PRIVATE "${FFX_SDK_ROOT}/ffx-api/include")
     target_compile_options(slavic_fg_fixture PRIVATE -include "${CMAKE_CURRENT_SOURCE_DIR}/linux_compat.h")
