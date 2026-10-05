@@ -115,11 +115,11 @@ public sealed class MenuRenderer : IDisposable
         _preparedVertexCount = 0;
         PrepareCount++;
 
-        var screen = new Vector4(width, height, 0f, 0f);
-        commandList.UpdateBuffer(_screenBuffer, 0, screen);
-
         if (view is null)
             return;
+
+        var screen = new Vector4(width, height, 0f, 0f);
+        commandList.UpdateBuffer(_screenBuffer, 0, screen);
 
         Build(view, width, height);
         EnsureCapacity();
