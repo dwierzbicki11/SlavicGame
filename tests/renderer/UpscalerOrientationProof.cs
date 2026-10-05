@@ -44,6 +44,10 @@ internal static class UpscalerOrientationProof
         }
         device.UpdateTexture(source, pixels, 0, 0, 0, width, height, 1, 0, 0);
         var baseline = Read(UpscalerMode.Bilinear, view);
+        if (Math.Abs(baseline[0] - baseline[6]) < 150 ||
+            Math.Abs(baseline[2] - baseline[5]) < 100 ||
+            Enumerable.Range(0, 4).Any(i => Math.Abs(baseline[i * 3 + 1] - 64) > 2))
+            throw new Exception("BILINEAR readback did not preserve the asymmetric test image");
         var fsr = Read(UpscalerMode.Fsr1, view);
         for (int i = 0; i < baseline.Length; i++)
             if (Math.Abs(baseline[i] - fsr[i]) > 8)
