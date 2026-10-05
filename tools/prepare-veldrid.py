@@ -97,6 +97,83 @@ namespace Veldrid
                 CheckResult(result);''', '''                VkResult result = vkCreateDevice(_physicalDevice, ref deviceCreateInfo, null, out _device);
                 if (result != VkResult.Success)
                     throw new VeldridException("Vulkan device creation failed with VkResult " + result);''')
+    text = replace_once(text, '''        private protected override void SwapBuffersCore(Swapchain swapchain)
+        {''', '''        internal VulkanPresentationResult SubmitCommandsAndPresent(CommandList commands, Swapchain swapchain)
+        {
+            VkSwapchain sc = Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain);
+            VkSemaphore finished = sc.GetRenderFinishedSemaphore();
+            // Acquisition has already completed on the host fence. Signal a
+            // per-image semaphore so even a separate present queue waits for
+            // this image's final composition and PRESENT layout transition.
+            SubmitCommandList(commands, 0, null, 1, &finished, null);
+            return PresentAndAcquire(sc, finished);
+        }
+
+        private protected override void SwapBuffersCore(Swapchain swapchain)
+        {
+            PresentAndAcquire(Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain), VkSemaphore.Null);
+        }
+
+        private VulkanPresentationResult PresentAndAcquire(VkSwapchain vkSC, VkSemaphore finished)
+        {''')
+    text = replace_once(text, '''            VkSwapchain vkSC = Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain);
+            VkSwapchainKHR deviceSwapchain = vkSC.DeviceSwapchain;''', '''            VkSwapchainKHR deviceSwapchain = vkSC.DeviceSwapchain;''')
+    text = replace_once(text, '''            presentInfo.pImageIndices = &imageIndex;
+
+            object presentLock''', '''            presentInfo.pImageIndices = &imageIndex;
+            if (finished != VkSemaphore.Null)
+            {
+                presentInfo.waitSemaphoreCount = 1;
+                presentInfo.pWaitSemaphores = &finished;
+            }
+            ulong generation = vkSC.Generation;
+            uint mode = vkSC.PresentMode;
+            VkResult result;
+            long timestamp;
+
+            object presentLock''')
+    text = replace_once(text, '''                vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
+                if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
+                {
+                    Vulkan.VkFence fence = vkSC.ImageAvailableFence;
+                    vkWaitForFences(_device, 1, ref fence, true, ulong.MaxValue);
+                    vkResetFences(_device, 1, ref fence);
+                }
+            }
+        }''', '''                result = vkQueuePresentKHR(vkSC.PresentQueue, ref presentInfo);
+                timestamp = Stopwatch.GetTimestamp();
+            }
+            bool presented = result == VkResult.Success || result == VkResult.SuboptimalKHR;
+            if (presented) vkSC.NotifyPresented(imageIndex);
+            else if (result != VkResult.ErrorOutOfDateKHR)
+                throw new VeldridException("Vulkan present failed with VkResult " + result);
+            if (result == VkResult.ErrorOutOfDateKHR || result == VkResult.SuboptimalKHR)
+                vkSC.Resize(vkSC.Framebuffer.Width, vkSC.Framebuffer.Height);
+            else if (vkSC.AcquireNextImage(_device, VkSemaphore.Null, vkSC.ImageAvailableFence))
+                vkSC.WaitForImageAvailable();
+            return new VulkanPresentationResult(presented, imageIndex, generation, mode, timestamp);
+        }''')
+    text = replace_once(text, '''                VkResult result = vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
+                CheckResult(result);''', '''                VkResult result = vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
+                if (result != VkResult.Success)
+                    throw new VeldridException("Vulkan queue submission failed with VkResult " + result);''')
+    text = replace_once(text, '        private class SharedCommandPool', '''        internal void SynchronizeNativeDispatch()
+        {
+            // The external SDK has its own layout tracker. Its final image
+            // transitions must be visible to subsequent Veldrid sampling,
+            // transfers and attachment reuse on this same graphics queue.
+            SharedCommandPool pool = GetFreeCommandPool();
+            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+            VkMemoryBarrier barrier = VkMemoryBarrier.New();
+            barrier.srcAccessMask = VkAccessFlags.MemoryWrite;
+            barrier.dstAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            vkCmdPipelineBarrier(cb, VkPipelineStageFlags.AllCommands,
+                VkPipelineStageFlags.AllCommands, VkDependencyFlags.None,
+                1, ref barrier, 0, null, 0, null);
+            pool.EndAndSubmit(cb);
+        }
+
+        private class SharedCommandPool''')
     path.write_text(text)
 
     path = OUTPUT / 'src/Veldrid/BackendInfoVulkan.cs'
@@ -107,6 +184,155 @@ namespace Veldrid
         public uint InstanceApiVersion => _gd.InstanceApiVersion;
         public uint PhysicalDeviceApiVersion => _gd.PhysicalDeviceApiVersion;
         public bool ShaderStorageImageExtendedFormatsEnabled => _gd.ShaderStorageImageExtendedFormatsEnabled;''')
+    text = replace_once(text, '        public IntPtr Device => _gd.Device.Handle;', '''        public IntPtr Device => _gd.Device.Handle;
+
+        // Submit this image's final draw, signal its render-finished semaphore,
+        // queue present with that wait, and acquire the next image by host fence.
+        public VulkanPresentationResult SubmitCommandsAndPresent(CommandList commands, Swapchain swapchain)
+            => _gd.SubmitCommandsAndPresent(commands, swapchain);
+
+        public void ConfigureFrameGenerationPresentation(Swapchain swapchain, bool enabled)
+            => Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain).ConfigureFrameGenerationPresentation(enabled);
+
+        public uint GetSwapchainPresentMode(Swapchain swapchain)
+            => Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain).PresentMode;
+
+        public bool CanReadSwapchainImages(Swapchain swapchain)
+            => Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain).CanReadImages;
+
+        public void SynchronizeNativeDispatch() => _gd.SynchronizeNativeDispatch();''')
+    text = replace_once(text, '    public class BackendInfoVulkan', '''    public readonly struct VulkanPresentationResult
+    {
+        public readonly bool Presented;
+        public readonly uint ImageIndex;
+        public readonly ulong Generation;
+        public readonly uint PresentMode;
+        public readonly long Timestamp;
+        internal VulkanPresentationResult(bool presented, uint imageIndex, ulong generation, uint mode, long timestamp)
+        { Presented = presented; ImageIndex = imageIndex; Generation = generation; PresentMode = mode; Timestamp = timestamp; }
+    }
+
+    public class BackendInfoVulkan''')
+    path.write_text(text)
+    prepare_swapchain()
+
+    path = OUTPUT / 'src/Veldrid/Vk/VkCommandList.cs'
+    text = path.read_text(encoding='utf-8-sig')
+    text = replace_once(text, '''            if (_activeRenderPass != VkRenderPass.Null)
+            {
+                EndCurrentRenderPass();
+                _currentFramebuffer.TransitionToFinalLayout(_cb);
+            }
+
+            vkEndCommandBuffer(_cb);''', '''            if (_activeRenderPass != VkRenderPass.Null)
+            {
+                EndCurrentRenderPass();
+            }
+            // CopyTexture may have ended the render pass and transitioned
+            // its image to TRANSFER_SRC. End still owes the framebuffer's
+            // final layout, especially PRESENT_SRC before queue presentation.
+            _currentFramebuffer?.TransitionToFinalLayout(_cb);
+
+            VkResult endResult = vkEndCommandBuffer(_cb);
+            if (endResult != VkResult.Success)
+                throw new VeldridException("Vulkan command buffer end failed: " + endResult);''')
+    text = replace_once(text, '''            vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
+
+            VkMemoryBarrier barrier;
+            barrier.sType = VkStructureType.MemoryBarrier;
+            barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+            barrier.dstAccessMask = VkAccessFlags.VertexAttributeRead;
+            barrier.pNext = null;
+            vkCmdPipelineBarrier(
+                _cb,
+                VkPipelineStageFlags.Transfer, VkPipelineStageFlags.VertexInput,
+                VkDependencyFlags.None,
+                1, ref barrier,
+                0, null,
+                0, null);''', '''            // Updates reuse uniform/index/storage buffers as well as vertex
+            // buffers. Order earlier GPU accesses before overwriting this
+            // range, then expose the copy to every subsequent consumer.
+            VkBufferMemoryBarrier barrier = VkBufferMemoryBarrier.New();
+            barrier.srcQueueFamilyIndex = QueueFamilyIgnored;
+            barrier.dstQueueFamilyIndex = QueueFamilyIgnored;
+            barrier.buffer = dstVkBuffer.DeviceBuffer;
+            barrier.offset = destinationOffset;
+            barrier.size = sizeInBytes;
+            barrier.srcAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            barrier.dstAccessMask = VkAccessFlags.TransferWrite;
+            vkCmdPipelineBarrier(_cb, VkPipelineStageFlags.AllCommands,
+                VkPipelineStageFlags.Transfer, VkDependencyFlags.None,
+                0, null, 1, &barrier, 0, null);
+
+            vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
+
+            barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+            barrier.dstAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            vkCmdPipelineBarrier(_cb, VkPipelineStageFlags.Transfer,
+                VkPipelineStageFlags.AllCommands, VkDependencyFlags.None,
+                0, null, 1, &barrier, 0, null);''')
+    path.write_text(text)
+
+    # Pipeline compatibility requires identical dependency descriptions in
+    # the pipeline's render pass and all framebuffer load/clear variants.
+    for filename in ('VkFramebuffer.cs', 'VkPipeline.cs'):
+        path = OUTPUT / 'src/Veldrid/Vk' / filename
+        text = path.read_text(encoding='utf-8-sig')
+        text = replace_once(text, '''            subpassDependency.srcStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+            subpassDependency.dstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+            subpassDependency.dstAccessMask = VkAccessFlags.ColorAttachmentRead | VkAccessFlags.ColorAttachmentWrite;''', '''            subpassDependency.srcStageMask = VkPipelineStageFlags.AllCommands;
+            subpassDependency.srcAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            subpassDependency.dstStageMask = VkPipelineStageFlags.ColorAttachmentOutput
+                | VkPipelineStageFlags.EarlyFragmentTests | VkPipelineStageFlags.LateFragmentTests;
+            subpassDependency.dstAccessMask = VkAccessFlags.ColorAttachmentRead | VkAccessFlags.ColorAttachmentWrite
+                | VkAccessFlags.DepthStencilAttachmentRead | VkAccessFlags.DepthStencilAttachmentWrite;''')
+        path.write_text(text)
+
+    path = OUTPUT / 'src/Veldrid/Vk/VulkanUtil.cs'
+    text = path.read_text(encoding='utf-8-sig')
+    text = replace_once(text, '''            else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferRead;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.Transfer;
+                dstStageFlags = VkPipelineStageFlags.FragmentShader;
+            }''', '''            else if (oldLayout == VkImageLayout.General && newLayout == VkImageLayout.ShaderReadOnlyOptimal)
+            {
+                // GENERAL may contain native AMD compute writes as well as
+                // transfers. Make those writes visible to the actual sampler.
+                barrier.srcAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.AllCommands;
+                dstStageFlags = VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.ComputeShader;
+            }''')
+    text = replace_once(text, '''            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.General)
+            {
+                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead;
+                srcStageFlags = VkPipelineStageFlags.FragmentShader;
+                dstStageFlags = VkPipelineStageFlags.ComputeShader;
+            }''', '''            else if (oldLayout == VkImageLayout.ShaderReadOnlyOptimal && newLayout == VkImageLayout.General)
+            {
+                barrier.srcAccessMask = VkAccessFlags.ShaderRead;
+                barrier.dstAccessMask = VkAccessFlags.ShaderRead | VkAccessFlags.ShaderWrite;
+                srcStageFlags = VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.ComputeShader;
+                dstStageFlags = VkPipelineStageFlags.ComputeShader;
+            }''')
+    text = replace_once(text, '''            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.PresentSrcKHR)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferWrite;''', '''            else if ((oldLayout == VkImageLayout.TransferDstOptimal || oldLayout == VkImageLayout.TransferSrcOptimal)
+                && newLayout == VkImageLayout.PresentSrcKHR)
+            {
+                barrier.srcAccessMask = oldLayout == VkImageLayout.TransferDstOptimal
+                    ? VkAccessFlags.TransferWrite : VkAccessFlags.TransferRead;''')
+    text = replace_once(text, '                Debug.Fail("Invalid image layout transition.");',
+                        '                throw new VeldridException("Unsupported Vulkan image layout transition: " + oldLayout + " -> " + newLayout);')
+    # Depth/color/transfer outputs are consumed by both the scene fragment
+    # shaders and AMD compute. A fragment-only destination is insufficient.
+    text = text.replace('srcStageFlags = VkPipelineStageFlags.FragmentShader;',
+                        'srcStageFlags = VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.ComputeShader;')
+    text = text.replace('dstStageFlags = VkPipelineStageFlags.FragmentShader;',
+                        'dstStageFlags = VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.ComputeShader;')
     path.write_text(text)
     shutil.copyfile(SOURCE / 'LICENSE', OUTPUT / 'LICENSE')
 
@@ -119,6 +345,161 @@ namespace Veldrid
                     return VkFormat.R16g16Sfloat;''')
     path.write_text(text)
     (OUTPUT / 'stamp').write_text(FINGERPRINT)
+
+
+def prepare_swapchain():
+    path = OUTPUT / 'src/Veldrid/Vk/VkSwapchain.cs'
+    text = path.read_text(encoding='utf-8-sig')
+    text = replace_once(text, '        private bool _disposed;', '''        private bool _disposed;
+        private bool _frameGenerationPresentation;
+        private VkSemaphore[] _renderFinished;
+        private readonly System.Collections.Generic.List<Tuple<VkSwapchainKHR, VkSemaphore[]>> _retired
+            = new System.Collections.Generic.List<Tuple<VkSwapchainKHR, VkSemaphore[]>>();
+        private uint _firstPresentedImage = uint.MaxValue;
+        public ulong Generation { get; private set; }
+        public uint PresentMode { get; private set; }
+        public bool CanReadImages { get; private set; }
+
+        public void ConfigureFrameGenerationPresentation(bool enabled)
+        {
+            if (_frameGenerationPresentation == enabled) return;
+            _frameGenerationPresentation = enabled;
+            RecreateAndReacquire(_framebuffer.Width, _framebuffer.Height);
+        }
+
+        public VkSemaphore GetRenderFinishedSemaphore()
+        {
+            if (_renderFinished == null)
+            {
+                uint count = 0;
+                VkResult result = vkGetSwapchainImagesKHR(_gd.Device, _deviceSwapchain, ref count, null);
+                if (result != VkResult.Success) throw new VeldridException("Cannot enumerate presentation images: " + result);
+                _renderFinished = new VkSemaphore[count];
+                VkSemaphoreCreateInfo ci = VkSemaphoreCreateInfo.New();
+                for (int i = 0; i < _renderFinished.Length; i++)
+                {
+                    result = vkCreateSemaphore(_gd.Device, ref ci, null, out _renderFinished[i]);
+                    if (result != VkResult.Success) throw new VeldridException("Cannot create presentation semaphore: " + result);
+                }
+            }
+            // Only an acquisition fence for this very image proves that its
+            // previous present wait has completed. A command-ring fence does
+            // not prove that, and must not select the presentation semaphore.
+            return _renderFinished[_currentImageIndex];
+        }
+
+        public void NotifyPresented(uint imageIndex)
+        {
+            if (_firstPresentedImage == uint.MaxValue) _firstPresentedImage = imageIndex;
+        }
+
+        public void WaitForImageAvailable()
+        {
+            VkResult result = vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
+            if (result != VkResult.Success) throw new VeldridException("Vulkan acquire fence failed: " + result);
+            result = vkResetFences(_gd.Device, 1, ref _imageAvailableFence);
+            if (result != VkResult.Success) throw new VeldridException("Vulkan acquire fence reset failed: " + result);
+            if (_currentImageIndex == _firstPresentedImage)
+            {
+                // The first present on the new swapchain has completed. WSI
+                // has also finished presenting the retired swapchains. This
+                // follows the Khronos swapchain-recreation sample; WaitIdle
+                // by itself would not establish present-wait retirement.
+                foreach (var retired in _retired)
+                {
+                    DestroySemaphores(retired.Item2);
+                    vkDestroySwapchainKHR(_gd.Device, retired.Item1, null);
+                }
+                _retired.Clear();
+            }
+        }
+
+        private void DestroySemaphores(VkSemaphore[] semaphores)
+        {
+            if (semaphores == null) return;
+            foreach (var semaphore in semaphores)
+                if (semaphore != VkSemaphore.Null) vkDestroySemaphore(_gd.Device, semaphore, null);
+        }''')
+    text = replace_once(text, '''            vkCreateFence(_gd.Device, ref fenceCI, null, out _imageAvailableFence);
+
+            AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence);
+            vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
+            vkResetFences(_gd.Device, 1, ref _imageAvailableFence);''', '''            VkResult fenceResult = vkCreateFence(_gd.Device, ref fenceCI, null, out _imageAvailableFence);
+            if (fenceResult != VkResult.Success) throw new VeldridException("Vulkan acquire fence creation failed: " + fenceResult);
+
+            if (AcquireNextImage(_gd.Device, VkSemaphore.Null, _imageAvailableFence))
+                WaitForImageAvailable();''')
+    text = replace_once(text, '''            _framebuffer.SetImageIndex(_currentImageIndex);
+            if (result == VkResult.ErrorOutOfDateKHR || result == VkResult.SuboptimalKHR)
+            {
+                CreateSwapchain(_framebuffer.Width, _framebuffer.Height);
+                return false;
+            }
+            else if (result != VkResult.Success)''', '''            if (result == VkResult.ErrorOutOfDateKHR)
+            {
+                RecreateAndReacquire(_framebuffer.Width, _framebuffer.Height);
+                return false;
+            }
+            else if (result != VkResult.Success && result != VkResult.SuboptimalKHR)''')
+    text = replace_once(text, '''            return true;
+        }
+
+        private void RecreateAndReacquire''', '''            // SUBOPTIMAL is a successful acquisition and signals the fence.
+            // Consume that signal before any possible recreation/reset.
+            _framebuffer.SetImageIndex(_currentImageIndex);
+            return true;
+        }
+
+        private void RecreateAndReacquire''')
+    text = replace_once(text, '''                    vkWaitForFences(_gd.Device, 1, ref _imageAvailableFence, true, ulong.MaxValue);
+                    vkResetFences(_gd.Device, 1, ref _imageAvailableFence);''', '''                    WaitForImageAvailable();''')
+    text = replace_once(text, '''            if (_syncToVBlank)
+            {''', '''            if (_frameGenerationPresentation)
+            {
+                // MAILBOX may drop the intermediate image. FIFO preserves
+                // output order; IMMEDIATE requires the application's pacer.
+                presentMode = !_syncToVBlank && presentModes.Contains(VkPresentModeKHR.ImmediateKHR)
+                    ? VkPresentModeKHR.ImmediateKHR : VkPresentModeKHR.FifoKHR;
+            }
+            else if (_syncToVBlank)
+            {''')
+    text = replace_once(text, '''            swapchainCI.imageUsage = VkImageUsageFlags.ColorAttachment | VkImageUsageFlags.TransferDst;''', '''            swapchainCI.imageUsage = VkImageUsageFlags.ColorAttachment | VkImageUsageFlags.TransferDst;
+            CanReadImages = (surfaceCapabilities.supportedUsageFlags & VkImageUsageFlags.TransferSrc) != 0;
+            if (CanReadImages) swapchainCI.imageUsage |= VkImageUsageFlags.TransferSrc;''')
+    text = replace_once(text, '''            CheckResult(result);
+            if (oldSwapchain != VkSwapchainKHR.Null)
+            {
+                vkDestroySwapchainKHR(_gd.Device, oldSwapchain, null);
+            }
+
+            _framebuffer.SetNewSwapchain''', '''            if (result != VkResult.Success) throw new VeldridException("Vulkan swapchain creation failed: " + result);
+            if (oldSwapchain != VkSwapchainKHR.Null)
+                _retired.Add(Tuple.Create(oldSwapchain, _renderFinished));
+            _renderFinished = null;
+            _firstPresentedImage = uint.MaxValue;
+            Generation++;
+            PresentMode = (uint)presentMode;
+
+            _framebuffer.SetNewSwapchain''')
+    text = replace_once(text, '''            vkDestroyFence(_gd.Device, _imageAvailableFence, null);''', '''            // Terminal shutdown follows the unextended Vulkan convention;
+            // ordinary resize retires through an actual reacquisition above.
+            _gd.WaitForIdle();
+            DestroySemaphores(_renderFinished);
+            foreach (var retired in _retired)
+            {
+                DestroySemaphores(retired.Item2);
+                vkDestroySwapchainKHR(_gd.Device, retired.Item1, null);
+            }
+            _retired.Clear();
+            vkDestroyFence(_gd.Device, _imageAvailableFence, null);''')
+    path.write_text(text)
+
+    # Re-query image count after every recreation: surfaces may change it.
+    path = OUTPUT / 'src/Veldrid/Vk/VkSwapchainFramebuffer.cs'
+    text = path.read_text(encoding='utf-8-sig')
+    text = replace_once(text, '            if (_scImages == null)',
+                        '            if (_scImages == null || _scImages.Length != scImageCount)')
+    path.write_text(text)
 
 
 if __name__ == '__main__':

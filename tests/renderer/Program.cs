@@ -21,6 +21,11 @@ if (Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
 Environment.SetEnvironmentVariable(FidelityFxSceneFrameGeneration.SceneValidationVariable, "1");
 Environment.SetEnvironmentVariable(FidelityFxUpscalerPolicy.EnvironmentVariable, null);
 VulkanRuntimeCompatibility.EnsureInitialized();
+if (args.Contains("--presentation"))
+{
+    PresentationProof.Run();
+    return;
+}
 using var device = VulkanDeviceFactory.Create(new GraphicsDeviceOptions {
     PreferStandardClipSpaceYDirection = true, PreferDepthRangeZeroToOne = true });
 var checks = 0;

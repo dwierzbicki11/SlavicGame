@@ -30,6 +30,7 @@ public sealed class VeldridRenderer : IDisposable
 
     private FidelityFxUpscaler? _fsr3Upscaler;
     private FidelityFxSceneFrameGeneration? _frameGeneration;
+    private FrameGenerationPresenter? _framePresenter;
     private Framebuffer? _offscreenTarget;
     private bool _ownsDevice = true;
     private ulong _sceneFrameId;
@@ -82,6 +83,10 @@ public sealed class VeldridRenderer : IDisposable
 
     private Framebuffer OutputFramebuffer => _offscreenTarget ?? GraphicsDevice.SwapchainFramebuffer;
     internal FidelityFxSceneFrameGeneration? FrameGenerationScene => _frameGeneration;
+    internal FrameGenerationPresenter? FramePresenter => _framePresenter;
+    // Runtime proof copies the very swapchain image submitted to WSI. Ordinary
+    // gameplay leaves this hook null and performs no staging copy/readback.
+    internal Action<CommandList, Framebuffer, PresentedFrameKind, ulong>? BeforeFramePresentation { get; set; }
     internal Texture? SceneDepth => _resolutionScaler.SampleableDepthTexture;
     internal Texture? SceneMotion => _motionVectors.IsInitialized ? _motionVectors.MotionVectorTexture : null;
     internal bool NativeUpscalerReady => _fsr3Upscaler is { IsReady: true } && !_fsr3DisabledAfterError;
@@ -199,6 +204,8 @@ public sealed class VeldridRenderer : IDisposable
             FidelityFxSceneFrameGeneration.TryCreate(device, out _frameGeneration, out var fgDiagnostic);
             FrameGenerationDiagnostic = fgDiagnostic;
             EngineLog.Info("FG scene validation: " + fgDiagnostic);
+            if (_frameGeneration is not null && _offscreenTarget is null)
+                _framePresenter = new FrameGenerationPresenter(device);
         }
         var effectiveMsaa = FidelityFxStartupPolicy.EffectiveMsaa(
             msaaQuality,
@@ -586,6 +593,7 @@ public sealed class VeldridRenderer : IDisposable
         }
 
         var sceneFrameId = _sceneFrameId++;
+        _framePresenter?.BeginFrame(frameDeltaSeconds, GraphicsQualityCatalog.FrameRate(settings.FpsLimit));
         if (_previousUpscaler is { } previous && previous != settings.Upscaler)
             ResetTemporalHistory();
         _previousUpscaler = settings.Upscaler;
@@ -1411,27 +1419,47 @@ public sealed class VeldridRenderer : IDisposable
             }
         }
 
-        _resolutionScaler.Present(_commandList, swapchainFramebuffer,
-            displayUpscaler, displaySharpness, displaySource);
-
-        if (_hudVertices.Count > 0)
+        var paired = _offscreenTarget is null && _framePresenter is not null &&
+            _frameGeneration is { HasGeneratedFrame: true };
+        if (paired)
         {
-            _commandList.SetPipeline(_hudPipeline);
-            _commandList.SetGraphicsResourceSet(0, _hudSet);
-            _commandList.SetVertexBuffer(0, _hudVertexBuffer);
-            _commandList.Draw((uint)_hudVertices.Count);
+            // AMD has consumed the actual current scene and submitted the
+            // interpolated image. Present it first, then use the freshly
+            // acquired swapchain image for the real scene. World/input and UI
+            // state are built once above; neither is advanced a second time.
+            ComposeDisplay(_frameGeneration!.GeneratedView, UpscalerMode.Bilinear, 0f);
+            BeforeFramePresentation?.Invoke(_commandList, swapchainFramebuffer,
+                PresentedFrameKind.Generated, sceneFrameId);
+            _commandList.End();
+            _framePresenter!.Submit(_commandList, PresentedFrameKind.Generated, sceneFrameId, paired: true);
+            _commandList.Begin();
+            swapchainFramebuffer = OutputFramebuffer;
+        }
+        ComposeDisplay(displaySource, displayUpscaler, displaySharpness);
+        if (_framePresenter is not null)
+            BeforeFramePresentation?.Invoke(_commandList, swapchainFramebuffer,
+                PresentedFrameKind.Rendered, sceneFrameId);
+        _commandList.End();
+        if (_framePresenter is not null)
+            _framePresenter.Submit(_commandList, PresentedFrameKind.Rendered, sceneFrameId, paired);
+        else
+        {
+            _graphicsDevice.SubmitCommands(_commandList);
+            if (_offscreenTarget is null) _graphicsDevice.SwapBuffers();
         }
 
-        _menu.Render(
-            _commandList,
-            displayWidth,
-            displayHeight,
-            menuView);
-
-        _commandList.End();
-
-        _graphicsDevice.SubmitCommands(_commandList);
-        if (_offscreenTarget is null) _graphicsDevice.SwapBuffers();
+        void ComposeDisplay(TextureView source, UpscalerMode upscaler, float sharpness)
+        {
+            _resolutionScaler.Present(_commandList, swapchainFramebuffer, upscaler, sharpness, source);
+            if (_hudVertices.Count > 0)
+            {
+                _commandList.SetPipeline(_hudPipeline);
+                _commandList.SetGraphicsResourceSet(0, _hudSet);
+                _commandList.SetVertexBuffer(0, _hudVertexBuffer);
+                _commandList.Draw((uint)_hudVertices.Count);
+            }
+            _menu.Render(_commandList, displayWidth, displayHeight, menuView);
+        }
     }
 
     internal void ResetTemporalHistory()
@@ -1439,6 +1467,7 @@ public sealed class VeldridRenderer : IDisposable
         _temporalFrame.Reset();
         _dynamicMotionHistory.Reset();
         _frameGeneration?.RequestReset();
+        _framePresenter?.ResetPacing();
     }
 
     private void DisableSceneFrameGeneration(Exception exception)

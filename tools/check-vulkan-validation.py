@@ -8,6 +8,7 @@ errors = [line for line in log.splitlines() if 'Validation Error:' in line]
 if errors:
     print('\n'.join(errors), file=sys.stderr)
     raise SystemExit(f'Vulkan validation reported {len(errors)} errors.')
-if 'Scene FG runtime proof:' not in log or 'checks passed;' not in log:
-    raise SystemExit('The renderer scene proof did not complete.')
-print('Vulkan validation: zero errors; renderer scene proof completed.')
+proof = 'Presentation FG runtime proof:' if '--presentation' in sys.argv[2:] else 'Scene FG runtime proof:'
+if proof not in log or 'checks passed;' not in log:
+    raise SystemExit('The required renderer proof did not complete: ' + proof)
+print('Vulkan validation: zero errors; renderer proof completed: ' + proof)
