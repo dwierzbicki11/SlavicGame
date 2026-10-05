@@ -176,7 +176,9 @@ public sealed class ResolutionScalerRenderer : IDisposable
             factory,
             _easuShaders,
             _easuLayout,
-            _fsrFramebuffer!.OutputDescription);
+            _fsrFramebuffer!.OutputDescription,
+            preserveTextureRows: graphicsDevice.BackendType == GraphicsBackend.Vulkan &&
+                                 !graphicsDevice.IsClipSpaceYInverted);
 
         _easuSwapchainPipeline = CreateFullscreenPipeline(
             factory,
@@ -368,6 +370,10 @@ public sealed class ResolutionScalerRenderer : IDisposable
         var rcas = BuildRcasConstants(sharpness);
         commandList.UpdateBuffer(_rcasConstants, 0, rcas);
 
+        // EASU adds a raster pass only when upscaling. Preserve source row
+        // order here: with Veldrid's standard Vulkan clip direction the
+        // negative viewport would otherwise invert this intermediate image.
+        // RCAS then has the same final orientation as direct BILINEAR.
         commandList.SetFramebuffer(_fsrFramebuffer);
         commandList.SetFullViewports();
         commandList.SetFullScissorRects();
@@ -630,7 +636,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
         ResourceFactory factory,
         Shader[] shaders,
         ResourceLayout layout,
-        OutputDescription output)
+        OutputDescription output,
+        bool preserveTextureRows = false)
     {
         return factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
@@ -644,7 +651,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
             PrimitiveTopology.TriangleList,
             new ShaderSetDescription(
                 Array.Empty<VertexLayoutDescription>(),
-                shaders),
+                shaders,
+                [new SpecializationConstant(0, preserveTextureRows ? 1u : 0u)]),
             [layout],
             output));
     }
