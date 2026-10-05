@@ -652,7 +652,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
             new ShaderSetDescription(
                 Array.Empty<VertexLayoutDescription>(),
                 shaders,
-                [new SpecializationConstant(0, preserveTextureRows)]),
+                [new SpecializationConstant(0, preserveTextureRows ? 1u : 0u)]),
             [layout],
             output));
     }
