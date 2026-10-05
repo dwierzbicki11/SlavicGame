@@ -34,6 +34,15 @@ internal static class EnemyAttackTelegraphRegression
         check(world.Player.Health == before && enemy.FacingDirection.X > 0.99f,
             "Moving behind the locked strike direction avoids a swing without reducing target distance");
 
+        var entryWorld = new WorldState(); entryWorld.Initialize();
+        var entryPosition = new Vector3(0f, entryWorld.Terrain.SampleHeight(Vector3.Zero), 0f);
+        var entryEnemy = new EnemyAgent("entry-facing-target", entryPosition);
+        entryWorld.SetPlayerPosition(entryPosition + Vector3.UnitZ * 1.2f);
+        entryEnemy.Restore(new EnemySnapshot(entryEnemy.Id, entryPosition, entryEnemy.MaxHealth, EnemyState.Chase));
+        entryEnemy.Update(entryWorld, 0d);
+        check(entryEnemy.State == EnemyState.Attack && entryEnemy.FacingDirection.Z > 0.99f,
+            "Entering melee range locks facing immediately for a readable committed strike");
+
         (world, enemy) = Fight(); before = world.Player.Health;
         enemy.Update(world, 0.2);
         enemy.TakeDamage(1f);
