@@ -25,6 +25,9 @@ public static class SettingsPersistenceRegression
                 Resolution = RenderResolution.Hd720,
                 WindowResolution = RenderResolution.FullHd1080,
                 Upscaler = UpscalerMode.Fsr3,
+                FrameGeneration = true,
+                FrameGenerationRuntime = FrameGenerationRuntimeState.Failed,
+                FrameGenerationRuntimeReason = "transient test reason",
                 FsrQuality = FsrQualityMode.Quality,
                 Bloom = BloomQuality.Medium,
                 TextureQuality = TextureQuality.Low
@@ -45,11 +48,23 @@ public static class SettingsPersistenceRegression
                     "\"Bloom\": \"Medium\"",
                     StringComparison.Ordinal),
                 "Settings persist post-processing enums by stable names");
+            check(savedJson.Contains(
+                    "\"FrameGeneration\": true",
+                    StringComparison.Ordinal),
+                "Settings persist Frame Generation by stable boolean property");
+            check(!savedJson.Contains(
+                    "FrameGenerationRuntime",
+                    StringComparison.Ordinal) &&
+                  !savedJson.Contains(
+                    "transient test reason",
+                    StringComparison.Ordinal),
+                "Settings never persist transient Frame Generation runtime status");
 
             var roundTrip = store.Load();
             check(roundTrip.Resolution == RenderResolution.Hd720 &&
                   roundTrip.WindowResolution == RenderResolution.FullHd1080 &&
                   roundTrip.Upscaler == UpscalerMode.Fsr3 &&
+                  roundTrip.FrameGeneration &&
                   roundTrip.FsrQuality == FsrQualityMode.Quality &&
                   roundTrip.Bloom == BloomQuality.Medium,
                 "Named settings survive save/load round trip");
@@ -67,8 +82,9 @@ public static class SettingsPersistenceRegression
 
             var migrated = store.Load();
             check(migrated.Resolution == RenderResolution.Hd720 &&
-                  migrated.WindowResolution == RenderResolution.Hd720,
-                "Legacy resolution index 0 migrates to historical 1280x720");
+                  migrated.WindowResolution == RenderResolution.Hd720 &&
+                  !migrated.FrameGeneration,
+                "Legacy settings migrate with Frame Generation safely defaulted OFF");
 
             var migratedJson = File.ReadAllText(path);
             check(migratedJson.Contains(

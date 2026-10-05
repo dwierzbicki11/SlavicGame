@@ -13,6 +13,11 @@ internal static class PresentationProof
 {
     internal static void Run()
     {
+        // This stage proves the production saved-option path rather than the
+        // earlier developer-only environment switch.
+        Environment.SetEnvironmentVariable(
+            FidelityFxSceneFrameGeneration.SceneValidationVariable,
+            null);
         var checks = 0;
         void Check(bool condition, string message)
         {
@@ -34,8 +39,16 @@ internal static class PresentationProof
             settings.AntiAliasing = AntiAliasingMode.Off;
             settings.FpsLimit = FrameRateLimit.Fps60;
             settings.VSync = vsync;
+            settings.FrameGeneration = true;
             using var renderer = new VeldridRenderer();
-            renderer.Initialize(window, world, vsync, TextureQuality.Low, MsaaQuality.Off, settings.Upscaler);
+            renderer.Initialize(
+                window,
+                world,
+                vsync,
+                TextureQuality.Low,
+                MsaaQuality.Off,
+                settings.Upscaler,
+                settings.FrameGeneration);
             var device = renderer.GraphicsDevice;
             var vk = device.GetVulkanInfo();
             var presenter = renderer.FramePresenter ?? throw new Exception(renderer.FrameGenerationDiagnostic);

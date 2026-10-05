@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SlavicGame.Engine.Settings;
 
 public enum CameraPreference
@@ -105,6 +107,15 @@ public enum UpscalerMode
     Bilinear,
     Fsr1,
     Fsr3
+}
+
+public enum FrameGenerationRuntimeState
+{
+    Off,
+    RestartRequired,
+    Active,
+    Unavailable,
+    Failed
 }
 
 public enum FsrQualityMode
@@ -639,6 +650,16 @@ public sealed class GameSettings
     public ModelLodQuality ModelLod { get; set; } = ModelLodQuality.Quality;
     public FarVegetationMode FarVegetation { get; set; } = FarVegetationMode.Impostors;
     public UpscalerMode Upscaler { get; set; } = UpscalerMode.Fsr1;
+    public bool FrameGeneration { get; set; }
+
+    [JsonIgnore]
+    public FrameGenerationRuntimeState FrameGenerationRuntime { get; set; } =
+        FrameGenerationRuntimeState.Off;
+
+    [JsonIgnore]
+    public string FrameGenerationRuntimeReason { get; set; } =
+        "Frame Generation is disabled.";
+
     public FsrQualityMode FsrQuality { get; set; } = FsrQualityMode.Quality;
     public float FsrSharpness { get; set; } = 0.35f;
     public AntiAliasingMode AntiAliasing { get; set; } = AntiAliasingMode.Fxaa;

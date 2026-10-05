@@ -11,21 +11,18 @@ Start from current `main`, inspect open renderer/FG PRs and their exact heads,
 Actions, and this file on the active branch. Continue the active PR before
 opening another. Do not depend on retained local files.
 
-Active stage: **3 — presentation and spacing**, branch
-`fsr3/fg-presentation`, based on current main
-`91172e7dc1e4a8ac008b4998acaf58facecffd7f` (stage 2 merged).
-Continue [PR #331](https://github.com/dwierzbicki11/SlavicGame/pull/331), initial
-head `fd8128409ca92bf880d0f2c7e734530b4632707f`. Current main
-`1cf73b03b1c510428ba60e7db504c0e4b55577a8` adds independent loot input routing;
-it is incorporated without renderer conflicts.
-Stages 0–2 are complete; continue this presentation branch before opening
-another FG PR. The adapter uses #319's validated managed runtime; do not
-restore the superseded duplicate #306 ABI.
+Active stage: **5 — saved production setting**, branch `fsr3/fg-setting`,
+[PR #336](https://github.com/dwierzbicki11/SlavicGame/pull/336), based on
+current main after stage 4 merge. Stages 0–4 are complete. The shipping setting
+remains default OFF and must distinguish a saved request from actual runtime
+state (active, restart required, unavailable, failed). Continue #336 before
+opening another FG PR.
 
-Graphics Loop's `perf/menu-retired-buffer` was at
-`8e467a13b7fb23c2b1acabb59bd9548bc566adbd` when checked on 2026-10-05.
-Its MenuRenderer work is not edited by this stage. Recheck the branch/open PRs
-before later UI/presentation changes. No other automation is modified.
+Stage 4 merged through [PR #335](https://github.com/dwierzbicki11/SlavicGame/pull/335)
+as `a34573c23f307bd8947d2ee8a9c99abf67beaa71`. Its exact-head
+Linux/Windows CI is green and includes zero-error Vulkan synchronization
+validation. The adapter uses #319's validated managed runtime; do not restore
+the superseded duplicate #306 ABI. No other automation is modified.
 
 ## 0. Existing generator and managed command ring — complete
 
@@ -172,101 +169,74 @@ before later UI/presentation changes. No other automation is modified.
   performance/quality evidence is claimed by this stage.
 - Next: stage 3 actual window presentation.
 
-## 3. Presentation and spacing — active, runtime/CI gate
+## 3. Presentation and spacing — complete
 
 - Dependencies: stage 2 merged.
-- Exit criterion: real swapchain acquire/submit/present shows interpolated then
-  rendered frames with useful spacing, correct fences/semaphores and VSync.
-  Simulation/input advance once per rendered frame. No per-frame device idle.
-- Evidence required: count/order of actual presented frames, moving image,
-  reset suppression and pacing timestamps, runtime SHA/PR and Linux/Windows CI.
-- Implementation checkpoint: the Veldrid source patch adds a checked combined
-  submit/present endpoint. The final draw signals a per-swapchain-image binary
-  semaphore; present waits on it, including when graphics/present queues differ.
-  Acquisition completes through the existing host fence. Resize retains old
-  swapchains/semaphores until the first new present is proven complete by
-  reacquiring that image, following the Khronos recreation sample. FG uses
-  FIFO for VSync and IMMEDIATE where supported without VSync, avoiding MAILBOX
-  replacement of intermediate frames. There is no ordinary-frame device idle.
-  Renderer composes AMD's generated image then the real image into two actual
-  acquired images, drawing the same current HUD/menu separately. The pacer
-  enforces half-frame deadlines with monotonic timestamps; its preceding wait
-  is excluded from the cadence estimate. Simulation/input run once per scene.
-  This conservative CPU pacing adds latency; no performance gain is claimed.
-- Runtime executable: `tests/renderer` with `--presentation` creates real SDL
-  windows and Vulkan swapchains, moves the production scene, records accepted
-  vkQueuePresentKHR outputs, copies those very images before presentation,
-  and checks order/count, distinct interpolation, spacing, reset and resize
-  with VSync off/on. Xvfb/lavapipe validates WSI execution, not physical scanout
-  or Vega 7 FPS. Existing offscreen proofs and Windows CI remain required.
-- Local checkpoint (2026-10-05): Release game and renderer-proof compilation
-  pass. Local WSI execution is blocked before Vulkan surface creation because
-  the sandbox prohibits X11 listening sockets: Xvfb reports "Cannot establish
-  any listening sockets" and SDL falls back to its offscreen video driver.
-  This is not a passing window proof. The Linux Actions job installs Xvfb/SDL,
-  requires the X11 driver and runs the same production-window executable under
-  Khronos validation. No tests are skipped or weakened to bypass this limit.
-- First window CI: [run 37285910143](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37285910143)
-  at initial head completes all 244 window assertions, with 17 real + 14
-  generated = 31 accepted presentations for each VSync mode. Its validation
-  gate correctly fails on 138 layout errors, so it is not completion evidence.
-  The generated image needs an explicit GENERAL-to-SHADER_READ barrier after
-  native AMD writes even when Veldrid's cached resource set expects sampling.
-  Also Veldrid End skipped the framebuffer's final layout after CopyTexture
-  closed the render pass. End now restores the final layout after such copies,
-  including PRESENT_SRC for the exact swapchain readback proof. Both actual
-  barriers are repaired; validation filtering remains unchanged.
-- Layout-fix head `cd5089b7b179362234549851e1ed0da2ee5ab4a8`,
-  [CI 37286517321](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37286517321):
-  Windows, both CTests, 1266 current-main regressions and both scene proofs
-  pass. Window assertions also pass; validation finds 124 errors from the
-  upstream barrier helper's missing TRANSFER_SRC-to-PRESENT branch (zero
-  stage masks in Release). The pinned patch adds that transfer-read barrier,
-  makes GENERAL-to-sample transitions include AMD compute writes, and rejects
-  unknown transitions in Release instead of emitting invalid zero masks.
-- Basic-validation head `853facdf65e17337b148f6e513a8e856d41eba18`,
-  [CI 37287127090](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37287127090):
-  Linux/Windows jobs are green. Before merge, expanded local synchronization
-  validation exposed 6097 errors despite the completed 47-check scene proof:
-  upstream buffer copies only exposed vertex reads, depth subpass dependencies
-  omitted depth accesses, and native final transitions were not visible to
-  subsequent fragment sampling. The pinned patch now orders buffer-range
-  reuse/copies, includes depth tests in attachment dependencies, exposes image
-  transitions to compute and fragment consumers, and queues an explicit native
-  memory boundary without an idle wait. CI enables synchronization validation
-  for both scene and actual-window proofs. All errors still fail the gate.
-- Local synchronization-fix evidence: Release compilation and the complete
-  47-check moving production-scene proof pass with **zero basic or
-  synchronization validation errors**, including FSR3 upscaling and pending
-  submissions. Pipeline and framebuffer render-pass dependencies are patched
-  together to retain Vulkan compatibility. Actual-window execution still
-  requires Actions/Xvfb because local X11 sockets are unavailable.
-- Blocker: verify the synchronization repairs locally and in exact-head
-  Linux/Windows CI before merge. The earlier green basic validation is not
-  sufficient evidence for the expanded gate.
-- Next: continue this branch; repair observed runtime/CI errors before merge.
+- Implementation: the production Linux/Vulkan renderer presents the
+  AMD-generated frame before its matching rendered frame through real
+  swapchain acquire/submit/present. Per-image render-finished semaphores,
+  FIFO/IMMEDIATE present modes and monotonic half-frame CPU deadlines preserve
+  ordering without a second simulation/input update or ordinary-frame
+  device-idle.
+- Runtime proof: the SDL/Xvfb/lavapipe window test captures the actual
+  swapchain images before presentation and validates frame order/count,
+  distinct moving interpolation, spacing, reset suppression, resize and VSync
+  off/on. Synchronization validation is mandatory.
+- Evidence: [PR #331](https://github.com/dwierzbicki11/SlavicGame/pull/331),
+  exact head `56f2e0c07cdb75b34f5abade50e0551f603c0558`,
+  [CI 37288592009](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37288592009)
+  Linux/Windows green. Linux proves 17 rendered + 14 generated = 31 accepted
+  presentations per VSync mode with zero basic/synchronization validation
+  errors. Merged as `9879b7062713c2accb3694c6b28cb9248be705c2`.
+- No physical scanout or Vega 7 performance result is claimed.
+- Blocker: none.
+- Next: stage 4.
 
-## 4. UI composition and resource/history lifecycle — pending
+## 4. UI composition and resource/history lifecycle — complete
 
-- Dependencies: stage 3 merged; coordinate MenuRenderer retirement work.
-- Exit criterion: compose HUD/menu separately on each displayed image. Handle
-  resize, resolution/quality changes, fullscreen, pause/resume, camera jumps,
-  gaps, reset/recovery and safe resource retirement while GPU work is pending.
-- Evidence required: UI excluded from interpolation; runtime transitions and
-  cleanup under pending GPU work; SHA/PR/CI.
-- Blocker: no split scene/generated/present UI path yet.
-- Next: reuse UI geometry/update once, compose into both displayed frames.
+- Dependencies: stage 3 merged.
+- Implementation: menu geometry is prepared/uploaded once per simulation frame
+  and drawn unchanged on generated and rendered presentations; hidden menu
+  frames perform no menu-buffer upload. HUD/menu remain outside AMD
+  interpolation.
+- Lifecycle: menu/pause transitions, large camera/FOV cuts, VSync changes,
+  resize and explicit resets suppress stale interpolation. Runtime FG failure
+  destroys only interpolation resources; the existing semaphore-correct WSI
+  presenter stays alive and presents rendered-only frames for the remainder of
+  that renderer session, avoiding an unsafe mid-session synchronization-model
+  switch. Shutdown/restart retires the presenter normally.
+- Runtime proof extends the actual SDL/Vulkan WSI test with prepare-once /
+  draw-twice UI assertions, pause/resume, camera cut and live generator failure
+  recovery. The proof also retires every staging capture and checks device
+  destruction under validation.
+- Evidence: [PR #335](https://github.com/dwierzbicki11/SlavicGame/pull/335),
+  exact head `f1c0cb457cf3072cd6cbe29ee74cf606b2574760`,
+  [CI 37308453018](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37308453018)
+  Linux/Windows green. Linux: **1267 regressions**, two **47-check** production
+  scene proofs, **334-check** real-window presentation proof and **zero Vulkan
+  validation errors**. Merged as
+  `a34573c23f307bd8947d2ee8a9c99abf67beaa71`.
+- Blocker: none.
+- Next: stage 5.
 
-## 5. Working saved FG option — pending
+## 5. Working saved FG option — active
 
-- Dependencies: stages 3 and 4 merged.
-- Exit criterion: saved menu option actually enables generation + presentation;
-  status/reason reflects enabled state. FG failure disables only FG, leaving
-  FSR3 upscaling or the ordinary presentation fallback functional.
-- Evidence required: off/on/reload/recovery, unavailable-device reasons,
-  presented-frame counts, SHA/PR/CI. A developer offscreen toggle is insufficient.
-- Blocker: presentation/UI path not yet implemented.
-- Next: add the option after its complete runtime behavior is available.
+- Dependencies: stage 4 merged.
+- Implementation on PR #336: persisted `GameSettings.FrameGeneration`,
+  default OFF; `FRAME GENERATION: OFF/ON` in Post Processing; restart-required
+  application; production renderer startup uses the saved setting rather than
+  the developer scene-validation environment variable.
+- Runtime truth is transient and not serialized. The frontend distinguishes
+  `OFF`, `ON (RESTART)`, `ON`, `NIEDOST.` and `BLAD`; the detailed
+  diagnostic reason remains available from the renderer/log. A rejected or
+  failed FG request does not disable native FSR3 upscaling or normal rendering.
+- The real-window proof clears the developer FG environment switch and enables
+  FG through the same saved-option startup path used by the game.
+- Exit criterion: frontend/persistence regressions, legacy-default OFF,
+  supported runtime ON, unavailable/failure status, actual presented frame
+  counts, fallback, Linux/Windows CI on the exact final head, then merge #336.
+- Blocker: exact-head CI after stage-4 merge.
+- Next: complete #336; then stage 6.
 
 ## 6. Final validation and user build instructions — pending
 

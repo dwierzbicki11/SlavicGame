@@ -46,6 +46,8 @@ public sealed class GameEngine : IDisposable
     private double _autosaveSeconds;
     private bool _settingsReapplyPending;
     private bool _applyingSettings;
+    private bool _frameGenerationStartupRequested;
+    private bool _frameGenerationEverActive;
     private string? _voicedCinematicId;
     private int _voicedCinematicShot = -1;
     private const double AutosaveIntervalSeconds = 120.0;
@@ -84,13 +86,16 @@ public sealed class GameEngine : IDisposable
         _voice ??= VoiceOverService.CreateFromEnvironment();
         _riverAmbience ??= RiverAmbienceService.TryCreate();
         _audio ??= AudioDirector.TryCreate();
+        _frameGenerationStartupRequested = _settings.FrameGeneration;
         _renderer.Initialize(
             _window,
             _world,
             _vsync,
             _settings.TextureQuality,
             _settings.Msaa,
-            _settings.Upscaler);
+            _settings.Upscaler,
+            _settings.FrameGeneration);
+        SyncFrameGenerationRuntimeStatus();
         ApplySettings();
         _camera.Follow(_world.PlayerPosition, 0f, _world.Terrain);
         _window.SetMouseCapture(false);
@@ -285,6 +290,7 @@ public sealed class GameEngine : IDisposable
                 _time.DeltaSeconds,
                 _settings,
                 menuView);
+            SyncFrameGenerationRuntimeStatus();
 
             ApplyFrameRateLimit(frameStartTimestamp);
         }
@@ -434,12 +440,53 @@ public sealed class GameEngine : IDisposable
                 $"Settings applied: output={outputWidth}x{outputHeight}, " +
                 $"internal={renderResolution.Width}x{renderResolution.Height}, " +
                 $"upscaler={_settings.Upscaler}/{_settings.FsrQuality}, " +
+                $"frameGeneration={_settings.FrameGeneration}, " +
                 $"preset={GraphicsPresetCatalog.DetectName(_settings)}.");
         }
         finally
         {
             _applyingSettings = false;
         }
+    }
+
+    private void SyncFrameGenerationRuntimeStatus()
+    {
+        // The saved bool is the next-start request. Runtime state is transient
+        // and must never be serialized as if a rejected/failed feature worked.
+        if (_settings.FrameGeneration != _frameGenerationStartupRequested)
+        {
+            _settings.FrameGenerationRuntime =
+                FrameGenerationRuntimeState.RestartRequired;
+            _settings.FrameGenerationRuntimeReason =
+                "Restart renderer to apply the Frame Generation change.";
+            return;
+        }
+
+        if (!_settings.FrameGeneration)
+        {
+            _settings.FrameGenerationRuntime =
+                FrameGenerationRuntimeState.Off;
+            _settings.FrameGenerationRuntimeReason =
+                "Frame Generation is disabled.";
+            return;
+        }
+
+        if (_renderer.FrameGenerationActive)
+        {
+            _frameGenerationEverActive = true;
+            _settings.FrameGenerationRuntime =
+                FrameGenerationRuntimeState.Active;
+            _settings.FrameGenerationRuntimeReason =
+                _renderer.FrameGenerationDiagnostic;
+            return;
+        }
+
+        _settings.FrameGenerationRuntime =
+            _frameGenerationEverActive
+                ? FrameGenerationRuntimeState.Failed
+                : FrameGenerationRuntimeState.Unavailable;
+        _settings.FrameGenerationRuntimeReason =
+            _renderer.FrameGenerationDiagnostic;
     }
 
     private void UpdateFps(double deltaSeconds)
