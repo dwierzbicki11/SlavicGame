@@ -102,7 +102,8 @@ public sealed class VeldridRenderer : IDisposable
     // An externally owned framebuffer drives the complete production renderer
     // without an OS window. Only the final SwapBuffers operation is omitted.
     internal void InitializeOffscreen(GraphicsDevice device, Framebuffer target, WorldState world,
-        TextureQuality textureQuality, MsaaQuality msaa, UpscalerMode upscaler)
+        TextureQuality textureQuality, MsaaQuality msaa, UpscalerMode upscaler,
+        bool frameGenerationEnabled = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_initialized) throw new InvalidOperationException("Renderer is already initialized.");
@@ -111,7 +112,12 @@ public sealed class VeldridRenderer : IDisposable
         _ownsDevice = false;
         try
         {
-            InitializeSceneResources(world, textureQuality, msaa, upscaler);
+            InitializeSceneResources(
+                world,
+                textureQuality,
+                msaa,
+                upscaler,
+                frameGenerationEnabled);
             _initialized = true;
         }
         catch { Dispose(); throw; }
@@ -132,7 +138,8 @@ public sealed class VeldridRenderer : IDisposable
         bool vsync,
         TextureQuality textureQuality,
         MsaaQuality msaaQuality,
-        UpscalerMode upscalerMode)
+        UpscalerMode upscalerMode,
+        bool frameGenerationEnabled = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_initialized) return;
@@ -146,7 +153,8 @@ public sealed class VeldridRenderer : IDisposable
                 vsync,
                 textureQuality,
                 msaaQuality,
-                upscalerMode);
+                upscalerMode,
+                frameGenerationEnabled);
             _initialized = true;
         }
         catch
@@ -162,7 +170,8 @@ public sealed class VeldridRenderer : IDisposable
         bool vsync,
         TextureQuality textureQuality,
         MsaaQuality msaaQuality,
-        UpscalerMode upscalerMode)
+        UpscalerMode upscalerMode,
+        bool frameGenerationEnabled)
     {
         PresentationPolicy.Apply(vsync);
         VulkanRuntimeCompatibility.EnsureInitialized();
@@ -181,11 +190,20 @@ public sealed class VeldridRenderer : IDisposable
             (uint)window.NativeWindow.Width, (uint)window.NativeWindow.Height,
             options.SwapchainDepthFormat, options.SyncToVerticalBlank, options.SwapchainSrgbFormat));
 
-        InitializeSceneResources(world, textureQuality, msaaQuality, upscalerMode);
+        InitializeSceneResources(
+            world,
+            textureQuality,
+            msaaQuality,
+            upscalerMode,
+            frameGenerationEnabled);
     }
 
-    private void InitializeSceneResources(WorldState world, TextureQuality textureQuality,
-        MsaaQuality msaaQuality, UpscalerMode upscalerMode)
+    private void InitializeSceneResources(
+        WorldState world,
+        TextureQuality textureQuality,
+        MsaaQuality msaaQuality,
+        UpscalerMode upscalerMode,
+        bool frameGenerationEnabled)
     {
         var device = GraphicsDevice;
         _graphicsDevice = device;
@@ -206,13 +224,28 @@ public sealed class VeldridRenderer : IDisposable
         _fsr3Requested =
             upscalerMode == UpscalerMode.Fsr3 ||
             _fsr3ForcedByEnvironment;
-        if (FidelityFxSceneFrameGeneration.IsSceneValidationRequested())
+        var frameGenerationRequested =
+            frameGenerationEnabled ||
+            FidelityFxSceneFrameGeneration.IsSceneValidationRequested();
+        if (frameGenerationRequested)
         {
-            FidelityFxSceneFrameGeneration.TryCreate(device, out _frameGeneration, out var fgDiagnostic);
+            FidelityFxSceneFrameGeneration.TryCreate(
+                device,
+                out _frameGeneration,
+                out var fgDiagnostic);
             FrameGenerationDiagnostic = fgDiagnostic;
-            EngineLog.Info("FG scene validation: " + fgDiagnostic);
+            EngineLog.Info(
+                (frameGenerationEnabled
+                    ? "Frame Generation setting: "
+                    : "FG scene validation: ") +
+                fgDiagnostic);
             if (_frameGeneration is not null && _offscreenTarget is null)
                 _framePresenter = new FrameGenerationPresenter(device);
+        }
+        else
+        {
+            FrameGenerationDiagnostic =
+                "Frame Generation is disabled in settings.";
         }
         var effectiveMsaa = FidelityFxStartupPolicy.EffectiveMsaa(
             msaaQuality,
