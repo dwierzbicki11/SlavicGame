@@ -2,6 +2,10 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-05
+
+- **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
+
 ## 2026-10-04
 
 - **Menu renderer per-frame vertex-array allocation — fixed on `perf/menu-span-upload-v3`.** `MenuRenderer.Render` still rebuilds its reusable `List<UiVertex>`, but uploads its active contents through `CollectionsMarshal.AsSpan(_vertices)` instead of `_vertices.ToArray()`. This removes the fresh managed array allocation and full vertex copy from every rendered menu frame without changing vertex count, draw calls, UI output or CPU->GPU upload size.
