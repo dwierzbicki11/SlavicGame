@@ -16,7 +16,12 @@ public sealed class MenuRenderer : IDisposable
     private Shader[]? _shaders;
     private GraphicsDevice? _graphicsDevice;
     private uint _vertexCapacity = 4096;
+    private uint _preparedVertexCount;
+    private bool _preparedForFrame;
     private bool _disposed;
+
+    internal ulong PrepareCount { get; private set; }
+    internal ulong DrawCount { get; private set; }
 
     public void Initialize(
         GraphicsDevice graphicsDevice,
@@ -78,9 +83,23 @@ public sealed class MenuRenderer : IDisposable
         uint height,
         MenuView? view)
     {
+        Prepare(commandList, width, height, view);
+        Draw(commandList);
+    }
+
+    /// <summary>
+    /// Builds and uploads menu geometry once for a simulation frame. Frame
+    /// Generation can then draw the exact same UI onto both the interpolated
+    /// and rendered swapchain images without rebuilding or uploading it twice.
+    /// </summary>
+    internal void Prepare(
+        CommandList commandList,
+        uint width,
+        uint height,
+        MenuView? view)
+    {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (view is null)
-            return;
+        ArgumentNullException.ThrowIfNull(commandList);
 
         if (_graphicsDevice is null ||
             _vertexBuffer is null ||
@@ -92,24 +111,47 @@ public sealed class MenuRenderer : IDisposable
                 "Menu renderer is not initialized.");
         }
 
-        Build(view, width, height);
-        EnsureCapacity();
+        _preparedForFrame = true;
+        _preparedVertexCount = 0;
+        PrepareCount++;
 
         var screen = new Vector4(width, height, 0f, 0f);
         commandList.UpdateBuffer(_screenBuffer, 0, screen);
 
-        if (_vertices.Count == 0)
+        if (view is null)
+            return;
+
+        Build(view, width, height);
+        EnsureCapacity();
+        _preparedVertexCount = checked((uint)_vertices.Count);
+        if (_preparedVertexCount == 0)
             return;
 
         commandList.UpdateBuffer(
             _vertexBuffer,
             0,
             System.Runtime.InteropServices.CollectionsMarshal.AsSpan(_vertices));
+    }
 
-        commandList.SetPipeline(_pipeline);
-        commandList.SetGraphicsResourceSet(0, _set);
-        commandList.SetVertexBuffer(0, _vertexBuffer);
-        commandList.Draw((uint)_vertices.Count);
+    /// <summary>
+    /// Draws the geometry uploaded by <see cref="Prepare"/>. Multiple draws are
+    /// intentional for FG: generated and rendered images receive identical UI.
+    /// </summary>
+    internal void Draw(CommandList commandList)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(commandList);
+        if (!_preparedForFrame)
+            throw new InvalidOperationException(
+                "MenuRenderer.Draw requires Prepare for the current frame.");
+        if (_preparedVertexCount == 0)
+            return;
+
+        commandList.SetPipeline(_pipeline!);
+        commandList.SetGraphicsResourceSet(0, _set!);
+        commandList.SetVertexBuffer(0, _vertexBuffer!);
+        commandList.Draw(_preparedVertexCount);
+        DrawCount++;
     }
 
     private void Build(MenuView view, uint width, uint height)
@@ -456,6 +498,8 @@ public sealed class MenuRenderer : IDisposable
                 shader.Dispose();
 
         _pipeline = null;
+        _preparedForFrame = false;
+        _preparedVertexCount = 0;
         _set = null;
         _layout = null;
         _vertexBuffer = null;
