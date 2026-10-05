@@ -176,12 +176,25 @@ public static class FrontendSettingsRegression
         settings.FrameGeneration = false;
         frameGeneration.Change(settings, 1);
         check(settings.FrameGeneration &&
-              frameGeneration.ValueText(settings) == "ON",
-            "Frontend can enable FSR3 Frame Generation");
+              settings.FrameGenerationRuntime ==
+                  FrameGenerationRuntimeState.RestartRequired &&
+              frameGeneration.ValueText(settings) == "ON (RESTART)",
+            "Frontend distinguishes requested Frame Generation from active runtime state");
+        settings.FrameGenerationRuntime = FrameGenerationRuntimeState.Active;
+        check(frameGeneration.ValueText(settings) == "ON",
+            "Frontend reports ON only after the FG runtime is actually active");
+        settings.FrameGenerationRuntime = FrameGenerationRuntimeState.Unavailable;
+        check(frameGeneration.ValueText(settings) == "NIEDOST.",
+            "Frontend reports unavailable FG instead of pretending the saved request worked");
+        settings.FrameGenerationRuntime = FrameGenerationRuntimeState.Failed;
+        check(frameGeneration.ValueText(settings) == "BLAD",
+            "Frontend reports a runtime FG failure separately from a saved ON request");
         frameGeneration.Change(settings, -1);
         check(!settings.FrameGeneration &&
-              frameGeneration.ValueText(settings) == "OFF",
-            "Frontend can disable FSR3 Frame Generation");
+              settings.FrameGenerationRuntime ==
+                  FrameGenerationRuntimeState.RestartRequired &&
+              frameGeneration.ValueText(settings) == "OFF (RESTART)",
+            "Frontend marks disabling active FG as a restart-required change");
 
         var fsrQuality = definitions.Single(item => item.Id == "fsr-quality");
         settings.Upscaler = UpscalerMode.Bilinear;
