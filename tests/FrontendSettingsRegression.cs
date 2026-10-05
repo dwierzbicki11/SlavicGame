@@ -169,6 +169,20 @@ public static class FrontendSettingsRegression
               upscaler.ValueText(settings) == "FSR3",
             "Frontend exposes AMD FSR3 temporal upscaling");
 
+        var frameGeneration =
+            definitions.Single(item => item.Id == "frame-generation");
+        check(frameGeneration.RequiresRestart,
+            "Frame Generation warns that Vulkan presentation resources require restart");
+        settings.FrameGeneration = false;
+        frameGeneration.Change(settings, 1);
+        check(settings.FrameGeneration &&
+              frameGeneration.ValueText(settings) == "ON",
+            "Frontend can enable FSR3 Frame Generation");
+        frameGeneration.Change(settings, -1);
+        check(!settings.FrameGeneration &&
+              frameGeneration.ValueText(settings) == "OFF",
+            "Frontend can disable FSR3 Frame Generation");
+
         var fsrQuality = definitions.Single(item => item.Id == "fsr-quality");
         settings.Upscaler = UpscalerMode.Bilinear;
         check(fsrQuality.ValueText(settings) == "NIEAKTYWNE",
