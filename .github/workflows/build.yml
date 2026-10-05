@@ -83,6 +83,7 @@ jobs:
           test -n "$VK_ICD_FILENAMES"
           dotnet build tests/renderer/SlavicGame.RendererTests.csproj --configuration Release
           export VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation
+          export VK_LAYER_ENABLES=VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
           # Each process covers pending-work cleanup and two renderer lifetimes.
           # Fail immediately on either run; do not retry a failing proof.
           for attempt in 1 2; do
@@ -97,6 +98,7 @@ jobs:
           export VK_ICD_FILENAMES="$(find /usr/share/vulkan/icd.d -name '*lvp*' -print -quit)"
           test -n "$VK_ICD_FILENAMES"
           export VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation
+          export VK_LAYER_ENABLES=VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
           export SDL_VIDEODRIVER=x11
           xvfb-run -a dotnet tests/renderer/bin/Release/net11.0/SlavicGame.RendererTests.dll --presentation 2>&1 | tee presentation-fg-proof.log
           python3 tools/check-vulkan-validation.py presentation-fg-proof.log --presentation

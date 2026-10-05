@@ -29,6 +29,13 @@ The semaphore-reuse and recreation rules follow the Khronos Vulkan Guide and
 swapchain-recreation sample. Terminal shutdown retains the conventional
 unextended-Vulkan WaitIdle path; ordinary resize uses reacquisition evidence.
 
+Synchronization validation additionally checks buffer reuse and copies,
+depth/color attachment dependencies and the native AMD-to-Veldrid memory
+boundary. The patch makes copied buffer ranges visible to uniform/index and
+storage consumers as well as vertices, preserves compatible pipeline/render
+pass dependencies, and exposes image transitions to compute and fragment
+sampling. These are GPU barriers; they do not add per-frame idle waits.
+
 All original Vulkan, D3D11, OpenGL and Metal sources and pinned native binding
 versions are retained. StartupUtilities and ImageSharp remain the official
 4.9.0 packages and reference the same Veldrid assembly identity. The local

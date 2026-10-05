@@ -116,6 +116,7 @@ internal sealed class FidelityFxSceneFrameGeneration : IDisposable
             // changing only the tracker does not record the AMD write-to-draw
             // dependency. Queue the real barrier before the WSI consumer.
             vk.TransitionImageLayout(_output, 5);
+            vk.SynchronizeNativeDispatch();
         }
     }
 

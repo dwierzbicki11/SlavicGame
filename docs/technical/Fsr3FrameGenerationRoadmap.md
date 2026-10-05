@@ -224,8 +224,26 @@ before later UI/presentation changes. No other automation is modified.
   stage masks in Release). The pinned patch adds that transfer-read barrier,
   makes GENERAL-to-sample transitions include AMD compute writes, and rejects
   unknown transitions in Release instead of emitting invalid zero masks.
-- Blocker: compile and execute the new presentation proof, inspect all Vulkan
-  validation output, then require green Linux/Windows CI on the exact PR head.
+- Basic-validation head `853facdf65e17337b148f6e513a8e856d41eba18`,
+  [CI 37287127090](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37287127090):
+  Linux/Windows jobs are green. Before merge, expanded local synchronization
+  validation exposed 6097 errors despite the completed 47-check scene proof:
+  upstream buffer copies only exposed vertex reads, depth subpass dependencies
+  omitted depth accesses, and native final transitions were not visible to
+  subsequent fragment sampling. The pinned patch now orders buffer-range
+  reuse/copies, includes depth tests in attachment dependencies, exposes image
+  transitions to compute and fragment consumers, and queues an explicit native
+  memory boundary without an idle wait. CI enables synchronization validation
+  for both scene and actual-window proofs. All errors still fail the gate.
+- Local synchronization-fix evidence: Release compilation and the complete
+  47-check moving production-scene proof pass with **zero basic or
+  synchronization validation errors**, including FSR3 upscaling and pending
+  submissions. Pipeline and framebuffer render-pass dependencies are patched
+  together to retain Vulkan compatibility. Actual-window execution still
+  requires Actions/Xvfb because local X11 sockets are unavailable.
+- Blocker: verify the synchronization repairs locally and in exact-head
+  Linux/Windows CI before merge. The earlier green basic validation is not
+  sufficient evidence for the expanded gate.
 - Next: continue this branch; repair observed runtime/CI errors before merge.
 
 ## 4. UI composition and resource/history lifecycle — pending

@@ -157,6 +157,23 @@ namespace Veldrid
                 CheckResult(result);''', '''                VkResult result = vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
                 if (result != VkResult.Success)
                     throw new VeldridException("Vulkan queue submission failed with VkResult " + result);''')
+    text = replace_once(text, '        private class SharedCommandPool', '''        internal void SynchronizeNativeDispatch()
+        {
+            // The external SDK has its own layout tracker. Its final image
+            // transitions must be visible to subsequent Veldrid sampling,
+            // transfers and attachment reuse on this same graphics queue.
+            SharedCommandPool pool = GetFreeCommandPool();
+            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+            VkMemoryBarrier barrier = VkMemoryBarrier.New();
+            barrier.srcAccessMask = VkAccessFlags.MemoryWrite;
+            barrier.dstAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            vkCmdPipelineBarrier(cb, VkPipelineStageFlags.AllCommands,
+                VkPipelineStageFlags.AllCommands, VkDependencyFlags.None,
+                1, ref barrier, 0, null, 0, null);
+            pool.EndAndSubmit(cb);
+        }
+
+        private class SharedCommandPool''')
     path.write_text(text)
 
     path = OUTPUT / 'src/Veldrid/BackendInfoVulkan.cs'
@@ -181,7 +198,9 @@ namespace Veldrid
             => Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain).PresentMode;
 
         public bool CanReadSwapchainImages(Swapchain swapchain)
-            => Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain).CanReadImages;''')
+            => Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain).CanReadImages;
+
+        public void SynchronizeNativeDispatch() => _gd.SynchronizeNativeDispatch();''')
     text = replace_once(text, '    public class BackendInfoVulkan', '''    public readonly struct VulkanPresentationResult
     {
         public readonly bool Presented;
@@ -217,7 +236,57 @@ namespace Veldrid
             VkResult endResult = vkEndCommandBuffer(_cb);
             if (endResult != VkResult.Success)
                 throw new VeldridException("Vulkan command buffer end failed: " + endResult);''')
+    text = replace_once(text, '''            vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
+
+            VkMemoryBarrier barrier;
+            barrier.sType = VkStructureType.MemoryBarrier;
+            barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+            barrier.dstAccessMask = VkAccessFlags.VertexAttributeRead;
+            barrier.pNext = null;
+            vkCmdPipelineBarrier(
+                _cb,
+                VkPipelineStageFlags.Transfer, VkPipelineStageFlags.VertexInput,
+                VkDependencyFlags.None,
+                1, ref barrier,
+                0, null,
+                0, null);''', '''            // Updates reuse uniform/index/storage buffers as well as vertex
+            // buffers. Order earlier GPU accesses before overwriting this
+            // range, then expose the copy to every subsequent consumer.
+            VkBufferMemoryBarrier barrier = VkBufferMemoryBarrier.New();
+            barrier.srcQueueFamilyIndex = QueueFamilyIgnored;
+            barrier.dstQueueFamilyIndex = QueueFamilyIgnored;
+            barrier.buffer = dstVkBuffer.DeviceBuffer;
+            barrier.offset = destinationOffset;
+            barrier.size = sizeInBytes;
+            barrier.srcAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            barrier.dstAccessMask = VkAccessFlags.TransferWrite;
+            vkCmdPipelineBarrier(_cb, VkPipelineStageFlags.AllCommands,
+                VkPipelineStageFlags.Transfer, VkDependencyFlags.None,
+                0, null, 1, &barrier, 0, null);
+
+            vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
+
+            barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+            barrier.dstAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            vkCmdPipelineBarrier(_cb, VkPipelineStageFlags.Transfer,
+                VkPipelineStageFlags.AllCommands, VkDependencyFlags.None,
+                0, null, 1, &barrier, 0, null);''')
     path.write_text(text)
+
+    # Pipeline compatibility requires identical dependency descriptions in
+    # the pipeline's render pass and all framebuffer load/clear variants.
+    for filename in ('VkFramebuffer.cs', 'VkPipeline.cs'):
+        path = OUTPUT / 'src/Veldrid/Vk' / filename
+        text = path.read_text(encoding='utf-8-sig')
+        text = replace_once(text, '''            subpassDependency.srcStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+            subpassDependency.dstStageMask = VkPipelineStageFlags.ColorAttachmentOutput;
+            subpassDependency.dstAccessMask = VkAccessFlags.ColorAttachmentRead | VkAccessFlags.ColorAttachmentWrite;''', '''            subpassDependency.srcStageMask = VkPipelineStageFlags.AllCommands;
+            subpassDependency.srcAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            subpassDependency.dstStageMask = VkPipelineStageFlags.ColorAttachmentOutput
+                | VkPipelineStageFlags.EarlyFragmentTests | VkPipelineStageFlags.LateFragmentTests;
+            subpassDependency.dstAccessMask = VkAccessFlags.ColorAttachmentRead | VkAccessFlags.ColorAttachmentWrite
+                | VkAccessFlags.DepthStencilAttachmentRead | VkAccessFlags.DepthStencilAttachmentWrite;''')
+        path.write_text(text)
 
     path = OUTPUT / 'src/Veldrid/Vk/VulkanUtil.cs'
     text = path.read_text(encoding='utf-8-sig')
@@ -258,6 +327,12 @@ namespace Veldrid
                     ? VkAccessFlags.TransferWrite : VkAccessFlags.TransferRead;''')
     text = replace_once(text, '                Debug.Fail("Invalid image layout transition.");',
                         '                throw new VeldridException("Unsupported Vulkan image layout transition: " + oldLayout + " -> " + newLayout);')
+    # Depth/color/transfer outputs are consumed by both the scene fragment
+    # shaders and AMD compute. A fragment-only destination is insufficient.
+    text = text.replace('srcStageFlags = VkPipelineStageFlags.FragmentShader;',
+                        'srcStageFlags = VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.ComputeShader;')
+    text = text.replace('dstStageFlags = VkPipelineStageFlags.FragmentShader;',
+                        'dstStageFlags = VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.ComputeShader;')
     path.write_text(text)
     shutil.copyfile(SOURCE / 'LICENSE', OUTPUT / 'LICENSE')
 

@@ -299,6 +299,7 @@ public sealed class FidelityFxUpscaler : IDisposable
         // writes when a storage-capable image is bound for graphics sampling.
         // Queue the compute-write -> sampled-read barrier on the same queue.
         _vk.TransitionImageLayout(output, VkImageLayoutShaderReadOnlyOptimal);
+        _vk.SynchronizeNativeDispatch();
     }
 
     private void CreateContext(
