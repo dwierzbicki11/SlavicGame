@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ34. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ40. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -23,28 +23,29 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 - [x] MQ31 „Archiwum popiołu” — scalone po zielonym CI.
 - [x] MQ32 „Noc Zamkniętego Progu” — scalone po zielonym CI.
 - [x] MQ33 „Rozwierający” — scalone po zielonym CI.
-- [x] MQ34 „Trzy projekty” — trzy trwałe modele, lead do Nawii i handoff do MQ40 — scalone po zielonym CI.
+- [x] MQ34 „Trzy projekty” — scalone po zielonym CI.
+- [x] MQ40 „Droga umarłych” — wejście do Nawii, kotwica powrotna, recovery i handoff do MQ41 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ40 „Droga umarłych” — IMPLEMENTED, oczekuje na CI/merge
+### MQ41 „Dwa echa” — IMPLEMENTED, oczekuje na CI/merge
 
 Kontrakt z `docs/quests/MainQuestCardsAct4.md`:
 
-1. wejście po `MQ34_COMPLETE` i trwałym leadzie do Nawii;
-2. przejście do Nawii przez stabilny próg oraz trwały `MQ40_ENTERED_NAVIA`;
-3. obserwacja podstawowych reguł Nawii bez przedwczesnego ujawniania natury Splotu;
-4. idempotentne ustanowienie trwałej kotwicy powrotnej `MQ40_RETURN_ANCHOR_SET`;
-5. krytyczne instrukcje progu mają recovery niezależne od opcjonalnego przewodnika;
-6. trop do dwóch podobnych ech domyka krytyczne beaty i zapisuje `MQ40_COMPLETE`;
-7. handoff do MQ41 następuje dokładnie raz, z persistence/save-load i idempotencją.
+1. wejście wyłącznie po `MQ40_COMPLETE`;
+2. oba echa mogą zostać znalezione w dowolnej kolejności i są zapisywane trwale;
+3. operacyjna różnica Nawia/Splot wymaga obu ech oraz minimum dwóch niezależnych różnic;
+4. porównanie w Journal zapisuje `MQ41_NAVIA_SPLOT_DISTINCTION`, bez ujawniania pełnej definicji Czwartej Sfery;
+5. pominięte obserwacje mają recovery zapisujące te same trwałe evidence flags;
+6. completion wymaga porównania i rozróżnienia, po czym zapisuje `MQ41_COMPLETE`;
+7. MQ42 jest oferowane dokładnie raz, z persistence/save-load i idempotencją.
 
-## Kolejka po MQ40
+## Kolejka po MQ41
 
-Po pełnym zakończeniu MQ40 należy ponownie przeanalizować aktualny `main`, trzy dokumenty kolejki/coverage/readiness oraz kartę Aktu IV. MQ41 może rozpocząć się wyłącznie po zielonym CI i merge MQ40 oraz ponownym potwierdzeniu readiness.
+Po pełnym zakończeniu MQ41 należy ponownie przeanalizować aktualny `main`, WorkQueue, Coverage, ten dokument oraz kartę Aktu IV. MQ42 może rozpocząć się wyłącznie po zielonym CI i merge MQ41 oraz ponownym potwierdzeniu readiness.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ40: finalny staging przejścia, wygląd Nawii, przewodnik i line writing pozostają content/art/VO lockiem.
-- MQ40: recovery instrukcji może być prezentowane przez Journal lub znaki przy progu; runtime zapisuje jedynie trwały fakt odzyskania instrukcji.
-- MQ40: obserwacja reguł Nawii nie może ujawniać pełnej natury Splotu przed MQ43.
+- MQ41: wygląd obu ech, staging obserwacji i finalne line writing pozostają content/art/VO lockiem.
+- MQ41: recovery może być środowiskowym śladem lub zapisem w pobliżu; runtime zapisuje ten sam trwały fakt evidence.
+- MQ41: rozróżnienie jest wyłącznie operacyjne; pełna natura Splotu pozostaje zablokowana do MQ43.
