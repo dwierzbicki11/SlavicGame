@@ -13,7 +13,8 @@ opening another. Do not depend on retained local files.
 
 Active stage: **2 — actual HUD-free scene input**, branch
 `fsr3/fg-scene-input`, based on current main
-`4055b885800d51a5e956732e5e81dac38e0b3f5b`,
+`667091dc94b55d20cd86d80be197f17da08ef45f` (loot UI commands merged; no
+overlapping renderer changes),
 [PR #324](https://github.com/dwierzbicki11/SlavicGame/pull/324).
 Initial head: `b17a1c8658c1948051ddd89da1271d5335b222ae`. PR #306 is merged. Continue
 this stage's PR before starting presentation work. Its adapter uses #319's
@@ -135,10 +136,26 @@ before later UI/presentation changes. No other automation is modified.
   allocates exactly one color image with its final sampling usage, preserving
   MSAA behavior. Validation also reports SPIR-V 1.5 on a Vulkan 1.1 instance;
   scene shader compilation now targets 1.0, including the old-device fallback.
-  CI enables Khronos validation and rejects every validation error in both
-  complete scene-proof processes. These latest fixes still need runtime/CI
-  validation; do not merge the known-red 53ef553 revision.
-- Blocker: verify the initialization/lifetime and shader-target repairs with
+- Validation follow-up: head `171ccf462d8e497b888eb011fee50933253f5e12`,
+  [CI 37276450036](https://github.com/dwierzbicki11/SlavicGame/actions/runs/37276450036),
+  completes both 47-check scene processes and Linux/Windows jobs. It is **not
+  mergeable evidence**: validation logs report invalid motion formats, view
+  retirement and FSR3 output layout. The shell log gate incorrectly accepted
+  `rg: command not found` inside an `if`. A Python gate now fails on every
+  validation error or a missing completed proof; its rejection was verified
+  against the recorded failing log. No assertions or validation errors are
+  excluded. The branch additionally repairs Veldrid's RG16F-to-RGBA16F mapping,
+  which both created invalid AMD views and overran the RG16F staging buffer;
+  retains prepare's views without advancing the SDK ring a second time in the
+  same submitted FG frame; queues an explicit native FSR3 write-to-sample
+  transition; and stops calling optional debug-utils labels whose instance
+  extension was not enabled. Six additional scene submissions without
+  intermediate readbacks expose view retirement hidden by readback fences.
+  Local Release builds, both native CTests, all 1261 regressions on current\n  main, and two complete 47-check scene
+  processes now pass with zero Khronos validation errors, including the six
+  pending submissions without readback. Exact-head Linux/Windows CI is still
+  required before merge. No physical GPU or swapchain-presentation evidence yet.
+- Blocker: verify all format/layout/lifetime repairs with
   actual renderer GPU execution, zero Vulkan validation errors, and green
   Linux/Windows CI on the exact final head, followed by merge. Stage 2 has no
   generated-frame presentation gate.

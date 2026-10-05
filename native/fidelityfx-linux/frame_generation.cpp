@@ -15,6 +15,9 @@
 #include <cwchar>
 #include <new>
 
+// Generated Vulkan backend control, local to each owned scratch allocation.
+void slavicFfxSetPrepareDispatchVK(FfxInterface* backend, bool preparing);
+
 namespace {
 
 struct SharedResource {
@@ -343,8 +346,10 @@ extern "C" __attribute__((visibility("default"))) uint32_t slavicFgPrepare(
     std::memcpy(prepare.cameraRight, desc->cameraRight, sizeof(desc->cameraRight));
     std::memcpy(prepare.cameraForward, desc->cameraForward, sizeof(desc->cameraForward));
 
+    slavicFfxSetPrepareDispatchVK(&context->fiBackend, true);
     FfxErrorCode rc = ffxFrameInterpolationPrepare(
         &context->frameInterpolation, &prepare);
+    slavicFfxSetPrepareDispatchVK(&context->fiBackend, false);
     if (rc != FFX_OK)
         return static_cast<uint32_t>(rc);
 

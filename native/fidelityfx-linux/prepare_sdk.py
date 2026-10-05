@@ -47,6 +47,38 @@ path.parent.mkdir(parents=True, exist_ok=True)
 if not path.exists() or path.read_text() != header:
     path.write_text(header)
 source = (sdk / 'sdk/src/backends/vk/ffx_vk.cpp').read_text()
+# The SDK treats each unregister as a frame boundary. FI prepare and dispatch
+# are two operations in ONE submitted frame; retiring twice can destroy views
+# still referenced by a pending command buffer. Only interpolation advances
+# the SDK's four-slot view ring. The caller's three-slot fence ring waits for
+# that frame before its views can be retired. The flag belongs to this backend
+# scratch allocation, not global state, and is cleared after prepare, on error
+# as well as success. It never suppresses barriers or resource unregistering.
+old = '    uint32_t maxEffectContexts;'
+assert source.count(old) == 1
+source = source.replace(old, old + '\n    bool slavicPrepareDispatch;')
+old = '''    // destroy the views of the next frame
+    effectContext.frameIndex = (effectContext.frameIndex + 1) % FFX_MAX_QUEUED_FRAMES;'''
+assert source.count(old) == 1
+source = source.replace(old, '''    if (backendContext->slavicPrepareDispatch)
+        return FFX_OK;
+
+''' + old)
+source += '''
+// Linux provider owns submissions and fences; prepare is not a frame boundary.
+static_assert(FFX_MAX_QUEUED_FRAMES >= 4, "Three submitted frames need four view slots");
+void slavicFfxSetPrepareDispatchVK(FfxInterface* backend, bool preparing)
+{
+    static_cast<BackendContext_VK*>(backend->scratchBuffer)->slavicPrepareDispatch = preparing;
+}
+'''
+# The API does not pass the enabled instance-extension list to this backend.
+# A nonnull loader function is not proof VK_EXT_debug_utils was enabled.
+# Keep optional native markers disabled until that contract exists.
+for name in ['vkCmdBeginDebugUtilsLabelEXT', 'vkCmdEndDebugUtilsLabelEXT']:
+    old = f'        backendContext->vkFunctionTable.{name} = (PFN_{name})vkDeviceContext->vkDeviceProcAddr(backendContext->device, "{name}");'
+    assert source.count(old) == 1, f'Unexpected debug marker load site: {name}'
+    source = source.replace(old, f'        backendContext->vkFunctionTable.{name} = nullptr;')
 # EffectContext has alignas(32), but the upstream scratch layout aligns slices
 # to only four bytes. Optimized GCC uses aligned stores and can crash. Align
 # the allocation and every slice consistently in both sizing and mapping.

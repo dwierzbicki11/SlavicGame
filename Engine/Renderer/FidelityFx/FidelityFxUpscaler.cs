@@ -294,6 +294,11 @@ public sealed class FidelityFxUpscaler : IDisposable
         _vk.OverrideImageLayout(
             reactive,
             VkImageLayoutShaderReadOnlyOptimal);
+
+        // Veldrid tracks its own compute writes, but cannot infer native AMD
+        // writes when a storage-capable image is bound for graphics sampling.
+        // Queue the compute-write -> sampled-read barrier on the same queue.
+        _vk.TransitionImageLayout(output, VkImageLayoutShaderReadOnlyOptimal);
     }
 
     private void CreateContext(

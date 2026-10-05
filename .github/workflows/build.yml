@@ -87,7 +87,5 @@ jobs:
           # Fail immediately on either run; do not retry a failing proof.
           for attempt in 1 2; do
             dotnet tests/renderer/bin/Release/net11.0/SlavicGame.RendererTests.dll 2>&1 | tee "scene-fg-proof-$attempt.log"
-            if rg -n 'Validation Error:' "scene-fg-proof-$attempt.log"; then
-              exit 1
-            fi
+            python3 tools/check-vulkan-validation.py "scene-fg-proof-$attempt.log"
           done

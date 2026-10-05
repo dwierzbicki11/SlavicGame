@@ -154,6 +154,13 @@ using (var renderer = new VeldridRenderer())
     renderer.Render(world, camera, 60, 0, 1.0 / 60, settings, null);
     Pose(0.3f);
     renderer.Render(world, camera, 60, 1.0 / 60, 1.0 / 60, settings, null);
+    // Cross both native command/fence and SDK view rings without readback
+    // fences between frames. This exposes retirement hidden by serial reads.
+    for (int frame = 2; frame < 8; frame++)
+    {
+        Pose(frame * 0.3f);
+        renderer.Render(world, camera, 60, frame / 60.0, 1.0 / 60, settings, null);
+    }
     Check(renderer.NativeUpscalerReady && fg.HasGeneratedFrame,
         "Actual renderer orders native FSR3 upscale then HUD-free capture then AMD FG");
     Check(Read<Rgba16>(device, fg.HudlessColor).All(p => p.Finite), "FSR3 HUD-free scene readback is valid");
@@ -161,7 +168,7 @@ using (var renderer = new VeldridRenderer())
     // Expire the real context to exercise error isolation, without a fake
     // generator or synthetic successful dispatch.
     fg.Dispose();
-    renderer.Render(world, camera, 60, 2.0 / 60, 1.0 / 60, settings, null);
+    renderer.Render(world, camera, 60, 8.0 / 60, 1.0 / 60, settings, null);
     Check(renderer.FrameGenerationScene is null && renderer.NativeUpscalerReady &&
         renderer.FrameGenerationDiagnostic.Contains("disabled", StringComparison.OrdinalIgnoreCase),
         "Expired FG context disables only FG while native FSR3 keeps rendering");
