@@ -23,6 +23,24 @@ internal static class LootContainerDepositRegression
         var resumed = new LootContainerUiController(restored, definition, inventory);
         check(resumed.View.Stacks.Single().Quantity == 4 && resumed.TakeAll(target) == LootContainerResult.Looted && inventory.Count("arrow-basic") == 10 && resumed.TakeAll(target) == LootContainerResult.Empty, "Store Capture Restore retrieves a deposit once without duplication");
 
+        var questState = new LootContainerInteractionState();
+        var questDefinition = new LootContainerDefinition("quest-chest", [new("marsh-herb", 1)], "quest:chest-cleared");
+        var questTarget = target with { Id = questDefinition.TargetId };
+        var questInventory = new InventoryState();
+        var questEvents = 0;
+        var questController = new LootContainerUiController(questState, questDefinition, questInventory, _ => questEvents++);
+        check(questController.TakeAll(questTarget) == LootContainerResult.Looted && questEvents == 1, "Emptying a quest loot container emits its completion event once");
+        check(questController.Store(questTarget, "marsh-herb", 1) == LootContainerResult.Stored && questController.TakeAll(questTarget) == LootContainerResult.Looted && questEvents == 1, "Re-storing and re-looting a completed quest container does not duplicate its quest event");
+        var questRestoredState = new LootContainerInteractionState(); questRestoredState.Restore(questState.Capture());
+        var questRestored = new LootContainerUiController(questRestoredState, questDefinition, questInventory, _ => questEvents++);
+        check(questRestored.Store(questTarget, "marsh-herb", 1) == LootContainerResult.Stored && questRestored.TakeAll(questTarget) == LootContainerResult.Looted && questEvents == 1, "Save restore preserves one-shot loot quest completion");
+        var legacyQuestState = new LootContainerInteractionState();
+        legacyQuestState.Restore([new LootContainerSnapshot("legacy-quest-chest", [new("marsh-herb", 1)])]);
+        var legacyQuestDefinition = new LootContainerDefinition("legacy-quest-chest", [new("marsh-herb", 1)], "quest:legacy-chest-cleared");
+        var legacyQuestTarget = target with { Id = legacyQuestDefinition.TargetId };
+        var legacyEvents = 0;
+        check(new LootContainerUiController(legacyQuestState, legacyQuestDefinition, new InventoryState(), _ => legacyEvents++).TakeAll(legacyQuestTarget) == LootContainerResult.Looted && legacyEvents == 1, "Legacy snapshots without completion metadata remain compatible and can emit their first quest event");
+
         var saturated = new LootContainerDefinition("full", [new("arrow-basic", int.MaxValue)]);
         var saturatedTarget = target with { Id = saturated.TargetId };
         var overflow = false;
