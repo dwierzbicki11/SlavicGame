@@ -26,6 +26,8 @@ public static class SettingsPersistenceRegression
                 WindowResolution = RenderResolution.FullHd1080,
                 Upscaler = UpscalerMode.Fsr3,
                 FrameGeneration = true,
+                FrameGenerationRuntime = FrameGenerationRuntimeState.Failed,
+                FrameGenerationRuntimeReason = "transient test reason",
                 FsrQuality = FsrQualityMode.Quality,
                 Bloom = BloomQuality.Medium,
                 TextureQuality = TextureQuality.Low
@@ -50,6 +52,13 @@ public static class SettingsPersistenceRegression
                     "\"FrameGeneration\": true",
                     StringComparison.Ordinal),
                 "Settings persist Frame Generation by stable boolean property");
+            check(!savedJson.Contains(
+                    "FrameGenerationRuntime",
+                    StringComparison.Ordinal) &&
+                  !savedJson.Contains(
+                    "transient test reason",
+                    StringComparison.Ordinal),
+                "Settings never persist transient Frame Generation runtime status");
 
             var roundTrip = store.Load();
             check(roundTrip.Resolution == RenderResolution.Hd720 &&
