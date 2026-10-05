@@ -1,5 +1,8 @@
 #version 450
 
+// Only the intermediate EASU target must preserve texture row order.
+// Final presentation keeps the existing scene-to-display convention.
+layout(constant_id = 0) const bool PreserveTextureRows = false;
 layout(location = 0) out vec2 fsin_TexCoord;
 
 void main()
@@ -9,8 +12,10 @@ void main()
         float(gl_VertexIndex & 2));
 
     fsin_TexCoord = uv;
+    vec2 position = uv * 2.0 - 1.0;
+    if (PreserveTextureRows) position.y = -position.y;
     gl_Position = vec4(
-        uv * 2.0 - 1.0,
+        position,
         0.0,
         1.0);
 }
