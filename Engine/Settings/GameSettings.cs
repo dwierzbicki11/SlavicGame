@@ -639,6 +639,7 @@ public sealed class GameSettings
     public ModelLodQuality ModelLod { get; set; } = ModelLodQuality.Quality;
     public FarVegetationMode FarVegetation { get; set; } = FarVegetationMode.Impostors;
     public UpscalerMode Upscaler { get; set; } = UpscalerMode.Fsr1;
+    public bool FrameGeneration { get; set; }
     public FsrQualityMode FsrQuality { get; set; } = FsrQualityMode.Quality;
     public float FsrSharpness { get; set; } = 0.35f;
     public AntiAliasingMode AntiAliasing { get; set; } = AntiAliasingMode.Fxaa;
