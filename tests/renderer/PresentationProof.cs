@@ -192,6 +192,15 @@ internal static class PresentationProof
                 events[^1].Kind == PresentedFrameKind.Rendered &&
                 window.Exists,
                 "FG failure falls back to one semaphore-synchronized rendered presentation");
+            // The capture hook still runs for the fallback frame. This manual
+            // failure path intentionally bypasses RenderFrame(), so retire its
+            // staging copy here instead of leaking a Vulkan child object into
+            // device destruction.
+            Check(
+                copies.Count == 1,
+                "FG failure fallback still captures exactly one real swapchain image");
+            foreach (var copy in copies) copy.Dispose();
+            copies.Clear();
 
             Console.WriteLine($"WSI proof VSync={vsync}: rendered={presenter.RenderedCount}, generated={presenter.GeneratedCount}, presented={presenter.PresentedCount}; physical scanout/FPS quality is not measured by this software-Vulkan test.");
             renderer.BeforeFramePresentation = null;
