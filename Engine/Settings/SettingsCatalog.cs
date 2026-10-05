@@ -206,8 +206,23 @@ public static class SettingsCatalog
             "frame-generation",
             SettingCategory.PostProcessing,
             "FRAME GENERATION",
-            s => s.FrameGeneration ? "ON" : "OFF",
-            (s, _) => s.FrameGeneration = !s.FrameGeneration,
+            s => s.FrameGenerationRuntime switch
+            {
+                FrameGenerationRuntimeState.Active => "ON",
+                FrameGenerationRuntimeState.RestartRequired =>
+                    s.FrameGeneration ? "ON (RESTART)" : "OFF (RESTART)",
+                FrameGenerationRuntimeState.Unavailable => "NIEDOST.",
+                FrameGenerationRuntimeState.Failed => "BLAD",
+                _ => s.FrameGeneration ? "ON (RESTART)" : "OFF"
+            },
+            (s, _) =>
+            {
+                s.FrameGeneration = !s.FrameGeneration;
+                s.FrameGenerationRuntime =
+                    FrameGenerationRuntimeState.RestartRequired;
+                s.FrameGenerationRuntimeReason =
+                    "Restart renderer to apply the Frame Generation change.";
+            },
             RequiresRestart: true),
         new(
             "fsr-quality",
