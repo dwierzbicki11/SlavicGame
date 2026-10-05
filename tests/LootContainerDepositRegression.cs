@@ -58,9 +58,9 @@ internal static class LootContainerDepositRegression
         world.SetPlayerPosition(chest!.Value);
         check(world.Loot.TryOpenNearest(world), "E can open nearby market chest");
         world.Progress.Inventory.Restore([new("arrow-basic", 8)]);
-        world.Loot.SelectPanel(LootPanel.Inventory);
-        check(world.Loot.TransferSelected(world) == LootContainerResult.Stored && world.Progress.Inventory.Count("arrow-basic") == 7, "Inventory panel deposits one item");
-        check(world.Loot.TransferSelected(world, wholeStack: true) == LootContainerResult.Stored && !world.Progress.Inventory.Contains("arrow-basic"), "Inventory panel deposits the selected whole stack");
+        check(world.Loot.HandleCommand(world, LootCommand.InventoryPanel) is null && world.Loot.Panel == LootPanel.Inventory, "Loot command surface switches to inventory panel");
+        check(world.Loot.HandleCommand(world, LootCommand.TransferOne) == LootContainerResult.Stored && world.Progress.Inventory.Count("arrow-basic") == 7, "Loot command surface deposits one selected item");
+        check(world.Loot.HandleCommand(world, LootCommand.TransferStack) == LootContainerResult.Stored && !world.Progress.Inventory.Contains("arrow-basic"), "Loot command surface deposits the selected whole stack");
         var loaded = WorldGenerator.Generate();
         SaveGameService.Restore(loaded, SaveGameService.Serialize(world));
         check(!loaded.Loot.IsOpen && loaded.Loot.Lines(loaded, LootPanel.Container).Single().Quantity == 8, "Full game save restores deposited items and closes transient storage UI");
@@ -72,11 +72,12 @@ internal static class LootContainerDepositRegression
         check(loaded.Loot.TransferSelected(loaded, true) == LootContainerResult.Stored && loaded.Loot.Lines(loaded, LootPanel.Container).Single().ItemId == "arrow-basic", "Inventory selection remains deterministic while preparing bulk retrieval");
         loaded.Loot.SelectPanel(LootPanel.Inventory); loaded.Loot.MoveSelection(loaded, 1);
         check(loaded.Loot.TransferSelected(loaded, true) == LootContainerResult.Stored && loaded.Loot.Lines(loaded, LootPanel.Container).Count == 2, "Runtime container can hold multiple deposited stacks");
-        check(loaded.Loot.TakeAll(loaded) == LootContainerResult.Looted && loaded.Progress.Inventory.Count("arrow-basic") == 8 && loaded.Progress.Inventory.Count("simple-bandage") == 2 && loaded.Loot.Lines(loaded, LootPanel.Container).Count == 0 && loaded.Loot.Message.StartsWith("ZABRANO WSZYSTKO", StringComparison.Ordinal), "Runtime TakeAll atomically retrieves every container stack and reports completion");
-        check(loaded.Loot.TakeAll(loaded) == LootContainerResult.Empty && loaded.Progress.Inventory.Count("simple-bandage") == 2, "Runtime TakeAll on an empty container is idempotent");
+        check(loaded.Loot.HandleCommand(loaded, LootCommand.TakeAll) == LootContainerResult.Looted && loaded.Progress.Inventory.Count("arrow-basic") == 8 && loaded.Progress.Inventory.Count("simple-bandage") == 2 && loaded.Loot.Lines(loaded, LootPanel.Container).Count == 0 && loaded.Loot.Message.StartsWith("ZABRANO WSZYSTKO", StringComparison.Ordinal), "Loot command surface atomically retrieves every container stack and reports completion");
+        check(loaded.Loot.HandleCommand(loaded, LootCommand.TakeAll) == LootContainerResult.Empty && loaded.Progress.Inventory.Count("simple-bandage") == 2, "Loot command TakeAll on an empty container is idempotent");
 
         loaded.Progress.Inventory.Add("simple-bow"); loaded.Bow.SetAiming(loaded, true);
         check(!loaded.Bow.IsAiming, "Storage UI blocks bow aiming");
+        check(loaded.Loot.HandleCommand(loaded, LootCommand.Close) is null && !loaded.Loot.IsOpen, "Loot command surface closes the storage UI");
         loaded.SetPlayerPosition(Vector3.Zero); loaded.Loot.Update(loaded);
         check(!loaded.Loot.IsOpen, "Moving out of reach closes storage UI");
         var oldSave = SaveGameService.Capture(loaded) with { LootContainers = null };

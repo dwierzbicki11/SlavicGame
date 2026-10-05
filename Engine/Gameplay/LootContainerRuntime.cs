@@ -5,6 +5,7 @@ using SlavicGame.Engine.World;
 namespace SlavicGame.Engine.Gameplay;
 
 public enum LootPanel { Container, Inventory }
+public enum LootCommand { ContainerPanel, InventoryPanel, Previous, Next, TransferOne, TransferStack, TakeAll, Close }
 
 /// <summary>World access and selection for the existing authoritative loot controller.</summary>
 public sealed class LootContainerRuntime
@@ -71,6 +72,25 @@ public sealed class LootContainerRuntime
         if (!IsOpen) return;
         SelectedIndex = Math.Clamp(SelectedIndex + direction, 0,
             Math.Max(0, Lines(world, Panel).Count - 1));
+    }
+
+    /// <summary>Single command surface for keyboard/gamepad UI adapters.</summary>
+    public LootContainerResult? HandleCommand(WorldState world, LootCommand command)
+    {
+        if (!IsOpen) return null;
+        switch (command)
+        {
+            case LootCommand.ContainerPanel: SelectPanel(LootPanel.Container); break;
+            case LootCommand.InventoryPanel: SelectPanel(LootPanel.Inventory); break;
+            case LootCommand.Previous: MoveSelection(world, -1); break;
+            case LootCommand.Next: MoveSelection(world, 1); break;
+            case LootCommand.TransferOne: return TransferSelected(world);
+            case LootCommand.TransferStack: return TransferSelected(world, wholeStack: true);
+            case LootCommand.TakeAll: return TakeAll(world);
+            case LootCommand.Close: Close(); break;
+            default: throw new ArgumentOutOfRangeException(nameof(command), command, null);
+        }
+        return null;
     }
 
     // E moves one item; Shift+E moves the selected stack.
