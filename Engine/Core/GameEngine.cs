@@ -90,7 +90,8 @@ public sealed class GameEngine : IDisposable
             _vsync,
             _settings.TextureQuality,
             _settings.Msaa,
-            _settings.Upscaler);
+            _settings.Upscaler,
+            _settings.FrameGeneration);
         ApplySettings();
         _camera.Follow(_world.PlayerPosition, 0f, _world.Terrain);
         _window.SetMouseCapture(false);
@@ -434,6 +435,7 @@ public sealed class GameEngine : IDisposable
                 $"Settings applied: output={outputWidth}x{outputHeight}, " +
                 $"internal={renderResolution.Width}x{renderResolution.Height}, " +
                 $"upscaler={_settings.Upscaler}/{_settings.FsrQuality}, " +
+                $"frameGeneration={_settings.FrameGeneration}, " +
                 $"preset={GraphicsPresetCatalog.DetectName(_settings)}.");
         }
         finally
