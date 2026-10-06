@@ -9,6 +9,7 @@ public enum EnemyState
     Patrol,
     Alert,
     Chase,
+    Search,
     Attack,
     Return,
     Dead
@@ -34,10 +35,13 @@ public sealed class EnemyAgent : IDamageReceiver
     private const float Damage = 8f;
     private const float AlertSeconds = 0.55f;
     private const float HitReactionSeconds = 0.18f;
+    private const float SearchSeconds = 1.25f;
+    private const float SearchArrivalDistance = 0.3f;
 
     private float _patrolSign = 1f;
     private double _alertRemaining;
     private double _hitReactionRemaining;
+    private double _searchRemaining;
     private bool _provokedByDamage;
     private readonly EnemyChaseMemory _chaseMemory = new();
 
@@ -61,11 +65,7 @@ public sealed class EnemyAgent : IDamageReceiver
     public EnemyAgent(string id, Vector3 homePosition)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
-        if (!IsFinite(homePosition))
-        {
-            throw new ArgumentOutOfRangeException(nameof(homePosition));
-        }
-
+        if (!IsFinite(homePosition)) throw new ArgumentOutOfRangeException(nameof(homePosition));
         Id = id;
         HomePosition = homePosition;
         Position = homePosition;
@@ -74,10 +74,7 @@ public sealed class EnemyAgent : IDamageReceiver
     public void Update(WorldState world, double deltaSeconds)
     {
         ArgumentNullException.ThrowIfNull(world);
-        if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0)
-        {
-            return;
-        }
+        if (!double.IsFinite(deltaSeconds) || deltaSeconds < 0) return;
 
         if (!IsAlive)
         {
@@ -92,10 +89,7 @@ public sealed class EnemyAgent : IDamageReceiver
             var reactionSeconds = Math.Min(_hitReactionRemaining, deltaSeconds);
             _hitReactionRemaining -= reactionSeconds;
             deltaSeconds -= reactionSeconds;
-            if (_hitReactionRemaining > 0.0 || deltaSeconds <= 0.0)
-            {
-                return;
-            }
+            if (_hitReactionRemaining > 0.0 || deltaSeconds <= 0.0) return;
         }
 
         if (State != EnemyState.Attack && Attack.Phase == EnemyAttackPhase.Recovery)
@@ -113,38 +107,27 @@ public sealed class EnemyAgent : IDamageReceiver
                     State = EnemyState.Alert;
                     _alertRemaining = AlertSeconds;
                 }
-                else
-                {
-                    Patrol(world, deltaSeconds);
-                }
+                else Patrol(world, deltaSeconds);
                 break;
 
             case EnemyState.Alert:
                 if (!world.Player.IsAlive || playerDistance > disengageRange)
                 {
-                    State = EnemyState.Return;
-                    _provokedByDamage = false;
-                    _chaseMemory.Reset();
+                    BeginReturn();
                     break;
                 }
-
                 _alertRemaining -= deltaSeconds;
                 if (_alertRemaining <= 0.0)
                 {
                     State = EnemyState.Chase;
-                    if (HasLineOfSight(world, world.PlayerPosition))
-                        _chaseMemory.Observe(world.PlayerPosition);
+                    if (HasLineOfSight(world, world.PlayerPosition)) _chaseMemory.Observe(world.PlayerPosition);
                 }
                 break;
 
             case EnemyState.Chase:
-                if (!world.Player.IsAlive ||
-                    playerDistance > disengageRange ||
-                    homeDistance > MaxLeashDistance)
+                if (!world.Player.IsAlive || playerDistance > disengageRange || homeDistance > MaxLeashDistance)
                 {
-                    State = EnemyState.Return;
-                    _provokedByDamage = false;
-                    _chaseMemory.Reset();
+                    BeginReturn();
                 }
                 else if (HasLineOfSight(world, world.PlayerPosition))
                 {
@@ -154,48 +137,62 @@ public sealed class EnemyAgent : IDamageReceiver
                         State = EnemyState.Attack;
                         LockFacingTowards(world.PlayerPosition);
                     }
-                    else
-                    {
-                        MoveTowards(world, world.PlayerPosition, MoveSpeed, deltaSeconds);
-                    }
+                    else MoveTowards(world, world.PlayerPosition, MoveSpeed, deltaSeconds);
                 }
                 else
                 {
                     _chaseMemory.AdvanceUnseen(deltaSeconds);
-                    if (!_chaseMemory.HasKnownPosition || _chaseMemory.IsExpired)
+                    if (!_chaseMemory.HasKnownPosition)
                     {
-                        State = EnemyState.Return;
-                        _provokedByDamage = false;
-                        _chaseMemory.Reset();
+                        BeginReturn();
+                    }
+                    else if (HorizontalDistance(Position, _chaseMemory.LastKnownPosition) <= SearchArrivalDistance)
+                    {
+                        BeginSearch();
+                    }
+                    else if (_chaseMemory.IsExpired)
+                    {
+                        BeginReturn();
                     }
                     else
                     {
                         MoveTowards(world, _chaseMemory.LastKnownPosition, MoveSpeed, deltaSeconds);
+                        if (HorizontalDistance(Position, _chaseMemory.LastKnownPosition) <= SearchArrivalDistance)
+                            BeginSearch();
                     }
                 }
                 break;
 
-            case EnemyState.Attack:
-                if (!world.Player.IsAlive ||
-                    playerDistance > disengageRange ||
-                    homeDistance > MaxLeashDistance)
+            case EnemyState.Search:
+                if (!world.Player.IsAlive || playerDistance > disengageRange || homeDistance > MaxLeashDistance)
                 {
-                    State = EnemyState.Return;
+                    BeginReturn();
+                }
+                else if (HasLineOfSight(world, world.PlayerPosition) && playerDistance <= DetectionRange)
+                {
+                    _chaseMemory.Observe(world.PlayerPosition);
+                    State = EnemyState.Chase;
+                }
+                else
+                {
+                    _searchRemaining -= deltaSeconds;
+                    if (_searchRemaining <= 0.0) BeginReturn();
+                }
+                break;
+
+            case EnemyState.Attack:
+                if (!world.Player.IsAlive || playerDistance > disengageRange || homeDistance > MaxLeashDistance)
+                {
                     Attack.Reset();
-                    _provokedByDamage = false;
-                    _chaseMemory.Reset();
+                    BeginReturn();
                 }
                 else if (playerDistance > AttackExitRange && Attack.Phase != EnemyAttackPhase.Windup)
                 {
                     State = EnemyState.Chase;
                     Attack.Advance(deltaSeconds, out _);
-                    if (HasLineOfSight(world, world.PlayerPosition))
-                        _chaseMemory.Observe(world.PlayerPosition);
+                    if (HasLineOfSight(world, world.PlayerPosition)) _chaseMemory.Observe(world.PlayerPosition);
                 }
-                else
-                {
-                    UpdateAttack(world, deltaSeconds, playerDistance);
-                }
+                else UpdateAttack(world, deltaSeconds, playerDistance);
                 break;
 
             case EnemyState.Return:
@@ -206,10 +203,7 @@ public sealed class EnemyAgent : IDamageReceiver
                     _provokedByDamage = false;
                     _chaseMemory.Reset();
                 }
-                else
-                {
-                    MoveTowards(world, HomePosition, ReturnSpeed, deltaSeconds);
-                }
+                else MoveTowards(world, HomePosition, ReturnSpeed, deltaSeconds);
                 break;
 
             case EnemyState.Dead:
@@ -221,18 +215,15 @@ public sealed class EnemyAgent : IDamageReceiver
 
     public void Restore(EnemySnapshot snapshot)
     {
-        if (!string.Equals(snapshot.Id, Id, StringComparison.Ordinal) ||
-            !IsFinite(snapshot.Position) ||
-            !float.IsFinite(snapshot.Health) ||
-            snapshot.Health < 0f || snapshot.Health > MaxHealth)
-        {
+        if (!string.Equals(snapshot.Id, Id, StringComparison.Ordinal) || !IsFinite(snapshot.Position) ||
+            !float.IsFinite(snapshot.Health) || snapshot.Health < 0f || snapshot.Health > MaxHealth)
             throw new ArgumentException("Enemy snapshot is invalid.", nameof(snapshot));
-        }
 
         Position = snapshot.Position;
         Health = snapshot.Health;
         State = Health <= 0f ? EnemyState.Dead : snapshot.State;
         _alertRemaining = 0;
+        _searchRemaining = 0;
         Attack.Reset();
         if (State == EnemyState.Attack) Attack.Interrupt();
         _hitReactionRemaining = 0;
@@ -242,31 +233,21 @@ public sealed class EnemyAgent : IDamageReceiver
 
     public void ApplyDamage(float amount, DamageType damageType)
     {
-        if (!Enum.IsDefined(damageType))
-        {
-            throw new ArgumentOutOfRangeException(nameof(damageType));
-        }
-
+        if (!Enum.IsDefined(damageType)) throw new ArgumentOutOfRangeException(nameof(damageType));
         TakeDamage(amount);
     }
 
     public void TakeDamage(float amount)
     {
-        if (!float.IsFinite(amount) || amount < 0f)
-        {
-            throw new ArgumentOutOfRangeException(nameof(amount));
-        }
-
-        if (!IsAlive || amount <= 0f)
-        {
-            return;
-        }
+        if (!float.IsFinite(amount) || amount < 0f) throw new ArgumentOutOfRangeException(nameof(amount));
+        if (!IsAlive || amount <= 0f) return;
 
         Health = MathF.Max(0f, Health - amount);
         if (Health <= 0f)
         {
             State = EnemyState.Dead;
             _alertRemaining = 0;
+            _searchRemaining = 0;
             _hitReactionRemaining = 0;
             Attack.Reset();
             _provokedByDamage = false;
@@ -277,14 +258,23 @@ public sealed class EnemyAgent : IDamageReceiver
         _provokedByDamage = true;
         _hitReactionRemaining = HitReactionSeconds;
         if (Attack.Phase == EnemyAttackPhase.Windup) Attack.Interrupt();
-
-        if (State is EnemyState.Chase or EnemyState.Attack)
-        {
-            return;
-        }
-
+        if (State is EnemyState.Chase or EnemyState.Attack) return;
         State = EnemyState.Alert;
         _alertRemaining = AlertSeconds;
+    }
+
+    private void BeginSearch()
+    {
+        State = EnemyState.Search;
+        _searchRemaining = SearchSeconds;
+    }
+
+    private void BeginReturn()
+    {
+        State = EnemyState.Return;
+        _searchRemaining = 0;
+        _provokedByDamage = false;
+        _chaseMemory.Reset();
     }
 
     private void UpdateAttack(WorldState world, double deltaSeconds, float playerDistance)
@@ -298,14 +288,11 @@ public sealed class EnemyAgent : IDamageReceiver
                 LockFacingTowards(world.PlayerPosition);
                 Attack.TryStart();
             }
-
             remaining = Attack.Advance(remaining, out var impact);
             if (impact && MathF.Abs(world.PlayerPosition.Y - Position.Y) <= Height &&
                 MeleeHitDetection.FindTargets(Position, FacingDirection, AttackExitRange, 55f,
                     [new MeleeHitCandidate("player", world.PlayerPosition)]).Count != 0)
-            {
                 world.Player.TakeDamage(Damage);
-            }
         }
     }
 
@@ -317,10 +304,8 @@ public sealed class EnemyAgent : IDamageReceiver
         {
             var min = new Vector2(obstacle.Position.X, obstacle.Position.Z) - obstacle.HalfSize;
             var max = new Vector2(obstacle.Position.X, obstacle.Position.Z) + obstacle.HalfSize;
-            if (SegmentIntersectsBox(start, end, min, max))
-                return false;
+            if (SegmentIntersectsBox(start, end, min, max)) return false;
         }
-
         return true;
     }
 
@@ -329,7 +314,6 @@ public sealed class EnemyAgent : IDamageReceiver
         var direction = end - start;
         var tMin = 0f;
         var tMax = 1f;
-
         if (!ClipAxis(start.X, direction.X, min.X, max.X, ref tMin, ref tMax)) return false;
         if (!ClipAxis(start.Y, direction.Y, min.Y, max.Y, ref tMin, ref tMax)) return false;
         return tMax >= tMin;
@@ -337,9 +321,7 @@ public sealed class EnemyAgent : IDamageReceiver
 
     private static bool ClipAxis(float origin, float direction, float min, float max, ref float tMin, ref float tMax)
     {
-        if (MathF.Abs(direction) <= 0.000001f)
-            return origin >= min && origin <= max;
-
+        if (MathF.Abs(direction) <= 0.000001f) return origin >= min && origin <= max;
         var inverse = 1f / direction;
         var near = (min - origin) * inverse;
         var far = (max - origin) * inverse;
@@ -353,9 +335,7 @@ public sealed class EnemyAgent : IDamageReceiver
     {
         var direction = target - Position;
         direction.Y = 0f;
-        if (!IsFinite(direction) || direction.LengthSquared() <= 0.000001f)
-            return;
-
+        if (!IsFinite(direction) || direction.LengthSquared() <= 0.000001f) return;
         FacingDirection = Vector3.Normalize(direction);
     }
 
@@ -367,7 +347,6 @@ public sealed class EnemyAgent : IDamageReceiver
             _patrolSign *= -1f;
             target = HomePosition + new Vector3(PatrolDistance * _patrolSign, 0f, 0f);
         }
-
         MoveTowards(world, target, MoveSpeed * 0.55f, deltaSeconds);
     }
 
@@ -377,11 +356,7 @@ public sealed class EnemyAgent : IDamageReceiver
         var destination = new Vector2(target.X, target.Z);
         var difference = destination - current;
         var distance = difference.Length();
-        if (distance <= 0.0001f)
-        {
-            return;
-        }
-
+        if (distance <= 0.0001f) return;
         FacingDirection = new Vector3(difference.X, 0f, difference.Y) / distance;
         var step = MathF.Min(distance, speed * (float)deltaSeconds);
         var desired = current + difference / distance * step;
