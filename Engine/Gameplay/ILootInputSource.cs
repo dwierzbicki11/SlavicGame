@@ -1,4 +1,4 @@
-using Veldrid;
+using Veldrid.Sdl2;
 
 namespace SlavicGame.Engine.Gameplay;
 
