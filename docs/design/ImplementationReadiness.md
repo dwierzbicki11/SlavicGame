@@ -1,6 +1,6 @@
 # Implementation Readiness
 
-Stan kolejki implementacyjnej po scaleniu MQ43. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
+Stan kolejki implementacyjnej po scaleniu MQ44. Dokument wskazuje, co można bezpiecznie implementować bez zgadywania i jaki jest aktualny element sekwencyjnej pracy.
 
 ## Zasada sekwencyjna
 
@@ -28,27 +28,30 @@ Implementujemy dokładnie jeden element naraz. Następny element może rozpoczą
 - [x] MQ41 „Dwa echa” — scalone po zielonym CI.
 - [x] MQ42 „Ten, który pozostał” — Parent B/skip, persistence i handoff do MQ43 — scalone po zielonym CI.
 - [x] MQ43 „Czwarta nie jest miejscem” — reveal Splotu, recovery i handoff do MQ44 — scalone po zielonym CI.
+- [x] MQ44 „Powrót z wiedzą” — powrót, eskalacja, final-needs synthesis i handoff do MQ50 — scalone po zielonym CI.
 
 ## Aktywny element
 
-### MQ44 „Powrót z wiedzą” — IMPLEMENTED, oczekuje na CI/merge
+### MQ50 „Stare zobowiązania” — BLOCKED przed bezpieczną implementacją snapshotu
 
-Kontrakt z `docs/quests/MainQuestCardsAct4.md`:
+Kontrakt z `docs/quests/MainQuestCardsAct5.md` jest wystarczający dla gatingu, lifecycle i persistence, ale nie definiuje jeszcze deterministycznego sposobu wyliczenia czterech wymaganych tierów snapshotu z istniejącego stanu świata.
 
-1. wejście wymaga `MQ43_COMPLETE`, `MQ43_SPLOT_TRUTH_KNOWN` i trwałej kotwicy powrotnej MQ40;
-2. powrót do Jawii zapisuje `MQ44_RETURNED_TO_JAWIA`;
-3. eskalacja kryzysu następuje dopiero po powrocie i zapisuje `MQ44_CRISIS_ESCALATED`;
-4. regionalne wiadomości mogą różnić treść/zasoby, ale krytyczna synteza potrzeb finału ma fallback niezależny od konkretnego posłańca;
-5. `MQ44_FINAL_NEEDS_KNOWN` jest trwałe przez save/load;
-6. completion zapisuje `MQ44_COMPLETE` i oferuje MQ50 dokładnie raz, bez resetowania późniejszego postępu;
-7. ścieżki MQ42 Parent B i skip muszą obie prowadzić przez MQ44 bez softlocka.
+Twardy blocker do zamknięcia w ramach MQ50:
 
-## Kolejka po MQ44
+1. zdefiniować skończoną skalę/typ tieru dla `people`, `materials`, `knowledge`, `divine_terms`;
+2. wskazać bazowe wkłady z main questu gwarantujące ścieżkę bez side questów;
+3. wskazać istniejące trwałe flagi/stany, które są opcjonalnymi wzmocnieniami każdej kategorii;
+4. zdefiniować deterministyczne mapowanie wkładów na tier bez finalnych wartości balansu wymagających playtestu;
+5. określić zachowanie dla nieznanych/starych stanów save oraz potwierdzić, że snapshot po utworzeniu nie jest przeliczany.
 
-Po pełnym zakończeniu MQ44 należy ponownie przeanalizować aktualny `main`, WorkQueue, Coverage, ten dokument oraz kartę Aktu V. MQ50 może rozpocząć się wyłącznie po zielonym CI i merge MQ44 oraz ponownym potwierdzeniu readiness.
+Nie wolno implementować arbitralnego `tier = count(flags)`, domyślnych progów ani ręcznie wybranej listy flag bez owner spec. Po zamknięciu powyższego kontraktu wracamy do tego samego MQ50; MQ51 nie może zostać rozpoczęte.
+
+## Kolejka po MQ50
+
+Po pełnym zakończeniu MQ50 (implementacja, regresje, zielone CI i merge) należy ponownie przeanalizować aktualny `main`, WorkQueue, Coverage, ten dokument oraz kartę Aktu V. MQ51 może rozpocząć się dopiero wtedy.
 
 ## Otwarte decyzje implementacyjne
 
-- MQ44: konkretne regionalne wiadomości, posłańcy, line writing i staging pozostają content/VO lockiem; runtime zachowuje krytyczny fallback.
-- MQ44: warianty regionalne zmieniają treść i zasoby, nie fakt odblokowania Aktu V.
-- MQ44: finalne wartości zasobów i balansu pozostają playtest/measurement lockiem.
+- MQ50: skala i deterministyczne mapowanie `MQ50_*_TIER` z trwałego world state — twardy blocker bieżącego zadania.
+- MQ50: konkretne regionalne sceny powrotów, line writing i staging pozostają content/VO lockiem i nie blokują runtime po zamknięciu mapowania tierów.
+- MQ50: finalne tuning values progów/korzyści pozostają playtest/measurement lockiem; kontrakt mapowania musi rozdzielać stabilną semantykę tierów od późniejszego tuningu.
