@@ -1,4 +1,4 @@
-using Veldrid;
+using Veldrid.Sdl2;
 using SlavicGame.Engine.Interaction;
 using SlavicGame.Engine.World;
 
