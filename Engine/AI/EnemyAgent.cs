@@ -39,6 +39,7 @@ public sealed class EnemyAgent : IDamageReceiver
     private double _alertRemaining;
     private double _hitReactionRemaining;
     private bool _provokedByDamage;
+    private readonly EnemyChaseMemory _chaseMemory = new();
 
     public string Id { get; }
     public Vector3 HomePosition { get; }
@@ -82,6 +83,7 @@ public sealed class EnemyAgent : IDamageReceiver
         {
             State = EnemyState.Dead;
             Attack.Reset();
+            _chaseMemory.Reset();
             return;
         }
 
@@ -122,6 +124,7 @@ public sealed class EnemyAgent : IDamageReceiver
                 {
                     State = EnemyState.Return;
                     _provokedByDamage = false;
+                    _chaseMemory.Reset();
                     break;
                 }
 
@@ -129,6 +132,8 @@ public sealed class EnemyAgent : IDamageReceiver
                 if (_alertRemaining <= 0.0)
                 {
                     State = EnemyState.Chase;
+                    if (HasLineOfSight(world, world.PlayerPosition))
+                        _chaseMemory.Observe(world.PlayerPosition);
                 }
                 break;
 
@@ -139,15 +144,34 @@ public sealed class EnemyAgent : IDamageReceiver
                 {
                     State = EnemyState.Return;
                     _provokedByDamage = false;
+                    _chaseMemory.Reset();
                 }
-                else if (playerDistance <= AttackRange)
+                else if (HasLineOfSight(world, world.PlayerPosition))
                 {
-                    State = EnemyState.Attack;
-                    LockFacingTowards(world.PlayerPosition);
+                    _chaseMemory.Observe(world.PlayerPosition);
+                    if (playerDistance <= AttackRange)
+                    {
+                        State = EnemyState.Attack;
+                        LockFacingTowards(world.PlayerPosition);
+                    }
+                    else
+                    {
+                        MoveTowards(world, world.PlayerPosition, MoveSpeed, deltaSeconds);
+                    }
                 }
                 else
                 {
-                    MoveTowards(world, world.PlayerPosition, MoveSpeed, deltaSeconds);
+                    _chaseMemory.AdvanceUnseen(deltaSeconds);
+                    if (!_chaseMemory.HasKnownPosition || _chaseMemory.IsExpired)
+                    {
+                        State = EnemyState.Return;
+                        _provokedByDamage = false;
+                        _chaseMemory.Reset();
+                    }
+                    else
+                    {
+                        MoveTowards(world, _chaseMemory.LastKnownPosition, MoveSpeed, deltaSeconds);
+                    }
                 }
                 break;
 
@@ -159,11 +183,14 @@ public sealed class EnemyAgent : IDamageReceiver
                     State = EnemyState.Return;
                     Attack.Reset();
                     _provokedByDamage = false;
+                    _chaseMemory.Reset();
                 }
                 else if (playerDistance > AttackExitRange && Attack.Phase != EnemyAttackPhase.Windup)
                 {
                     State = EnemyState.Chase;
                     Attack.Advance(deltaSeconds, out _);
+                    if (HasLineOfSight(world, world.PlayerPosition))
+                        _chaseMemory.Observe(world.PlayerPosition);
                 }
                 else
                 {
@@ -177,6 +204,7 @@ public sealed class EnemyAgent : IDamageReceiver
                     Position = HomePosition;
                     State = EnemyState.Patrol;
                     _provokedByDamage = false;
+                    _chaseMemory.Reset();
                 }
                 else
                 {
@@ -209,6 +237,7 @@ public sealed class EnemyAgent : IDamageReceiver
         if (State == EnemyState.Attack) Attack.Interrupt();
         _hitReactionRemaining = 0;
         _provokedByDamage = false;
+        _chaseMemory.Reset();
     }
 
     public void ApplyDamage(float amount, DamageType damageType)
@@ -241,6 +270,7 @@ public sealed class EnemyAgent : IDamageReceiver
             _hitReactionRemaining = 0;
             Attack.Reset();
             _provokedByDamage = false;
+            _chaseMemory.Reset();
             return;
         }
 
