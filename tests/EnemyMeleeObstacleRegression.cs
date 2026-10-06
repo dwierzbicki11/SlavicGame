@@ -11,12 +11,13 @@ internal static class EnemyMeleeObstacleRegression
         var world = new WorldState();
         world.Initialize();
 
-        // The shrine stone is a real solid WorldObstacle. Keep both actors within melee
-        // range while its collider intersects the strike segment so the regression isolates
-        // impact occlusion rather than aggro/chase behavior.
-        var enemyPosition = new Vector3(-85.6f, 0f, 55f);
+        // Cross the south-west corner of the real shrine-stone-east collider. Both actors
+        // remain outside the solid AABB and inside melee range, while the strike segment
+        // passes through the obstacle corner. This isolates impact occlusion without
+        // relying on an actor being embedded in world collision.
+        var enemyPosition = new Vector3(-80.3f, 0f, 54.1f);
         enemyPosition.Y = world.Terrain.SampleHeight(enemyPosition);
-        var playerPosition = new Vector3(-84.4f, 0f, 55f);
+        var playerPosition = new Vector3(-79.9f, 0f, 53.7f);
         playerPosition.Y = world.Terrain.SampleHeight(playerPosition);
         world.SetPlayerPosition(playerPosition);
 
