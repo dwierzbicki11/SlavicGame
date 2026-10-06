@@ -14,6 +14,7 @@ namespace SlavicGame.Engine.Renderer;
 public sealed class VeldridRenderer : IDisposable
 {
     private readonly List<HudVertex> _hudVertices = [];
+    private readonly List<DeviceBuffer> _retiredHudVertexBuffers = [];
     private readonly SkyRenderer _sky = new();
     private readonly ShadowMapRenderer _shadows = new();
     private readonly TerrainMaterialRenderer _terrain = new();
@@ -1180,8 +1181,8 @@ public sealed class VeldridRenderer : IDisposable
         if (_hudVertices.Count > _hudVertexCapacity)
         {
             _hudVertexCapacity = (uint)Math.Max(_hudVertices.Count, _hudVertexCapacity * 2);
-            _graphicsDevice.WaitForIdle();
-            _hudVertexBuffer.Dispose();
+            if (_hudVertexBuffer is not null)
+                _retiredHudVertexBuffers.Add(_hudVertexBuffer);
             _hudVertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(
                 HudVertex.SizeInBytes * _hudVertexCapacity,
                 BufferUsage.VertexBuffer));
@@ -1278,7 +1279,10 @@ public sealed class VeldridRenderer : IDisposable
         }
         if (_hudVertices.Count > 0)
         {
-            _commandList.UpdateBuffer(_hudVertexBuffer, 0, _hudVertices.ToArray());
+            _commandList.UpdateBuffer(
+                _hudVertexBuffer,
+                0,
+                System.Runtime.InteropServices.CollectionsMarshal.AsSpan(_hudVertices));
         }
 
         if (shadowEnabled)
@@ -1908,6 +1912,9 @@ public sealed class VeldridRenderer : IDisposable
         _hudSet?.Dispose();
         _hudLayout?.Dispose();
         _hudVertexBuffer?.Dispose();
+        foreach (var retiredHudVertexBuffer in _retiredHudVertexBuffers)
+            retiredHudVertexBuffer.Dispose();
+        _retiredHudVertexBuffers.Clear();
         _hudScreenBuffer?.Dispose();
 
         _actorPipeline?.Dispose();
