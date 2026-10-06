@@ -290,6 +290,7 @@ public sealed class EnemyAgent : IDamageReceiver
             }
             remaining = Attack.Advance(remaining, out var impact);
             if (impact && MathF.Abs(world.PlayerPosition.Y - Position.Y) <= Height &&
+                HasLineOfSight(world, world.PlayerPosition) &&
                 MeleeHitDetection.FindTargets(Position, FacingDirection, AttackExitRange, 55f,
                     [new MeleeHitCandidate("player", world.PlayerPosition)]).Count != 0)
                 world.Player.TakeDamage(Damage);
