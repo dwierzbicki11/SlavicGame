@@ -101,6 +101,8 @@ public sealed class PlayerMeleeCombat
                             actor.Position,
                             profile.BodyRadius);
                     }))
+            .Where(candidate => world.Obstacles.All(obstacle =>
+                !obstacle.BlocksHorizontalSegment(world.PlayerPosition, candidate.Position)))
             .ToArray();
 
         var hits = MeleeHitResolver.ResolveActiveHits(

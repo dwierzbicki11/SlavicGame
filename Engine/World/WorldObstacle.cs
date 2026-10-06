@@ -50,6 +50,23 @@ public sealed class WorldObstacle
         return Vector2.DistanceSquared(center, closest) < radius * radius;
     }
 
+    public bool BlocksHorizontalSegment(Vector3 start, Vector3 end)
+    {
+        if (!IsFinite(start) || !IsFinite(end))
+            throw new ArgumentOutOfRangeException(nameof(start), "Segment endpoints must be finite.");
+
+        var origin = new Vector2(start.X, start.Z);
+        var direction = new Vector2(end.X - start.X, end.Z - start.Z);
+        var min = new Vector2(Position.X, Position.Z) - HalfSize;
+        var max = new Vector2(Position.X, Position.Z) + HalfSize;
+        var tMin = 0f;
+        var tMax = 1f;
+
+        return ClipAxis(origin.X, direction.X, min.X, max.X, ref tMin, ref tMax) &&
+               ClipAxis(origin.Y, direction.Y, min.Y, max.Y, ref tMin, ref tMax) &&
+               tMax >= tMin;
+    }
+
     public Vector2 ResolvePoint(Vector2 point, float radius)
     {
         if (!float.IsFinite(point.X) || !float.IsFinite(point.Y) ||
@@ -81,6 +98,18 @@ public sealed class WorldObstacle
         else point.Y = max.Y + ResolveEpsilon;
 
         return point;
+    }
+
+    private static bool ClipAxis(float origin, float direction, float min, float max, ref float tMin, ref float tMax)
+    {
+        if (MathF.Abs(direction) <= 0.000001f) return origin >= min && origin <= max;
+        var inverse = 1f / direction;
+        var near = (min - origin) * inverse;
+        var far = (max - origin) * inverse;
+        if (near > far) (near, far) = (far, near);
+        tMin = MathF.Max(tMin, near);
+        tMax = MathF.Min(tMax, far);
+        return tMin <= tMax;
     }
 
     private static bool IsFinite(Vector3 value) =>
