@@ -17,7 +17,7 @@ internal static class UpscalerOrientationProof
             foreach (var size in new[] { (1366u, 768u), (1280u, 720u), (960u, 540u) })
                 RunSize(device, size.Item1, size.Item2);
         }
-        Console.WriteLine("Upscaler orientation runtime proof: 24 checks passed;");
+        Console.WriteLine("Upscaler orientation runtime proof: 36 checks passed;");
     }
 
     private static void RunSize(GraphicsDevice device, uint width, uint height)
@@ -67,6 +67,38 @@ internal static class UpscalerOrientationProof
         ValidateCapture(UpscalerMode.Bilinear, ReadCapture(UpscalerMode.Bilinear, view));
         ValidateCapture(UpscalerMode.Fsr1, ReadCapture(UpscalerMode.Fsr1, view));
 
+        // Post-process and bloom are also fullscreen offscreen passes before
+        // FSR/presentation. They must preserve the same texture-row convention.
+        using (var post = new PostProcessRenderer())
+        {
+            post.Initialize(device, target.OutputDescription, view, width, height);
+            var settings = new GameSettings
+            {
+                AntiAliasing = AntiAliasingMode.Off,
+                Bloom = BloomQuality.Off,
+                BloomStrength = 0f,
+                Brightness = 1f,
+                Gamma = 2.2f
+            };
+            using var commands = factory.CreateCommandList();
+            commands.Begin();
+            var postView = post.Render(commands, settings);
+            commands.End();
+            device.SubmitCommands(commands);
+            ValidateBytes("POSTPROCESS", Read(UpscalerMode.Bilinear, postView));
+        }
+
+        using (var bloom = new BloomRenderer())
+        {
+            bloom.Initialize(device, target.OutputDescription, view, width, height);
+            using var commands = factory.CreateCommandList();
+            commands.Begin();
+            var bloomView = bloom.Render(commands, BloomQuality.Low, threshold: 0.05f);
+            commands.End();
+            device.SubmitCommands(commands);
+            ValidateBytes("BLOOM", Read(UpscalerMode.Bilinear, bloomView), redDelta: 25, blueDelta: 20);
+        }
+
         // Native temporal output preserves texture row order; compose it with
         // the same final pass as the game and compare against spatial baseline.
         if (!FidelityFxUpscaler.TryCreate(device, 1366, 768, out var upscaler, out var diagnostic))
@@ -105,6 +137,22 @@ internal static class UpscalerOrientationProof
                     $"clipYInverted={device.IsClipSpaceYInverted}, sample={i}");
         Console.WriteLine($"PASS: Native FSR3 {width}x{height} -> 1366x768 matches BILINEAR orientation " +
             $"(clipYInverted={device.IsClipSpaceYInverted})");
+
+        void ValidateBytes(
+            string stage,
+            byte[] samples,
+            int redDelta = 100,
+            int blueDelta = 70)
+        {
+            if (samples[0] - samples[6] < redDelta ||
+                samples[2] - samples[5] < blueDelta)
+                throw new Exception(
+                    $"{stage} inverted an asymmetric source at {width}x{height}, " +
+                    $"clipYInverted={device.IsClipSpaceYInverted}");
+            Console.WriteLine(
+                $"PASS: {stage} preserves texture rows at {width}x{height} " +
+                $"(clipYInverted={device.IsClipSpaceYInverted})");
+        }
 
         void ValidateCapture(UpscalerMode mode, float[] samples)
         {
