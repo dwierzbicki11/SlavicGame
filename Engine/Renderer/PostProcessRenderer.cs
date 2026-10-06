@@ -41,11 +41,18 @@ public sealed class PostProcessRenderer : IDisposable
         _shaders = ShaderLibrary.LoadPair(factory, "postprocess");
         RecreateTarget(width, height, sceneOutput.ColorAttachments[0].Format);
         RebindSources(sourceView, sourceView);
+        var preserveTextureRows =
+            graphicsDevice.BackendType == GraphicsBackend.Vulkan &&
+            !graphicsDevice.IsClipSpaceYInverted;
         _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend, DepthStencilStateDescription.Disabled,
             new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, false),
             PrimitiveTopology.TriangleList,
-            new ShaderSetDescription(Array.Empty<VertexLayoutDescription>(), _shaders), [_layout], _framebuffer!.OutputDescription));
+            new ShaderSetDescription(
+                Array.Empty<VertexLayoutDescription>(),
+                _shaders,
+                [new SpecializationConstant(0, preserveTextureRows ? 1u : 0u)]),
+            [_layout], _framebuffer!.OutputDescription));
     }
 
     public void SetSources(TextureView sourceView, TextureView bloomView, uint width, uint height, PixelFormat colorFormat)
