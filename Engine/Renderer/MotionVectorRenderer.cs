@@ -156,7 +156,8 @@ public sealed class MotionVectorRenderer : IDisposable
         TextureView depthSource,
         Texture depthTexture,
         uint width,
-        uint height)
+        uint height,
+        bool deviceAlreadyIdle = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(depthSource);
@@ -171,7 +172,8 @@ public sealed class MotionVectorRenderer : IDisposable
         height = Math.Max(1u, height);
         if (_width != width || _height != height)
         {
-            _graphicsDevice.WaitForIdle();
+            if (!deviceAlreadyIdle)
+                _graphicsDevice.WaitForIdle();
             RecreateTarget(width, height);
         }
         else
