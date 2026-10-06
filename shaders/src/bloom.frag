@@ -14,9 +14,11 @@ layout(location = 0) out vec4 fsout_Color;
 
 vec3 SampleSource(vec2 uv)
 {
-    return texture(
-        sampler2D(SourceColor, BloomSampler),
-        clamp(uv, vec2(0.0), vec2(1.0))).rgb;
+    // GraphicsDevice.LinearSampler is the engine's linear-clamp sampler, so
+    // clamping UVs in the shader duplicated the sampler's address-mode work on
+    // every bloom tap. Keeping edge handling in the sampler removes that ALU
+    // from the 4-tap downsample and every separable blur sample.
+    return texture(sampler2D(SourceColor, BloomSampler), uv).rgb;
 }
 
 vec3 BrightPart(vec3 color, float threshold)
