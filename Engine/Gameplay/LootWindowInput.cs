@@ -1,6 +1,5 @@
 using Veldrid;
 using SlavicGame.Engine.Interaction;
-using SlavicGame.Engine.Windowing;
 using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Gameplay;
@@ -12,21 +11,21 @@ namespace SlavicGame.Engine.Gameplay;
 /// </summary>
 public static class LootWindowInput
 {
-    public static LootContainerResult? Dispatch(GameWindow window, WorldState world)
+    public static LootContainerResult? Dispatch(ILootInputSource input, WorldState world)
     {
-        ArgumentNullException.ThrowIfNull(window);
+        ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(world);
         if (!world.Loot.IsOpen) return null;
 
         return LootInputRouter.Dispatch(
             world,
-            close: window.ConsumeKeyPress(Key.Escape),
-            containerPanel: window.ConsumeKeyPress(Key.A),
-            inventoryPanel: window.ConsumeKeyPress(Key.D),
-            previous: window.ConsumeKeyPress(Key.W),
-            next: window.ConsumeKeyPress(Key.S),
-            transfer: window.ConsumeKeyPress(Key.E),
-            transferStack: window.IsKeyDown(Key.ShiftLeft),
-            takeAll: window.ConsumeKeyPress(Key.F));
+            close: input.ConsumeKeyPress(Key.Escape),
+            containerPanel: input.ConsumeKeyPress(Key.A),
+            inventoryPanel: input.ConsumeKeyPress(Key.D),
+            previous: input.ConsumeKeyPress(Key.W),
+            next: input.ConsumeKeyPress(Key.S),
+            transfer: input.ConsumeKeyPress(Key.E),
+            transferStack: input.IsKeyDown(Key.ShiftLeft),
+            takeAll: input.ConsumeKeyPress(Key.F));
     }
 }
