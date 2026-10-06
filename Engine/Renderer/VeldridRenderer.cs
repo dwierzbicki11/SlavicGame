@@ -1854,9 +1854,20 @@ public sealed class VeldridRenderer : IDisposable
         if (_graphicsDevice is null)
             return;
 
+        var renderWidth = checked((uint)Math.Max(1, width));
+        var renderHeight = checked((uint)Math.Max(1, height));
+        if (_resolutionScaler.Width == renderWidth &&
+            _resolutionScaler.Height == renderHeight)
+            return;
+
+        // Scene color/depth, motion and reactive targets all retire resources
+        // from the same preceding frames. Synchronize once instead of forcing
+        // up to three device-wide waits while cycling graphics resolutions.
+        _graphicsDevice.WaitForIdle();
         _resolutionScaler.SetResolution(
-            checked((uint)Math.Max(1, width)),
-            checked((uint)Math.Max(1, height)));
+            renderWidth,
+            renderHeight,
+            deviceAlreadyIdle: true);
 
         ResetTemporalHistory();
         if (_temporalInputsEnabled &&
@@ -1868,7 +1879,8 @@ public sealed class VeldridRenderer : IDisposable
                 temporalDepth,
                 temporalDepthTexture,
                 _resolutionScaler.Width,
-                _resolutionScaler.Height);
+                _resolutionScaler.Height,
+                deviceAlreadyIdle: true);
         }
         if (_temporalInputsEnabled &&
             _reactiveMask.IsInitialized &&
@@ -1877,7 +1889,8 @@ public sealed class VeldridRenderer : IDisposable
             _reactiveMask.SetDepthSource(
                 reactiveDepthTexture,
                 _resolutionScaler.Width,
-                _resolutionScaler.Height);
+                _resolutionScaler.Height,
+                deviceAlreadyIdle: true);
         }
 
         var sceneOutput =
