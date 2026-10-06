@@ -261,12 +261,22 @@ public sealed class ResolutionScalerRenderer : IDisposable
             target.OutputDescription.SampleCount != TextureSampleCount.Count1)
             throw new ArgumentException("FG capture requires a color-only RGBA16F framebuffer.", nameof(target));
         if (_graphicsDevice is null) throw new InvalidOperationException("Scaler is not initialized.");
+
+        // A swapchain presentation and an offscreen texture draw do not share
+        // the same Vulkan viewport row convention. Preserve texture rows for
+        // FG's HUD-less target just like the EASU intermediate target does.
+        var preserveTextureRows =
+            _graphicsDevice.BackendType == GraphicsBackend.Vulkan &&
+            !_graphicsDevice.IsClipSpaceYInverted;
         _captureBilinearPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
-            _bilinearShaders!, _bilinearLayout!, target.OutputDescription);
+            _bilinearShaders!, _bilinearLayout!, target.OutputDescription,
+            preserveTextureRows);
         _captureEasuPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
-            _easuShaders!, _easuLayout!, target.OutputDescription);
+            _easuShaders!, _easuLayout!, target.OutputDescription,
+            preserveTextureRows);
         _captureRcasPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
-            _rcasShaders!, _rcasLayout!, target.OutputDescription);
+            _rcasShaders!, _rcasLayout!, target.OutputDescription,
+            preserveTextureRows);
         PresentCore(commands, target, upscaler, sharpness, source, capture: true);
     }
 
