@@ -426,14 +426,25 @@ public sealed class VeldridRenderer : IDisposable
                     DynamicMotionVertex.SizeInBytes *
                     _dynamicMotionVertexCapacity,
                     BufferUsage.VertexBuffer | BufferUsage.Dynamic));
-            _reactiveMask.Initialize(
-                _graphicsDevice,
-                _cameraLayout,
-                temporalDepthTexture,
-                _resolutionScaler.Width,
-                _resolutionScaler.Height);
+
+            // Frame Generation consumes depth + motion but not FSR's reactive
+            // mask. Do not allocate/render that extra target for FG-only runs.
+            var needsReactiveMask =
+                _fsr3Requested || TemporalInputPolicy.IsEnabled();
+            if (needsReactiveMask)
+            {
+                _reactiveMask.Initialize(
+                    _graphicsDevice,
+                    _cameraLayout,
+                    temporalDepthTexture,
+                    _resolutionScaler.Width,
+                    _resolutionScaler.Height);
+            }
+
             EngineLog.Info(
-                "Temporal FSR inputs enabled: camera + dynamic object motion + reactive mask.");
+                needsReactiveMask
+                    ? "Temporal FSR inputs enabled: camera + dynamic object motion + reactive mask."
+                    : "Temporal FG inputs enabled: camera + dynamic object motion; reactive mask skipped.");
         }
         else if (_temporalInputsEnabled)
         {
@@ -787,13 +798,17 @@ public sealed class VeldridRenderer : IDisposable
         MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
         var spectralEnd = checked((uint)actorIndices.Length);
 
-        var reactiveRanges = new ReactiveMaskRange[]
-        {
-            new(0, opaqueDynamicEnd, 0.42f),
-            new(waterStart, waterEnd - waterStart, 0.88f),
-            new(transientStart, transientEnd - transientStart, 1.0f),
-            new(spectralStart, spectralEnd - spectralStart, 1.0f)
-        };
+        // Opaque moving actors already have per-object motion vectors. Marking
+        // them reactive wastes another geometry pass and weakens temporal reuse.
+        // Reserve the mask for content FSR actually needs help reconstructing.
+        var reactiveRanges = fsr3Active
+            ? new ReactiveMaskRange[]
+            {
+                new(waterStart, waterEnd - waterStart, 0.88f),
+                new(transientStart, transientEnd - transientStart, 1.0f),
+                new(spectralStart, spectralEnd - spectralStart, 1.0f)
+            }
+            : [];
 
         EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
         _actorIndexCount = (uint)actorIndices.Length;
@@ -1361,7 +1376,7 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.DrawIndexed(_actorIndexCount);
         }
 
-        if (_temporalInputsEnabled && _reactiveMask.IsInitialized)
+        if (fsr3Active && _reactiveMask.IsInitialized)
         {
             _reactiveMask.Render(
                 _commandList,
@@ -1433,6 +1448,7 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.End();
             _graphicsDevice.SubmitCommands(_commandList);
 
+            var fsr3ProducedFrame = false;
             if (fsr3Active && _fsr3Upscaler is not null)
             {
                 try
@@ -1447,6 +1463,7 @@ public sealed class VeldridRenderer : IDisposable
                     displaySource = _resolutionScaler.Fsr3OutputView;
                     displayUpscaler = UpscalerMode.Bilinear;
                     displaySharpness = 0f;
+                    fsr3ProducedFrame = true;
                 }
                 catch (Exception exception)
                 {
@@ -1461,36 +1478,81 @@ public sealed class VeldridRenderer : IDisposable
 
             try { _frameGeneration?.EnsureDisplaySize(displayWidth, displayHeight); }
             catch (Exception exception) { DisableSceneFrameGeneration(exception); }
-            _commandList.Begin();
+
             if (_frameGeneration is { } fgScene)
             {
                 Exception? fgFailure = null;
-                try
+
+                if (fsr3ProducedFrame)
                 {
-                    _resolutionScaler.CaptureDisplayColor(_commandList, fgScene.HudlessFramebuffer,
-                        displayUpscaler, displaySharpness, displaySource);
-                }
-                catch (Exception exception) { fgFailure = exception; }
-                _commandList.End();
-                _graphicsDevice.SubmitCommands(_commandList);
-                if (fgFailure is null)
-                {
+                    // Native FSR3 already produced display-size RGBA16F without
+                    // HUD/UI. Feed that exact image into FG instead of spending
+                    // another full-screen 1080p raster copy every rendered frame.
                     try
                     {
-                        fgScene.Dispatch(fsrDepth, _motionVectors.MotionVectorTexture,
-                            temporalFrame, sceneFrameId, (float)Math.Max(0.00001, frameDeltaSeconds),
-                            camera.NearPlane, camera.FarPlane, camera.FieldOfView);
-                        // The real displayed frame uses exactly the image FG
-                        // consumed. HUD/menu are drawn only after this pass.
-                        displaySource = fgScene.HudlessView;
+                        fgScene.Dispatch(
+                            fsrDepth,
+                            _motionVectors.MotionVectorTexture,
+                            temporalFrame,
+                            sceneFrameId,
+                            (float)Math.Max(0.00001, frameDeltaSeconds),
+                            camera.NearPlane,
+                            camera.FarPlane,
+                            camera.FieldOfView,
+                            colorOverride: _resolutionScaler.Fsr3OutputTexture);
+                        displaySource = _resolutionScaler.Fsr3OutputView;
                         displayUpscaler = UpscalerMode.Bilinear;
                         displaySharpness = 0f;
                     }
                     catch (Exception exception) { fgFailure = exception; }
                 }
-                if (fgFailure is not null) DisableSceneFrameGeneration(fgFailure);
-                _commandList.Begin();
+                else
+                {
+                    // FSR1/bilinear still need a display-sized HUD-free image
+                    // before the native frame-interpolation dispatch.
+                    _commandList.Begin();
+                    try
+                    {
+                        _resolutionScaler.CaptureDisplayColor(
+                            _commandList,
+                            fgScene.HudlessFramebuffer,
+                            displayUpscaler,
+                            displaySharpness,
+                            displaySource);
+                    }
+                    catch (Exception exception) { fgFailure = exception; }
+                    _commandList.End();
+                    _graphicsDevice.SubmitCommands(_commandList);
+
+                    if (fgFailure is null)
+                    {
+                        try
+                        {
+                            fgScene.Dispatch(
+                                fsrDepth,
+                                _motionVectors.MotionVectorTexture,
+                                temporalFrame,
+                                sceneFrameId,
+                                (float)Math.Max(0.00001, frameDeltaSeconds),
+                                camera.NearPlane,
+                                camera.FarPlane,
+                                camera.FieldOfView);
+                            // The real displayed frame uses exactly the image FG
+                            // consumed. HUD/menu are drawn only after this pass.
+                            displaySource = fgScene.HudlessView;
+                            displayUpscaler = UpscalerMode.Bilinear;
+                            displaySharpness = 0f;
+                        }
+                        catch (Exception exception) { fgFailure = exception; }
+                    }
+                }
+
+                if (fgFailure is not null)
+                    DisableSceneFrameGeneration(fgFailure);
             }
+
+            // Continue normal generated/real presentation recording.
+            _commandList.Begin();
         }
 
         // Build/upload menu geometry once. The same immutable GPU data is
