@@ -12,9 +12,7 @@
     <Compile Include="../Engine/AI/*.cs" Link="AI/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Animation/*.cs" Link="Animation/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Assets/*.cs" Link="Assets/%(Filename)%(Extension)" />
-    <Compile Include="../Engine/Audio/*.cs"
-             Exclude="../Engine/Audio/SdlPcmPlayer.cs;../Engine/Audio/VoiceOverService.cs;../Engine/Audio/RiverAmbienceService.cs;../Engine/Audio/AudioDirector.cs"
-             Link="Audio/%(Filename)%(Extension)" />
+    <Compile Include="../Engine/Audio/*.cs" Exclude="../Engine/Audio/SdlPcmPlayer.cs;../Engine/Audio/VoiceOverService.cs;../Engine/Audio/RiverAmbienceService.cs;../Engine/Audio/AudioDirector.cs" Link="Audio/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Combat/*.cs" Link="Combat/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Dialogue/*.cs" Link="Dialogue/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Entity/*.cs" Link="Entity/%(Filename)%(Extension)" />
@@ -35,8 +33,6 @@
     <Compile Include="../Engine/Settings/*.cs" Link="Settings/%(Filename)%(Extension)" />
     <Compile Include="../Engine/World/*.cs" Link="World/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Core/GameTime.cs" Link="GameTime.cs" />
-    <Compile Include="../Engine/Core/EngineConfig.cs" Link="EngineConfig.cs" />
-    <Compile Include="../Engine/Window/GameWindow.cs" Link="Window/GameWindow.cs" />
     <Compile Include="../Engine/Diagnostics/*.cs" Link="Diagnostics/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Renderer/Camera3D.cs" Link="Camera3D.cs" />
     <Compile Include="../Engine/Renderer/BitmapFont.cs" Link="BitmapFont.cs" />
@@ -55,19 +51,12 @@
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxFrameGeneration.cs" Link="FidelityFxFrameGeneration.cs" />
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxUpscaler.cs" Link="FidelityFxUpscaler.cs" />
     <Compile Include="../Engine/Renderer/FidelityFx/FidelityFxVulkanInterop.cs" Link="FidelityFxVulkanInterop.cs" />
-    <Content Include="../native/fidelityfx/*.so" Link="native/fidelityfx/%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../native/fidelityfx/*.so" Link="native/fidelityfx/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="native/fidelityfx/*.so" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="../Engine/Renderer/DynamicMotionHistory.cs" Link="DynamicMotionHistory.cs" />
     <Compile Include="../Engine/Renderer/WorldModelRenderPolicy.cs" Link="WorldModelRenderPolicy.cs" />
-    <Content Include="../assets/audio/**/*.wav"
-             Link="assets/audio/%(RecursiveDir)%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../assets/models/**/*.glb"
-             Link="assets/models/%(RecursiveDir)%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../assets/textures/terrain/**/*.png"
-             Link="assets/textures/terrain/%(RecursiveDir)%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../assets/audio/**/*.wav" Link="assets/audio/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../assets/models/**/*.glb" Link="assets/models/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../assets/textures/terrain/**/*.png" Link="assets/textures/terrain/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
