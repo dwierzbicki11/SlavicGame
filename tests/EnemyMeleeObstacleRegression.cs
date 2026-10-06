@@ -11,11 +11,11 @@ internal static class EnemyMeleeObstacleRegression
         var world = new WorldState();
         world.Initialize();
 
-        // Cross the south-west corner of the real shrine-stone-east collider. Both actors
-        // remain outside the solid AABB and inside melee range, while the strike segment
-        // passes through the obstacle corner. This isolates impact occlusion without
-        // relying on an actor being embedded in world collision.
-        var enemyPosition = new Vector3(-80.3f, 0f, 54.1f);
+        // Cross the south-west corner of the real shrine-stone-east collider. SetPlayerPosition
+        // resolves the player's radius away from the stone, so start far enough west/north that
+        // the final strike segment still crosses the collider after that resolution. Both actor
+        // centers remain outside the solid AABB and well inside melee range.
+        var enemyPosition = new Vector3(-80.2f, 0f, 54.3f);
         enemyPosition.Y = world.Terrain.SampleHeight(enemyPosition);
         var playerPosition = new Vector3(-79.9f, 0f, 53.7f);
         playerPosition.Y = world.Terrain.SampleHeight(playerPosition);
