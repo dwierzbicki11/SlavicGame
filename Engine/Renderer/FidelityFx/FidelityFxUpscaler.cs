@@ -349,6 +349,7 @@ public sealed class FidelityFxUpscaler : IDisposable
             Flags =
                 FfxApi.EnableAutoExposure |
                 FfxApi.EnableMotionVectorsJitterCancellation |
+                FfxApi.EnableDynamicResolution |
                 FfxApi.EnableNonLinearColorspace,
             MaxRenderSize = new FfxApiDimensions2D(
                 outputWidth,
