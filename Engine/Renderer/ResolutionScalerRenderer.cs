@@ -204,7 +204,10 @@ public sealed class ResolutionScalerRenderer : IDisposable
             $"FSR single-pass EASU={_singlePassEasuCompatibility}.");
     }
 
-    public void SetResolution(uint width, uint height)
+    public void SetResolution(
+        uint width,
+        uint height,
+        bool deviceAlreadyIdle = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -221,7 +224,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
         if (_graphicsDevice is null)
             throw new InvalidOperationException("Resolution scaler is not initialized.");
 
-        _graphicsDevice.WaitForIdle();
+        if (!deviceAlreadyIdle)
+            _graphicsDevice.WaitForIdle();
         RecreateSceneTarget(width, height);
         SetPresentationSource(ResolvedSceneView);
 
