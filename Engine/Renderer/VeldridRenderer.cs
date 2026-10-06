@@ -693,7 +693,22 @@ public sealed class VeldridRenderer : IDisposable
             settings.Upscaler == UpscalerMode.Fsr3
                 ? UpscalerMode.Fsr1
                 : settings.Upscaler;
+
+        // Native temporal upscaling and frame interpolation both require the
+        // render extent to fit inside the display extent. A transient resize
+        // must fall back for one frame, not poison the native contexts for the
+        // rest of the process.
+        var temporalExtentValid =
+            width <= displayWidth &&
+            height <= displayHeight;
+        if (!temporalExtentValid &&
+            (_fsr3Upscaler is { IsReady: true } || _frameGeneration is not null))
+        {
+            ResetTemporalHistory();
+        }
+
         var fsr3Active =
+            temporalExtentValid &&
             (_fsr3ForcedByEnvironment ||
              settings.Upscaler == UpscalerMode.Fsr3) &&
             _fsr3Upscaler is { IsReady: true } &&
@@ -1439,7 +1454,10 @@ public sealed class VeldridRenderer : IDisposable
         var displaySource = presentationSource;
         var displayUpscaler = spatialFallbackUpscaler;
         var displaySharpness = settings.FsrSharpness;
-        var fgActive = _frameGeneration is not null && _motionVectors.IsInitialized;
+        var fgActive =
+            temporalExtentValid &&
+            _frameGeneration is not null &&
+            _motionVectors.IsInitialized;
         if ((fsr3Active || fgActive) &&
             _resolutionScaler.SampleableDepthTexture is { } fsrDepth)
         {
@@ -1856,9 +1874,38 @@ public sealed class VeldridRenderer : IDisposable
 
         var renderWidth = checked((uint)Math.Max(1, width));
         var renderHeight = checked((uint)Math.Max(1, height));
+        var requestedWidth = renderWidth;
+        var requestedHeight = renderHeight;
+
+        // Enforce the native FSR3/FG contract at the renderer boundary too,
+        // not only in the settings catalog. This protects direct callers and
+        // the one-frame window-resize interval before settings are reapplied.
+        if (_fsr3Requested || _frameGeneration is not null || _framePresenter is not null)
+        {
+            var outputWidth = Math.Max(1u, OutputFramebuffer.Width);
+            var outputHeight = Math.Max(1u, OutputFramebuffer.Height);
+            if (renderWidth > outputWidth || renderHeight > outputHeight)
+            {
+                var scale = Math.Min(
+                    outputWidth / (double)renderWidth,
+                    outputHeight / (double)renderHeight);
+                renderWidth = Math.Max(1u, (uint)Math.Floor(renderWidth * scale));
+                renderHeight = Math.Max(1u, (uint)Math.Floor(renderHeight * scale));
+                if (renderWidth > 1 && (renderWidth & 1u) != 0) renderWidth--;
+                if (renderHeight > 1 && (renderHeight & 1u) != 0) renderHeight--;
+            }
+        }
+
         if (_resolutionScaler.Width == renderWidth &&
             _resolutionScaler.Height == renderHeight)
             return;
+
+        if (renderWidth != requestedWidth || renderHeight != requestedHeight)
+        {
+            EngineLog.Warn(
+                $"Temporal render size {requestedWidth}x{requestedHeight} exceeds " +
+                $"the display; clamped to {renderWidth}x{renderHeight}.");
+        }
 
         // Scene color/depth, motion and reactive targets all retire resources
         // from the same preceding frames. Synchronize once instead of forcing
