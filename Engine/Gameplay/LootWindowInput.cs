@@ -1,3 +1,4 @@
+using Veldrid;
 using SlavicGame.Engine.Interaction;
 using SlavicGame.Engine.World;
 
@@ -18,13 +19,13 @@ public static class LootWindowInput
 
         return LootInputRouter.Dispatch(
             world,
-            close: input.ConsumeLootKeyPress(LootInputKey.Escape),
-            containerPanel: input.ConsumeLootKeyPress(LootInputKey.ContainerPanel),
-            inventoryPanel: input.ConsumeLootKeyPress(LootInputKey.InventoryPanel),
-            previous: input.ConsumeLootKeyPress(LootInputKey.Previous),
-            next: input.ConsumeLootKeyPress(LootInputKey.Next),
-            transfer: input.ConsumeLootKeyPress(LootInputKey.Transfer),
-            transferStack: input.IsLootKeyDown(LootInputKey.TransferStack),
-            takeAll: input.ConsumeLootKeyPress(LootInputKey.TakeAll));
+            close: input.ConsumeKeyPress(Key.Escape),
+            containerPanel: input.ConsumeKeyPress(Key.A),
+            inventoryPanel: input.ConsumeKeyPress(Key.D),
+            previous: input.ConsumeKeyPress(Key.W),
+            next: input.ConsumeKeyPress(Key.S),
+            transfer: input.ConsumeKeyPress(Key.E),
+            transferStack: input.IsKeyDown(Key.ShiftLeft),
+            takeAll: input.ConsumeKeyPress(Key.F));
     }
 }
