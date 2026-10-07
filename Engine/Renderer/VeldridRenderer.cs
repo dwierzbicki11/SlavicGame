@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid;
 using Veldrid.StartupUtilities;
 using SlavicGame.Engine.Assets;
@@ -81,6 +82,7 @@ public sealed class VeldridRenderer : IDisposable
     private uint _actorVertexCapacity;
     private uint _actorIndexCapacity;
     private uint _dynamicMotionVertexCapacity;
+    private DynamicMotionVertex[] _dynamicMotionUpload = [];
     private uint _hudVertexCapacity;
 
     public GraphicsDevice GraphicsDevice =>
@@ -831,10 +833,21 @@ public sealed class VeldridRenderer : IDisposable
         DynamicMotionVertex[] dynamicMotionVertices = [];
         if (_temporalInputsEnabled && _motionVectors.IsInitialized)
         {
-            dynamicMotionVertices = _dynamicMotionHistory.Build(
-                actorVertices.AsSpan(0, opaqueDynamicVertexCount),
-                temporalFrame.ResetHistory);
-            EnsureDynamicMotionCapacity(dynamicMotionVertices.Length);
+            var dynamicMotionSpan = actorVertices.AsSpan(0, opaqueDynamicVertexCount);
+            EnsureDynamicMotionCapacity(dynamicMotionSpan.Length);
+            if (_dynamicMotionUpload.Length < dynamicMotionSpan.Length)
+            {
+                var nextCapacity = Math.Max(
+                    dynamicMotionSpan.Length,
+                    Math.Max(64, _dynamicMotionUpload.Length * 2));
+                Array.Resize(ref _dynamicMotionUpload, nextCapacity);
+            }
+
+            _dynamicMotionHistory.BuildInto(
+                dynamicMotionSpan,
+                temporalFrame.ResetHistory,
+                _dynamicMotionUpload.AsSpan(0, dynamicMotionSpan.Length));
+            dynamicMotionVertices = _dynamicMotionUpload;
         }
 
         BuildHud(
@@ -1304,11 +1317,14 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.UpdateBuffer(
                 _dynamicMotionVertexBuffer,
                 0,
-                dynamicMotionVertices);
+                _dynamicMotionUpload.AsSpan(0, dynamicMotionVertices.Length));
         }
         if (_hudVertices.Count > 0)
         {
-            _commandList.UpdateBuffer(_hudVertexBuffer, 0, _hudVertices.ToArray());
+            _commandList.UpdateBuffer(
+                _hudVertexBuffer,
+                0,
+                CollectionsMarshal.AsSpan(_hudVertices));
         }
 
         if (shadowEnabled)
@@ -1693,20 +1709,27 @@ public sealed class VeldridRenderer : IDisposable
             return;
         }
 
-        if ((uint)vertexCount > _actorVertexCapacity)
+        var growVertexBuffer = (uint)vertexCount > _actorVertexCapacity;
+        var growIndexBuffer = (uint)indexCount > _actorIndexCapacity;
+        if (!growVertexBuffer && !growIndexBuffer)
+            return;
+
+        // Both buffers can grow during the same scene build. Retire the
+        // previous resources once, then recreate whichever capacities changed.
+        _graphicsDevice.WaitForIdle();
+
+        if (growVertexBuffer)
         {
             _actorVertexCapacity = Math.Max((uint)vertexCount, _actorVertexCapacity * 2);
-            _graphicsDevice.WaitForIdle();
             _actorVertexBuffer?.Dispose();
             _actorVertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(
                 TerrainVertex.SizeInBytes * _actorVertexCapacity,
                 BufferUsage.VertexBuffer | BufferUsage.Dynamic));
         }
 
-        if ((uint)indexCount > _actorIndexCapacity)
+        if (growIndexBuffer)
         {
             _actorIndexCapacity = Math.Max((uint)indexCount, _actorIndexCapacity * 2);
-            _graphicsDevice.WaitForIdle();
             _actorIndexBuffer?.Dispose();
             _actorIndexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(
                 sizeof(uint) * _actorIndexCapacity,

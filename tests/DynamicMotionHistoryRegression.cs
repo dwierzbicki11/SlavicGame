@@ -32,6 +32,14 @@ internal static class DynamicMotionHistoryRegression
               second[1].CurrentPosition == secondFrame[1].Position,
             "Dynamic motion preserves the exact prior actor vertex positions");
 
+        var reusableHistory = new DynamicMotionHistory();
+        var reusable = new DynamicMotionVertex[2];
+        reusableHistory.BuildInto(firstFrame, resetHistory: false, reusable);
+        reusableHistory.BuildInto(secondFrame, resetHistory: false, reusable);
+        check(reusable[0].PreviousPosition == firstFrame[0].Position &&
+              reusable[1].PreviousPosition == firstFrame[1].Position,
+            "Dynamic motion supports caller-owned storage without changing temporal history");
+
         history.Reset();
         var afterReset = history.Build(secondFrame, resetHistory: false);
         check(afterReset.All(v => v.CurrentPosition == v.PreviousPosition),
