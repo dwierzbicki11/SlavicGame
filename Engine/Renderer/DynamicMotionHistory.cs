@@ -28,20 +28,34 @@ public readonly struct DynamicMotionVertex
 public sealed class DynamicMotionHistory
 {
     private Vector3[] _previousPositions = [];
+    private int _previousCount;
 
-    public int PreviousVertexCount => _previousPositions.Length;
+    public int PreviousVertexCount => _previousCount;
 
     public DynamicMotionVertex[] Build(
         ReadOnlySpan<TerrainVertex> currentVertices,
         bool resetHistory)
     {
-        var count = currentVertices.Length;
-        var previousMatches =
-            !resetHistory &&
-            _previousPositions.Length == count;
+        var result = new DynamicMotionVertex[currentVertices.Length];
+        BuildInto(currentVertices, resetHistory, result);
+        return result;
+    }
 
-        var result = new DynamicMotionVertex[count];
-        var nextPrevious = new Vector3[count];
+    /// <summary>
+    /// Fills caller-owned storage so the renderer can reuse its upload array
+    /// instead of allocating two CPU arrays for every temporal frame.
+    /// </summary>
+    public void BuildInto(
+        ReadOnlySpan<TerrainVertex> currentVertices,
+        bool resetHistory,
+        Span<DynamicMotionVertex> destination)
+    {
+        var count = currentVertices.Length;
+        if (destination.Length < count)
+            throw new ArgumentException("Destination is smaller than the current vertex span.", nameof(destination));
+
+        var previousMatches = !resetHistory && _previousCount == count;
+        EnsurePreviousCapacity(count);
 
         for (var i = 0; i < count; i++)
         {
@@ -50,13 +64,24 @@ public sealed class DynamicMotionHistory
                 ? _previousPositions[i]
                 : current;
 
-            result[i] = new DynamicMotionVertex(current, previous);
-            nextPrevious[i] = current;
+            destination[i] = new DynamicMotionVertex(current, previous);
+            _previousPositions[i] = current;
         }
 
-        _previousPositions = nextPrevious;
-        return result;
+        _previousCount = count;
     }
 
-    public void Reset() => _previousPositions = [];
+    private void EnsurePreviousCapacity(int count)
+    {
+        if (_previousPositions.Length >= count)
+            return;
+
+        var capacity = Math.Max(count, Math.Max(64, _previousPositions.Length * 2));
+        Array.Resize(ref _previousPositions, capacity);
+    }
+
+    public void Reset()
+    {
+        _previousCount = 0;
+    }
 }
