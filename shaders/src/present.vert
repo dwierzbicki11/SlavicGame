@@ -1,5 +1,8 @@
 #version 450
 
+// Offscreen presentation targets (not the OS swapchain) need to preserve
+// texture row order on Vulkan. Final swapchain presentation leaves this off.
+layout(constant_id = 0) const uint PreserveTextureRows = 0u;
 layout(location = 0) out vec2 fsin_TexCoord;
 
 void main()
@@ -9,8 +12,10 @@ void main()
         float(gl_VertexIndex & 2));
 
     fsin_TexCoord = uv;
+    vec2 position = uv * 2.0 - 1.0;
+    if (PreserveTextureRows != 0u) position.y = -position.y;
     gl_Position = vec4(
-        uv * 2.0 - 1.0,
+        position,
         0.0,
         1.0);
 }

@@ -106,7 +106,8 @@ public sealed class ReactiveMaskRenderer : IDisposable
     public void SetDepthSource(
         Texture depthTexture,
         uint width,
-        uint height)
+        uint height,
+        bool deviceAlreadyIdle = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(depthTexture);
@@ -120,7 +121,8 @@ public sealed class ReactiveMaskRenderer : IDisposable
 
         if (_width != width || _height != height)
         {
-            _graphicsDevice.WaitForIdle();
+            if (!deviceAlreadyIdle)
+                _graphicsDevice.WaitForIdle();
             RecreateTarget(width, height);
             return;
         }

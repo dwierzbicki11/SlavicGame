@@ -48,6 +48,7 @@ internal sealed class FidelityFxSceneFrameGeneration : IDisposable
     internal ulong LastFrameId { get; private set; }
     internal ulong DispatchCount { get; private set; }
     internal ulong GeneratedCount { get; private set; }
+    internal bool LastDispatchUsedExternalColor { get; private set; }
 
     internal void EnsureDisplaySize(uint width, uint height)
     {
@@ -73,27 +74,39 @@ internal sealed class FidelityFxSceneFrameGeneration : IDisposable
 
     /// <summary>Call after submitting the HUD-free display-color pass.</summary>
     internal bool Dispatch(Texture depth, Texture motion, in TemporalFrameData frame,
-        ulong frameId, float seconds, float near, float far, float verticalFov)
+        ulong frameId, float seconds, float near, float far, float verticalFov,
+        Texture? colorOverride = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_color is null || _output is null)
+        if (_output is null)
+            throw new InvalidOperationException("FG output target has not been allocated.");
+
+        var color = colorOverride ?? _color;
+        if (color is null)
             throw new InvalidOperationException("FG needs a submitted HUD-free scene target.");
+        if (color.Format != PixelFormat.R16_G16_B16_A16_Float ||
+            color.SampleCount != TextureSampleCount.Count1 ||
+            color.Width != _output.Width || color.Height != _output.Height ||
+            ReferenceEquals(color, _output))
+            throw new ArgumentException("Scene FG requires a separate display-size RGBA16F HUD-free color input.");
         if (depth.Format != PixelFormat.R32_Float || (depth.Usage & TextureUsage.DepthStencil) == 0 ||
             motion.Format != PixelFormat.R16_G16_Float || depth.SampleCount != TextureSampleCount.Count1 ||
             motion.SampleCount != TextureSampleCount.Count1 ||
             depth.Width != motion.Width || depth.Height != motion.Height ||
-            depth.Width > _color.Width || depth.Height > _color.Height)
+            depth.Width > color.Width || depth.Height > color.Height)
             throw new ArgumentException("Scene FG requires single-sample R32 depth and matching RG16F render-size motion.");
+
+        LastDispatchUsedExternalColor = colorOverride is not null;
         HasGeneratedFrame = false;
         var vk = _device.GetVulkanInfo();
-        vk.TransitionImageLayout(_color, 5); // SHADER_READ_ONLY_OPTIMAL
+        vk.TransitionImageLayout(color, 5); // SHADER_READ_ONLY_OPTIMAL
         vk.TransitionImageLayout(depth, 5);
         vk.TransitionImageLayout(motion, 5);
         vk.TransitionImageLayout(_output, 1); // GENERAL
         try
         {
             HasGeneratedFrame = _generator.Dispatch(
-                Wrap(_color, FfxApi.FormatR16G16B16A16Float, FfxApi.ResourceUsageReadOnly),
+                Wrap(color, FfxApi.FormatR16G16B16A16Float, FfxApi.ResourceUsageReadOnly),
                 Wrap(depth, FfxApi.FormatR32Float, FfxApi.ResourceUsageDepthTarget),
                 Wrap(motion, FfxApi.FormatR16G16Float, FfxApi.ResourceUsageReadOnly),
                 Wrap(_output, FfxApi.FormatR16G16B16A16Float, FfxApi.ResourceUsageUav),
@@ -108,7 +121,7 @@ internal sealed class FidelityFxSceneFrameGeneration : IDisposable
             // The provider restores inputs to compute-read and leaves output
             // in GENERAL, including submitted error cleanup. Synchronize the
             // public Veldrid tracker before any sampling/copy on that queue.
-            vk.OverrideImageLayout(_color, 5);
+            vk.OverrideImageLayout(color, 5);
             vk.OverrideImageLayout(depth, 5);
             vk.OverrideImageLayout(motion, 5);
             vk.OverrideImageLayout(_output, 1);

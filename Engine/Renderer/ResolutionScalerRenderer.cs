@@ -204,7 +204,10 @@ public sealed class ResolutionScalerRenderer : IDisposable
             $"FSR single-pass EASU={_singlePassEasuCompatibility}.");
     }
 
-    public void SetResolution(uint width, uint height)
+    public void SetResolution(
+        uint width,
+        uint height,
+        bool deviceAlreadyIdle = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -221,7 +224,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
         if (_graphicsDevice is null)
             throw new InvalidOperationException("Resolution scaler is not initialized.");
 
-        _graphicsDevice.WaitForIdle();
+        if (!deviceAlreadyIdle)
+            _graphicsDevice.WaitForIdle();
         RecreateSceneTarget(width, height);
         SetPresentationSource(ResolvedSceneView);
 
@@ -261,12 +265,22 @@ public sealed class ResolutionScalerRenderer : IDisposable
             target.OutputDescription.SampleCount != TextureSampleCount.Count1)
             throw new ArgumentException("FG capture requires a color-only RGBA16F framebuffer.", nameof(target));
         if (_graphicsDevice is null) throw new InvalidOperationException("Scaler is not initialized.");
+
+        // A swapchain presentation and an offscreen texture draw do not share
+        // the same Vulkan viewport row convention. Preserve texture rows for
+        // FG's HUD-less target just like the EASU intermediate target does.
+        var preserveTextureRows =
+            _graphicsDevice.BackendType == GraphicsBackend.Vulkan &&
+            !_graphicsDevice.IsClipSpaceYInverted;
         _captureBilinearPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
-            _bilinearShaders!, _bilinearLayout!, target.OutputDescription);
+            _bilinearShaders!, _bilinearLayout!, target.OutputDescription,
+            preserveTextureRows);
         _captureEasuPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
-            _easuShaders!, _easuLayout!, target.OutputDescription);
+            _easuShaders!, _easuLayout!, target.OutputDescription,
+            preserveTextureRows);
         _captureRcasPipeline ??= CreateFullscreenPipeline(_graphicsDevice.ResourceFactory,
-            _rcasShaders!, _rcasLayout!, target.OutputDescription);
+            _rcasShaders!, _rcasLayout!, target.OutputDescription,
+            preserveTextureRows);
         PresentCore(commands, target, upscaler, sharpness, source, capture: true);
     }
 

@@ -231,6 +231,22 @@ public static class FrontendSettingsRegression
         check(fsrCustom == custom,
             "FSR1 Custom preserves manually selected internal resolution");
 
+        var oversizedCustom = GraphicsQualityCatalog.FsrRenderResolution(
+            1920,
+            1080,
+            FsrQualityMode.Custom,
+            new ResolutionSize(2560, 1440));
+        check(oversizedCustom.Width == 1920 && oversizedCustom.Height == 1080,
+            "FSR Custom clamps supersampled input to the display size so native FSR3 and FG stay valid");
+
+        var portraitLimitedCustom = GraphicsQualityCatalog.FsrRenderResolution(
+            1920,
+            1080,
+            FsrQualityMode.Custom,
+            new ResolutionSize(1920, 1200));
+        check(portraitLimitedCustom.Width == 1728 && portraitLimitedCustom.Height == 1080,
+            "FSR Custom preserves aspect ratio while clamping either dimension to the display");
+
         foreach (var presetValue in new[]
                  {
                      GraphicsPreset.LowEnd,

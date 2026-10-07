@@ -335,7 +335,32 @@ public static class GraphicsQualityCatalog
         outputHeight = Math.Max(1, outputHeight);
 
         if (quality == FsrQualityMode.Custom)
-            return customResolution;
+        {
+            // FSR is an upscaling path. A custom render size larger than the
+            // drawable is supersampling, which native FSR3 rejects and which
+            // also violates Frame Generation's render-size <= display-size
+            // contract. Clamp proportionally so cycling resolutions at runtime
+            // can never tear down FSR3/FG for the rest of the session.
+            var customWidth = Math.Max(1, customResolution.Width);
+            var customHeight = Math.Max(1, customResolution.Height);
+            var scale = Math.Min(
+                1.0,
+                Math.Min(
+                    outputWidth / (double)customWidth,
+                    outputHeight / (double)customHeight));
+
+            static int ClampEven(double value, int maximum)
+            {
+                var rounded = Math.Max(1, (int)Math.Floor(value));
+                if (rounded > 1 && (rounded & 1) != 0)
+                    rounded--;
+                return Math.Min(maximum, rounded);
+            }
+
+            return new ResolutionSize(
+                ClampEven(customWidth * scale, outputWidth),
+                ClampEven(customHeight * scale, outputHeight));
+        }
 
         var divisor = quality switch
         {

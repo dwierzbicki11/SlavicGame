@@ -52,10 +52,18 @@ public sealed class BloomRenderer : IDisposable
             new ResourceLayoutElementDescription("BloomSampler", ResourceKind.Sampler, ShaderStages.Fragment)));
         _shaders = ShaderLibrary.LoadPair(factory, "bloom");
         SetSource(sourceView, width, height, BloomQuality.Medium);
+        var preserveTextureRows =
+            graphicsDevice.BackendType == GraphicsBackend.Vulkan &&
+            !graphicsDevice.IsClipSpaceYInverted;
         _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend, DepthStencilStateDescription.Disabled,
             new RasterizerStateDescription(FaceCullMode.None, PolygonFillMode.Solid, FrontFace.Clockwise, true, false),
-            PrimitiveTopology.TriangleList, new ShaderSetDescription(Array.Empty<VertexLayoutDescription>(), _shaders), [_layout], _framebufferA!.OutputDescription));
+            PrimitiveTopology.TriangleList,
+            new ShaderSetDescription(
+                Array.Empty<VertexLayoutDescription>(),
+                _shaders,
+                [new SpecializationConstant(0, preserveTextureRows ? 1u : 0u)]),
+            [_layout], _framebufferA!.OutputDescription));
     }
 
     public void SetSource(TextureView sourceView, uint width, uint height, BloomQuality quality)

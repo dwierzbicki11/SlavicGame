@@ -172,13 +172,23 @@ using (var renderer = new VeldridRenderer())
         renderer.Render(world, camera, 60, frame / 60.0, 1.0 / 60, settings, null);
     }
     Check(renderer.NativeUpscalerReady && fg.HasGeneratedFrame,
-        "Actual renderer orders native FSR3 upscale then HUD-free capture then AMD FG");
-    Check(Read<Rgba16>(device, fg.HudlessColor).All(p => p.Finite), "FSR3 HUD-free scene readback is valid");
+        "Actual renderer orders native FSR3 upscale then AMD FG");
+    Check(fg.LastDispatchUsedExternalColor,
+        "FSR3 plus FG reuses the native display-size temporal output without a fullscreen capture copy");
     Check(Read<Rgba16>(device, fg.GeneratedColor).All(p => p.Finite), "FSR3 plus FG scene readback is valid");
+
+    // Reproduce the user-facing failure that previously killed both temporal
+    // paths after selecting a custom size larger than the current display.
+    renderer.SetRenderResolution(1280, 720);
+    renderer.Render(world, camera, 60, 8.0 / 60, 1.0 / 60, settings, null);
+    Check(renderer.SceneDepth!.Width == 640 && renderer.SceneDepth.Height == 360 &&
+          renderer.NativeUpscalerReady && renderer.FrameGenerationScene is not null,
+        "Oversized temporal render requests clamp to display size without disabling FSR3 or FG");
+
     // Expire the real context to exercise error isolation, without a fake
     // generator or synthetic successful dispatch.
     fg.Dispose();
-    renderer.Render(world, camera, 60, 8.0 / 60, 1.0 / 60, settings, null);
+    renderer.Render(world, camera, 60, 9.0 / 60, 1.0 / 60, settings, null);
     Check(renderer.FrameGenerationScene is null && renderer.NativeUpscalerReady &&
         renderer.FrameGenerationDiagnostic.Contains("disabled", StringComparison.OrdinalIgnoreCase),
         "Expired FG context disables only FG while native FSR3 keeps rendering");
