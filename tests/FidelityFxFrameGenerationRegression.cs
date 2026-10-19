@@ -15,6 +15,36 @@ internal static class FidelityFxFrameGenerationRegression
                 FidelityFxFrameGeneration.MinimumVulkanVersion, out unsupported, out diagnostic),
             "FG does not accept missing device/queue handles");
 
+        // Synthetic handles exercise the production guard without loading Vulkan.
+        FfxApiResource Image(nint handle, uint format, uint usage, uint state) => new()
+        {
+            Resource = handle,
+            Description = new FfxApiResourceDescription
+            {
+                Type = FfxApi.ResourceTypeTexture2D, Format = format,
+                Width = 128, Height = 128, Depth = 1, MipCount = 1, Usage = usage
+            },
+            State = state
+        };
+        var inputColor = Image(1, FfxApi.FormatR16G16B16A16Float,
+            FfxApi.ResourceUsageReadOnly, FfxApi.ResourceStateComputeRead);
+        var inputDepth = Image(2, FfxApi.FormatR32Float,
+            FfxApi.ResourceUsageDepthTarget, FfxApi.ResourceStateComputeRead);
+        var inputMotion = Image(3, FfxApi.FormatR16G16Float,
+            FfxApi.ResourceUsageReadOnly, FfxApi.ResourceStateComputeRead);
+        var generated = Image(4, FfxApi.FormatR16G16B16A16Float,
+            FfxApi.ResourceUsageUav, FfxApi.ResourceStateUnorderedAccess);
+        FidelityFxFrameGeneration.ValidateResources(inputColor, inputDepth, inputMotion, generated);
+        check(true, "FG accepts separate input and output images without a native provider");
+        foreach (var input in new[] { inputColor, inputDepth, inputMotion })
+        {
+            var aliased = generated;
+            aliased.Resource = input.Resource;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateResources(
+                inputColor, inputDepth, inputMotion, aliased));
+            check(true, "FG rejects output aliasing input image handle " + input.Resource);
+        }
+
         if (!OperatingSystem.IsLinux() ||
             Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
             return;
