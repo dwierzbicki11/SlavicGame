@@ -220,6 +220,33 @@ internal static class BowCombatRegression
         check(wallWorld.Bow.Projectiles.Count == 0 && wallWorld.Bow.RecoverableArrows.Count == 1,
             "Obstacle volumes stop arrows before they pass through a hut");
 
+        var closeWorld = WorldGenerator.Generate();
+        var closeEnemy = closeWorld.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeRaven = closeWorld.Wildlife.Actors.Single(actor => actor.Id == "raven-start-01");
+        foreach (var targetCenter in new[]
+                 {
+                     closeEnemy.Position + Vector3.UnitY * 0.78f,
+                     closeRaven.Position
+                 })
+        {
+            closeWorld.Bow.SetAiming(closeWorld, true);
+            check(closeWorld.Bow.TryStartDraw(closeWorld), "Point-blank bow draw starts");
+            closeWorld.Bow.Update(closeWorld, 1.3);
+            // Undo the release offset so the projectile starts at the hitbox center.
+            check(closeWorld.Bow.TryRelease(closeWorld,
+                    targetCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                    Vector3.UnitZ),
+                "Point-blank arrow releases inside the target hitbox");
+            closeWorld.Bow.Update(closeWorld, 0.001);
+            check(closeWorld.Bow.Projectiles.Count == 0,
+                "Arrow already inside a target hits during the first short simulation step");
+        }
+        check(closeEnemy.Health < closeEnemy.MaxHealth,
+            "Point-blank arrow damages an overlapping enemy");
+        check(closeWorld.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health == 0f,
+            "Point-blank arrow damages overlapping wildlife through hunting health");
+
         var blocked = WorldGenerator.Generate();
         blocked.Bow.SetAiming(blocked, true);
         blocked.Bow.TryStartDraw(blocked);
