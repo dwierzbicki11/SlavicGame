@@ -69,11 +69,15 @@ public static class NpcCrowdSteering
                 if (aProtected && bProtected)
                     continue;
 
+                // A passer yields to a worker at a workstation. Dialogue protection
+                // takes priority, and pairs with equal mobility still share the push.
+                var aFixed = aProtected || (!bProtected && !a.IsMoving && b.IsMoving);
+                var bFixed = bProtected || (!aProtected && !b.IsMoving && a.IsMoving);
                 var push = MathF.Min(
                     MaxPushPerPass,
-                    penetration * (aProtected || bProtected ? 1f : 0.5f));
+                    penetration * (aFixed || bFixed ? 1f : 0.5f));
 
-                if (!aProtected)
+                if (!aFixed)
                 {
                     a = WithResolvedPosition(
                         world,
@@ -82,7 +86,7 @@ public static class NpcCrowdSteering
                     actors[i] = a;
                 }
 
-                if (!bProtected)
+                if (!bFixed)
                 {
                     b = WithResolvedPosition(
                         world,
