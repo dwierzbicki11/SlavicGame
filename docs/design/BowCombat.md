@@ -156,6 +156,8 @@ Flying/stuck arrows używają tego samego actor bufferu.
 ### QA lock
 Regresje wymagają cancel bez utraty ammo, ammo -1 dokładnie przy release, full draw, fizycznego trafienia przeciwnika, aggro po trafieniu, terrain stick + retrieval, kill wildlife + persistence oraz poprawnej geometrii bow/arrow.
 
+Strzała rozpoczynająca krok symulacji wewnątrz hitboxa celu trafia natychmiast (fraction = 0), bez czekania na przecięcie powierzchni wyjściowej. Regresja walki z bliska sprawdza pierwszy krok dla 1 ms, 120 FPS i 10 FPS.
+
 ## Integration with current hunting runtime
 
 Bow and melee share WildlifeWorldRuntime health, wound flight, carcass and one-time harvest state. Save/load preserves this state; restoring clears transient draws and arrows. Projectiles test obstacle volumes as well as terrain and targets. Constant-acceleration integration retains the same trajectory at low and high frame rates; frame time is not discarded after 250 ms. Opening crafting, trade, dialogue, pause or a cinematic cancels draw without spending ammo.
