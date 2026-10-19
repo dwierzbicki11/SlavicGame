@@ -72,7 +72,6 @@ public static class WaterLandscape
     public static float ShapeHeight(float x, float z, float original)
     {
         var offset = MathF.Abs(x - CenterX(z));
-        var halfWidth = HalfWidth(z);
         var channelHalfWidth = SurfaceHalfWidth(z);
         var water = WaterLevel(z);
 
@@ -103,7 +102,9 @@ public static class WaterLandscape
             1f,
             shoulderDistance / BankShoulderWidth);
         var shore = water - ShoreDepth;
-        return Lerp(shore, original, shoulderBlend);
+        // Preserve naturally lower terrain just as the wetted channel does.
+        // Raising it here creates a height jump at the water ribbon's edge.
+        return MathF.Min(original, Lerp(shore, original, shoulderBlend));
     }
 
     public static void AppendSurface(
