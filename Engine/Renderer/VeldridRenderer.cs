@@ -852,8 +852,13 @@ public sealed class VeldridRenderer : IDisposable
 
         BuildHud(
             (float)Math.Max(0, fps),
+            world.Player.Health,
+            world.Player.MaxHealth,
+            world.Player.Stamina,
+            world.Player.MaxStamina,
             world.Player.Health / world.Player.MaxHealth,
             world.Player.Stamina / world.Player.MaxStamina,
+            animationSeconds,
             settings.ShowFps,
             menuView is null);
         if (menuView is null)
@@ -1739,8 +1744,13 @@ public sealed class VeldridRenderer : IDisposable
 
     private void BuildHud(
         float fps,
+        float health,
+        float maxHealth,
+        float stamina,
+        float maxStamina,
         float healthRatio,
         float staminaRatio,
+        double animationSeconds,
         bool showFps,
         bool showGameplayHud)
     {
@@ -1781,13 +1791,39 @@ public sealed class VeldridRenderer : IDisposable
 
         healthRatio = Math.Clamp(healthRatio, 0f, 1f);
         staminaRatio = Math.Clamp(staminaRatio, 0f, 1f);
+        maxHealth = MathF.Max(1f, maxHealth);
+        maxStamina = MathF.Max(1f, maxStamina);
+        health = Math.Clamp(health, 0f, maxHealth);
+        stamina = Math.Clamp(stamina, 0f, maxStamina);
         const float barX = 18f;
         const float barWidth = 160f;
         const float barHeight = 9f;
         AddHudQuad(barX, 78f, barWidth, barHeight, new Vector4(0.08f, 0.07f, 0.06f, 0.82f));
-        AddHudQuad(barX, 78f, barWidth * healthRatio, barHeight, new Vector4(0.62f, 0.16f, 0.12f, 0.95f));
+        AddHudQuad(
+            barX,
+            78f,
+            barWidth * healthRatio,
+            barHeight,
+            healthRatio <= 0.25f
+                ? new Vector4(0.84f, 0.18f, 0.12f, 1f)
+                : new Vector4(0.62f, 0.16f, 0.12f, 0.95f));
         AddHudQuad(barX, 96f, barWidth, barHeight, new Vector4(0.08f, 0.07f, 0.06f, 0.82f));
-        AddHudQuad(barX, 96f, barWidth * staminaRatio, barHeight, new Vector4(0.72f, 0.58f, 0.18f, 0.95f));
+        AddHudQuad(
+            barX,
+            96f,
+            barWidth * staminaRatio,
+            barHeight,
+            staminaRatio <= 0.18f
+                ? new Vector4(0.88f, 0.76f, 0.20f, 1f)
+                : new Vector4(0.72f, 0.58f, 0.18f, 0.95f));
+        AddGameplayText($"HP {health:0}/{maxHealth:0}", barX, 58f, 180f);
+        AddGameplayText($"STAMINA {stamina:0}/{maxStamina:0}", barX, 108f, 236f);
+
+        var warningPulse = ((int)Math.Floor(animationSeconds * 4.0)) % 2 == 0;
+        if (healthRatio <= 0.25f && warningPulse)
+            AddGameplayText("UWAGA: KRYTYCZNE ZYCIE", barX, 132f, 360f);
+        if (staminaRatio <= 0.18f && warningPulse)
+            AddGameplayText("UWAGA: BRAK STAMINY", barX, 156f, 360f);
     }
 
     private void AddGameplayText(string text, float x, float y, float availableWidth)
