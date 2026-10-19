@@ -37,3 +37,12 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Regresja GGX materiałów modeli
+
+`python3 tools/test-pbr-ggx.py` sprawdza bez GPU wyrażenia funkcji
+`DistributionGGX` z `pbr.frag`: wartość w maksimum odbłysku, granicę przy
+kącie stycznym oraz skończone, nieujemne wyniki w zakresie roughness 0.06–1.
+Mianownik zachowuje mały składnik roughness⁴ bez odejmowania zbliżonych
+wartości. Nie stosuje dolnego limitu tłumiącego odbłyski gładkich materiałów.
+Test numeryczny nie zastępuje kompilacji SPIR-V ani oceny obrazu Vulkan.
