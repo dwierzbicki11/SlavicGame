@@ -37,3 +37,17 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Bias cieni materiałów PBR
+
+`SampleSunShadow` przyjmuje normalną geometrii w przestrzeni świata.
+W `pbr.frag` jest to `baseNormal`, sprzed nałożenia normal mapy. Normal mapa
+zmienia odpowiedź oświetlenia, ale nie geometrię zapisywaną w shadow depth pass,
+więc nie powinna zmieniać biasu porównania głębokości. Zapobiega to uzależnieniu
+samocieniowania od detali tekstury i przełącznika normal mappingu.
+
+Zmiana nie dodaje odczytów tekstur ani passów, korzysta z dotychczasowego
+fallbacku po wyłączeniu cieni i nie wpływa na gameplay. Weryfikacja:
+`./tools/compile-shaders.sh`, następnie porównanie cieni na modelu z wyraźną
+normal mapą przy niskim kącie słońca, z normal mappingiem włączonym i wyłączonym.
+Bias powinien pozostać taki sam, choć oświetlenie powierzchni będzie się różnić.
