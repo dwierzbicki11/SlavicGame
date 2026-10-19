@@ -53,4 +53,4 @@ Przed zakończeniem pakietu sprawdzamy unikalne identyfikatory, warianty nazw, o
 
 ## Stałe techniczne
 
-Projekt pozostaje na **.NET 11**. Podstawowy renderer używa **Vulkan przez Veldrid**; silnik i systemy gry powstają w C#. Najpierw PC, Android później po ocenie wydajności, wejścia i potrzeb platformy. Dokumentacja świata nie jest migracją frameworka ani deklaracją gotowości wszystkich wymienionych systemów.
+Projekt pozostaje na **.NET 10**. Podstawowy renderer używa **Vulkan przez Veldrid**; silnik i systemy gry powstają w C#. Najpierw PC, Android później po ocenie wydajności, wejścia i potrzeb platformy. Dokumentacja świata nie jest migracją frameworka ani deklaracją gotowości wszystkich wymienionych systemów.

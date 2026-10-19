@@ -279,7 +279,7 @@ ABI. No other automation is modified.
 
 ## Reproducible Linux Mint / Ryzen 5 5600G (Vega 7) scenario
 
-Install .NET 11, Git, Python 3, CMake, g++, libvulkan-dev, Mesa Vulkan drivers,
+Install .NET 10, Git, Python 3, CMake, g++, libvulkan-dev, Mesa Vulkan drivers,
 glslang-tools and vulkan-tools. Clone current main, then run:
 
 ```bash

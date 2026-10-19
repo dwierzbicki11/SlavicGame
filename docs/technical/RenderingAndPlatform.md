@@ -5,7 +5,7 @@ Dokument rozwija etapy 19–20 roadmapy.
 ## Stos
 
 - C#;
-- .NET 11;
+- .NET 10;
 - Veldrid;
 - Vulkan jako wymagany backend pierwszego runtime;
 - SDL2 dla okna i wejścia.
