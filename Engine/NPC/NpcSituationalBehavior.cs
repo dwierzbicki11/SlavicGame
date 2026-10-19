@@ -20,7 +20,10 @@ public static class NpcSituationalBehavior
         ArgumentNullException.ThrowIfNull(npc);
         ArgumentNullException.ThrowIfNull(slot);
 
-        if (!npc.Id.StartsWith("settler-", StringComparison.Ordinal))
+        // Rest already keeps residents at their home poses; a storm must not
+        // send them back outside onto a moving shelter route.
+        if (string.Equals(slot.Activity, "rest", StringComparison.Ordinal) ||
+            !npc.Id.StartsWith("settler-", StringComparison.Ordinal))
             return slot.Activity;
 
         var severeWeather =
