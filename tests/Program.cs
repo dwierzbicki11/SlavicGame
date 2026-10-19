@@ -30,6 +30,7 @@ void Check(bool condition, string name)
     if (!condition) throw new Exception(name);
     checks++;
 }
+ShadowMapStabilityRegression.Run(Check);
 MagicCinematicRegression.Run(Check);
 FidelityFxStartupRegression.Run(Check);
 FidelityFxFenceRegression.Run(Check);
