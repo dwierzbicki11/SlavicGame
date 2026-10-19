@@ -2,6 +2,10 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-19
+
+- **PBR GGX highlight suppression — fixed.** `pbr.frag` clamped the complete GGX denominator to `0.0001`, suppressing the distribution peak for smooth materials (at roughness 0.06: about 0.13 instead of 24560.95). The denominator now uses `(1 - NdotH²) + NdotH² * roughness⁴` to avoid cancellation near the peak, and NdotH is clamped to [0, 1]. The existing caller bounds roughness to at least 0.06, keeping division safe without clipping the peak. No texture fetches, resource layouts or quality switches changed. A CPU numerical sweep executing the scalar expressions extracted from the shader passed 70021 checks for finite, monotonic values, analytic peaks and dot-product overshoot across seven roughness values. This used Python floating point, not GPU execution. Shader compilation is blocked by missing `glslc`/`glslangValidator`; .NET build/regressions are blocked at dependency restore (missing NuGet assets). Vulkan compilation and visual checks of smooth/wet materials remain outstanding, especially highlight aliasing at low roughness.
+
 ## 2026-10-05
 
 - **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
