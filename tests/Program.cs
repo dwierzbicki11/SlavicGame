@@ -299,6 +299,26 @@ Check(relationships.Get("herbalist", RelationshipKind.Trust) == 12,
 var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
 Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
     "NPC schedule supports overnight ranges");
+Check(nightSchedule.Contains(19) && !nightSchedule.Contains(6),
+    "NPC night shift includes its start and excludes its end");
+var allDaySchedule = new NpcScheduleSlot(0, 24, "old-village", "watch");
+foreach (var hour in new double[] { 0, 6, 12, 23.999, 24, -1, 48 })
+    Check(allDaySchedule.Contains(hour), "Full-day NPC duty covers normalized hour " + hour);
+Check(new NpcScheduleSlot(6, 30, "old-village", "watch").Contains(3),
+    "Full-day NPC duty may start away from midnight");
+Check(!new NpcScheduleSlot(6, 6, "old-village", "watch").Contains(6),
+    "Equal NPC schedule endpoints remain an empty interval");
+foreach (var invalidHour in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+{
+    Check(!allDaySchedule.Contains(invalidHour), "NPC duty rejects non-finite query hours");
+    Check(!new NpcScheduleSlot(invalidHour, 6, "old-village", "watch").Contains(12),
+        "NPC duty rejects non-finite start hours");
+    Check(!new NpcScheduleSlot(6, invalidHour, "old-village", "watch").Contains(12),
+        "NPC duty rejects non-finite end hours");
+}
+var fullDayNpc = new NpcDefinition("all-day-guard", NpcRole.CommunityGuard, [allDaySchedule]);
+Check(fullDayNpc.GetSchedule(12) == allDaySchedule,
+    "NPC resolves an explicitly authored full-day activity");
 
 var ritual = new RitualDefinition(
     "first-ritual",

@@ -17,6 +17,13 @@ Minimalny NPC posiada:
 
 Harmonogram opisuje **aktywność i miejsce**, nie pełną animację każdej sekundy.
 
+Runtime używa przedziałów z początkiem włącznie i końcem wyłącznie.
+Zakres przechodzący przez północ (np. `19–6`) obejmuje nocny dyżur.
+Jawny zakres co najmniej 24 godzin (np. `0–24` lub `6–30`) oznacza
+aktywność całodobową; identyczne końce (`6–6`) oznaczają pusty przedział.
+Godziny zapytania są normalizowane do doby, a wartości nieskończone i NaN
+w zapytaniu lub granicach przedziału nie wybierają aktywności.
+
 Pierwszy wycinek używa dwóch głównych zakresów:
 - dzień;
 - noc.
