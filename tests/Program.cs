@@ -50,6 +50,7 @@ NpcWeatherBehaviorRegression.Run(Check);
 NpcCrowdSteeringRegression.Run(Check);
 NpcReactionRegression.Run(Check);
 NpcWorkstationRegression.Run(Check);
+NpcScheduleRegression.Run(Check);
 VendorRegression.Run(Check);
 CraftingRegression.Run(Check);
 MissingToolsSideQuestRegression.Run(Check);
