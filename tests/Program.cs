@@ -299,6 +299,22 @@ Check(relationships.Get("herbalist", RelationshipKind.Trust) == 12,
 var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
 Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
     "NPC schedule supports overnight ranges");
+var allDayNpc = new NpcDefinition("all-day-guard", NpcRole.CommunityGuard,
+    [new NpcScheduleSlot(0, 24, "old-village", "patrol")]);
+Check(new[] { -1.0, 0.0, 6.0, 12.0, 23.999, 24.0, 48.0 }
+        .All(hour => allDayNpc.GetSchedule(hour)?.Activity == "patrol"),
+    "NPC full-day duty remains available across midnight and wrapped hours");
+Check(new NpcScheduleSlot(6, 30, "old-village", "patrol").Contains(3),
+    "NPC full-day duty supports an offset start hour");
+Check(!new NpcScheduleSlot(6, 6, "old-village", "rest").Contains(6),
+    "NPC zero-duration duty remains empty");
+Check(nightSchedule.Contains(19) && !nightSchedule.Contains(6),
+    "NPC duty includes its start and excludes its end");
+Check(new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity }
+        .All(value => allDayNpc.GetSchedule(value) is null &&
+            !new NpcScheduleSlot(value, 24, "old-village", "patrol").Contains(12) &&
+            !new NpcScheduleSlot(0, value, "old-village", "patrol").Contains(12)),
+    "NPC schedules reject non-finite times and endpoints");
 
 var ritual = new RitualDefinition(
     "first-ritual",
