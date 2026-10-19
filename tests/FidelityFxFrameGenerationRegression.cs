@@ -15,6 +15,37 @@ internal static class FidelityFxFrameGenerationRegression
                 FidelityFxFrameGeneration.MinimumVulkanVersion, out unsupported, out diagnostic),
             "FG does not accept missing device/queue handles");
 
+        // Exercise the production resource contract without loading a native
+        // provider. Equal render/display extents are valid (native resolution).
+        FfxApiResource Image(nint handle, uint state, uint usage) => new()
+        {
+            Resource = handle,
+            State = state,
+            Description = new()
+            {
+                Type = FfxApi.ResourceTypeTexture2D,
+                Format = FfxApi.FormatR16G16B16A16Float,
+                Width = 128, Height = 128, Depth = 1, MipCount = 1,
+                Usage = usage
+            }
+        };
+        var inputColor = Image(1, FfxApi.ResourceStateComputeRead, FfxApi.ResourceUsageReadOnly);
+        var inputDepth = Image(2, FfxApi.ResourceStateComputeRead, FfxApi.ResourceUsageDepthTarget);
+        var inputMotion = Image(3, FfxApi.ResourceStateComputeRead, FfxApi.ResourceUsageReadOnly);
+        var separateOutput = Image(4, FfxApi.ResourceStateUnorderedAccess, FfxApi.ResourceUsageUav);
+        FidelityFxFrameGeneration.ValidateResources(inputColor, inputDepth, inputMotion, separateOutput);
+        check(true, "FG accepts distinct input/output images at native resolution");
+        foreach (var input in new[] { inputColor, inputDepth, inputMotion })
+        {
+            var aliasedOutput = separateOutput;
+            aliasedOutput.Resource = input.Resource;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateResources(
+                inputColor, inputDepth, inputMotion, aliasedOutput));
+            check(true, "FG rejects output aliasing input image " + input.Resource);
+        }
+        FidelityFxFrameGeneration.ValidateResources(inputColor, inputDepth, inputMotion, separateOutput);
+        check(true, "FG resource validation accepts corrected output after alias rejection");
+
         if (!OperatingSystem.IsLinux() ||
             Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
             return;
