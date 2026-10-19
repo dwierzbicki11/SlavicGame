@@ -57,11 +57,13 @@ public static class NpcCrowdSteering
                 if (penetration <= 0f)
                     continue;
 
-                var aProtected = string.Equals(
+                // Workers must keep their authored pose at a workstation;
+                // passing NPCs take the full separation displacement.
+                var aProtected = !a.IsMoving || string.Equals(
                     a.Id,
                     protectedActorId,
                     StringComparison.Ordinal);
-                var bProtected = string.Equals(
+                var bProtected = !b.IsMoving || string.Equals(
                     b.Id,
                     protectedActorId,
                     StringComparison.Ordinal);
