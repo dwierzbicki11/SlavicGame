@@ -192,6 +192,7 @@ AudioAssetRegression.Run(Check);
 FrontendSettingsRegression.Run(Check);
 SettingsPersistenceRegression.Run(Check);
 CameraFrustumRegression.Run(Check);
+ShadowProjectionRegression.Run(Check);
 
 var animation = new AnimationStateMachine();
 animation.Register("idle");

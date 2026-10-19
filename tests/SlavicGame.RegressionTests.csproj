@@ -38,6 +38,7 @@
     <Compile Include="../Engine/Diagnostics/*.cs" Link="Diagnostics/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Renderer/Camera3D.cs" Link="Camera3D.cs" />
     <Compile Include="../Engine/Renderer/BitmapFont.cs" Link="BitmapFont.cs" />
+    <Compile Include="../Engine/Renderer/ShadowProjection.cs" Link="ShadowProjection.cs" />
     <Compile Include="../Engine/Renderer/CameraFrustum.cs" Link="CameraFrustum.cs" />
     <Compile Include="../Engine/Renderer/CelestialLighting.cs" Link="CelestialLighting.cs" />
     <Compile Include="../Engine/Renderer/PresentationPolicy.cs" Link="PresentationPolicy.cs" />
