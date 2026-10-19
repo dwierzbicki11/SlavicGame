@@ -191,6 +191,39 @@ internal static class BowCombatRegression
               !harvestedRestore.Wildlife.TryHarvest(harvestedRestore, raven.Id),
             "Bow harvest stays consumed after save/load");
 
+        var closeEnemyWorld = WorldGenerator.Generate();
+        var closeEnemy = closeEnemyWorld.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeEnemyCenter = closeEnemy.Position + Vector3.UnitY * 0.78f;
+        FireFromInsideTarget(closeEnemyWorld, closeEnemyCenter);
+        check(closeEnemy.Health < closeEnemy.MaxHealth &&
+              closeEnemyWorld.Bow.Projectiles.Count == 0,
+            "Arrow starting inside an enemy hits immediately before leaving its hitbox");
+        var closeEnemyHealth = closeEnemy.Health;
+        closeEnemyWorld.Bow.Update(closeEnemyWorld, 0.1);
+        check(closeEnemy.Health == closeEnemyHealth,
+            "Close-range arrow damages an enemy exactly once");
+
+        var closeWildlifeWorld = WorldGenerator.Generate();
+        var closeRaven = closeWildlifeWorld.Wildlife.Actors.Single(actor =>
+            actor.Id == "raven-start-01");
+        FireFromInsideTarget(closeWildlifeWorld, closeRaven.Position);
+        check(closeWildlifeWorld.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health == 0f &&
+              closeWildlifeWorld.Bow.Projectiles.Count == 0,
+            "Arrow starting inside wildlife hits immediately before leaving its hitbox");
+
+        void FireFromInsideTarget(WorldState targetWorld, Vector3 center)
+        {
+            targetWorld.Bow.SetAiming(targetWorld, true);
+            check(targetWorld.Bow.TryStartDraw(targetWorld), "Close-range draw starts");
+            targetWorld.Bow.Update(targetWorld, 1.3);
+            // Compensate for the release offset so the projectile starts at the hitbox center.
+            var releaseOrigin = center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+            check(targetWorld.Bow.TryRelease(targetWorld, releaseOrigin, Vector3.UnitZ),
+                "Close-range arrow releases");
+            targetWorld.Bow.Update(targetWorld, 0.0001);
+        }
+
         var slow = Flight(0.1);
         var fast = Flight(1.0 / 120.0);
         check(Vector3.Distance(slow, fast) < 0.005f,
