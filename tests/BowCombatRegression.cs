@@ -66,6 +66,22 @@ internal static class BowCombatRegression
         check(world.Bow.Projectiles.Count == 0,
             "Arrow stops simulating after target collision");
 
+        var closeRange = WorldGenerator.Generate();
+        var closeTarget = closeRange.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeCenter = closeTarget.Position + Vector3.UnitY * 0.78f;
+        closeRange.Bow.SetAiming(closeRange, true);
+        closeRange.Bow.TryStartDraw(closeRange);
+        // Release offsets the spawn by +0.42 along aim and -0.08 vertically.
+        check(closeRange.Bow.TryRelease(closeRange,
+                closeCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                Vector3.UnitZ),
+            "Point-blank shot spawns inside the target collision sphere");
+        closeRange.Bow.Update(closeRange, 0.001);
+        check(closeTarget.Health < closeTarget.MaxHealth &&
+              closeRange.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without waiting to exit");
+
         world.Bow.SetAiming(world, true);
         check(world.Bow.TryStartDraw(world),
             "Terrain-shot draw starts");
