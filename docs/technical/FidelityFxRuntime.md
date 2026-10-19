@@ -163,3 +163,15 @@ normal rendering and the selected upscaler continue; an already-active
 semaphore-correct presenter remains in rendered-only mode until renderer
 restart/shutdown. Saved preferences are preserved. Environment overrides remain
 developer/CI diagnostics, not the shipping enable path.
+
+### FG output isolation regression
+
+The managed FG boundary rejects an output image that shares its Vulkan handle
+with any color, depth or motion input before context creation or native dispatch.
+This also applies when render and display extents are equal. The CPU-only
+`FidelityFxFrameGenerationRegression` covers separate images and all three
+output/input alias cases without requiring the native provider:
+
+```bash
+dotnet run --project tests/SlavicGame.RegressionTests.csproj -c Release
+```
