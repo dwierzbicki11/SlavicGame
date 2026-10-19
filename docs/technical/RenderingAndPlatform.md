@@ -77,6 +77,15 @@ Dane gry muszą działać w testach CPU-only.
 
 ## Materiały
 
+Bias słonecznej mapy cieni dla terenu i modeli PBR używa bazowej normalnej
+powierzchni, przed zastosowaniem normal map. Detal normal map wpływa na BRDF,
+ale nie zmienia geometrii zapisanej w mapie głębokości, więc nie powinien
+sterować biasem i powodować plam samocieniowania. Zmiana nie dodaje próbek
+tekstur ani passów GPU, zachowuje ścieżkę z wyłączonymi cieniami i nie wpływa
+na gameplay. Weryfikacja wizualna: porównać cienie na terenie i modelach przy
+włączaniu normal mappingu, również przy niskim kącie słońca; wzór normal map
+nie powinien zmieniać biasu cieni.
+
 Docelowy materiał powinien rozdzielać:
 - albedo;
 - normal;
