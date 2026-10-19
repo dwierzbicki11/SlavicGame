@@ -7,6 +7,37 @@ internal static class FidelityFxFrameGenerationRegression
 {
     public static void Run(Action<bool, string> check)
     {
+        // Resource validation must run without loading the native provider.
+        // Use matching extents so each alias is rejected for its handle alone.
+        FfxApiResource Image(nint handle, uint format, uint usage, uint state) => new()
+        {
+            Resource = handle,
+            Description = new()
+            {
+                Type = FfxApi.ResourceTypeTexture2D, Format = format,
+                Width = 64, Height = 64, Depth = 1, MipCount = 1, Usage = usage
+            },
+            State = state
+        };
+        var inputColor = Image(1, FfxApi.FormatR16G16B16A16Float,
+            FfxApi.ResourceUsageReadOnly, FfxApi.ResourceStateComputeRead);
+        var inputDepth = Image(2, FfxApi.FormatR32Float,
+            FfxApi.ResourceUsageDepthTarget, FfxApi.ResourceStateComputeRead);
+        var inputMotion = Image(3, FfxApi.FormatR16G16Float,
+            FfxApi.ResourceUsageReadOnly, FfxApi.ResourceStateComputeRead);
+        var separateOutput = Image(4, FfxApi.FormatR16G16B16A16Float,
+            FfxApi.ResourceUsageUav, FfxApi.ResourceStateUnorderedAccess);
+        FidelityFxFrameGeneration.ValidateResources(inputColor, inputDepth, inputMotion, separateOutput);
+        check(true, "FG accepts separate output with valid color/depth/motion descriptors");
+        foreach (var input in new[] { inputColor, inputDepth, inputMotion })
+        {
+            var aliasedOutput = separateOutput;
+            aliasedOutput.Resource = input.Resource;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateResources(
+                inputColor, inputDepth, inputMotion, aliasedOutput));
+            check(true, "FG rejects output aliasing input image " + input.Resource);
+        }
+
         check(!FidelityFxFrameGeneration.TryCreate(default, 1u << 22,
                 out var unsupported, out var diagnostic) && unsupported is null &&
                 diagnostic.Contains("Vulkan 1.1", StringComparison.Ordinal),
