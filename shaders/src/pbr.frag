@@ -65,10 +65,14 @@ float DistributionGGX(vec3 n, vec3 h, float roughness)
 {
     float a = roughness * roughness;
     float a2 = a * a;
-    float ndoth = max(dot(n, h), 0.0);
-    float ndoth2 = ndoth * ndoth;
-    float denom = ndoth2 * (a2 - 1.0) + 1.0;
-    return a2 / max(PI * denom * denom, 0.0001);
+    float ndoth = clamp(dot(n, h), 0.0, 1.0);
+    // Equivalent to 1 + ndoth^2 * (a2 - 1), without subtracting
+    // nearly equal values at the specular peak. Roughness is bounded to
+    // at least 0.06 by the material path, so denom remains positive.
+    float denom = (1.0 - ndoth) * (1.0 + ndoth) + ndoth * ndoth * a2;
+    // Clamping this denominator to 1e-4 suppresses smooth-material peaks:
+    // at roughness 0.06 the correct peak is about 24561, not 0.13.
+    return a2 / (PI * denom * denom);
 }
 
 float GeometrySchlickGGX(float ndotv, float roughness)
