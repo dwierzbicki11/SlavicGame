@@ -438,7 +438,7 @@ R0 forests now contain animated deer, boars, wolves and ravens using a lightweig
 
 ### Wildlife tracking
 
-Ground wildlife now leaves transient species-specific tracks on suitable terrain. Deer and boar stamp hoof marks, wolves stamp paw marks, and nearby HUD feedback reports species plus freshness without drawing a GPS trail. Rain erodes tracks faster, rock and submerged terrain reject them, and these hunting traces remain fully separate from durable quest evidence and magical Reveal Trace signatures.
+Ground wildlife now leaves transient species-specific tracks on suitable terrain. Tracks are spaced along each movement segment at species-specific stride intervals, preserving partial strides between updates. Deer and boar stamp hoof marks, wolves stamp paw marks, and nearby HUD feedback reports species plus freshness without drawing a GPS trail. Rain erodes tracks faster, rock and submerged terrain reject them, and these hunting traces remain fully separate from durable quest evidence and magical Reveal Trace signatures.
 
 
 ### R0 community dialogue
