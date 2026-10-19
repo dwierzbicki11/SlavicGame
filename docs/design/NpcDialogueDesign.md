@@ -37,6 +37,10 @@ Przykładowa kolejność:
 4. harmonogram;
 5. idle.
 
+Zaimplementowane: burza kieruje aktywnych mieszkańców tła do schronienia.
+Nie przerywa aktywności `rest`: mieszkańcy odpoczywający w domach zachowują
+nocny harmonogram również przed i po północy.
+
 ## Dialog
 
 Graf dialogowy posiada:
