@@ -424,6 +424,8 @@ Jeśli żywy przeciwnik znajduje się w aktywnym stanie `Alert`, `Chase` albo `A
 - cywile przechodzą w `FleeThreat` i odsuwają się od przeciwnika;
 - strażnik przechodzi w `GuardThreat` i podchodzi do kontrolowanego dystansu od zagrożenia.
 
+Pozycja obronna strażnika zachowuje jego stronę względem przeciwnika i dystans 4.5 m. Strażnik zwraca się ku zagrożeniu; gdy stoi zbyt blisko, odsuwa się, zamiast przeskakiwać na drugą stronę przeciwnika.
+
 To nie jest jeszcze pełne combat AI strażnika — `GuardThreat` jest reakcją pozycyjną i wizualną, nie automatycznym zadawaniem obrażeń.
 
 ### Dialogue priority
