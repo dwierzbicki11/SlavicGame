@@ -12,6 +12,24 @@ internal static class BowCombatRegression
 
         var world = WorldGenerator.Generate();
 
+        foreach (var step in new[] { 0.001, 1.0 / 120.0, 0.1 })
+        {
+            var closeRange = WorldGenerator.Generate();
+            var target = closeRange.Enemies.Single(enemy =>
+                enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+            var center = target.Position + Vector3.UnitY * 0.78f;
+            closeRange.Bow.SetAiming(closeRange, true);
+            closeRange.Bow.TryStartDraw(closeRange);
+            closeRange.Bow.Update(closeRange, 1.3);
+            // Release offsets the projectile by +0.42 Z and -0.08 Y.
+            var origin = center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+            check(closeRange.Bow.TryRelease(closeRange, origin, Vector3.UnitZ),
+                "Close-range arrow releases inside the enemy hitbox");
+            closeRange.Bow.Update(closeRange, step);
+            check(target.Health < target.MaxHealth && closeRange.Bow.Projectiles.Count == 0,
+                $"Arrow starting inside a hitbox damages the target on its first step ({step}s)");
+        }
+
         check(
             world.Progress.Inventory.Contains(BowCombatRuntime.BowItemId) &&
             world.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == 16,
