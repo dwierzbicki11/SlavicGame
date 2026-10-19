@@ -49,6 +49,28 @@ Minimum:
 
 Zmiana nie powinna trafiać do main po czerwonym CI.
 
+## Regresja FG: osobny obraz wyjściowy
+
+Walidator Frame Generation odrzuca obraz wyjściowy współdzielący uchwyt
+Vulkan z kolorem, głębią lub wektorami ruchu. Sprawdzenie następuje przed
+utworzeniem kontekstu i nagrywaniem poleceń, aby zapis wyniku nie kolidował
+z odczytem wejścia.
+
+`tests/FidelityFxFrameGenerationRegression.cs` sprawdza te trzy konflikty,
+poprawny zestaw obrazów oraz poprawny zestaw po odrzuceniu konfliktów.
+Testy działają bez GPU i biblioteki AMD w zwykłym przebiegu regresji:
+
+```bash
+dotnet run --project tests/SlavicGame.RegressionTests.csproj -c Release
+```
+
+Weryfikacja lokalna 2026-10-19: pięć sprawdzeń przeszło w izolowanym programie
+z metodami walidacji i testami pobranymi z plików projektu; poprzedni walidator
+nie przeszedł nowej regresji. Pełne regresje i kompilacja gry pozostają
+niezweryfikowane: przywracanie zależności blokuje brak dostępu do NuGet
+(`NU1301`, odmowa połączenia z `api.nuget.org:443`). Próby GPU wymagają
+dodatkowo środowiska Vulkan i dostawcy AMD; ten test CPU ich nie zastępuje.
+
 ## Metryki
 
 Zbieramy:
