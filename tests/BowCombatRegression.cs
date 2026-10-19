@@ -66,6 +66,24 @@ internal static class BowCombatRegression
         check(world.Bow.Projectiles.Count == 0,
             "Arrow stops simulating after target collision");
 
+        var closeWorld = WorldGenerator.Generate();
+        var closeEnemy = closeWorld.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeCenter = closeEnemy.Position + Vector3.UnitY * 0.78f;
+        closeWorld.Bow.SetAiming(closeWorld, true);
+        check(closeWorld.Bow.TryStartDraw(closeWorld), "Point-blank bow draw starts");
+        check(closeWorld.Bow.TryRelease(closeWorld,
+                closeCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                Vector3.UnitZ),
+            "Point-blank arrow spawns inside the enemy collider");
+        closeWorld.Bow.Update(closeWorld, 0.001);
+        check(closeEnemy.Health < closeEnemy.MaxHealth && closeWorld.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without reaching its surface");
+        var healthAfterCloseHit = closeEnemy.Health;
+        closeWorld.Bow.Update(closeWorld, 0.1);
+        check(closeEnemy.Health == healthAfterCloseHit,
+            "Point-blank arrow deals damage exactly once");
+
         world.Bow.SetAiming(world, true);
         check(world.Bow.TryStartDraw(world),
             "Terrain-shot draw starts");
