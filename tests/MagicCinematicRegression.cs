@@ -119,11 +119,18 @@ public static class MagicCinematicRegression
         check(magic.Message == "ZIVA", "Incantation begins with its first spoken word");
         check(world.Player.Stamina == 65 && world.Player.Health == 60, "Cost paid once before cast resolves");
         check(!magic.TryStart(world, Vector3.UnitZ), "Casting cannot stack");
+        check(!magic.SelectSpell("spell.reveal-trace") && magic.Current.Id == "spell.mend",
+            "Direct spell selection cannot replace a paid incantation");
+        magic.SelectNext(world);
+        check(magic.Current.Id == "spell.mend" && world.Player.Stamina == 65,
+            "Cycling spells during an incantation preserves its selection and cost");
         magic.Update(world, 0.5);
         check(magic.Message == "ZIVA DAR" && magic.CastingProgress > 0.5, "Incantation reveals the next word during windup");
         check(world.Player.Health == 60, "Windup does not heal early");
         magic.Update(world, 0.5);
         check(world.Player.Health == 85 && !magic.IsCasting, "Completed incantation heals");
+        check(magic.RevealRemaining == 0 && world.Player.Stamina == 65,
+            "Rejected spell change resolves only the original effect without another cost");
         check(!magic.TryStart(world, Vector3.UnitZ), "Cooldown blocks repeats");
         var legacy = SaveGameService.Capture(world) with { Magic = null, Tracks = [] };
         var oldWorld = WorldGenerator.Generate();
@@ -140,6 +147,8 @@ public static class MagicCinematicRegression
         world.Player.TakeDamage(1);
         magic.Update(world, 1);
         check(world.Player.Health == 69 && !magic.IsCasting, "Damage interrupts magic without healing");
+        check(magic.SelectSpell("spell.reveal-trace") && magic.SelectSpell("spell.mend"),
+            "Spell selection becomes available after interruption during cooldown");
         magic.Restore(null); world.Player.SetState(100, 0);
         check(!magic.TryStart(world, Vector3.UnitZ), "Insufficient stamina rejects casting");
         world.Player.Restore();
