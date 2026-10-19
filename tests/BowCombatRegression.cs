@@ -66,6 +66,21 @@ internal static class BowCombatRegression
         check(world.Bow.Projectiles.Count == 0,
             "Arrow stops simulating after target collision");
 
+        var closeWorld = WorldGenerator.Generate();
+        var closeEnemy = closeWorld.Enemies.First();
+        var closeOrigin = closeEnemy.Position + Vector3.UnitY * 0.78f;
+        closeWorld.Bow.SetAiming(closeWorld, true);
+        check(closeWorld.Bow.TryStartDraw(closeWorld) &&
+              closeWorld.Bow.TryRelease(closeWorld, closeOrigin, Vector3.UnitZ),
+            "Point-blank arrow releases inside the enemy collider");
+        closeWorld.Bow.Update(closeWorld, 0.001);
+        check(closeEnemy.Health < closeEnemy.MaxHealth && closeWorld.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately even during a short frame");
+        var healthAfterContact = closeEnemy.Health;
+        closeWorld.Bow.Update(closeWorld, 0.1);
+        check(closeEnemy.Health == healthAfterContact,
+            "Initial-overlap arrow applies damage only once");
+
         world.Bow.SetAiming(world, true);
         check(world.Bow.TryStartDraw(world),
             "Terrain-shot draw starts");
