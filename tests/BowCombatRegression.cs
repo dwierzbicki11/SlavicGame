@@ -242,6 +242,20 @@ internal static class BowCombatRegression
         check(!blocked.Bow.IsAiming && !blocked.Bow.IsDrawing && blocked.Bow.Projectiles.Count == 0,
             "Restore clears transient bow input and projectiles");
 
+        var closeRange = WorldGenerator.Generate();
+        var closeRaven = closeRange.Wildlife.Actors.Single(actor => actor.Id == "raven-start-01");
+        closeRange.Bow.SetAiming(closeRange, true);
+        check(closeRange.Bow.TryStartDraw(closeRange), "Close-range bow draw starts");
+        closeRange.Bow.Update(closeRange, 1.3);
+        // Release offsets the projectile by +0.42 Z and -0.08 Y.
+        var closeOrigin = closeRaven.Position - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+        check(closeRange.Bow.TryRelease(closeRange, closeOrigin, Vector3.UnitZ),
+            "Close-range arrow releases inside target collision volume");
+        closeRange.Bow.Update(closeRange, 0.001);
+        check(closeRange.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health == 0f &&
+              closeRange.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without waiting to exit its volume");
+
         Vector3 Flight(double step)
         {
             var flight = WorldGenerator.Generate();
