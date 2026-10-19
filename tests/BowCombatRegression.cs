@@ -191,6 +191,28 @@ internal static class BowCombatRegression
               !harvestedRestore.Wildlife.TryHarvest(harvestedRestore, raven.Id),
             "Bow harvest stays consumed after save/load");
 
+        var overlapping = WorldGenerator.Generate();
+        var closeTarget = overlapping.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeCenter = closeTarget.Position + Vector3.UnitY * 0.78f;
+        overlapping.Bow.SetAiming(overlapping, true);
+        check(overlapping.Bow.TryStartDraw(overlapping),
+            "Point-blank bow draw starts");
+        overlapping.Bow.Update(overlapping, 1.3);
+        // Compensate for the muzzle offset so the projectile starts at the target centre.
+        check(overlapping.Bow.TryRelease(overlapping,
+                closeCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                Vector3.UnitZ),
+            "Point-blank arrow releases inside the target collision volume");
+        var healthBeforeOverlap = closeTarget.Health;
+        overlapping.Bow.Update(overlapping, 0.0001);
+        check(closeTarget.Health == healthBeforeOverlap - 38f &&
+              overlapping.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without waiting for an exit");
+        overlapping.Bow.Update(overlapping, 0.1);
+        check(closeTarget.Health == healthBeforeOverlap - 38f,
+            "Point-blank arrow applies damage exactly once");
+
         var slow = Flight(0.1);
         var fast = Flight(1.0 / 120.0);
         check(Vector3.Distance(slow, fast) < 0.005f,
