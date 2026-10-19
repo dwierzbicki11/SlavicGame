@@ -299,6 +299,7 @@ Check(relationships.Get("herbalist", RelationshipKind.Trust) == 12,
 var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
 Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
     "NPC schedule supports overnight ranges");
+NpcScheduleRegression.Run(Check);
 
 var ritual = new RitualDefinition(
     "first-ritual",
