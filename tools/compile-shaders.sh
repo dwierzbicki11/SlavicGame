@@ -26,9 +26,14 @@ EOF
     exit 127
 fi
 
+# Build every SPIR-V in a temporary directory before publishing any result.
+# Failed GLSL compilation must not leave a mix of old and new shader binaries.
+STAGING_DIR="$(mktemp -d "$OUT_DIR/.compile-shaders.XXXXXXXX")"
+trap 'rm -rf -- "$STAGING_DIR"' EXIT
+
 compile_shader() {
     local source="$1"
-    local output="$2"
+    local output="$STAGING_DIR/${2##*/}"
     local stage="$3"
 
     echo "[shader] $source -> $output"
@@ -72,5 +77,10 @@ compile_shader "$SRC_DIR/fsr_rcas.vert"     "$OUT_DIR/fsr_rcas.vert.spv"     ver
 compile_shader "$SRC_DIR/fsr_rcas.frag"     "$OUT_DIR/fsr_rcas.frag.spv"     frag
 compile_shader "$SRC_DIR/vegetation_impostor.vert" "$OUT_DIR/vegetation_impostor.vert.spv" vert
 compile_shader "$SRC_DIR/vegetation_impostor.frag" "$OUT_DIR/vegetation_impostor.frag.spv" frag
+
+# All compiler invocations succeeded; only now publish the complete build.
+for staged in "$STAGING_DIR"/*.spv; do
+    mv -f -- "$staged" "$OUT_DIR/"
+done
 
 echo "[shader] Gotowe. SPIR-V: $OUT_DIR"
