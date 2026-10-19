@@ -270,46 +270,8 @@ public sealed class ShadowMapRenderer : IDisposable
         uint mapSize,
         float worldSpan)
     {
-        if (!float.IsFinite(focusPosition.X) ||
-            !float.IsFinite(focusPosition.Y) ||
-            !float.IsFinite(focusPosition.Z))
-        {
-            throw new ArgumentOutOfRangeException(nameof(focusPosition));
-        }
-
-        if (!float.IsFinite(sunDirection.X) ||
-            !float.IsFinite(sunDirection.Y) ||
-            !float.IsFinite(sunDirection.Z) ||
-            sunDirection.LengthSquared() < 0.000001f)
-        {
-            throw new ArgumentOutOfRangeException(nameof(sunDirection));
-        }
-
-        sunDirection = Vector3.Normalize(sunDirection);
-
-        // Snap the shadow focus to the shadow texel footprint. This greatly
-        // reduces shimmering while the camera moves slowly.
-        mapSize = Math.Clamp(mapSize, 512u, 4096u);
-        worldSpan = Math.Clamp(worldSpan, 80f, DefaultWorldSpan);
-        var texelWorldSize = worldSpan / mapSize;
-        var focus = new Vector3(
-            MathF.Round(focusPosition.X / texelWorldSize) * texelWorldSize,
-            focusPosition.Y,
-            MathF.Round(focusPosition.Z / texelWorldSize) * texelWorldSize);
-
-        var up = MathF.Abs(Vector3.Dot(sunDirection, Vector3.UnitY)) > 0.96f
-            ? Vector3.UnitZ
-            : Vector3.UnitY;
-
-        var eye = focus + sunDirection * 520f;
-        var lightView = Matrix4x4.CreateLookAt(eye, focus, up);
-        var lightProjection = Matrix4x4.CreateOrthographic(
-            worldSpan,
-            worldSpan,
-            2f,
-            1050f);
-
-        return lightView * lightProjection;
+        return SunShadowProjection.Calculate(
+            focusPosition, sunDirection, mapSize, worldSpan);
     }
 
     private Pipeline CreateDepthPipeline(
