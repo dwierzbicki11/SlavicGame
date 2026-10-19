@@ -90,6 +90,14 @@ Tło codzienności, nie wszystkie interaktywne.
 - paleniska;
 - podstawowe props.
 
+## Harmonogramy NPC — implementacja
+
+`NpcScheduleSlot` obsługuje dyżury przez północ oraz jawne przedziały
+całodobowe, np. `0–24` i `6–30`. Początek przedziału jest włączony,
+koniec wyłączony; identyczne godziny początku i końca oznaczają pusty
+przedział. Godziny spoza doby są normalizowane, a wartości niefinitywne
+nie aktywują dyżuru. Regresje: `tests/NpcScheduleRegression.cs`.
+
 ## Otwarte
 
 - finalna liczba mieszkańców;
