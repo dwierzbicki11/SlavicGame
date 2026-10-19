@@ -39,9 +39,9 @@ sampling. These are GPU barriers; they do not add per-frame idle waits.
 All original Vulkan, D3D11, OpenGL and Metal sources and pinned native binding
 versions are retained. StartupUtilities and ImageSharp remain the official
 4.9.0 packages and reference the same Veldrid assembly identity. The local
-source projects target the game's .NET 11 version.
+source projects target the game's .NET 10 version.
 
-Build prerequisites are .NET 11, Git and Python 3 (`python` on Windows,
+Build prerequisites are .NET 10, Git and Python 3 (`python` on Windows,
 `python3` on Linux). A clean `dotnet build SlavicGame.csproj -c Release` prepares
 the dependency automatically; the first build needs GitHub access. The cache
 can be removed and reconstructed. `SLAVICGAME_VELDRID_SOURCE` may name a clean

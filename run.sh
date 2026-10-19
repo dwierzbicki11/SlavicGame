@@ -7,13 +7,13 @@ CONFIGURATION="${CONFIGURATION:-Release}"
 
 if ! command -v dotnet >/dev/null 2>&1; then
     echo "BŁĄD: nie znaleziono polecenia dotnet." >&2
-    echo "Zainstaluj .NET SDK 11 i uruchom skrypt ponownie." >&2
+    echo "Zainstaluj .NET SDK 10 i uruchom skrypt ponownie." >&2
     exit 127
 fi
 
 DOTNET_VERSION="$(dotnet --version)"
-if [[ "${DOTNET_VERSION%%.*}" != "11" ]]; then
-    echo "UWAGA: projekt celuje w .NET 11, a znaleziono SDK: $DOTNET_VERSION" >&2
+if [[ "${DOTNET_VERSION%%.*}" != "10" ]]; then
+    echo "UWAGA: projekt celuje w .NET 10, a znaleziono SDK: $DOTNET_VERSION" >&2
 fi
 
 echo "[SlavicGame] compile shaders..."

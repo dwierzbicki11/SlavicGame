@@ -327,7 +327,7 @@ This does **not** mean the game is production-complete. Detailed region bibles, 
 
 ## Build and run
 
-Install the .NET 11 SDK and a Vulkan-capable graphics driver. Linux also requires SDL2 (`libSDL2-2.0.so.0`).
+Install the .NET 10 SDK and a Vulkan-capable graphics driver. Linux also requires SDL2 (`libSDL2-2.0.so.0`).
 
 ```sh
 dotnet build SlavicGame.csproj --configuration Release
