@@ -37,3 +37,13 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## GGX modeli PBR
+
+`pbr.frag` ogranicza chropowatość materiału do minimum 0.06 (po deszczu
+minimum wynosi 0.08). Rozkład GGX korzysta z dodatniej postaci mianownika
+`(1 - NdotH²) + NdotH² * roughness⁴`, bez stałego minimum na jego kwadracie.
+Pozwala to zachować wąskie refleksy gładkich materiałów. Dla `NdotH = 1`
+wartość rozkładu powinna wynosić `1 / (PI * roughness⁴)`; dla chropowatości
+1 rozkład jest stały i wynosi `1 / PI`. Zmiana nie dodaje próbek tekstur
+ani nowych zasobów Vulkan i działa w istniejącej ścieżce PBR.
