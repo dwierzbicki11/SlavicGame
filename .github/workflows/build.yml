@@ -50,6 +50,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Validate PBR GGX distribution
+        if: runner.os == 'Linux'
+        run: python3 tools/test-pbr-ggx.py
       - run: dotnet build SlavicGame.csproj --configuration Release
       - name: Verify compiled Vulkan shaders were copied to output
         if: runner.os == 'Linux'
