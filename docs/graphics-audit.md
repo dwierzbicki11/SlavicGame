@@ -2,6 +2,10 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-19
+
+- **PBR normal-map derivatives in divergent control flow — fixed in source, GPU validation pending.** `pbr.frag` called `CotangentFrame` (which uses `dFdx`/`dFdy`) only when the sampled tangent-space normal had a nonzero XY component. Adjacent fragments can take different branches at flat/detail transitions, where GLSL derivatives are undefined ([GLSL specification](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). The frame is now computed before that per-fragment branch, inside the existing frame-uniform PBR/normal-mapping feature branch. Flat-normal fallback, resource bindings and texture-fetch count are unchanged; disabled normal mapping still skips the derivative work. Validate on Vulkan with a normal map alternating flat and tilted normals, under grazing sunlight and camera movement, then compare normal mapping disabled. Local shader compilation is blocked by missing `glslc`/`glslangValidator`; visual validation remains open.
+
 ## 2026-10-05
 
 - **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
