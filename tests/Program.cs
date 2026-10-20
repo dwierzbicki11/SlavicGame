@@ -31,6 +31,7 @@ void Check(bool condition, string name)
     checks++;
 }
 MagicCinematicRegression.Run(Check);
+ShadowMapRegression.Run(Check);
 FidelityFxStartupRegression.Run(Check);
 FidelityFxFenceRegression.Run(Check);
 FidelityFxNativeRegression.Run(Check);

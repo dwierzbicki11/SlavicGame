@@ -128,6 +128,14 @@ Mgła używana jako mechanika musi zachować czytelność również na niższych
 
 Renderer jest prototypem. Dokument nie deklaruje gotowości produkcyjnej ani końcowych wymagań sprzętowych.
 
+Mapa cieni słońca stabilizuje przesunięcie w płaszczyźnie XY światła,
+zaokrąglając je do pełnych texeli dla aktualnej rozdzielczości i zasięgu mapy.
+Obejmuje to także zmianę wysokości kamery przy ukośnym świetle. Przesunięcie
+wzdłuż kierunku światła zachowuje ciągłą głębokość. Regresja CPU
+`ShadowMapRegression` sprawdza nieruchome współrzędne cienia przy małych
+ruchach w trzech osiach, skok o jeden texel i światło pionowe. Nie zastępuje
+to oceny migotania na GPU; zmiana kierunku słońca nadal obraca siatkę mapy.
+
 
 ## Vulkan fullscreen orientation
 
