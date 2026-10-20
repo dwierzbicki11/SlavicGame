@@ -12,6 +12,21 @@ internal static class BowCombatRegression
 
         var world = WorldGenerator.Generate();
 
+        var closeRange = WorldGenerator.Generate();
+        var closeRaven = closeRange.Wildlife.Actors.Single(actor => actor.Id == "raven-start-01");
+        closeRange.Bow.SetAiming(closeRange, true);
+        closeRange.Bow.TryStartDraw(closeRange);
+        closeRange.Bow.Update(closeRange, 1.3);
+        // Release offsets the projectile by +0.42 forward and -0.08 vertically.
+        // Place its initial position at the target center.
+        var closeOrigin = closeRaven.Position - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+        check(closeRange.Bow.TryRelease(closeRange, closeOrigin, Vector3.UnitZ),
+            "Point-blank bow shot releases inside the target hit volume");
+        closeRange.Bow.Update(closeRange, 0.001);
+        check(closeRange.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health == 0f &&
+              closeRange.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without waiting for the exit surface");
+
         check(
             world.Progress.Inventory.Contains(BowCombatRuntime.BowItemId) &&
             world.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == 16,
