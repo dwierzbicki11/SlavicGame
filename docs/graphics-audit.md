@@ -2,6 +2,11 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-20
+
+- **Shadow texel stabilization used world axes — fixed.** `ShadowMapRenderer` rounded world X/Z while leaving Y unsnapped. For oblique sunlight those axes do not match the shadow texture, so camera motion could still slide the sampling grid. The CPU-only `ShadowLightMatrix` now builds a fixed light rotation and snaps light-space X/Y to the texel footprint; depth follows the focus continuously. Public renderer entry points and shadow resource/shader layouts remain unchanged. This adds no GPU passes or texture fetches and does not affect gameplay.
+- **Validation:** 72 isolated CPU regression checks passed for oblique/vertical light, 512/2048/4096 maps and 80/420 m spans (subtexel stability, whole-pixel movement, light-axis motion and Vulkan depth range). Fullscreen orientation checks passed. The same regression rejects the original implementation. Full project build/regression restore failed in this environment (the no-restore attempts report NETSDK1004, missing project.assets.json); GLSL compilation is unavailable because neither `glslc` nor `glslangValidator` is installed. Visual Vulkan validation on a moving camera remains open.
+
 ## 2026-10-05
 
 - **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
