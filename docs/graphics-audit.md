@@ -2,6 +2,10 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-20
+
+- **Model PBR GGX highlights suppressed by denominator floor — fixed in source.** `pbr.frag` clamped the squared GGX denominator to `0.0001`, reducing the normal-incidence distribution at roughness `0.06` from approximately `24560.95` to `0.1296`. The denominator now uses `(1 - NdotH²) + NdotH² * roughness⁴` to avoid cancellation at the peak, with a guard below the supported roughness range before squaring. `NdotH` is clamped to `[0, 1]` for rounding safety. This preserves the existing quality fallback and requires no additional texture fetches or bindings. A CPU evaluation of the shader function passed 7007 samples against the analytic distribution, including finite/positive/monotonic values and peak/boundary checks. The existing Vulkan orientation check passed. SPIR-V compilation and visual Vulkan verification remain pending because this environment lacks `glslc`/`glslangValidator`; CPU arithmetic checks do not establish GPU output or performance.
+
 ## 2026-10-05
 
 - **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
