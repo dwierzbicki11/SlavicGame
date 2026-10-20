@@ -110,6 +110,34 @@ public static class MagicCinematicRegression
         check(SpellLessons.All.All(lesson => SpellLessons.IsLearned(learnedRestored, lesson.SpellId)),
             "Learned spells persist through save and load");
 
+        var lockedMagic = learnedRestored.Magic;
+        lockedMagic.Restore(null);
+        learnedRestored.Player.Restore();
+        learnedRestored.Player.TakeDamage(40);
+        check(lockedMagic.SelectSpell("spell.reveal-trace") &&
+              lockedMagic.TryStart(learnedRestored, Vector3.UnitZ),
+            "Reveal starts before testing spell selection during incantation");
+        check(!lockedMagic.SelectSpell("spell.mend") &&
+              !lockedMagic.SelectSpell("spell.spark") &&
+              lockedMagic.Current.Id == "spell.reveal-trace",
+            "Direct spell selection cannot replace an active incantation");
+        lockedMagic.SelectNext(learnedRestored);
+        check(lockedMagic.Current.Id == "spell.reveal-trace",
+            "Cycling spells also preserves the active incantation");
+        lockedMagic.Update(learnedRestored, 2);
+        check(lockedMagic.RevealRemaining > 0 &&
+              learnedRestored.Player.Health == 60 &&
+              learnedRestored.Player.Stamina == 82,
+            "Original reveal resolves for its original cost without applying healing");
+        check(lockedMagic.SelectSpell("spell.mend"),
+            "Direct selection works again after the incantation completes");
+        lockedMagic.Update(learnedRestored, 10);
+        check(lockedMagic.TryStart(learnedRestored, Vector3.UnitZ),
+            "Selected heal starts after cooldown");
+        lockedMagic.Cancel();
+        check(lockedMagic.SelectSpell("spell.spark"),
+            "Direct selection works after an incantation is cancelled");
+
         world.Player.Restore();
         magic.SelectSpell("spell.spark");
         magic.SelectNext(world);
