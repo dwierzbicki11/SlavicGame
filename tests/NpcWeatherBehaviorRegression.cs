@@ -67,5 +67,30 @@ internal static class NpcWeatherBehaviorRegression
               resumed.Any(actor => actor.Activity == "field-work") &&
               resumed.Any(actor => actor.Activity == "market-trade"),
             "Settlers resume authored work routines after the storm ends");
+
+        world.Time.SetTimeOfDay(23);
+        world.NpcWorld.Update(world);
+        var resting = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .ToDictionary(actor => actor.Id);
+
+        world.Weather.SetCondition(WeatherKind.Storm, immediate: true);
+        world.NpcWorld.Update(world);
+        var restingDuringStorm = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .ToArray();
+
+        check(restingDuringStorm.Length == 14 &&
+              restingDuringStorm.All(actor =>
+                  actor.Activity == "rest" && !actor.IsMoving &&
+                  actor.Position == resting[actor.Id].Position),
+            "Night storms leave resting settlers stationary at their home positions");
+
+        world.Time.SetTimeOfDay(10);
+        world.NpcWorld.Update(world);
+        check(world.NpcWorld.Actors
+                .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+                .All(actor => NpcSituationalBehavior.IsStormShelterActivity(actor.Activity)),
+            "Settlers seek storm shelter when daytime duties begin during an ongoing storm");
     }
 }

@@ -450,6 +450,8 @@ Ground wildlife now leaves transient species-specific tracks on suitable terrain
 
 Żarnowiec's fourteen ambient settlers now interrupt ordinary work/travel routines during severe storms and move along lightweight deterministic shelter routes. Normal rain leaves routine work intact, core quest NPC schedules are untouched, and residents resume their authored jobs when the storm passes.
 
+Residents already resting at home keep their night routine during storms. If the storm continues into their daytime duties, they switch to shelter routes then.
+
 
 ### Missing tools micro side quest
 
