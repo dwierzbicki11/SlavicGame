@@ -196,6 +196,24 @@ internal static class BowCombatRegression
         check(Vector3.Distance(slow, fast) < 0.005f,
             "Arrow trajectory is independent of 10 versus 120 FPS");
 
+        var closeRange = WorldGenerator.Generate();
+        var closeEnemy = closeRange.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeOrigin = closeEnemy.Position + Vector3.UnitY * 0.78f - Vector3.UnitZ * 0.5f;
+        closeRange.Bow.SetAiming(closeRange, true);
+        check(closeRange.Bow.TryStartDraw(closeRange), "Point-blank bow draw starts");
+        closeRange.Bow.Update(closeRange, 1.3);
+        check(closeRange.Bow.TryRelease(closeRange, closeOrigin, Vector3.UnitZ),
+            "Point-blank arrow releases inside the target hit volume");
+        var closeHealth = closeEnemy.Health;
+        closeRange.Bow.Update(closeRange, 0.001);
+        check(closeEnemy.Health < closeHealth && closeRange.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without waiting to exit its volume");
+        var healthAfterHit = closeEnemy.Health;
+        closeRange.Bow.Update(closeRange, 0.1);
+        check(closeEnemy.Health == healthAfterHit,
+            "Point-blank arrow applies damage only once");
+
         var wounded = WorldGenerator.Generate();
         var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
         wounded.Wildlife.TryDamage(wounded, deer.Id, 20f);
