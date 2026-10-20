@@ -297,6 +297,20 @@ Check(relationships.Get("herbalist", RelationshipKind.Trust) == 12,
     "Character relationship state");
 
 var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
+var allDaySchedule = new NpcScheduleSlot(0, 24, "old-village", "guard");
+Check(new[] { -1d, 0d, 6d, 12d, 23.999d, 24d, 48d }.All(allDaySchedule.Contains),
+    "NPC full-day schedule remains active across midnight and wrapped hours");
+Check(new NpcScheduleSlot(6, 30, "old-village", "guard").Contains(3),
+    "NPC full-day schedule supports a shifted start hour");
+Check(!new NpcScheduleSlot(6, 6, "old-village", "empty").Contains(6),
+    "NPC zero-duration schedule remains empty");
+Check(nightSchedule.Contains(19) && !nightSchedule.Contains(6),
+    "NPC schedule includes its start and excludes its end");
+Check(!allDaySchedule.Contains(double.NaN) &&
+      !allDaySchedule.Contains(double.PositiveInfinity) &&
+      !new NpcScheduleSlot(double.NaN, 24, "old-village", "invalid").Contains(12) &&
+      !new NpcScheduleSlot(0, double.PositiveInfinity, "old-village", "invalid").Contains(12),
+    "NPC schedule rejects non-finite hours and endpoints");
 Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
     "NPC schedule supports overnight ranges");
 
