@@ -426,6 +426,8 @@ Jeśli żywy przeciwnik znajduje się w aktywnym stanie `Alert`, `Chase` albo `A
 
 To nie jest jeszcze pełne combat AI strażnika — `GuardThreat` jest reakcją pozycyjną i wizualną, nie automatycznym zadawaniem obrażeń.
 
+Pozycja `GuardThreat` zachowuje stronę, po której strażnik znajduje się względem przeciwnika, utrzymuje dystans 4.5 m i kieruje wzrok ku zagrożeniu. Wyznaczanie tej pozycji nie przenosi strażnika na przeciwną stronę wroga; końcową pozycję nadal ogranicza istniejący resolver kolizji.
+
 ### Dialogue priority
 NPC będący aktywnym rozmówcą jest chroniony przed crowd push oraz reaction override:
 - pozostaje na miejscu;
