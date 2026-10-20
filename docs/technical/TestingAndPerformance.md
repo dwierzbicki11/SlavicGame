@@ -19,6 +19,14 @@ Systemy możliwe do uruchomienia bez Vulkan:
 - pogoda jako stan;
 - logika interakcji.
 
+Regresje FG w `tests/FidelityFxFrameGenerationRegression.cs` sprawdzają bez GPU,
+że obraz wyjściowy nie współdzieli uchwytu z żadnym wejściem (kolor, głębia,
+wektory ruchu), także przy jednakowej rozdzielczości renderowania i prezentacji.
+Kontrola działa przed utworzeniem kontekstu i wysłaniem poleceń Vulkan.
+Uruchomienie: `dotnet run --project tests/SlavicGame.RegressionTests.csproj -c Release`.
+Natywne testy dispatch/readback wymagają dodatkowo dostawcy FidelityFX oraz
+`SLAVICGAME_TEST_FSR3_NATIVE=1`.
+
 ### Integration
 - input + movement;
 - world + AI;
