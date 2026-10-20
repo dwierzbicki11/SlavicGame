@@ -55,6 +55,23 @@ internal static class NpcWeatherBehaviorRegression
               shrineKeeper.Activity == "tend-shrine",
             "Core quest NPC schedules are not silently overridden by ambient storm behavior");
 
+        world.Time.SetTimeOfDay(23);
+        world.NpcWorld.Update(world);
+
+        var resting = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .ToArray();
+        check(resting.Length == 14 &&
+              resting.All(actor => actor.Activity == "rest" && !actor.IsMoving),
+            "Storms do not send resting residents onto moving shelter routes at night");
+
+        world.Time.SetTimeOfDay(10);
+        world.NpcWorld.Update(world);
+        check(world.NpcWorld.Actors
+                .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+                .All(actor => NpcSituationalBehavior.IsStormShelterActivity(actor.Activity)),
+            "Residents seek shelter when their daytime shifts begin during a storm");
+
         world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
         world.NpcWorld.Update(world);
 
