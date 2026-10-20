@@ -128,6 +128,19 @@ Mgła używana jako mechanika musi zachować czytelność również na niższych
 
 Renderer jest prototypem. Dokument nie deklaruje gotowości produkcyjnej ani końcowych wymagań sprzętowych.
 
+### Pochodne normal map modeli PBR
+
+`pbr.frag` oblicza układ styczny (`CotangentFrame`, `dFdx`/`dFdy`)
+przed warunkiem zależnym od próbki normal mapy. Fragmenty sąsiadujące
+na granicy płaskiego i wypukłego obszaru tekstury mogą wybrać różne gałęzie;
+liczenie pochodnych dopiero w takiej gałęzi dawałoby niezdefiniowane wyniki.
+Obliczenia pozostają pod jednolitymi dla klatki flagami PBR i normal mappingu,
+więc wyłączenie funkcji nadal pomija ten koszt. Liczba próbek tekstury i układ
+zasobów Vulkan pozostają bez zmian; poprawka nie wpływa na gameplay.
+
+Weryfikacja: `./tools/compile-shaders.sh` i oględziny modelu z normal mapą
+zawierającą sąsiadujące płaskie i wypukłe obszary, także w ruchu kamery.
+
 
 ## Vulkan fullscreen orientation
 
