@@ -21,6 +21,12 @@ Pierwszy wycinek używa dwóch głównych zakresów:
 - dzień;
 - noc.
 
+W kodzie `NpcScheduleSlot` początek zakresu jest włączony, a koniec
+wyłączony. Zakres przechodzący przez północ (np. `19–6`) obejmuje noc.
+Jawny zakres o długości co najmniej 24 godzin (np. `0–24` lub `6–30`)
+zapewnia dostępność całodobową; identyczne granice (`6–6`) oznaczają pusty
+wpis. Godziny i granice muszą być skończonymi liczbami.
+
 Później można dodać:
 - świt;
 - zmierzch;

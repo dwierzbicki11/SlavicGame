@@ -297,6 +297,23 @@ Check(relationships.Get("herbalist", RelationshipKind.Trust) == 12,
     "Character relationship state");
 
 var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
+var fullDaySchedule = new NpcScheduleSlot(0, 24, "old-village", "guard");
+Check(new[] { 0.0, 6.0, 12.0, 23.999, 24.0, -1.0 }
+        .All(fullDaySchedule.Contains),
+    "Full-day NPC schedule includes every normalized hour");
+Check(new NpcScheduleSlot(6, 30, "old-village", "guard").Contains(5),
+    "Full-day NPC schedule supports shifted day boundaries");
+Check(!new NpcScheduleSlot(6, 6, "old-village", "guard").Contains(6),
+    "Equal NPC schedule endpoints remain an empty slot");
+Check(!fullDaySchedule.Contains(double.NaN) &&
+      !fullDaySchedule.Contains(double.PositiveInfinity) &&
+      !new NpcScheduleSlot(double.NegativeInfinity, 24, "old-village", "guard").Contains(12) &&
+      !new NpcScheduleSlot(0, double.PositiveInfinity, "old-village", "guard").Contains(12),
+    "NPC schedules reject non-finite hours and boundaries");
+var fullDayNpc = new NpcDefinition("all-day-guard", NpcRole.CommunityGuard,
+    new[] { fullDaySchedule });
+Check(ReferenceEquals(fullDayNpc.GetSchedule(12), fullDaySchedule),
+    "NPC with a full-day schedule remains available to world runtime");
 Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
     "NPC schedule supports overnight ranges");
 
