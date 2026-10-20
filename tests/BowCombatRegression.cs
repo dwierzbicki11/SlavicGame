@@ -191,6 +191,23 @@ internal static class BowCombatRegression
               !harvestedRestore.Wildlife.TryHarvest(harvestedRestore, raven.Id),
             "Bow harvest stays consumed after save/load");
 
+        var closeRange = WorldGenerator.Generate();
+        var closeEnemy = closeRange.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeCenter = closeEnemy.Position + Vector3.UnitY * 0.78f;
+        closeRange.Bow.SetAiming(closeRange, true);
+        closeRange.Bow.TryStartDraw(closeRange);
+        closeRange.Bow.Update(closeRange, 1.3);
+        check(closeRange.Bow.TryRelease(
+                closeRange,
+                closeCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                Vector3.UnitZ),
+            "Point-blank arrow releases inside the enemy collision sphere");
+        closeRange.Bow.Update(closeRange, 0.001);
+        check(closeEnemy.Health < closeEnemy.MaxHealth &&
+              closeRange.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without waiting for an exit");
+
         var slow = Flight(0.1);
         var fast = Flight(1.0 / 120.0);
         check(Vector3.Distance(slow, fast) < 0.005f,
