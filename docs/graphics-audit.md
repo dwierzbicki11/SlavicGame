@@ -2,6 +2,11 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-20
+
+- **Shadow projection stabilization in light space — fixed.** The shadow focus was snapped in world X/Z, which does not align with shadow-map texels for oblique sunlight and leaves vertical camera movement unsnapped. `ShadowMapRenderer.CalculateLightViewProjection` now builds a focus-independent light orientation and snaps the two image-plane translations to the texel footprint. Depth still follows the focus continuously. This changes CPU matrix construction only, without extra GPU resources, shader samples or gameplay changes. `ShadowProjectionRegression` checks sub-texel stability, whole-texel translation and focus coverage for oblique/vertical light, 512/2048/4096 maps and 80/420 m spans.
+- Validation: 108 isolated CPU checks passed using the production projection methods and the new regression. Full Release build and regression runner were attempted but stopped during Veldrid dependency restore without a concrete error diagnostic. GLSL compilation is blocked by missing `glslc`/`glslangValidator`. Visual Vulkan validation and full integration checks remain pending.
+
 ## 2026-10-05
 
 - **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
