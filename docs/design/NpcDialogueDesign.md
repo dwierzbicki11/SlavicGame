@@ -17,6 +17,11 @@ Minimalny NPC posiada:
 
 Harmonogram opisuje **aktywność i miejsce**, nie pełną animację każdej sekundy.
 
+Przedziały obejmują godzinę początkową, a wykluczają końcową; mogą przechodzić
+przez północ (np. 19–6). Jawny zakres co najmniej 24 godzin (np. 0–24 lub 6–30)
+oznacza aktywność przez całą dobę. Identyczne końce (np. 6–6) oznaczają pusty
+przedział. Godziny są normalizowane do doby, a wartości niefinitywne odrzucane.
+
 Pierwszy wycinek używa dwóch głównych zakresów:
 - dzień;
 - noc.
