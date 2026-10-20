@@ -574,6 +574,12 @@ public sealed class BowCombatRuntime
     {
         fraction = 0f;
 
+        var offset = from - center;
+        // An overlapping projectile hits at the start of the step, even if
+        // this segment is too short to reach the surface of the hitbox.
+        if (offset.LengthSquared() <= radius * radius)
+            return true;
+
         var segment = to - from;
         var segmentLengthSquared =
             segment.LengthSquared();
@@ -581,7 +587,6 @@ public sealed class BowCombatRuntime
         if (segmentLengthSquared < 0.0000001f)
             return false;
 
-        var offset = from - center;
         var a = segmentLengthSquared;
         var b = 2f * Vector3.Dot(offset, segment);
         var c =
