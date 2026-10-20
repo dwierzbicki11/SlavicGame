@@ -15,6 +15,29 @@ internal static class FidelityFxFrameGenerationRegression
                 FidelityFxFrameGeneration.MinimumVulkanVersion, out unsupported, out diagnostic),
             "FG does not accept missing device/queue handles");
 
+        var cameraFrame = new TemporalFrameState().BeginFrame(
+            Matrix4x4.CreatePerspectiveFieldOfView(1, 1, 0.1f, 100),
+            Matrix4x4.CreateLookAt(new Vector3(2, 3, 4), Vector3.Zero, Vector3.UnitY),
+            64, 64, enableJitter: true);
+        var inverse = FidelityFxFrameGeneration.ValidateCamera(cameraFrame);
+        check(Vector3.Distance(inverse.Translation, new Vector3(2, 3, 4)) < 0.0001f,
+            "FG camera validation preserves a valid jittered camera position without native dependencies");
+        var invalidView = cameraFrame.View;
+        invalidView.M11 = float.NaN;
+        ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(cameraFrame with { View = invalidView }));
+        check(true, "FG rejects NaN camera matrices before native dispatch");
+        invalidView = cameraFrame.View;
+        invalidView.M41 = float.PositiveInfinity;
+        ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(cameraFrame with { View = invalidView }));
+        check(true, "FG rejects infinite camera translation before native dispatch");
+        ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(cameraFrame with { View = default }));
+        check(true, "FG rejects singular camera matrices before native dispatch");
+        foreach (var jitter in new[] { new Vector2(float.NaN, 0), new Vector2(0, float.NegativeInfinity) })
+        {
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(cameraFrame with { JitterPixels = jitter }));
+            check(true, "FG rejects non-finite jitter before native dispatch: " + jitter);
+        }
+
         if (!OperatingSystem.IsLinux() ||
             Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
             return;
@@ -115,7 +138,7 @@ internal static class FidelityFxFrameGenerationRegression
     {
         try { action(); }
         catch (ArgumentException) { return; }
-        throw new Exception("FG accepted invalid resources");
+        throw new Exception("FG accepted invalid input");
     }
 
     private static T Bind<T>(nint library, string name) where T : Delegate =>
