@@ -67,8 +67,11 @@ float DistributionGGX(vec3 n, vec3 h, float roughness)
     float a2 = a * a;
     float ndoth = max(dot(n, h), 0.0);
     float ndoth2 = ndoth * ndoth;
-    float denom = ndoth2 * (a2 - 1.0) + 1.0;
-    return a2 / max(PI * denom * denom, 0.0001);
+    // Keep the narrow GGX peak for smooth materials. A 1e-4 floor on the
+    // squared denominator suppresses it even at the minimum roughness (0.06).
+    // This equivalent form also avoids subtracting nearly equal values at N.H=1.
+    float denom = (1.0 - ndoth2) + ndoth2 * a2;
+    return a2 / max(PI * denom * denom, 1e-12);
 }
 
 float GeometrySchlickGGX(float ndotv, float roughness)
