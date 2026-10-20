@@ -110,7 +110,11 @@ and disposal wait for its submitted work before releasing native resources.
 Inputs are HUD-free color at display resolution and depth/motion at render
 resolution; all input images must be shader-read-only, with the output in
 GENERAL. The caller owns texture lifetimes and layout tracking and submits on
-the render thread. Device creation must enable `shaderStorageImageExtendedFormats`;
+the render thread. The output image must be distinct from all three input
+images (color, depth and motion); managed validation rejects aliasing before
+context creation or command recording. CPU-only regressions cover each input
+alias and a valid set of distinct images without loading the native provider.
+Device creation must enable `shaderStorageImageExtendedFormats`;
 both the current Veldrid device factory and the fixture enable that core feature.
 Physical-device Vulkan version, compute subgroup arithmetic and extended
 storage-format support are checked before FG allocates resources. Camera vectors
