@@ -72,6 +72,7 @@ public sealed class SpellCasting
     public bool SelectSpell(string spellId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(spellId);
+        if (IsCasting) return false;
         var index = Spells.ToList().FindIndex(spell => string.Equals(spell.Id, spellId, StringComparison.Ordinal));
         if (index < 0) return false;
         Selected = index;
@@ -81,6 +82,7 @@ public sealed class SpellCasting
     public void NormalizeSelection(WorldState world)
     {
         ArgumentNullException.ThrowIfNull(world);
+        if (IsCasting) return;
         if (SpellLessons.IsLearned(world, Current.Id)) return;
 
         for (var i = 0; i < Spells.Count; i++)

@@ -26,6 +26,14 @@ Nie:
 
 Finalne wartości ustalamy po playteście.
 
+### Wybór czaru podczas inkantacji — runtime
+
+Rozpoczęta inkantacja zachowuje wybrany czar aż do zakończenia lub przerwania.
+Zmiana przez `SelectNext`, `SelectSpell` oraz normalizacja wyboru nie podmieniają
+czaru w trakcie rzucania; `SelectSpell` zwraca wtedy `false`. Koszt i efekt
+pozostają przypisane do tego samego czaru. Po zakończeniu lub przerwaniu można
+ponownie zmienić wybór, także podczas cooldownu.
+
 ### Użycie w zadaniu
 
 Może pomóc zauważyć:
