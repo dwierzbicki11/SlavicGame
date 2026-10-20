@@ -119,11 +119,20 @@ public static class MagicCinematicRegression
         check(magic.Message == "ZIVA", "Incantation begins with its first spoken word");
         check(world.Player.Stamina == 65 && world.Player.Health == 60, "Cost paid once before cast resolves");
         check(!magic.TryStart(world, Vector3.UnitZ), "Casting cannot stack");
+        check(!magic.SelectSpell("spell.reveal-trace") && magic.Current.Id == "spell.mend" &&
+              world.Player.Stamina == 65,
+            "Direct spell selection cannot replace a paid incantation or change its cost");
+        magic.SelectNext(world);
+        check(magic.Current.Id == "spell.mend",
+            "Cycling spells also preserves the active incantation");
         magic.Update(world, 0.5);
         check(magic.Message == "ZIVA DAR" && magic.CastingProgress > 0.5, "Incantation reveals the next word during windup");
         check(world.Player.Health == 60, "Windup does not heal early");
         magic.Update(world, 0.5);
         check(world.Player.Health == 85 && !magic.IsCasting, "Completed incantation heals");
+        check(magic.RevealRemaining == 0 && magic.SelectSpell("spell.reveal-trace") &&
+              magic.SelectSpell("spell.mend"),
+            "Original effect resolves and direct selection becomes available after casting");
         check(!magic.TryStart(world, Vector3.UnitZ), "Cooldown blocks repeats");
         var legacy = SaveGameService.Capture(world) with { Magic = null, Tracks = [] };
         var oldWorld = WorldGenerator.Generate();
