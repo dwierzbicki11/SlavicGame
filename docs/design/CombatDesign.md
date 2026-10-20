@@ -29,6 +29,10 @@ Wyczerpanie nie powinno całkowicie odbierać sterowania. Gracz może się porus
 
 ## Timing
 
+Runtime: melee i inkantacja wzajemnie blokują rozpoczęcie drugiej akcji.
+Czar można rozpocząć dopiero po zakończeniu recovery ataku; odrzucona
+próba nie zużywa staminy i nie uruchamia cooldownu czaru.
+
 Atak posiada:
 - windup;
 - active window;
