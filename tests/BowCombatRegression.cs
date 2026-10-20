@@ -242,6 +242,33 @@ internal static class BowCombatRegression
         check(!blocked.Bow.IsAiming && !blocked.Bow.IsDrawing && blocked.Bow.Projectiles.Count == 0,
             "Restore clears transient bow input and projectiles");
 
+        foreach (var hitWildlife in new[] { false, true })
+        {
+            var closeRange = WorldGenerator.Generate();
+            var enemy = closeRange.Enemies.First();
+            var animal = closeRange.Wildlife.Actors.Single(actor => actor.Id == "raven-start-01");
+            var center = hitWildlife ? animal.Position : enemy.Position + Vector3.UnitY * 0.78f;
+            var healthBefore = hitWildlife ? animal.Health : enemy.Health;
+            closeRange.Bow.SetAiming(closeRange, true);
+            closeRange.Bow.TryStartDraw(closeRange);
+            closeRange.Bow.Update(closeRange, 1.3);
+            // Compensate for the launch offset so the arrow starts inside the target.
+            closeRange.Bow.TryRelease(closeRange,
+                center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                Vector3.UnitZ);
+            closeRange.Bow.Update(closeRange, 0.001);
+            var healthAfter = hitWildlife
+                ? closeRange.Wildlife.Actors.Single(actor => actor.Id == animal.Id).Health
+                : enemy.Health;
+            check(healthAfter < healthBefore && closeRange.Bow.Projectiles.Count == 0,
+                $"Arrow starting inside {(hitWildlife ? "wildlife" : "enemy")} hits immediately at high FPS");
+            closeRange.Bow.Update(closeRange, 0.1);
+            check((hitWildlife
+                    ? closeRange.Wildlife.Actors.Single(actor => actor.Id == animal.Id).Health
+                    : enemy.Health) == healthAfter,
+                "Close-range arrow applies damage only once");
+        }
+
         Vector3 Flight(double step)
         {
             var flight = WorldGenerator.Generate();
