@@ -220,6 +220,34 @@ internal static class BowCombatRegression
         check(wallWorld.Bow.Projectiles.Count == 0 && wallWorld.Bow.RecoverableArrows.Count == 1,
             "Obstacle volumes stop arrows before they pass through a hut");
 
+        var closeRange = WorldGenerator.Generate();
+        var closeEnemy = closeRange.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeDeer = closeRange.Wildlife.Actors.First(actor =>
+            actor.Species == WildlifeSpecies.Deer);
+        foreach (var (targetOrigin, healthBefore, healthAfter, targetName) in new[]
+        {
+            (closeEnemy.Position + Vector3.UnitY * 0.78f,
+                closeEnemy.Health, (Func<float>)(() => closeEnemy.Health), "enemy"),
+            (closeDeer.Position + Vector3.UnitY *
+                WildlifeCatalog.For(closeDeer.Species).BodyRadius * 0.72f,
+                closeDeer.Health, (Func<float>)(() => closeRange.Wildlife.Actors.Single(
+                    actor => actor.Id == closeDeer.Id).Health), "wildlife")
+        })
+        {
+            closeRange.Bow.SetAiming(closeRange, true);
+            check(closeRange.Bow.TryStartDraw(closeRange) &&
+                  closeRange.Bow.TryRelease(closeRange, targetOrigin, Vector3.UnitZ),
+                $"Point-blank arrow releases inside {targetName} collision volume");
+            closeRange.Bow.Update(closeRange, 0.001);
+            check(healthAfter() < healthBefore && closeRange.Bow.Projectiles.Count == 0,
+                $"Arrow starting inside {targetName} hits on its first simulation step");
+            var healthAfterImpact = healthAfter();
+            closeRange.Bow.Update(closeRange, 0.1);
+            check(healthAfter() == healthAfterImpact,
+                $"Point-blank arrow damages {targetName} exactly once");
+        }
+
         var blocked = WorldGenerator.Generate();
         blocked.Bow.SetAiming(blocked, true);
         blocked.Bow.TryStartDraw(blocked);
