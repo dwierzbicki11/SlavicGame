@@ -72,6 +72,8 @@ public sealed class SpellCasting
     public bool SelectSpell(string spellId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(spellId);
+        // Resolution uses Current, so keep the spell tied to its paid cost and incantation.
+        if (IsCasting) return false;
         var index = Spells.ToList().FindIndex(spell => string.Equals(spell.Id, spellId, StringComparison.Ordinal));
         if (index < 0) return false;
         Selected = index;
