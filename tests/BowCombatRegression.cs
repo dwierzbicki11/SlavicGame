@@ -196,6 +196,20 @@ internal static class BowCombatRegression
         check(Vector3.Distance(slow, fast) < 0.005f,
             "Arrow trajectory is independent of 10 versus 120 FPS");
 
+        var closeRange = WorldGenerator.Generate();
+        var closeEnemy = closeRange.Enemies.First(enemy => enemy.IsAlive);
+        var closeCenter = closeEnemy.Position + Vector3.UnitY * 0.78f;
+        closeRange.Bow.SetAiming(closeRange, true);
+        check(closeRange.Bow.TryStartDraw(closeRange),
+            "Point-blank bow draw starts");
+        check(closeRange.Bow.TryRelease(closeRange,
+                closeCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                Vector3.UnitZ),
+            "Point-blank arrow spawns inside the enemy collision sphere");
+        closeRange.Bow.Update(closeRange, 0.001);
+        check(closeEnemy.Health < closeEnemy.MaxHealth && closeRange.Bow.Projectiles.Count == 0,
+            "Arrow starting inside an enemy hits immediately within a short simulation step");
+
         var wounded = WorldGenerator.Generate();
         var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
         wounded.Wildlife.TryDamage(wounded, deer.Id, 20f);
