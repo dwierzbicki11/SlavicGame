@@ -119,11 +119,21 @@ public static class MagicCinematicRegression
         check(magic.Message == "ZIVA", "Incantation begins with its first spoken word");
         check(world.Player.Stamina == 65 && world.Player.Health == 60, "Cost paid once before cast resolves");
         check(!magic.TryStart(world, Vector3.UnitZ), "Casting cannot stack");
+        var castingRemaining = magic.CastingRemaining;
+        var castingCooldown = magic.Cooldown;
+        check(!magic.SelectSpell("spell.reveal-trace") && magic.Current.Id == "spell.mend",
+            "Direct spell selection cannot replace a pending heal with another effect");
+        magic.SelectNext(world);
+        check(magic.Current.Id == "spell.mend" &&
+              magic.CastingRemaining == castingRemaining && magic.Cooldown == castingCooldown &&
+              world.Player.Stamina == 65,
+            "Rejected spell changes preserve incantation timing, cooldown and paid cost");
         magic.Update(world, 0.5);
         check(magic.Message == "ZIVA DAR" && magic.CastingProgress > 0.5, "Incantation reveals the next word during windup");
         check(world.Player.Health == 60, "Windup does not heal early");
         magic.Update(world, 0.5);
         check(world.Player.Health == 85 && !magic.IsCasting, "Completed incantation heals");
+        check(magic.RevealRemaining == 0, "Rejected spell change does not apply the replacement effect");
         check(!magic.TryStart(world, Vector3.UnitZ), "Cooldown blocks repeats");
         var legacy = SaveGameService.Capture(world) with { Magic = null, Tracks = [] };
         var oldWorld = WorldGenerator.Generate();
@@ -140,6 +150,8 @@ public static class MagicCinematicRegression
         world.Player.TakeDamage(1);
         magic.Update(world, 1);
         check(world.Player.Health == 69 && !magic.IsCasting, "Damage interrupts magic without healing");
+        check(magic.SelectSpell("spell.spark") && magic.Current.Id == "spell.spark",
+            "Direct spell selection is available again after casting is interrupted");
         magic.Restore(null); world.Player.SetState(100, 0);
         check(!magic.TryStart(world, Vector3.UnitZ), "Insufficient stamina rejects casting");
         world.Player.Restore();
