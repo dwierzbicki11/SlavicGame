@@ -19,6 +19,12 @@ Systemy możliwe do uruchomienia bez Vulkan:
 - pogoda jako stan;
 - logika interakcji.
 
+Regresje assetów obejmują również rozmieszczanie modeli brzegów rzeki na
+terenach o różnych rozmiarach i rozdzielczościach. Generator pomija punkty
+poza granicami heightfielda, zachowując identyfikatory, pozycje X/Z, skalę
+i obrót pozostałych instancji dla tego samego ziarna. Wysokość jest pobierana
+z lokalnego terenu. Test obejmuje też mapę bez rzeki.
+
 ### Integration
 - input + movement;
 - world + AI;

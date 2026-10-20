@@ -16,6 +16,8 @@ public static class RiverbankPropGenerator
         var random = new Random(Seed);
         var result = new List<WorldModelInstance>(128);
         var index = 0;
+        var extentX = (terrain.Width - 1) * terrain.CellSize * 0.5f;
+        var extentZ = (terrain.Depth - 1) * terrain.CellSize * 0.5f;
 
         for (var z = StartZ; z <= EndZ; z += Step)
         {
@@ -37,15 +39,22 @@ public static class RiverbankPropGenerator
 
                 var x = centerX + side * offset;
                 var position = new Vector3(x, 0f, sampleZ);
-                position.Y = terrain.SampleHeight(position) - 0.05f;
-
                 var scale = 0.62f + random.NextSingle() * 0.42f;
+                var rotation = yaw + (random.NextSingle() - 0.5f) * 0.35f;
+                var id = $"riverbank-rock-{index++:000}";
+
+                // Consume the same random sequence and IDs even when clipping,
+                // so resizing the terrain preserves the remaining placements.
+                if (MathF.Abs(x) > extentX || MathF.Abs(sampleZ) > extentZ)
+                    continue;
+
+                position.Y = terrain.SampleHeight(position) - 0.05f;
                 result.Add(new WorldModelInstance(
-                    $"riverbank-rock-{index++:000}",
+                    id,
                     "models/static/riverbank_rocky_r0_01.glb",
                     position,
                     new Vector3(scale, scale * 0.72f, scale),
-                    yaw + (random.NextSingle() - 0.5f) * 0.35f,
+                    rotation,
                     Vector3.One));
             }
         }
