@@ -195,7 +195,9 @@ public sealed class WaterInteractionState
         var ground =
             world.Terrain.SampleHeight(position);
 
-        return MathF.Max(0f, waterLevel - ground);
+        // Player positions refer to the feet. Jumping reduces immersion and
+        // clears water effects once the feet rise above the surface.
+        return MathF.Max(0f, waterLevel - MathF.Max(ground, position.Y));
     }
 
     public static float MovementSpeedMultiplierForDepth(
