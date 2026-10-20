@@ -207,6 +207,8 @@ Sterowanie:
 - `Q` — zmienia tylko pomiędzy już poznanymi czarami;
 - `F` — nie pozwala rzucić niepoznanego czaru.
 
+Podczas inkantacji zmiana wybranego czaru jest zablokowana zarówno przez `Q`, jak i bezpośrednie `SelectSpell`. Rozpoczęty czar zachowuje swój koszt, cooldown i efekt; wybór kolejnego jest dostępny po zakończeniu lub przerwaniu inkantacji.
+
 HUD nie pokazuje inkantacji ani kosztu czaru przed jego poznaniem.
 
 ### spell.spark — ISKRA / ZAR VEK
