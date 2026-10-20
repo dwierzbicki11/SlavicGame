@@ -220,6 +220,36 @@ internal static class BowCombatRegression
         check(wallWorld.Bow.Projectiles.Count == 0 && wallWorld.Bow.RecoverableArrows.Count == 1,
             "Obstacle volumes stop arrows before they pass through a hut");
 
+        var closeWorld = WorldGenerator.Generate();
+        var closeEnemy = closeWorld.Enemies.First(enemy => enemy.IsAlive);
+        CheckPointBlankHit(closeEnemy.Position + Vector3.UnitY * 0.78f,
+            () => closeEnemy.Health,
+            "Arrow starting inside an enemy hits immediately instead of waiting for an exit");
+        var closeAnimal = closeWorld.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
+        CheckPointBlankHit(closeAnimal.Position + Vector3.UnitY *
+                WildlifeCatalog.For(closeAnimal.Species).BodyRadius * 0.72f,
+            () => closeWorld.Wildlife.Actors.Single(actor => actor.Id == closeAnimal.Id).Health,
+            "Arrow starting inside wildlife hits immediately instead of waiting for an exit");
+
+        void CheckPointBlankHit(Vector3 center, Func<float> health, string description)
+        {
+            closeWorld.Bow.SetAiming(closeWorld, true);
+            check(closeWorld.Bow.TryStartDraw(closeWorld), "Point-blank draw starts");
+            var before = health();
+            var ammo = closeWorld.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId);
+            // Compensate the launch offset so the projectile starts at the target center.
+            check(closeWorld.Bow.TryRelease(closeWorld,
+                    center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f, Vector3.UnitZ),
+                "Point-blank arrow releases");
+            closeWorld.Bow.Update(closeWorld, 0.001);
+            check(health() < before && closeWorld.Bow.Projectiles.Count == 0, description);
+            var after = health();
+            closeWorld.Bow.Update(closeWorld, 0.1);
+            check(health() == after &&
+                  closeWorld.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == ammo - 1,
+                "Point-blank hit applies damage and consumes ammunition exactly once");
+        }
+
         var blocked = WorldGenerator.Generate();
         blocked.Bow.SetAiming(blocked, true);
         blocked.Bow.TryStartDraw(blocked);
