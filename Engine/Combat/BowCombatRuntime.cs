@@ -574,6 +574,12 @@ public sealed class BowCombatRuntime
     {
         fraction = 0f;
 
+        var offset = from - center;
+        // An existing overlap is a hit at the start of the segment, even
+        // when this simulation step does not reach the sphere's surface.
+        if (offset.LengthSquared() <= radius * radius)
+            return true;
+
         var segment = to - from;
         var segmentLengthSquared =
             segment.LengthSquared();
@@ -581,7 +587,6 @@ public sealed class BowCombatRuntime
         if (segmentLengthSquared < 0.0000001f)
             return false;
 
-        var offset = from - center;
         var a = segmentLengthSquared;
         var b = 2f * Vector3.Dot(offset, segment);
         var c =
