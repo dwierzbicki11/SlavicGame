@@ -163,3 +163,12 @@ normal rendering and the selected upscaler continue; an already-active
 semaphore-correct presenter remains in rendered-only mode until renderer
 restart/shutdown. Saved preferences are preserved. Environment overrides remain
 developer/CI diagnostics, not the shipping enable path.
+
+### FG camera input validation
+
+The managed FG adapter rejects non-finite temporal jitter, singular camera
+views and views that produce non-finite camera position or normalized basis
+vectors before creating a context or recording GPU commands. CPU regressions
+cover NaN and both infinities in rotation, translation and either jitter axis,
+plus singular and valid identity views; these checks do not require the native
+provider or a Vulkan device.

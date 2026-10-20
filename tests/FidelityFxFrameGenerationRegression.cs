@@ -15,6 +15,29 @@ internal static class FidelityFxFrameGenerationRegression
                 FidelityFxFrameGeneration.MinimumVulkanVersion, out unsupported, out diagnostic),
             "FG does not accept missing device/queue handles");
 
+        var cameraFrame = new TemporalFrameData { View = Matrix4x4.Identity };
+        check(FidelityFxFrameGeneration.ValidateCamera(cameraFrame) == Matrix4x4.Identity,
+            "FG accepts a finite camera and zero jitter without native resources");
+        foreach (var invalid in new[] { float.NaN, float.PositiveInfinity, float.NegativeInfinity })
+        {
+            var invalidView = Matrix4x4.Identity;
+            invalidView.M11 = invalid;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(
+                cameraFrame with { View = invalidView }));
+            invalidView = Matrix4x4.Identity;
+            invalidView.M41 = invalid;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(
+                cameraFrame with { View = invalidView }));
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(
+                cameraFrame with { JitterPixels = new Vector2(invalid, 0) }));
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(
+                cameraFrame with { JitterPixels = new Vector2(0, invalid) }));
+            check(true, $"FG rejects {invalid} camera rotation, position and both jitter axes before GPU work");
+        }
+        ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(
+            cameraFrame with { View = default }));
+        check(true, "FG rejects a singular camera view before GPU work");
+
         if (!OperatingSystem.IsLinux() ||
             Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
             return;
@@ -115,7 +138,7 @@ internal static class FidelityFxFrameGenerationRegression
     {
         try { action(); }
         catch (ArgumentException) { return; }
-        throw new Exception("FG accepted invalid resources");
+        throw new Exception("FG accepted invalid input");
     }
 
     private static T Bind<T>(nint library, string name) where T : Delegate =>
