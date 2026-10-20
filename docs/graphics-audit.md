@@ -2,6 +2,11 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-20
+
+- **PBR GGX highlight clipping — fixed.** `pbr.frag` clamped the entire GGX denominator to `0.0001`, suppressing narrow highlights on smooth materials. At roughness `0.06` and `NdotH = 1`, the distribution was `0.1296` instead of the analytic peak `1 / (PI * roughness^4) ≈ 24560.95`. The denominator now uses `(1 - NdotH²) + NdotH² * roughness^4`, avoiding cancellation at the peak, and clamps `NdotH` to `[0, 1]`. The existing material roughness minimum of `0.06` keeps the denominator positive without clipping it. This changes only the model PBR distribution; terrain uses a separate lighting approximation.
+- **Validation scope.** A CPU numerical probe evaluating the extracted GLSL function passed 49 roughness/angle cases (including a dot product slightly above one) and seven analytic peak checks. This probe uses Python floating-point arithmetic, not GPU float32 execution. Shader compilation and visual Vulkan validation still require a GLSL compiler and a working runtime; smoother materials may now show substantially brighter, narrower highlights and need visual review.
+
 ## 2026-10-05
 
 - **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
