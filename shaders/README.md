@@ -37,3 +37,11 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Regresja numeryczna PBR
+
+`python3 tools/test-pbr-ggx.py` porównuje funkcję GGX odczytaną z `pbr.frag`
+z referencją double dla roughness 0,06–1,0 oraz granicznych wartości N·H.
+Wymaga Python 3 i kompilatora C++17 (`c++` lub wskazanego przez `CXX`).
+Test wykonuje arytmetykę float32 na CPU; kompilację GLSL/SPIR-V i ocenę
+wizualną refleksów w Vulkanie należy wykonać osobno.
