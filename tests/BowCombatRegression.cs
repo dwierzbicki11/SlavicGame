@@ -196,6 +196,26 @@ internal static class BowCombatRegression
         check(Vector3.Distance(slow, fast) < 0.005f,
             "Arrow trajectory is independent of 10 versus 120 FPS");
 
+        var closeRange = WorldGenerator.Generate();
+        var closeTarget = closeRange.Enemies.First();
+        closeTarget.Restore(new SlavicGame.Engine.AI.EnemySnapshot(
+            closeTarget.Id, closeRange.PlayerPosition + Vector3.UnitY * 100f,
+            closeTarget.MaxHealth, SlavicGame.Engine.AI.EnemyState.Patrol));
+        var closeCenter = closeTarget.Position + Vector3.UnitY * 0.78f;
+        // Release offsets the projectile by 0.42 m forward and 0.08 m down.
+        var closeOrigin = closeCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+        closeRange.Bow.SetAiming(closeRange, true);
+        check(closeRange.Bow.TryStartDraw(closeRange) &&
+              closeRange.Bow.TryRelease(closeRange, closeOrigin, Vector3.UnitZ),
+            "Point-blank shot starts inside the target collision sphere");
+        closeRange.Bow.Update(closeRange, 0.001);
+        check(closeTarget.Health < closeTarget.MaxHealth && closeRange.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without waiting to exit its sphere");
+        var healthAfterCloseHit = closeTarget.Health;
+        closeRange.Bow.Update(closeRange, 0.1);
+        check(closeTarget.Health == healthAfterCloseHit,
+            "Point-blank arrow applies damage only once");
+
         var wounded = WorldGenerator.Generate();
         var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
         wounded.Wildlife.TryDamage(wounded, deer.Id, 20f);
