@@ -249,20 +249,25 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
         _format = format;
     }
 
-    private static void ValidateResources(in FfxApiResource color, in FfxApiResource depth,
+    internal static void ValidateResources(in FfxApiResource color, in FfxApiResource depth,
         in FfxApiResource motion, in FfxApiResource output)
     {
         ValidateResource(color, FfxApi.ResourceStateComputeRead);
         ValidateResource(depth, FfxApi.ResourceStateComputeRead);
         ValidateResource(motion, FfxApi.ResourceStateComputeRead);
         ValidateResource(output, FfxApi.ResourceStateUnorderedAccess);
+        // Every input remains readable while interpolation writes the output.
+        // Compare native image handles, not just the managed descriptions.
+        if (output.Resource == color.Resource || output.Resource == depth.Resource ||
+            output.Resource == motion.Resource)
+            throw new ArgumentException("FG output must be separate from every input image.");
         if (color.Description.Width != output.Description.Width ||
             color.Description.Height != output.Description.Height ||
             color.Description.Format != output.Description.Format ||
             depth.Description.Width != motion.Description.Width ||
             depth.Description.Height != motion.Description.Height ||
             depth.Description.Width > output.Description.Width ||
-            depth.Description.Height > output.Description.Height || color.Resource == output.Resource)
+            depth.Description.Height > output.Description.Height)
             throw new ArgumentException("FG color/output and depth/motion extents must match; output must be separate.");
         if ((output.Description.Usage & FfxApi.ResourceUsageUav) == 0 ||
             (depth.Description.Usage & FfxApi.ResourceUsageDepthTarget) == 0)

@@ -19,6 +19,15 @@ Systemy możliwe do uruchomienia bez Vulkan:
 - pogoda jako stan;
 - logika interakcji.
 
+Regresje FSR3 Frame Generation w `tests/FidelityFxFrameGenerationRegression.cs`
+sprawdzają bez GPU także walidację obrazów przed wywołaniem SDK: wyjście musi
+mieć inny uchwyt Vulkan niż kolor, głębia i wektory ruchu. Przypadki te obejmują
+równe rozmiary renderowania i wyświetlania, aby odrzucenia nie maskowała
+walidacja wymiarów. Uruchomienie: `dotnet run --project tests/SlavicGame.RegressionTests.csproj -c Release`.
+Testy natywnego dispatch/readback wymagają dodatkowo providera oraz
+`SLAVICGAME_TEST_FSR3_NATIVE=1`; procedura jest w
+[roadmapie FG](Fsr3FrameGenerationRoadmap.md).
+
 ### Integration
 - input + movement;
 - world + AI;

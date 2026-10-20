@@ -7,6 +7,37 @@ internal static class FidelityFxFrameGenerationRegression
 {
     public static void Run(Action<bool, string> check)
     {
+        // Exercise the production pre-dispatch gate without a native provider.
+        FfxApiResource Image(nint handle, uint format, uint usage, uint state) => new()
+        {
+            Resource = handle,
+            Description = new FfxApiResourceDescription
+            {
+                Type = FfxApi.ResourceTypeTexture2D, Format = format,
+                Width = 128, Height = 128, Depth = 1, MipCount = 1, Usage = usage
+            },
+            State = state
+        };
+        var inputColor = Image(1, FfxApi.FormatR16G16B16A16Float,
+            FfxApi.ResourceUsageReadOnly, FfxApi.ResourceStateComputeRead);
+        var inputDepth = Image(2, FfxApi.FormatR32Float,
+            FfxApi.ResourceUsageDepthTarget, FfxApi.ResourceStateComputeRead);
+        var inputMotion = Image(3, FfxApi.FormatR16G16Float,
+            FfxApi.ResourceUsageReadOnly, FfxApi.ResourceStateComputeRead);
+        var separateOutput = Image(4, FfxApi.FormatR16G16B16A16Float,
+            FfxApi.ResourceUsageUav, FfxApi.ResourceStateUnorderedAccess);
+        FidelityFxFrameGeneration.ValidateResources(inputColor, inputDepth, inputMotion, separateOutput);
+        check(true, "FG accepts separate input/output images at equal render and display sizes");
+        foreach (var (handle, name) in new[] { (inputColor.Resource, "color"),
+                     (inputDepth.Resource, "depth"), (inputMotion.Resource, "motion") })
+        {
+            var aliasedOutput = separateOutput;
+            aliasedOutput.Resource = handle;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateResources(
+                inputColor, inputDepth, inputMotion, aliasedOutput));
+            check(true, "FG rejects output aliasing " + name + " before native dispatch");
+        }
+
         check(!FidelityFxFrameGeneration.TryCreate(default, 1u << 22,
                 out var unsupported, out var diagnostic) && unsupported is null &&
                 diagnostic.Contains("Vulkan 1.1", StringComparison.Ordinal),
