@@ -67,8 +67,11 @@ float DistributionGGX(vec3 n, vec3 h, float roughness)
     float a2 = a * a;
     float ndoth = max(dot(n, h), 0.0);
     float ndoth2 = ndoth * ndoth;
-    float denom = ndoth2 * (a2 - 1.0) + 1.0;
-    return a2 / max(PI * denom * denom, 0.0001);
+    // Keep a2 at the highlight peak instead of subtracting nearly equal
+    // values. The minimum authored roughness (0.06) gives a denominator
+    // around 5e-10; a 1e-4 floor incorrectly suppresses smooth highlights.
+    float denom = (1.0 - ndoth2) + ndoth2 * a2;
+    return a2 / max(PI * denom * denom, 1e-12);
 }
 
 float GeometrySchlickGGX(float ndotv, float roughness)
