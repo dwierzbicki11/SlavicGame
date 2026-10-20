@@ -17,6 +17,11 @@ Minimalny NPC posiada:
 
 Harmonogram opisuje **aktywność i miejsce**, nie pełną animację każdej sekundy.
 
+Zaimplementowane: mieszkańcy ambientowi (`settler-*`) podczas burzy zastępują
+aktywności dzienne szukaniem schronienia. Nocny `rest` zachowuje pierwszeństwo:
+odpoczywający mieszkańcy pozostają w domu bez uruchamiania trasy schronienia.
+Po rozpoczęciu dziennej zmiany nadal trwająca burza uruchamia szukanie schronienia.
+
 Pierwszy wycinek używa dwóch głównych zakresów:
 - dzień;
 - noc.
