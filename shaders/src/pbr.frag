@@ -65,10 +65,14 @@ float DistributionGGX(vec3 n, vec3 h, float roughness)
 {
     float a = roughness * roughness;
     float a2 = a * a;
-    float ndoth = max(dot(n, h), 0.0);
+    float ndoth = clamp(dot(n, h), 0.0, 1.0);
     float ndoth2 = ndoth * ndoth;
-    float denom = ndoth2 * (a2 - 1.0) + 1.0;
-    return a2 / max(PI * denom * denom, 0.0001);
+    // Keep the alpha^2 contribution at the highlight peak: subtracting it
+    // from 1 first loses precision for smooth materials. Roughness is clamped
+    // to >= 0.06 by the material path, so this denominator is strictly positive.
+    // A fixed epsilon on its square would flatten smooth/wet GGX highlights.
+    float denom = (1.0 - ndoth2) + ndoth2 * a2;
+    return a2 / (PI * denom * denom);
 }
 
 float GeometrySchlickGGX(float ndotv, float roughness)
