@@ -37,3 +37,12 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Stabilność GGX w materiałach PBR
+
+`pbr.frag` ogranicza chropowatość materiału do minimum 0,06. Rozkład GGX
+oblicza mianownik jako `(1 - NdotH²) + NdotH² * roughness⁴`, aby uniknąć
+odejmowania niemal równych liczb przy gładkich powierzchniach. Nie należy
+dodawać limitu `0.0001` do końcowego mianownika `PI * denom²`: tłumi on
+refleksy gładkich materiałów. Dla `NdotH = 1` wynik powinien wynosić
+`1 / (PI * roughness⁴)` (około 24560,95 dla chropowatości 0,06).
