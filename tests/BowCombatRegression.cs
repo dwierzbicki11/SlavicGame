@@ -191,6 +191,30 @@ internal static class BowCombatRegression
               !harvestedRestore.Wildlife.TryHarvest(harvestedRestore, raven.Id),
             "Bow harvest stays consumed after save/load");
 
+        var closeRange = WorldGenerator.Generate();
+        var closeEnemy = closeRange.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeRaven = closeRange.Wildlife.Actors.Single(actor => actor.Id == "raven-start-01");
+        CheckInsideTarget(closeEnemy.Position + Vector3.UnitY * 0.78f,
+            () => closeEnemy.Health < closeEnemy.MaxHealth,
+            "Arrow spawned inside an enemy hits immediately without waiting for an exit");
+        CheckInsideTarget(closeRaven.Position,
+            () => closeRange.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health == 0f,
+            "Arrow spawned inside wildlife hits immediately through shared hunting damage");
+
+        void CheckInsideTarget(Vector3 center, Func<bool> damaged, string message)
+        {
+            closeRange.Bow.SetAiming(closeRange, true);
+            check(closeRange.Bow.TryStartDraw(closeRange), "Close-range bow draw starts");
+            closeRange.Bow.Update(closeRange, 1.3);
+            // Compensate for the muzzle offset so the projectile starts at the target center.
+            var origin = center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+            check(closeRange.Bow.TryRelease(closeRange, origin, Vector3.UnitZ),
+                "Close-range arrow releases inside the target");
+            closeRange.Bow.Update(closeRange, 0.001);
+            check(damaged() && closeRange.Bow.Projectiles.Count == 0, message);
+        }
+
         var slow = Flight(0.1);
         var fast = Flight(1.0 / 120.0);
         check(Vector3.Distance(slow, fast) < 0.005f,
