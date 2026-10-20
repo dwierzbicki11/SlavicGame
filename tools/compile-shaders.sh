@@ -78,9 +78,37 @@ compile_shader "$SRC_DIR/fsr_rcas.frag"     "$OUT_DIR/fsr_rcas.frag.spv"     fra
 compile_shader "$SRC_DIR/vegetation_impostor.vert" "$OUT_DIR/vegetation_impostor.vert.spv" vert
 compile_shader "$SRC_DIR/vegetation_impostor.frag" "$OUT_DIR/vegetation_impostor.frag.spv" frag
 
-# All compiler invocations succeeded; only now publish the complete build.
+# Back up published binaries before replacement. Roll back on handled
+# publication errors; this is not a crash-atomic multi-file transaction.
+BACKUP_DIR="$STAGING_DIR/.previous"
+mkdir -p "$BACKUP_DIR"
 for staged in "$STAGING_DIR"/*.spv; do
-    mv -f -- "$staged" "$OUT_DIR/"
+    target="$OUT_DIR/${staged##*/}"
+    if [[ -f "$target" ]]; then
+        cp -p -- "$target" "$BACKUP_DIR/"
+    fi
+done
+
+published=()
+rollback_publish() {
+    local target previous
+    for target in "${published[@]}"; do
+        previous="$BACKUP_DIR/${target##*/}"
+        if [[ -f "$previous" ]]; then
+            cp -p -- "$previous" "$target"
+        else
+            rm -f -- "$target"
+        fi
+    done
+}
+for staged in "$STAGING_DIR"/*.spv; do
+    target="$OUT_DIR/${staged##*/}"
+    if ! mv -f -- "$staged" "$target"; then
+        rollback_publish
+        echo "[shader] Failed to publish complete SPIR-V set; previous outputs restored" >&2
+        exit 1
+    fi
+    published+=("$target")
 done
 
 echo "[shader] Gotowe. SPIR-V: $OUT_DIR"

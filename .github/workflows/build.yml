@@ -35,6 +35,9 @@ jobs:
             $errors | ForEach-Object { Write-Error $_.Message }
             exit 1
           }
+      - name: Test shader compile staging (CPU only)
+        if: runner.os == 'Linux'
+        run: python3 -m unittest discover -s tests -p test_compile_shaders.py -v
       - name: Validate Vulkan fullscreen orientation
         if: runner.os == 'Linux'
         run: bash tools/check-render-orientation.sh
