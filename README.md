@@ -403,7 +403,7 @@ Rain and Storm now render lightweight camera-local rain streaks. Terrain and PBR
 
 ### Dynamic muddy footprints
 
-Walking across mud, swamp ground and wet river banks now leaves a bounded transient footprint trail with alternating feet. Heavy rain erodes old prints much faster. These physical player traces are visual world feedback only: they do not create quest evidence, are not persisted in saves and are intentionally separate from magical `Reveal Trace` signatures.
+Walking across mud, swamp ground and wet river banks now leaves a bounded transient footprint trail with alternating feet. Footsteps are spaced along the travelled segment even when one frame covers several strides. Heavy rain erodes old prints much faster. These physical player traces are visual world feedback only: they do not create quest evidence, are not persisted in saves and are intentionally separate from magical `Reveal Trace` signatures.
 
 
 ### NPC dialogue runtime

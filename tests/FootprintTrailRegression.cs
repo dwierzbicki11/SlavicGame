@@ -30,6 +30,23 @@ internal static class FootprintTrailRegression
         world.WaterInteraction.Reset(world.PlayerPosition);
         world.Footprints.Reset(world.PlayerPosition);
 
+        // Several steps in one update must occupy the travelled segment,
+        // including a partial stride carried over from the preceding update.
+        world.SetPlayerPosition(start + new Vector3(0f, 0f, 0.30f));
+        world.Footprints.Update(world, 0.05);
+        world.SetPlayerPosition(start + new Vector3(0f, 0f, 2.30f));
+        world.Footprints.Update(world, 0.30);
+        var batched = world.Footprints.Footprints.ToArray();
+        check(batched.Length == 3,
+            "A batched movement preserves the number of accumulated footsteps");
+        check(batched.Select((footprint, index) =>
+                MathF.Abs(footprint.Position.Z - (start.Z + (index + 1) * 0.72f)) < 0.001f)
+                .All(matches => matches),
+            "Batched footsteps are spaced along the travelled segment with partial strides preserved");
+
+        world.SetPlayerPosition(start);
+        world.Footprints.Reset(world.PlayerPosition);
+
         var durableTracksBefore = world.Progress.Tracking.Tracks.Count;
 
         for (var i = 1; i <= 7; i++)

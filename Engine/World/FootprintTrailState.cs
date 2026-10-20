@@ -72,7 +72,13 @@ public sealed class FootprintTrailState
         {
             _distanceAccumulator -= StepDistance;
 
-            var samplePosition = position;
+            // The remaining distance lies after this step along the current segment.
+            // Sampling backwards from the endpoint also preserves partial strides
+            // accumulated during earlier updates.
+            var samplePosition = position - new Vector3(
+                direction.X * _distanceAccumulator,
+                0f,
+                direction.Y * _distanceAccumulator);
             var groundPosition = new Vector3(
                 samplePosition.X,
                 world.Terrain.SampleHeight(samplePosition),
