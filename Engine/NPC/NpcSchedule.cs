@@ -21,7 +21,8 @@ public sealed record NpcScheduleSlot(
 {
     public bool Contains(double hour)
     {
-        if (!double.IsFinite(hour))
+        if (!double.IsFinite(hour) ||
+            !double.IsFinite(StartHour) || !double.IsFinite(EndHour))
         {
             return false;
         }
@@ -29,6 +30,13 @@ public sealed record NpcScheduleSlot(
         hour = ((hour % 24.0) + 24.0) % 24.0;
         var start = ((StartHour % 24.0) + 24.0) % 24.0;
         var end = ((EndHour % 24.0) + 24.0) % 24.0;
+        // Preserve an explicitly authored full day (e.g. 0–24 or 6–30).
+        // Identical endpoints still represent an empty interval.
+        if (start == end && EndHour > StartHour)
+        {
+            return true;
+        }
+
         return start <= end
             ? hour >= start && hour < end
             : hour >= start || hour < end;
