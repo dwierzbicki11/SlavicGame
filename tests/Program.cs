@@ -41,6 +41,7 @@ SwampPredatorEncounterRegression.Run(Check);
 SwampApparitionRegression.Run(Check);
 WorldItemVisualRegression.Run(Check);
 RiverInteractionRegression.Run(Check);
+RiverbankPropRegression.Run(Check);
 WeatherVisualRegression.Run(Check);
 CampfireInteractionRegression.Run(Check);
 FootprintTrailRegression.Run(Check);
