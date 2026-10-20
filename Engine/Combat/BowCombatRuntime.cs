@@ -574,6 +574,12 @@ public sealed class BowCombatRuntime
     {
         fraction = 0f;
 
+        var offset = from - center;
+        var c = offset.LengthSquared() - radius * radius;
+        // A projectile already inside the hit volume makes contact immediately.
+        if (c <= 0f)
+            return true;
+
         var segment = to - from;
         var segmentLengthSquared =
             segment.LengthSquared();
@@ -581,12 +587,8 @@ public sealed class BowCombatRuntime
         if (segmentLengthSquared < 0.0000001f)
             return false;
 
-        var offset = from - center;
         var a = segmentLengthSquared;
         var b = 2f * Vector3.Dot(offset, segment);
-        var c =
-            offset.LengthSquared() -
-            radius * radius;
 
         var discriminant =
             b * b -
