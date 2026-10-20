@@ -37,3 +37,11 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Odbicia modeli PBR
+
+`pbr.frag` oblicza rozkład GGX dla chropowatości ograniczonej do minimum
+`0.06` (mokre materiały i liście mają dodatkowe ograniczenia). Mianownik
+rozkładu ma postać `(1 - NdotH²) + NdotH² * roughness⁴`, która zachowuje
+mały dodatni składnik przy szczycie odbicia. Nie należy ograniczać kwadratu
+tego mianownika stałą `0.0001`: tłumi to odbicia gładkich powierzchni.
