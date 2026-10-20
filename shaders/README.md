@@ -37,3 +37,12 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Rozkład odbicia PBR
+
+Shader modeli używa GGX z szorstkością ograniczoną do zakresu 0,06–1.
+Mianownik rozkładu jest liczony jako `(1 - NdotH²) + NdotH² * roughness⁴`,
+aby zachować precyzję przy wąskich refleksach. Zabezpieczenie dzielenia
+`1e-12` leży poniżej najmniejszego mianownika w tym zakresie; większy próg
+`1e-4` tłumił odbicia gładkich materiałów. Zmiana nie dotyczy uproszczonego
+oświetlenia terenu ani filtrowania map cieni.
