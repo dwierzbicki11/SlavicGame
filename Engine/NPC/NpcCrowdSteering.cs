@@ -165,6 +165,12 @@ public static class NpcCrowdSteering
         string first,
         string second)
     {
+        // A reversed pair must produce the opposite vector so each NPC keeps
+        // its separation direction when the actor enumeration order changes.
+        var reversed = string.CompareOrdinal(first, second) > 0;
+        if (reversed)
+            (first, second) = (second, first);
+
         unchecked
         {
             uint hash = 2166136261;
@@ -186,9 +192,10 @@ public static class NpcCrowdSteering
                 4096f *
                 MathF.Tau;
 
-            return new Vector2(
+            var direction = new Vector2(
                 MathF.Cos(angle),
                 MathF.Sin(angle));
+            return reversed ? -direction : direction;
         }
     }
 }
