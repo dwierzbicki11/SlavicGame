@@ -17,6 +17,12 @@ Minimalny NPC posiada:
 
 Harmonogram opisuje **aktywność i miejsce**, nie pełną animację każdej sekundy.
 
+Runtime `NpcScheduleSlot` uwzględnia początek przedziału i wyklucza jego koniec.
+Obsługuje zakresy przez północ (np. `19–6`) oraz pełną dobę, gdy koniec
+jest co najmniej 24 godziny późniejszy od początku (np. `0–24`, `6–30`).
+Równe końce (`6–6`) oznaczają pusty przedział. Godziny zapytania są
+normalizowane do doby; wartości NaN i nieskończone nie pasują do harmonogramu.
+
 Pierwszy wycinek używa dwóch głównych zakresów:
 - dzień;
 - noc.
