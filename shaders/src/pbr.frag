@@ -106,14 +106,21 @@ void main()
     vec3 normal = baseNormal;
     if (modelPbr > 0.5 && normalMapping > 0.5)
     {
+        // Derivatives must run before the texture-dependent branch so every
+        // fragment in the quad participates, including flat normal-map texels.
+        mat3 tangentFrame = CotangentFrame(
+            baseNormal, fsin_WorldPosition, fsin_TexCoord);
         vec3 sampledNormal = texture(
             sampler2D(NormalTexture, MaterialSampler),
             fsin_TexCoord).xyz * 2.0 - 1.0;
         if (length(sampledNormal.xy) > 0.001)
         {
-            normal = normalize(
-                CotangentFrame(baseNormal, fsin_WorldPosition, fsin_TexCoord) *
-                sampledNormal);
+            vec3 mappedNormal = tangentFrame * sampledNormal;
+            float lengthSquared = dot(mappedNormal, mappedNormal);
+            // Collapsed UVs can produce a zero tangent frame contribution.
+            // Keep the geometric normal instead of normalizing a zero vector.
+            if (lengthSquared > 1e-8)
+                normal = mappedNormal * inversesqrt(lengthSquared);
         }
     }
 
