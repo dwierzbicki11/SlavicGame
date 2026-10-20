@@ -135,6 +135,8 @@ Każda wypuszczona strzała ma własną pozycję, velocity, gravity, damage i li
 Symulacja dzieli frame na kroki do około 1/90 s, więc szybka strzała nie jest frame-dependent hitscanem.
 
 Collision obejmuje teren, bryły przeszkód, żywego przeciwnika i żywe wildlife.
+Strzała rozpoczynająca krok symulacji wewnątrz bryły celu trafia natychmiast,
+także gdy krótki krok nie dociera do jej powierzchni. Dotyczy to również strzałów z bliska.
 Trafienie EnemyAgent korzysta z normalnego damage/aggro path. Trafienie swamp-predator może domknąć jego istniejący encounter.
 
 ### Hunting wildlife
