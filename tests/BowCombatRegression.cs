@@ -191,6 +191,36 @@ internal static class BowCombatRegression
               !harvestedRestore.Wildlife.TryHarvest(harvestedRestore, raven.Id),
             "Bow harvest stays consumed after save/load");
 
+        foreach (var targetWildlife in new[] { false, true })
+        {
+            var close = WorldGenerator.Generate();
+            var closeEnemy = close.Enemies.Single(enemy =>
+                enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+            var closeRaven = close.Wildlife.Actors.Single(actor => actor.Id == "raven-start-01");
+            var center = targetWildlife
+                ? closeRaven.Position
+                : closeEnemy.Position + Vector3.UnitY * 0.78f;
+            var healthBefore = targetWildlife ? closeRaven.Health : closeEnemy.Health;
+            close.Bow.SetAiming(close, true);
+            close.Bow.TryStartDraw(close);
+            close.Bow.Update(close, 1.3);
+            // Release offsets the projectile by +0.42 forward and -0.08 vertically.
+            close.Bow.TryRelease(close,
+                center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                Vector3.UnitZ);
+            close.Bow.Update(close, 0.001);
+            var healthAfter = targetWildlife
+                ? close.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health
+                : closeEnemy.Health;
+            check(healthAfter < healthBefore && close.Bow.Projectiles.Count == 0,
+                $"Arrow starting inside {(targetWildlife ? "wildlife" : "enemy")} hits immediately before exiting the target");
+            close.Bow.Update(close, 0.1);
+            check((targetWildlife
+                    ? close.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health
+                    : closeEnemy.Health) == healthAfter,
+                "Close-range arrow applies damage only once");
+        }
+
         var slow = Flight(0.1);
         var fast = Flight(1.0 / 120.0);
         check(Vector3.Distance(slow, fast) < 0.005f,
