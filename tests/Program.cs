@@ -107,6 +107,15 @@ Check(waterVertices.All(v =>
 Check(waterIndices.All(index => index < waterVertices.Length),
     "water indices valid");
 
+Check(Enumerable.Range(0, waterIndices.Length / 3).All(triangle =>
+    {
+        var a = waterVertices[waterIndices[triangle * 3]].Position;
+        var b = waterVertices[waterIndices[triangle * 3 + 1]].Position;
+        var c = waterVertices[waterIndices[triangle * 3 + 2]].Position;
+        return Vector3.Cross(b - a, c - a).Y > 0f;
+    }),
+    "river surface and foam on both banks have upward triangle winding");
+
 TerrainVertex[] animatedWaterVertices = [];
 uint[] animatedWaterIndices = [];
 WaterLandscape.AppendSurface(
