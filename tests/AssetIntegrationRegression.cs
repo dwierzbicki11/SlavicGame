@@ -171,6 +171,31 @@ internal static class AssetIntegrationRegression
                     WaterLandscape.SurfaceHalfWidth(model.Position.Z)),
             "Rocky riverbank models sit outside the animated water ribbon");
 
+        check(RiverbankPropGenerator.Generate(new Terrain()).Count == 0,
+            "Terrain that does not reach the river has no riverbank models");
+        foreach (var (width, depth) in new[] { (151, 81), (101, 301) })
+        {
+            var smallTerrain = new Terrain(width, depth, 4f);
+            var extentX = (width - 1) * 2f;
+            var extentZ = (depth - 1) * 2f;
+            var expected = riverbankA.Where(model =>
+                MathF.Abs(model.Position.X) <= extentX &&
+                MathF.Abs(model.Position.Z) <= extentZ).ToArray();
+            var actual = RiverbankPropGenerator.Generate(smallTerrain);
+            check(actual.Count > 0 && actual.Count < riverbankA.Count &&
+                  actual.Count == expected.Length,
+                "Rectangular terrain clips riverbank placement to both map extents");
+            check(actual.Zip(expected).All(pair =>
+                    pair.First.Id == pair.Second.Id &&
+                    pair.First.Position.X == pair.Second.Position.X &&
+                    pair.First.Position.Z == pair.Second.Position.Z &&
+                    MathF.Abs(pair.First.Position.Y -
+                        (smallTerrain.SampleHeight(pair.First.Position) - 0.05f)) < 0.0001f &&
+                    pair.First.Scale == pair.Second.Scale &&
+                    pair.First.YawRadians == pair.Second.YawRadians),
+                "Clipping riverbank models preserves the full map's deterministic candidates");
+        }
+
         var clutterA = GroundClutterGenerator.Generate(world.Terrain);
         var clutterB = GroundClutterGenerator.Generate(world.Terrain);
         check(clutterA.Count == clutterB.Count && clutterA.Count >= 300,
