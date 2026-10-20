@@ -191,6 +191,38 @@ internal static class BowCombatRegression
               !harvestedRestore.Wildlife.TryHarvest(harvestedRestore, raven.Id),
             "Bow harvest stays consumed after save/load");
 
+        foreach (var step in new[] { 0.001, 0.1 })
+        {
+            var close = WorldGenerator.Generate();
+            var target = close.Enemies.Single(enemy =>
+                enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+            CheckOverlappingShot(close, target.Position + Vector3.UnitY * 0.78f, step);
+            check(target.Health < target.MaxHealth && close.Bow.Projectiles.Count == 0,
+                $"Arrow starting inside enemy hits immediately with frame step {step}");
+
+            var hunting = WorldGenerator.Generate();
+            var animal = hunting.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
+            var center = animal.Position + Vector3.UnitY *
+                WildlifeCatalog.For(animal.Species).BodyRadius * 0.72f;
+            var healthBefore = animal.Health;
+            CheckOverlappingShot(hunting, center, step);
+            check(hunting.Wildlife.Actors.Single(actor => actor.Id == animal.Id).Health < healthBefore &&
+                  hunting.Bow.Projectiles.Count == 0,
+                $"Arrow starting inside wildlife hits immediately with frame step {step}");
+        }
+
+        void CheckOverlappingShot(WorldState targetWorld, Vector3 center, double step)
+        {
+            targetWorld.Bow.SetAiming(targetWorld, true);
+            check(targetWorld.Bow.TryStartDraw(targetWorld), "Close-range draw starts");
+            targetWorld.Bow.Update(targetWorld, 1.3);
+            // Undo the release offset so the projectile starts at the collider center.
+            var origin = center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+            check(targetWorld.Bow.TryRelease(targetWorld, origin, Vector3.UnitZ),
+                "Close-range arrow releases");
+            targetWorld.Bow.Update(targetWorld, step);
+        }
+
         var slow = Flight(0.1);
         var fast = Flight(1.0 / 120.0);
         check(Vector3.Distance(slow, fast) < 0.005f,
