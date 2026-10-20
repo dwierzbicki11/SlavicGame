@@ -22,6 +22,15 @@ internal static class NpcCrowdSteeringRegression
                 NpcCrowdSteering.MinimumSpacing - 0.01f,
             "Crowd steering separates two NPCs spawned at the same point");
 
+        var reversedActors = new List<NpcWorldActor> { overlapB, overlapA };
+        NpcCrowdSteering.Resolve(world, reversedActors);
+
+        check(
+            actors.All(actor => Vector3.DistanceSquared(
+                actor.Position,
+                reversedActors.Single(other => other.Id == actor.Id).Position) < 0.000001f),
+            "Overlapping NPC pair keeps its positions when actor order is reversed");
+
         var deterministicA = new List<NpcWorldActor>
         {
             overlapA,
