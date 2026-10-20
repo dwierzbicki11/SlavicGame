@@ -37,6 +37,12 @@ Przykładowa kolejność:
 4. harmonogram;
 5. idle.
 
+Przy rozdzielaniu tłumu przechodzień ustępuje nieruchomemu NPC, aby
+pracujący mieszkaniec zachował pozycję względem narzędzi i stanowiska.
+Ochrona rozmówcy ma wyższy priorytet: pozostałe postacie ustępują mu
+również wtedy, gdy same stoją. Dwie postacie o takim samym stanie ruchu
+dzielą korektę pozycji między siebie.
+
 ## Dialog
 
 Graf dialogowy posiada:

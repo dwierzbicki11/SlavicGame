@@ -69,11 +69,21 @@ public static class NpcCrowdSteering
                 if (aProtected && bProtected)
                     continue;
 
+                // Dialogue has priority; otherwise walkers yield to stationary
+                // NPCs so workers remain aligned with their workstation props.
+                var moveA = !aProtected;
+                var moveB = !bProtected;
+                if (!aProtected && !bProtected)
+                {
+                    moveA = a.IsMoving || !b.IsMoving;
+                    moveB = b.IsMoving || !a.IsMoving;
+                }
+
                 var push = MathF.Min(
                     MaxPushPerPass,
-                    penetration * (aProtected || bProtected ? 1f : 0.5f));
+                    penetration * (moveA && moveB ? 0.5f : 1f));
 
-                if (!aProtected)
+                if (moveA)
                 {
                     a = WithResolvedPosition(
                         world,
@@ -82,7 +92,7 @@ public static class NpcCrowdSteering
                     actors[i] = a;
                 }
 
-                if (!bProtected)
+                if (moveB)
                 {
                     b = WithResolvedPosition(
                         world,
