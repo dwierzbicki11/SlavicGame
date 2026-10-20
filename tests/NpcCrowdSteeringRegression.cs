@@ -43,6 +43,16 @@ internal static class NpcCrowdSteeringRegression
                     pair.Second.Position) < 0.000001f),
             "Crowd steering is deterministic and cannot jitter from random pushes");
 
+        var reversedActors = new List<NpcWorldActor> { overlapB, overlapA };
+        NpcCrowdSteering.Resolve(world, reversedActors);
+
+        check(
+            deterministicA.All(actor => Vector3.DistanceSquared(
+                actor.Position,
+                reversedActors.Single(other => other.Id == actor.Id).Position)
+                < 0.000001f),
+            "Coincident NPCs separate consistently when actor order is reversed");
+
         var speaker = CreateActor(
             world,
             "speaker",
@@ -79,6 +89,19 @@ internal static class NpcCrowdSteeringRegression
                 protectedActors[1]) >=
                 NpcCrowdSteering.MinimumSpacing - 0.01f,
             "Other NPC yields around the protected dialogue speaker");
+
+        var reversedProtectedActors = new List<NpcWorldActor> { passer, speaker };
+        NpcCrowdSteering.Resolve(
+            world,
+            reversedProtectedActors,
+            protectedActorId: "speaker");
+
+        check(
+            protectedActors.All(actor => Vector3.DistanceSquared(
+                actor.Position,
+                reversedProtectedActors.Single(other => other.Id == actor.Id).Position)
+                < 0.000001f),
+            "Coincident NPC yields consistently around dialogue speaker in either actor order");
 
         world.SetPlayerPosition(new Vector3(72f, 0f, -40f));
         var movingThroughPlayer = new List<NpcWorldActor>
