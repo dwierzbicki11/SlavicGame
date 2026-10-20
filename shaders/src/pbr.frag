@@ -109,11 +109,14 @@ void main()
         vec3 sampledNormal = texture(
             sampler2D(NormalTexture, MaterialSampler),
             fsin_TexCoord).xyz * 2.0 - 1.0;
+        // Derivatives must run before the texture-dependent branch: neighbouring
+        // fragments may disagree on whether the sampled normal is flat.
+        mat3 tangentFrame = CotangentFrame(
+            baseNormal, fsin_WorldPosition, fsin_TexCoord);
         if (length(sampledNormal.xy) > 0.001)
         {
             normal = normalize(
-                CotangentFrame(baseNormal, fsin_WorldPosition, fsin_TexCoord) *
-                sampledNormal);
+                tangentFrame * sampledNormal);
         }
     }
 
