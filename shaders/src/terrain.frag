@@ -69,6 +69,7 @@ layout(location = 1) in vec3 fsin_WorldNormal;
 layout(location = 2) in vec3 fsin_PrimaryWeights;
 layout(location = 3) in vec3 fsin_SecondaryWeights;
 layout(location = 4) in float fsin_Distance;
+layout(location = 5) in vec3 fsin_CameraPosition;
 
 layout(location = 0) out vec4 fsout_Color;
 
@@ -322,7 +323,7 @@ void main()
          ndotl * daylight * sunColor * directShadow) *
         ambientOcclusion;
 
-    vec3 viewDirection = normalize(-fsin_WorldPosition);
+    vec3 viewDirection = normalize(fsin_CameraPosition - fsin_WorldPosition);
     vec3 halfVector = normalize(sunDirection + viewDirection);
     float specPower = mix(5.0, 72.0, 1.0 - roughness);
     float specular = 0.0;

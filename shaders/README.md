@@ -37,3 +37,17 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Odblaski terenu
+
+Shader terenu wyznacza kierunek patrzenia od fragmentu do pozycji kamery,
+odtworzonej z macierzy `View` w vertex shaderze (tak jak modele PBR).
+Dzięki temu odblaski mokrego podłoża podążają za kamerą także poza początkiem świata.
+Zmiana nie dodaje tekstur ani deskryptorów Vulkan; koszt to dodatkowy interpolant
+`vec3` i odtworzenie pozycji kamery na wierzchołek. Ustawienia wyłączające
+PBR lub odbicia nadal pomijają składnik specular. Zmiana dotyczy wyłącznie obrazu.
+
+Weryfikacja: kompilacja shaderów oraz kontrola w grze przy włączonym PBR
+terenu i odbiciach, najlepiej podczas deszczu. Przesuwając kamerę i obserwując
+ten sam fragment terenu daleko od `(0, 0, 0)`, sprawdź, czy odblask zmienia
+położenie wraz z punktem obserwacji. Warto powtórzyć próbę po wyłączeniu odbić.
