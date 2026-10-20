@@ -32,6 +32,18 @@ Systemy możliwe do uruchomienia bez Vulkan:
 - shader compilation;
 - GPU resource lifetime.
 
+### FSR3 Frame Generation — walidacja wejść
+
+`dotnet run --project tests/SlavicGame.RegressionTests.csproj -c Release`
+uruchamia również kontrolę aliasowania zasobów FG bez GPU i bez natywnego
+providera. Osobny obraz wyjściowy jest akceptowany; wyjście wskazujące obraz
+koloru, głębi lub wektorów ruchu musi zostać odrzucone przed utworzeniem
+kontekstu i wysłaniem pracy do GPU. Przypadki mają zgodne rozmiary, aby
+wykrywać brak kontroli aliasowania niezależnie od walidacji rozdzielczości.
+
+Te regresje nie zastępują natywnych testów dispatch/readback ani testów
+prezentacji opisanych w [roadmapie FG](Fsr3FrameGenerationRoadmap.md).
+
 ### Playtest
 - czytelność;
 - pacing;
