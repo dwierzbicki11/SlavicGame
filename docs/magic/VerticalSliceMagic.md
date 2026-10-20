@@ -249,6 +249,7 @@ Lekcja nie zużywa przedmiotu. Ma być nagrodą za poprawne połączenie wiedzy 
 
 ## Persistence i fail-forward
 
+- podczas inkantacji zmiana czaru przez `SelectSpell` oraz `SelectNext` jest blokowana; rozpoczęty czar zachowuje swój koszt i efekt;
 - poznane czary są zapisywane przez istniejące world flags;
 - save/load zachowuje wiedzę;
 - po load wybrany czar jest normalizowany do faktycznie poznanego;
