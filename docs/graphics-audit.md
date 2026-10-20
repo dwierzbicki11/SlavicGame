@@ -2,6 +2,10 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-20
+
+- **PBR normal-map derivatives in divergent control flow — fixed in source.** `pbr.frag` now computes `CotangentFrame` before the texture-dependent sampled-normal branch. Its `dFdx`/`dFdy` calls therefore execute under the frame-uniform PBR/normal-mapping feature branch, avoiding undefined derivatives where neighboring fragments disagree about whether the normal map is flat. Disabled normal mapping still skips the frame calculation. Shader compilation and a Vulkan visual check remain pending: this environment has neither `glslc` nor `glslangValidator`. Release build and CPU regression attempts also stopped during .NET restore without an actionable error diagnostic.
+
 ## 2026-10-05
 
 - **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
