@@ -196,6 +196,33 @@ internal static class BowCombatRegression
         check(Vector3.Distance(slow, fast) < 0.005f,
             "Arrow trajectory is independent of 10 versus 120 FPS");
 
+        var close = WorldGenerator.Generate();
+        var closeEnemy = close.Enemies.Single(enemy =>
+            enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+        var closeRaven = close.Wildlife.Actors.Single(actor => actor.Id == "raven-start-01");
+        foreach (var target in new[]
+                 {
+                     closeEnemy.Position + Vector3.UnitY * 0.78f,
+                     closeRaven.Position
+                 })
+        {
+            close.Bow.SetAiming(close, true);
+            check(close.Bow.TryStartDraw(close), "Point-blank bow draw starts");
+            // Compensate for the release offset so the arrow starts at the target center.
+            check(close.Bow.TryRelease(close,
+                    target - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f,
+                    Vector3.UnitZ),
+                "Point-blank arrow releases inside target collision volume");
+            close.Bow.Update(close, 0.001);
+            check(close.Bow.Projectiles.Count == 0,
+                "Arrow starting inside a target hits in its first simulation step");
+        }
+        check(closeEnemy.Health < closeEnemy.MaxHealth &&
+              closeEnemy.State != SlavicGame.Engine.AI.EnemyState.Patrol,
+            "Point-blank arrow damages and alerts the enemy immediately");
+        check(close.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health == 0f,
+            "Point-blank arrow applies shared wildlife damage immediately");
+
         var wounded = WorldGenerator.Generate();
         var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
         wounded.Wildlife.TryDamage(wounded, deer.Id, 20f);
