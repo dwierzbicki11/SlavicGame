@@ -17,6 +17,11 @@ Minimalny NPC posiada:
 
 Harmonogram opisuje **aktywność i miejsce**, nie pełną animację każdej sekundy.
 
+Runtime lokalnych tras NPC dopasowuje długość cyklu do całkowitej liczby
+okrążeń na dobę. Dzięki temu faza lokalnej trasy pozostaje ciągła przy przejściu
+zegara przez północ, także po przesunięciu czasu trasy wskutek rozmowy.
+Zmiana aktywności lub miejsca w harmonogramie nadal może zmienić trasę.
+
 Pierwszy wycinek używa dwóch głównych zakresów:
 - dzień;
 - noc.
