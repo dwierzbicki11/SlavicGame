@@ -185,7 +185,9 @@ void main()
             ShadowSampler,
             LightViewProjection,
             fsin_WorldPosition,
-            normal,
+            // Bias follows the receiver geometry, not normal-map detail that
+            // is absent from the shadow depth pass.
+            baseNormal,
             lightDirection);
     }
 

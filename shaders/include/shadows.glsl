@@ -6,7 +6,7 @@ float SampleSunShadow(
     sampler shadowSampler,
     mat4 lightViewProjection,
     vec3 worldPosition,
-    vec3 worldNormal,
+    vec3 geometricNormal,
     vec3 sunDirection)
 {
     vec4 lightClip =
@@ -26,7 +26,7 @@ float SampleSunShadow(
     }
 
     float ndotl = max(
-        dot(normalize(worldNormal), normalize(sunDirection)),
+        dot(normalize(geometricNormal), normalize(sunDirection)),
         0.0);
     float bias = max(0.00022, 0.00110 * (1.0 - ndotl));
 
