@@ -27,9 +27,12 @@ public static class NpcRoutineMotion
                 false);
         }
 
+        // The world clock wraps at midnight. Fit a whole number of laps into
+        // each day so that wrapping it cannot teleport an actor along its route.
+        var cyclesPerDay = Math.Max(1d, Math.Round(24d / route.CycleHours));
         var phase =
             PositiveModulo(
-                timeOfDayHours / route.CycleHours +
+                timeOfDayHours * cyclesPerDay / 24d +
                 StablePhase(npcId),
                 1.0);
 
