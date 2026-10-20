@@ -191,6 +191,35 @@ internal static class BowCombatRegression
               !harvestedRestore.Wildlife.TryHarvest(harvestedRestore, raven.Id),
             "Bow harvest stays consumed after save/load");
 
+        var closeEnemyWorld = WorldGenerator.Generate();
+        var closeEnemy = closeEnemyWorld.Enemies.First(enemy => enemy.IsAlive);
+        CheckPointBlankHit(
+            closeEnemyWorld,
+            closeEnemy.Position + Vector3.UnitY * 0.78f,
+            () => closeEnemy.Health < closeEnemy.MaxHealth,
+            "Arrow starting inside an enemy hits immediately at high FPS");
+
+        var closeWildlifeWorld = WorldGenerator.Generate();
+        var closeRaven = closeWildlifeWorld.Wildlife.Actors.Single(actor => actor.Id == "raven-start-01");
+        CheckPointBlankHit(
+            closeWildlifeWorld,
+            closeRaven.Position,
+            () => closeWildlifeWorld.Wildlife.Actors.Single(actor => actor.Id == closeRaven.Id).Health == 0f,
+            "Arrow starting inside wildlife hits immediately at high FPS");
+
+        void CheckPointBlankHit(WorldState targetWorld, Vector3 targetCenter, Func<bool> wasHit, string name)
+        {
+            targetWorld.Bow.SetAiming(targetWorld, true);
+            check(targetWorld.Bow.TryStartDraw(targetWorld), "Point-blank draw starts");
+            targetWorld.Bow.Update(targetWorld, 1.3);
+            // Compensate for the release offset so the projectile starts at the target center.
+            var shotOrigin = targetCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+            check(targetWorld.Bow.TryRelease(targetWorld, shotOrigin, Vector3.UnitZ),
+                "Point-blank arrow releases");
+            targetWorld.Bow.Update(targetWorld, 0.0001);
+            check(wasHit() && targetWorld.Bow.Projectiles.Count == 0, name);
+        }
+
         var slow = Flight(0.1);
         var fast = Flight(1.0 / 120.0);
         check(Vector3.Distance(slow, fast) < 0.005f,
