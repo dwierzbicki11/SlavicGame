@@ -196,6 +196,28 @@ internal static class BowCombatRegression
         check(Vector3.Distance(slow, fast) < 0.005f,
             "Arrow trajectory is independent of 10 versus 120 FPS");
 
+        foreach (var step in new[] { 0.001, 0.1 })
+        {
+            var overlapWorld = WorldGenerator.Generate();
+            var target = overlapWorld.Enemies.Single(enemy =>
+                enemy.Id == SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
+            var center = target.Position + Vector3.UnitY * 0.78f;
+            // Release offsets the arrow by +0.42 forward and -0.08 vertically.
+            var overlapOrigin = center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+            overlapWorld.Bow.SetAiming(overlapWorld, true);
+            check(overlapWorld.Bow.TryStartDraw(overlapWorld) &&
+                  overlapWorld.Bow.TryRelease(overlapWorld, overlapOrigin, Vector3.UnitZ),
+                $"Point-blank arrow releases for frame duration {step}");
+
+            overlapWorld.Bow.Update(overlapWorld, step);
+            var healthAfterHit = target.Health;
+            check(healthAfterHit < target.MaxHealth && overlapWorld.Bow.Projectiles.Count == 0,
+                $"Arrow starting inside a target hits immediately for frame duration {step}");
+            overlapWorld.Bow.Update(overlapWorld, 0.1);
+            check(target.Health == healthAfterHit,
+                "Point-blank arrow applies damage exactly once");
+        }
+
         var wounded = WorldGenerator.Generate();
         var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
         wounded.Wildlife.TryDamage(wounded, deer.Id, 20f);
