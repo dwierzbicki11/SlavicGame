@@ -66,9 +66,12 @@ float DistributionGGX(vec3 n, vec3 h, float roughness)
     float a = roughness * roughness;
     float a2 = a * a;
     float ndoth = max(dot(n, h), 0.0);
-    float ndoth2 = ndoth * ndoth;
-    float denom = ndoth2 * (a2 - 1.0) + 1.0;
-    return a2 / max(PI * denom * denom, 0.0001);
+    // Avoid cancellation near the specular peak and preserve its energy.
+    // The caller clamps perceptual roughness to at least 0.06, so denom
+    // stays positive without a floor that would flatten smooth highlights.
+    vec3 nxh = cross(n, h);
+    float denom = dot(nxh, nxh) + ndoth * ndoth * a2;
+    return a2 / (PI * denom * denom);
 }
 
 float GeometrySchlickGGX(float ndotv, float roughness)
