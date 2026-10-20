@@ -15,6 +15,23 @@ internal static class FidelityFxFrameGenerationRegression
                 FidelityFxFrameGeneration.MinimumVulkanVersion, out unsupported, out diagnostic),
             "FG does not accept missing device/queue handles");
 
+        var camera = new TemporalFrameState().BeginFrame(
+            Matrix4x4.CreatePerspectiveFieldOfView(1, 1, 0.1f, 100),
+            Matrix4x4.CreateTranslation(-2, -3, -4), 64, 64, enableJitter: true);
+        check(FidelityFxFrameGeneration.ValidateCamera(camera).Translation == new Vector3(2, 3, 4),
+            "FG preserves a valid inverse camera transform and finite jitter");
+        foreach (var invalid in new[] { float.NaN, float.PositiveInfinity, float.NegativeInfinity })
+        {
+            var view = camera.View;
+            view.M41 = invalid;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(camera with { View = view }));
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(camera with { JitterPixels = new(invalid, 0) }));
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(camera with { JitterPixels = new(0, invalid) }));
+            check(true, "FG rejects non-finite camera translation and both jitter components: " + invalid);
+        }
+        ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(camera with { View = default }));
+        check(true, "FG rejects a singular camera before native work");
+
         if (!OperatingSystem.IsLinux() ||
             Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
             return;
