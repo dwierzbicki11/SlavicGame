@@ -15,6 +15,30 @@ internal static class FidelityFxFrameGenerationRegression
                 FidelityFxFrameGeneration.MinimumVulkanVersion, out unsupported, out diagnostic),
             "FG does not accept missing device/queue handles");
 
+        var camera = new TemporalFrameState().BeginFrame(
+            Matrix4x4.CreatePerspectiveFieldOfView(1, 1, 0.1f, 100),
+            Matrix4x4.CreateLookAt(new Vector3(2, 3, 4), Vector3.Zero, Vector3.UnitY),
+            64, 64, enableJitter: true);
+        var inverse = FidelityFxFrameGeneration.ValidateCamera(camera);
+        check(Vector3.Distance(inverse.Translation, new Vector3(2, 3, 4)) < 0.0001f,
+            "FG accepts a finite camera and preserves its world position");
+        foreach (var invalid in new[] { float.NaN, float.PositiveInfinity, float.NegativeInfinity })
+        {
+            var view = camera.View;
+            view.M41 = invalid;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(camera with { View = view }));
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(
+                camera with { JitterPixels = new Vector2(invalid, 0) }));
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(
+                camera with { JitterPixels = new Vector2(0, invalid) }));
+            check(true, "FG rejects non-finite view and both jitter axes: " + invalid);
+        }
+        ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(camera with { View = default }));
+        var tinyView = Matrix4x4.Identity;
+        tinyView.M11 = float.Epsilon;
+        ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateCamera(camera with { View = tinyView }));
+        check(true, "FG rejects singular views and finite views whose inverse overflows");
+
         if (!OperatingSystem.IsLinux() ||
             Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
             return;
@@ -115,7 +139,7 @@ internal static class FidelityFxFrameGenerationRegression
     {
         try { action(); }
         catch (ArgumentException) { return; }
-        throw new Exception("FG accepted invalid resources");
+        throw new Exception("FG accepted invalid resources or camera data");
     }
 
     private static T Bind<T>(nint library, string name) where T : Delegate =>
