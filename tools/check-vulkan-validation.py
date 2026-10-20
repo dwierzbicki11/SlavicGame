@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fail a Vulkan runtime proof on validation errors or a missing proof log."""
 import sys
+import re
 from pathlib import Path
 
 log = Path(sys.argv[1]).read_text()
@@ -11,6 +12,7 @@ if errors:
 proof = ('Upscaler orientation runtime proof:' if '--upscaler-orientation' in sys.argv[2:]
          else 'Presentation FG runtime proof:' if '--presentation' in sys.argv[2:]
          else 'Scene FG runtime proof:')
-if proof not in log or 'checks passed;' not in log:
+if not re.search(r'^' + re.escape(proof) + r' [1-9][0-9]* checks passed;[^\r\n]*\r?$',
+                 log, re.MULTILINE):
     raise SystemExit('The required renderer proof did not complete: ' + proof)
 print('Vulkan validation: zero errors; renderer proof completed: ' + proof)
