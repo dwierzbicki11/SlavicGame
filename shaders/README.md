@@ -37,3 +37,18 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Regresja rozkładu GGX
+
+```bash
+python3 tools/test-pbr-ggx.py
+```
+
+Test wymaga kompilatora `c++` z C++17, bez GPU. Wykonuje funkcję
+`DistributionGGX` odczytaną z `pbr.frag` w arytmetyce `float` i porównuje
+42 przypadki z referencją o podwójnej precyzji. Sprawdza też ograniczenie
+cosinusa przy błędzie zaokrąglenia. Nie zastępuje kompilacji GLSL ani testu obrazu.
+
+Mianownik GGX zachowuje dodatni składnik `roughness^4` także na szczycie
+refleksu. Stały dolny limit mianownika tłumił refleksy gładkich materiałów.
+Funkcja zakłada chropowatość co najmniej `0.06`, zgodnie ze ścieżką materiału.
