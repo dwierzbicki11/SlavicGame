@@ -48,6 +48,7 @@ NpcDialogueRegression.Run(Check);
 PolishTextRenderingRegression.Run(Check);
 NpcWeatherBehaviorRegression.Run(Check);
 NpcCrowdSteeringRegression.Run(Check);
+NpcScheduleRegression.Run(Check);
 NpcReactionRegression.Run(Check);
 NpcWorkstationRegression.Run(Check);
 VendorRegression.Run(Check);

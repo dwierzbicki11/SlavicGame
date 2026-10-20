@@ -17,6 +17,12 @@ Minimalny NPC posiada:
 
 Harmonogram opisuje **aktywność i miejsce**, nie pełną animację każdej sekundy.
 
+Implementacja `NpcScheduleSlot` uwzględnia początek przedziału i wyklucza
+koniec, obsługuje przejście przez północ (np. 19–6) oraz normalizuje czas
+modulo 24. Jawny pełny cykl (np. 0–24 lub 6–30) oznacza aktywność
+całodobową; identyczne granice (6–6) oznaczają pusty przedział.
+Nieskończone wartości i NaN nie wybierają aktywności.
+
 Pierwszy wycinek używa dwóch głównych zakresów:
 - dzień;
 - noc.
