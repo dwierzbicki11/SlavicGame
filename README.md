@@ -418,6 +418,8 @@ The five R0 NPC roles now have schedule-driven world positions, visible humanoid
 
 ### Living NPC routines
 
+NPC schedule slots include their start hour and exclude their end hour. Overnight ranges such as `19–6` cross midnight; explicit spans of at least 24 hours such as `0–24` or `6–30` provide all-day duty. Equal endpoints such as `6–6` remain empty, and non-finite hours are rejected.
+
 Żarnowiec's visible settlers follow deterministic local work and patrol routes instead of remaining fixed at schedule anchors. Moving actors use `Walk`; when a worker reaches a stationary duty such as field work, woodworking, pottery, trading, herb preparation, crossing maintenance or shrine tending, the assigned NPC model uses its authored `Interact` clip instead of standing on `Idle`. Dialogue freezes only the active speaker and turns them toward the player.
 
 
