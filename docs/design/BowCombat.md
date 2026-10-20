@@ -159,3 +159,5 @@ Regresje wymagają cancel bez utraty ammo, ammo -1 dokładnie przy release, full
 ## Integration with current hunting runtime
 
 Bow and melee share WildlifeWorldRuntime health, wound flight, carcass and one-time harvest state. Save/load preserves this state; restoring clears transient draws and arrows. Projectiles test obstacle volumes as well as terrain and targets. Constant-acceleration integration retains the same trajectory at low and high frame rates; frame time is not discarded after 250 ms. Opening crafting, trade, dialogue, pause or a cinematic cancels draw without spending ammo.
+
+Point-blank hits: an arrow starting a simulation step inside an enemy or wildlife hit sphere registers contact immediately, even when the step is too short to leave the sphere. The hit consumes the projectile and applies damage once.
