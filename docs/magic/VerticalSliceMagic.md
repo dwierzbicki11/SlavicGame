@@ -26,6 +26,13 @@ Nie:
 
 Finalne wartości ustalamy po playteście.
 
+### Wybór czaru podczas inkantacji
+
+Aktywna inkantacja blokuje zmianę wybranego czaru zarówno przez przełączanie,
+jak i bezpośredni wybór. Próba zmiany nie modyfikuje kosztu, cooldownu ani
+efektu rozpoczętego czaru. Wybór jest ponownie dostępny po zakończeniu lub
+przerwaniu inkantacji.
+
 ### Użycie w zadaniu
 
 Może pomóc zauważyć:
