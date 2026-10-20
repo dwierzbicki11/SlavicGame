@@ -17,6 +17,12 @@ Minimalny NPC posiada:
 
 Harmonogram opisuje **aktywność i miejsce**, nie pełną animację każdej sekundy.
 
+Implementacja `NpcScheduleSlot.Contains` uwzględnia początek przedziału,
+wyklucza koniec i obsługuje przejście przez północ (np. 18–6).
+Jawny przedział o długości co najmniej 24 godzin (np. 0–24 lub 6–30)
+obejmuje całą dobę; identyczne końce (np. 6–6) oznaczają pusty przedział.
+Godziny zapytania są normalizowane do doby, a wartości niefinitywne odrzucane.
+
 Pierwszy wycinek używa dwóch głównych zakresów:
 - dzień;
 - noc.
