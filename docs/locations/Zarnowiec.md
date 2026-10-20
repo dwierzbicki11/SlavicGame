@@ -63,6 +63,15 @@ Tło codzienności, nie wszystkie interaktywne.
 - night watch;
 - ograniczone usługi.
 
+## Harmonogramy NPC — implementacja
+
+`NpcScheduleSlot` uwzględnia godzinę początku i pomija godzinę końca.
+Przedział `19–6` przechodzi przez północ. Jawny przedział o długości co
+najmniej 24 godzin (np. `0–24` lub `6–30`) oznacza całodobowy dyżur;
+identyczne godziny początku i końca oznaczają pusty przedział.
+Godziny spoza zakresu `0–24` są normalizowane, a wartości niefinitywne
+są odrzucane. Obsługa pełnej doby nie zmienia istniejących dyżurów mieszkańców.
+
 ## Stan po queście
 
 ### ritual-closure
