@@ -209,6 +209,11 @@ Sterowanie:
 
 HUD nie pokazuje inkantacji ani kosztu czaru przed jego poznaniem.
 
+Podczas inkantacji wybór czaru jest zablokowany zarówno dla `Q`, jak i dla
+bezpośredniego `SelectSpell`. Próba zmiany nie przerywa rzucania ani nie
+zmienia opłaconego kosztu i końcowego efektu. Wybór jest ponownie dostępny
+po zakończeniu lub anulowaniu inkantacji; cooldown nadal blokuje kolejne rzucenie.
+
 ### spell.spark — ISKRA / ZAR VEK
 
 Źródło lekcji: `shrine-keeper`  
