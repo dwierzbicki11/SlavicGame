@@ -209,6 +209,10 @@ Sterowanie:
 
 HUD nie pokazuje inkantacji ani kosztu czaru przed jego poznaniem.
 
+Podczas inkantacji wybór czaru jest zablokowany zarówno przez `Q`, jak i przez
+`SpellCasting.SelectSpell`. Odrzucona zmiana nie zużywa dodatkowej staminy ani
+nie zmienia czasu odnowienia; inkantacja kończy się efektem rozpoczętego czaru.
+
 ### spell.spark — ISKRA / ZAR VEK
 
 Źródło lekcji: `shrine-keeper`  
