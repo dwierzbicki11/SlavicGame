@@ -106,14 +106,17 @@ void main()
     vec3 normal = baseNormal;
     if (modelPbr > 0.5 && normalMapping > 0.5)
     {
+        // Derivatives must run before texture-dependent control flow so every
+        // fragment in the quad participates. The feature flags are uniform.
+        mat3 tangentFrame = CotangentFrame(
+            baseNormal, fsin_WorldPosition, fsin_TexCoord);
         vec3 sampledNormal = texture(
             sampler2D(NormalTexture, MaterialSampler),
             fsin_TexCoord).xyz * 2.0 - 1.0;
         if (length(sampledNormal.xy) > 0.001)
         {
             normal = normalize(
-                CotangentFrame(baseNormal, fsin_WorldPosition, fsin_TexCoord) *
-                sampledNormal);
+                tangentFrame * sampledNormal);
         }
     }
 
