@@ -7,6 +7,7 @@ internal static class FidelityFxFrameGenerationRegression
 {
     public static void Run(Action<bool, string> check)
     {
+        ValidateOutputIsolation(check);
         check(!FidelityFxFrameGeneration.TryCreate(default, 1u << 22,
                 out var unsupported, out var diagnostic) && unsupported is null &&
                 diagnostic.Contains("Vulkan 1.1", StringComparison.Ordinal),
@@ -108,6 +109,41 @@ internal static class FidelityFxFrameGenerationRegression
             generator?.Dispose();
             if (fixture != 0) Bind<DestroyFixture>(fixtureLibrary, "slavicFgTestDestroy")(fixture);
             NativeLibrary.Free(fixtureLibrary);
+        }
+    }
+
+    private static void ValidateOutputIsolation(Action<bool, string> check)
+    {
+        // Synthetic handles are inspected only by managed validation, never
+        // passed to Vulkan. Keep this contract covered without the AMD provider.
+        static FfxApiResource Image(nint handle, uint format, uint state, uint usage = 0) => new()
+        {
+            Resource = handle,
+            State = state,
+            Description = new()
+            {
+                Type = FfxApi.ResourceTypeTexture2D,
+                Width = 128, Height = 128, Depth = 1, MipCount = 1,
+                Format = format, Usage = usage
+            }
+        };
+
+        var color = Image(1, FfxApi.FormatR16G16B16A16Float, FfxApi.ResourceStateComputeRead);
+        var depth = Image(2, FfxApi.FormatR32Float, FfxApi.ResourceStateComputeRead,
+            FfxApi.ResourceUsageDepthTarget);
+        var motion = Image(3, FfxApi.FormatR16G16Float, FfxApi.ResourceStateComputeRead);
+        var output = Image(4, FfxApi.FormatR16G16B16A16Float, FfxApi.ResourceStateUnorderedAccess,
+            FfxApi.ResourceUsageUav);
+        FidelityFxFrameGeneration.ValidateResources(color, depth, motion, output);
+        check(true, "FG accepts separate input and output images without a native provider");
+
+        foreach (var (input, name) in new[] { (color, "color"), (depth, "depth"), (motion, "motion") })
+        {
+            var aliasedOutput = output;
+            aliasedOutput.Resource = input.Resource;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateResources(
+                color, depth, motion, aliasedOutput));
+            check(true, $"FG rejects output aliasing {name} before native dispatch");
         }
     }
 
