@@ -63,6 +63,16 @@ Tło codzienności, nie wszystkie interaktywne.
 - night watch;
 - ograniczone usługi.
 
+## Harmonogramy NPC — stan implementacji
+
+`NpcScheduleSlot` obsługuje przedziały z włączonym początkiem i wyłączonym
+końcem oraz zmiany przez północ, np. `18–6`. Jawny przedział obejmujący
+co najmniej 24 godziny, np. `0–24` lub `6–30`, oznacza aktywność całodobową.
+Identyczne godziny początku i końca oznaczają pusty przedział. Godziny
+nieskończone i NaN nie pasują do harmonogramu. Regresje:
+`tests/NpcScheduleRegression.cs`. Obecne harmonogramy mieszkańców nadal
+dzielą dobę na pracę i odpoczynek.
+
 ## Stan po queście
 
 ### ritual-closure
