@@ -38,6 +38,9 @@ jobs:
       - name: Validate Vulkan fullscreen orientation
         if: runner.os == 'Linux'
         run: bash tools/check-render-orientation.sh
+      - name: Validate PBR GGX numerics
+        if: runner.os == 'Linux'
+        run: python3 tools/check-pbr-ggx.py
       - name: Build and validate native Linux FSR3
         if: runner.os == 'Linux'
         run: |
