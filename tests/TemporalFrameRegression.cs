@@ -46,6 +46,29 @@ internal static class TemporalFrameRegression
         check(second.JitterPixels != first.JitterPixels,
             "Temporal jitter sequence advances every frame");
 
+        foreach (var invalidValue in new[] { float.NaN, float.PositiveInfinity, float.NegativeInfinity })
+        {
+            foreach (var invalidProjection in new[] { false, true })
+            {
+                var invalid = Matrix4x4.Identity;
+                invalid.M11 = invalidValue;
+                var rejected = false;
+                try
+                {
+                    state.BeginFrame(invalidProjection ? invalid : projection,
+                        invalidProjection ? view : invalid, 1280, 720, enableJitter: true);
+                }
+                catch (InvalidOperationException) { rejected = true; }
+                check(rejected && state.FrameIndex == 2 && state.HasHistory,
+                    $"Temporal camera rejects {invalidValue} in {(invalidProjection ? "projection" : "view")} without advancing history");
+            }
+        }
+        var recovered = state.BeginFrame(projection, view, 1280, 720, enableJitter: true);
+        check(!recovered.ResetHistory && recovered.FrameIndex == 2 &&
+              recovered.PreviousViewProjection == second.CurrentViewProjection &&
+              recovered.PreviousJitterPixels == second.JitterPixels,
+            "Valid camera frame recovers with the last successful history and jitter after invalid inputs");
+
         var unjittered = new TemporalFrameState().BeginFrame(
             projection,
             view,
