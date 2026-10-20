@@ -574,6 +574,12 @@ public sealed class BowCombatRuntime
     {
         fraction = 0f;
 
+        // Overlapping the target is already a hit, even if this step never
+        // reaches the sphere's surface (for example at point-blank range).
+        var offset = from - center;
+        if (offset.LengthSquared() <= radius * radius)
+            return true;
+
         var segment = to - from;
         var segmentLengthSquared =
             segment.LengthSquared();
@@ -581,7 +587,6 @@ public sealed class BowCombatRuntime
         if (segmentLengthSquared < 0.0000001f)
             return false;
 
-        var offset = from - center;
         var a = segmentLengthSquared;
         var b = 2f * Vector3.Dot(offset, segment);
         var c =
