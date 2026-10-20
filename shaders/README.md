@@ -37,3 +37,13 @@ sudo apt install glslc
 `./run.sh` automatycznie kompiluje shadery przed kompilacją i uruchomieniem gry.
 
 Pliki `.spv` są artefaktami generowanymi i nie są źródłem prawdy. Modyfikuj pliki `.vert` / `.frag`.
+
+## Rozkład odbić PBR
+
+`pbr.frag` oblicza rozkład GGX z minimalną szorstkością `0.06`.
+Mianownik korzysta z postaci `(1 - NdotH²) + NdotH² * roughness⁴`,
+ograniczającej utratę precyzji przy `NdotH` bliskim jedności. Nie należy
+ograniczać całego mianownika GGX stałą `0.0001`: tłumi to wąskie odbłyski
+gładkich i mokrych materiałów. Minimalna szorstkość zapewnia dodatni mianownik.
+Po zmianach warto obejrzeć gładki metal i mokre powierzchnie w ruchu kamery;
+poprawny, wąski odbłysk może uwidocznić aliasing wymagający osobnej poprawki.
