@@ -2,6 +2,10 @@
 
 Persistent findings for renderer/performance iterations. Re-check entries only when the relevant code changes.
 
+## 2026-10-20
+
+- **PBR GGX highlights on smooth materials — fixed.** `pbr.frag` clamped the squared GGX denominator to `1e-4`, suppressing the normal-incidence peak for low roughness. At roughness 0.06 the old peak was 0.1296 instead of approximately 24560.95. The denominator now uses the equivalent, cancellation-resistant `(1 - NdotH²) + NdotH² * roughness⁴` form with a `1e-12` floor, below its minimum over the shader's supported roughness range [0.06, 1]. Material bindings, feature toggles and the diffuse fallback are unchanged. GPU compilation and visual validation of narrow highlights remain required where GLSL/Vulkan tools are available.
+
 ## 2026-10-05
 
 - **Menu buffer-growth stall root cause and safe first fix pinned.** `MenuRenderer.EnsureCapacity` still calls device-wide `GraphicsDevice.WaitForIdle()` before disposing the old dynamic vertex buffer. The wait is required only because the old buffer can still be referenced by submitted GPU work; capacity growth itself does not require an idle device. The safe first implementation is to create the larger buffer immediately, move the old buffer into a bounded retired-buffer collection, and dispose retired buffers only when `MenuRenderer` itself is disposed (or later when explicit frame/fence ownership is available). Because capacity doubles on each growth, the number of retired buffers is logarithmically bounded, so this removes the normal-frame global GPU stall without risking use-after-dispose. Apply the same ownership model to HUD/dynamic-motion only after the menu path is green. Do not replace this with an unguarded immediate `Dispose`.
