@@ -300,6 +300,23 @@ var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
 Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
     "NPC schedule supports overnight ranges");
 
+var allDaySchedule = new NpcScheduleSlot(0, 24, "old-village", "rest");
+var allDayNpc = new NpcDefinition("all-day-worker", NpcRole.Worker, [allDaySchedule]);
+Check(new[] { -1d, 0d, 6d, 12d, 23.999d, 24d, 48d }
+        .All(hour => allDayNpc.GetSchedule(hour) == allDaySchedule),
+    "All-day NPC remains scheduled at midnight, daytime and normalized hours");
+Check(new NpcScheduleSlot(6, 30, "old-village", "rest").Contains(3),
+    "Full-day NPC schedule can start at an arbitrary hour");
+Check(!new NpcScheduleSlot(6, 6, "old-village", "rest").Contains(6),
+    "Equal NPC schedule endpoints remain an empty range");
+Check(nightSchedule.Contains(19) && !nightSchedule.Contains(6),
+    "NPC schedule includes its start and excludes its end");
+Check(new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity }
+        .All(hour => !allDaySchedule.Contains(hour) &&
+            !new NpcScheduleSlot(hour, 24, "old-village", "rest").Contains(12) &&
+            !new NpcScheduleSlot(0, hour, "old-village", "rest").Contains(12)),
+    "NPC schedules reject non-finite query hours and endpoints");
+
 var ritual = new RitualDefinition(
     "first-ritual",
     "First ritual",
