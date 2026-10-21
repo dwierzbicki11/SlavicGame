@@ -257,7 +257,8 @@ public static class WaterLandscape
                 var length = 1.8f + pulse * 1.6f;
                 var width = 0.07f + pulse * 0.08f;
                 var along = tangent * (length * 0.5f);
-                var across = sideVector * (width * side);
+                // Bank selection changes placement, never triangle winding.
+                var across = -sideVector * width;
                 var baseCenter = position2 + tangent * (pulse - 0.5f) * 0.8f;
                 var y = WaterLevel(z) + 0.055f;
 
