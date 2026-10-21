@@ -75,6 +75,19 @@ Nie wiążemy logiki gameplayu z obiektami GPU.
 
 Dane gry muszą działać w testach CPU-only.
 
+## Stabilizacja mapy cieni
+
+`ShadowMapRenderer` korzysta z obliczeń CPU w `ShadowProjection`. Środek
+ortograficznej mapy cieni jest zaokrąglany do pełnych tekseli w osiach
+przestrzeni światła. Dzięki temu również pionowy ruch kamery nie przesuwa
+płynnie współrzędnych UV cieni przy stałym kierunku słońca. Pozycja w osi
+głębokości podąża za kamerą bez zaokrąglania.
+
+`ShadowProjectionRegression` sprawdza ruch poniżej rozmiaru teksela,
+przesunięcia o jeden teksel w obu kierunkach, trzy rozdzielczości mapy oraz
+światło ukośne i pionowe. Testy CPU nie zastępują oceny obrazu w Vulkan;
+zmiana kierunku słońca nadal zmienia orientację mapy cieni.
+
 ## Materiały
 
 Bias słonecznej mapy cieni dla terenu i modeli PBR używa bazowej normalnej

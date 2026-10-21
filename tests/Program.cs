@@ -186,6 +186,7 @@ Check(catalog.Get(assetId).Path == "Assets/test.glb", "Asset catalog lookup");
 AssetIntegrationRegression.Run(Check);
 PresentationPolicyRegression.Run(Check);
 CelestialLightingRegression.Run(Check);
+ShadowProjectionRegression.Run(Check);
 TemporalFrameRegression.Run(Check);
 DynamicMotionHistoryRegression.Run(Check);
 AudioAssetRegression.Run(Check);
