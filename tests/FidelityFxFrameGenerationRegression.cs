@@ -15,6 +15,40 @@ internal static class FidelityFxFrameGenerationRegression
                 FidelityFxFrameGeneration.MinimumVulkanVersion, out unsupported, out diagnostic),
             "FG does not accept missing device/queue handles");
 
+        // Exercise the production pre-dispatch guard without loading Vulkan/AMD.
+        var input = new FfxApiResource
+        {
+            Resource = 1,
+            Description = new FfxApiResourceDescription
+            {
+                Type = FfxApi.ResourceTypeTexture2D, Width = 128, Height = 128,
+                Depth = 1, MipCount = 1, Format = FfxApi.FormatR16G16B16A16Float
+            },
+            State = FfxApi.ResourceStateComputeRead
+        };
+        var depthInput = input;
+        depthInput.Resource = 2;
+        depthInput.Description.Format = FfxApi.FormatR32Float;
+        depthInput.Description.Usage = FfxApi.ResourceUsageDepthTarget;
+        var motionInput = input;
+        motionInput.Resource = 3;
+        motionInput.Description.Format = FfxApi.FormatR16G16Float;
+        var separateOutput = input;
+        separateOutput.Resource = 4;
+        separateOutput.Description.Usage = FfxApi.ResourceUsageUav;
+        separateOutput.State = FfxApi.ResourceStateUnorderedAccess;
+        FidelityFxFrameGeneration.ValidateResources(input, depthInput, motionInput, separateOutput);
+        check(true, "FG accepts distinct input/output images without a native provider");
+        foreach (var (handle, name) in new[] { (input.Resource, "color"),
+                     (depthInput.Resource, "depth"), (motionInput.Resource, "motion") })
+        {
+            var aliasedOutput = separateOutput;
+            aliasedOutput.Resource = handle;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateResources(
+                input, depthInput, motionInput, aliasedOutput));
+            check(true, "FG rejects output aliasing " + name + " before native dispatch");
+        }
+
         if (!OperatingSystem.IsLinux() ||
             Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
             return;
