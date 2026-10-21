@@ -15,6 +15,8 @@ internal static class FidelityFxFrameGenerationRegression
                 FidelityFxFrameGeneration.MinimumVulkanVersion, out unsupported, out diagnostic),
             "FG does not accept missing device/queue handles");
 
+        ValidateResourceAliasing(check);
+
         if (!OperatingSystem.IsLinux() ||
             Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
             return;
@@ -77,7 +79,13 @@ internal static class FidelityFxFrameGenerationRegression
             invalidOutput.Resource = color.Resource;
             ExpectArgumentFailure(() => fg.Dispatch(color, depth, motion, invalidOutput,
                 Frame(), 26, 1f / 60, 0.1f, 100, 1));
-            check(Dispatch(26), "Invalid aliased output is rejected without advancing native frame history");
+            foreach (var input in new[] { depth, motion })
+            {
+                invalidOutput.Resource = input.Resource;
+                ExpectArgumentFailure(() => fg.Dispatch(color, depth, motion, invalidOutput,
+                    Frame(), 26, 1f / 60, 0.1f, 100, 1));
+            }
+            check(Dispatch(26), "Output aliasing any input is rejected without advancing native frame history");
             fg.WaitForIdle();
             check(verify(fixture) == 0, "Managed FG reset/recovery output remains finite and reconstructs input");
 
@@ -108,6 +116,40 @@ internal static class FidelityFxFrameGenerationRegression
             generator?.Dispose();
             if (fixture != 0) Bind<DestroyFixture>(fixtureLibrary, "slavicFgTestDestroy")(fixture);
             NativeLibrary.Free(fixtureLibrary);
+        }
+    }
+
+    private static void ValidateResourceAliasing(Action<bool, string> check)
+    {
+        static FfxApiResource Image(nint handle, uint format, uint usage, uint state) => new()
+        {
+            Resource = handle,
+            State = state,
+            Description = new()
+            {
+                Type = FfxApi.ResourceTypeTexture2D, Format = format,
+                Width = 128, Height = 128, Depth = 1, MipCount = 1, Usage = usage
+            }
+        };
+
+        // Synthetic handles are sufficient: validation must never touch Vulkan.
+        var color = Image(1, FfxApi.FormatR16G16B16A16Float,
+            FfxApi.ResourceUsageReadOnly, FfxApi.ResourceStateComputeRead);
+        var depth = Image(2, FfxApi.FormatR32Float,
+            FfxApi.ResourceUsageDepthTarget, FfxApi.ResourceStateComputeRead);
+        var motion = Image(3, FfxApi.FormatR16G16Float,
+            FfxApi.ResourceUsageReadOnly, FfxApi.ResourceStateComputeRead);
+        var output = Image(4, FfxApi.FormatR16G16B16A16Float,
+            FfxApi.ResourceUsageUav, FfxApi.ResourceStateUnorderedAccess);
+        FidelityFxFrameGeneration.ValidateResources(color, depth, motion, output);
+        check(true, "FG accepts separate input/output images at native resolution");
+        foreach (var input in new[] { (color, "color"), (depth, "depth"), (motion, "motion") })
+        {
+            var aliased = output;
+            aliased.Resource = input.Item1.Resource;
+            ExpectArgumentFailure(() =>
+                FidelityFxFrameGeneration.ValidateResources(color, depth, motion, aliased));
+            check(true, "FG rejects output aliasing " + input.Item2 + " before native dispatch");
         }
     }
 

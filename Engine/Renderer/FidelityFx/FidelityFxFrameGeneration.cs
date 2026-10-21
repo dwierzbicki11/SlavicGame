@@ -249,7 +249,7 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
         _format = format;
     }
 
-    private static void ValidateResources(in FfxApiResource color, in FfxApiResource depth,
+    internal static void ValidateResources(in FfxApiResource color, in FfxApiResource depth,
         in FfxApiResource motion, in FfxApiResource output)
     {
         ValidateResource(color, FfxApi.ResourceStateComputeRead);
@@ -262,8 +262,13 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
             depth.Description.Width != motion.Description.Width ||
             depth.Description.Height != motion.Description.Height ||
             depth.Description.Width > output.Description.Width ||
-            depth.Description.Height > output.Description.Height || color.Resource == output.Resource)
-            throw new ArgumentException("FG color/output and depth/motion extents must match; output must be separate.");
+            depth.Description.Height > output.Description.Height)
+            throw new ArgumentException("FG color/output and depth/motion extents must match.");
+        // Every input is read while the output is written in GENERAL. Sharing
+        // its image with any input violates both the layout and access contract.
+        if (output.Resource == color.Resource || output.Resource == depth.Resource ||
+            output.Resource == motion.Resource)
+            throw new ArgumentException("FG output must be separate from color, depth and motion inputs.");
         if ((output.Description.Usage & FfxApi.ResourceUsageUav) == 0 ||
             (depth.Description.Usage & FfxApi.ResourceUsageDepthTarget) == 0)
             throw new ArgumentException("FG output must support UAV writes and depth must describe a depth target.");
