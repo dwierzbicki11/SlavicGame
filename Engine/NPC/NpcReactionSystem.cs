@@ -66,7 +66,7 @@ public static class NpcReactionSystem
 
                 if (npc.Role == NpcRole.CommunityGuard)
                 {
-                    var desired = threat2 - away * GuardStandOffDistance;
+                    var desired = threat2 + away * GuardStandOffDistance;
                     var forward = SafeDirection(
                         threat2 - desired,
                         npc.Id,

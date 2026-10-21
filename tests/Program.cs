@@ -300,6 +300,23 @@ Check(relationships.Get("herbalist", RelationshipKind.Trust) == 12,
 var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
 Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
     "NPC schedule supports overnight ranges");
+Check(nightSchedule.Contains(19) && !nightSchedule.Contains(6) &&
+      nightSchedule.Contains(-1) && nightSchedule.Contains(26),
+    "NPC overnight schedule wraps hours and uses an exclusive end");
+var allDaySchedule = new NpcScheduleSlot(0, 24, "old-village", "guard-duty");
+var allDayNpc = new NpcDefinition("all-day-guard", NpcRole.CommunityGuard, [allDaySchedule]);
+Check(new[] { -24.0, 0.0, 6.0, 12.0, 23.999, 24.0, 48.0 }
+        .All(hour => allDayNpc.GetSchedule(hour) == allDaySchedule),
+    "NPC full-day activity remains available across midnight and wrapped days");
+Check(new NpcScheduleSlot(6, 30, "old-village", "guard-duty").Contains(3),
+    "NPC full-day schedule supports a non-midnight starting hour");
+Check(!new NpcScheduleSlot(6, 6, "old-village", "empty").Contains(6),
+    "NPC equal schedule endpoints remain empty");
+Check(new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity }
+        .All(value => !allDaySchedule.Contains(value) &&
+            !new NpcScheduleSlot(value, 24, "old-village", "invalid").Contains(12) &&
+            !new NpcScheduleSlot(0, value, "old-village", "invalid").Contains(12)),
+    "NPC schedules reject non-finite hours and endpoints");
 
 var ritual = new RitualDefinition(
     "first-ritual",

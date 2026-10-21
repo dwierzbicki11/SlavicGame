@@ -155,6 +155,7 @@ Flying/stuck arrows używają tego samego actor bufferu.
 
 ### QA lock
 Regresje wymagają cancel bez utraty ammo, ammo -1 dokładnie przy release, full draw, fizycznego trafienia przeciwnika, aggro po trafieniu, terrain stick + retrieval, kill wildlife + persistence oraz poprawnej geometrii bow/arrow.
+Strzała rozpoczynająca krok symulacji wewnątrz bryły przeciwnika lub wildlife trafia natychmiast, także przy bardzo wysokim FPS, i zadaje obrażenia tylko raz.
 
 ## Integration with current hunting runtime
 
