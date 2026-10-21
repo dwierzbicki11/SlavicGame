@@ -137,6 +137,20 @@ Mgła używana jako mechanika musi zachować czytelność również na niższych
 
 Renderer jest prototypem. Dokument nie deklaruje gotowości produkcyjnej ani końcowych wymagań sprzętowych.
 
+### Stabilizacja mapy cieni słońca
+
+`ShadowMapRenderer.CalculateLightViewProjection` zaokrągla środek mapy do
+siatki tekseli w płaszczyźnie światła. Obejmuje to ruch poziomy i zmianę
+wysokości kamery, również przy ukośnym słońcu. Głębokość podąża za środkiem
+bez zaokrąglania. Stabilizacja działa dla stałego kierunku światła; ruch
+słońca nadal zmienia projekcję. Rozdzielczość, zasięg i filtr PCF pozostają
+bez zmian. Poprawka nie dodaje passów ani próbek GPU i nie wpływa na gameplay.
+
+`ShadowProjectionRegression` sprawdza ruch poniżej rozmiaru teksela, skok
+o jeden teksel, słońce w zenicie i zakres głębokości Vulkan dla kilku
+rozdzielczości i zasięgów. Ocena wizualna migotania wymaga uruchomienia gry
+na Vulkan.
+
 
 ## Vulkan fullscreen orientation
 
