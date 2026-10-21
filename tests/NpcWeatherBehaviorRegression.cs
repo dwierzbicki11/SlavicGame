@@ -55,6 +55,33 @@ internal static class NpcWeatherBehaviorRegression
               shrineKeeper.Activity == "tend-shrine",
             "Core quest NPC schedules are not silently overridden by ambient storm behavior");
 
+        world.Time.SetTimeOfDay(23);
+        world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
+        world.NpcWorld.Update(world);
+        var resting = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .ToDictionary(actor => actor.Id);
+
+        world.Weather.SetCondition(WeatherKind.Storm, immediate: true);
+        world.NpcWorld.Update(world);
+        var stormNight = world.NpcWorld.Actors
+            .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+            .ToArray();
+
+        check(stormNight.Length == 14 &&
+              stormNight.All(actor => actor.Activity == "rest" && !actor.IsMoving),
+            "Storm does not replace settlers' nighttime rest with shelter routes");
+        check(stormNight.All(actor =>
+                  actor.Position == resting[actor.Id].Position),
+            "Resting settlers stay at their nighttime positions when a storm begins");
+
+        world.Time.SetTimeOfDay(10);
+        world.NpcWorld.Update(world);
+        check(world.NpcWorld.Actors
+                .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+                .All(actor => NpcSituationalBehavior.IsStormShelterActivity(actor.Activity)),
+            "Settlers seek shelter when their workday starts during a storm");
+
         world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
         world.NpcWorld.Update(world);
 

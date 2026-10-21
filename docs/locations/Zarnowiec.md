@@ -63,6 +63,11 @@ Tło codzienności, nie wszystkie interaktywne.
 - night watch;
 - ograniczone usługi.
 
+Runtime mieszkańców (`settler-*`) zachowuje aktywność `rest` również podczas
+burzy i intensywnego deszczu. Pogoda nie uruchamia wtedy ruchomych tras
+schronienia. Po rozpoczęciu pracy mieszkańcy ponownie szukają schronienia,
+jeśli trudne warunki nadal trwają.
+
 ## Stan po queście
 
 ### ritual-closure
