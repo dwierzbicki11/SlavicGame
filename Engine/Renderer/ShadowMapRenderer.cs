@@ -287,22 +287,25 @@ public sealed class ShadowMapRenderer : IDisposable
 
         sunDirection = Vector3.Normalize(sunDirection);
 
-        // Snap the shadow focus to the shadow texel footprint. This greatly
-        // reduces shimmering while the camera moves slowly.
         mapSize = Math.Clamp(mapSize, 512u, 4096u);
         worldSpan = Math.Clamp(worldSpan, 80f, DefaultWorldSpan);
         var texelWorldSize = worldSpan / mapSize;
-        var focus = new Vector3(
-            MathF.Round(focusPosition.X / texelWorldSize) * texelWorldSize,
-            focusPosition.Y,
-            MathF.Round(focusPosition.Z / texelWorldSize) * texelWorldSize);
-
         var up = MathF.Abs(Vector3.Dot(sunDirection, Vector3.UnitY)) > 0.96f
             ? Vector3.UnitZ
             : Vector3.UnitY;
 
-        var eye = focus + sunDirection * 520f;
-        var lightView = Matrix4x4.CreateLookAt(eye, focus, up);
+        // Snap in the light's image plane, where the shadow texel grid lives.
+        // World X/Z snapping leaves fractional texel motion for oblique light
+        // directions and does not stabilize changes in camera height.
+        var orientation = Matrix4x4.CreateLookAt(Vector3.Zero, -sunDirection, up);
+        var lightFocus = Vector3.Transform(focusPosition, orientation);
+        lightFocus.X = MathF.Round(lightFocus.X / texelWorldSize) * texelWorldSize;
+        lightFocus.Y = MathF.Round(lightFocus.Y / texelWorldSize) * texelWorldSize;
+
+        var lightView = orientation;
+        lightView.M41 = -lightFocus.X;
+        lightView.M42 = -lightFocus.Y;
+        lightView.M43 = -lightFocus.Z - 520f;
         var lightProjection = Matrix4x4.CreateOrthographic(
             worldSpan,
             worldSpan,
