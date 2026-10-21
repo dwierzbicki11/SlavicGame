@@ -483,7 +483,7 @@ The herbalist now exposes a playable alchemy station while on duty. Press **K** 
 
 ### NPC reactions
 
-R0 settlers now react to immediate danger: civilians watch or move away from player attacks, flee engaged enemies, and the community guard faces or moves toward threats instead of fleeing. Dialogue speakers remain protected from reaction overrides.
+R0 settlers now react to immediate danger: civilians watch or move away from player attacks, flee engaged enemies, and the community guard faces or moves toward threats instead of fleeing. Against engaged enemies, the guard keeps a 4.5 m stand-off position on its original side of the threat and faces it, avoiding a jump across the enemy. Dialogue speakers remain protected from reaction overrides.
 
 ### Wildlife hunting
 
