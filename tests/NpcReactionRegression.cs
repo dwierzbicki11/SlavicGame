@@ -117,6 +117,35 @@ internal static class NpcReactionRegression
             threat.MaxHealth,
             EnemyState.Attack));
 
+        foreach (var offset in new[]
+                 {
+                     new Vector2(3.2f, 0f),
+                     new Vector2(-8f, 0f),
+                     new Vector2(0f, 7f),
+                     new Vector2(0f, -2f)
+                 })
+        {
+            var threatPosition = new Vector2(threat.Position.X, threat.Position.Z);
+            var initialPosition = threatPosition + offset;
+            var reaction = NpcReactionSystem.Resolve(
+                world,
+                world.Npcs.Single(npc => npc.Id == "community-guard"),
+                initialPosition,
+                Vector2.UnitY,
+                true,
+                protectedByDialogue: false);
+            var fromThreat = reaction.Position - threatPosition;
+
+            check(reaction.Kind == NpcReactionKind.GuardThreat &&
+                  Vector2.Dot(fromThreat, offset) > 0f,
+                "Guard stays on the original side of the enemy when taking position");
+            check(MathF.Abs(fromThreat.Length() -
+                            NpcReactionSystem.GuardStandOffDistance) < 0.001f,
+                "Guard approaches or retreats to the controlled stand-off distance");
+            check(Vector2.Dot(reaction.Forward, Vector2.Normalize(-fromThreat)) > 0.999f,
+                "Guard faces the enemy from the stand-off position");
+        }
+
         world.NpcWorld.Update(world);
 
         var guarding =

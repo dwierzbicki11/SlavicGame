@@ -423,6 +423,7 @@ Gdy gracz wykonuje atak wręcz albo aktywnie inkantuje czar w pobliżu:
 Jeśli żywy przeciwnik znajduje się w aktywnym stanie `Alert`, `Chase` albo `Attack` blisko NPC:
 - cywile przechodzą w `FleeThreat` i odsuwają się od przeciwnika;
 - strażnik przechodzi w `GuardThreat` i podchodzi do kontrolowanego dystansu od zagrożenia.
+- Punkt docelowy strażnika pozostaje po jego dotychczasowej stronie przeciwnika, w odległości 4,5 m; strażnik zwraca się ku zagrożeniu i nie wyznacza trasy przez jego pozycję.
 
 To nie jest jeszcze pełne combat AI strażnika — `GuardThreat` jest reakcją pozycyjną i wizualną, nie automatycznym zadawaniem obrażeń.
 
