@@ -7,6 +7,25 @@ internal static class FidelityFxFrameGenerationRegression
 {
     public static void Run(Action<bool, string> check)
     {
+        // Exercise the production pre-dispatch guard without loading Vulkan or
+        // the native provider. Equal render/display sizes are valid FG input.
+        var colorInput = Resource(1, FfxApi.ResourceStateComputeRead);
+        var depthInput = Resource(2, FfxApi.ResourceStateComputeRead,
+            FfxApi.ResourceUsageDepthTarget);
+        var motionInput = Resource(3, FfxApi.ResourceStateComputeRead);
+        var separateOutput = Resource(4, FfxApi.ResourceStateUnorderedAccess,
+            FfxApi.ResourceUsageUav);
+        FidelityFxFrameGeneration.ValidateResources(colorInput, depthInput, motionInput, separateOutput);
+        check(true, "FG accepts separate input/output images at native resolution without a GPU");
+        foreach (var input in new[] { colorInput, depthInput, motionInput })
+        {
+            var aliasedOutput = separateOutput;
+            aliasedOutput.Resource = input.Resource;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateResources(
+                colorInput, depthInput, motionInput, aliasedOutput));
+            check(true, "FG rejects output aliasing input image " + input.Resource + " before native dispatch");
+        }
+
         check(!FidelityFxFrameGeneration.TryCreate(default, 1u << 22,
                 out var unsupported, out var diagnostic) && unsupported is null &&
                 diagnostic.Contains("Vulkan 1.1", StringComparison.Ordinal),
@@ -110,6 +129,19 @@ internal static class FidelityFxFrameGenerationRegression
             NativeLibrary.Free(fixtureLibrary);
         }
     }
+
+    private static FfxApiResource Resource(nint handle, uint state, uint usage = 0) => new()
+    {
+        Resource = handle,
+        State = state,
+        Description = new FfxApiResourceDescription
+        {
+            Type = FfxApi.ResourceTypeTexture2D,
+            Format = FfxApi.FormatR16G16B16A16Float,
+            Width = 64, Height = 64, Depth = 1, MipCount = 1,
+            Usage = usage
+        }
+    };
 
     private static void ExpectArgumentFailure(Action action)
     {
