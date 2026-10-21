@@ -7,6 +7,23 @@ internal static class FidelityFxFrameGenerationRegression
 {
     public static void Run(Action<bool, string> check)
     {
+        // Exercise the dispatch boundary without loading a provider or GPU.
+        var testColor = Resource(1, FfxApi.ResourceStateComputeRead, 0);
+        var testDepth = Resource(2, FfxApi.ResourceStateComputeRead, FfxApi.ResourceUsageDepthTarget);
+        var testMotion = Resource(3, FfxApi.ResourceStateComputeRead, 0);
+        var testOutput = Resource(4, FfxApi.ResourceStateUnorderedAccess, FfxApi.ResourceUsageUav);
+        FidelityFxFrameGeneration.ValidateResources(testColor, testDepth, testMotion, testOutput);
+        check(true, "FG accepts separate input and output images without native dispatch");
+        foreach (var (handle, name) in new[] { (testColor.Resource, "color"),
+                     (testDepth.Resource, "depth"), (testMotion.Resource, "motion") })
+        {
+            var aliasedOutput = testOutput;
+            aliasedOutput.Resource = handle;
+            ExpectArgumentFailure(() => FidelityFxFrameGeneration.ValidateResources(
+                testColor, testDepth, testMotion, aliasedOutput));
+            check(true, $"FG rejects output aliasing {name} before native dispatch");
+        }
+
         check(!FidelityFxFrameGeneration.TryCreate(default, 1u << 22,
                 out var unsupported, out var diagnostic) && unsupported is null &&
                 diagnostic.Contains("Vulkan 1.1", StringComparison.Ordinal),
@@ -110,6 +127,18 @@ internal static class FidelityFxFrameGenerationRegression
             NativeLibrary.Free(fixtureLibrary);
         }
     }
+
+    private static FfxApiResource Resource(nint handle, uint state, uint usage) => new()
+    {
+        Resource = handle,
+        State = state,
+        Description = new FfxApiResourceDescription
+        {
+            Type = FfxApi.ResourceTypeTexture2D,
+            Format = FfxApi.FormatR16G16B16A16Float,
+            Width = 128, Height = 128, Depth = 1, MipCount = 1, Usage = usage
+        }
+    };
 
     private static void ExpectArgumentFailure(Action action)
     {
