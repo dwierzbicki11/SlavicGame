@@ -230,3 +230,20 @@ FidelityFX line with the required Vulkan backend: FidelityFX SDK 1.1.4 / FSR 3.1
 The newer SDK 2.x line is not treated as a drop-in target while its documented Vulkan
 support is unavailable. We do not label the current temporal foundation as "FSR 3"
 until the real AMD dispatch path is connected and validated.
+
+
+## Stabilizacja mapy cieni słońca
+
+`ShadowMapRenderer.CalculateLightViewProjection` zaokrągla środek mapy do
+siatki tekseli w dwóch osiach prostopadłych do kierunku światła. Zaokrąglanie
+w światowych X/Z nie stabilizowało mapy przy ukośnym słońcu i pomijało zmianę
+wysokości kamery. Przesunięcie wzdłuż kierunku światła zachowuje ciągłość głębi.
+Koszt poprawki to kilka operacji wektorowych CPU na aktualizację macierzy;
+liczba passów, próbek PCF i rozmiar mapy nie zmieniają się. Mechanika gry nie
+korzysta z tej macierzy. Dotychczasowe wyłączenie cieni pozostaje dostępne.
+
+`ShadowMapStabilityRegression` sprawdza stałe UV dla ruchu mniejszego od teksela,
+skok o jeden teksel po przekroczeniu granicy oraz ruch wzdłuż światła. Obejmuje
+ukośne i pionowe światło, mapy 512/2048/4096 i zasięgi 80/420 m.
+Weryfikacja wizualna podczas ruchu kamery na Vulkan pozostaje potrzebna;
+test CPU nie ocenia końcowego obrazu ani ruchu słońca.

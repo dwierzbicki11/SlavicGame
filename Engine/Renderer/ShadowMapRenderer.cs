@@ -287,19 +287,21 @@ public sealed class ShadowMapRenderer : IDisposable
 
         sunDirection = Vector3.Normalize(sunDirection);
 
-        // Snap the shadow focus to the shadow texel footprint. This greatly
-        // reduces shimmering while the camera moves slowly.
+        // The texel grid lives in light space, not in world X/Z. Quantize
+        // both transverse axes, including the contribution from camera height.
         mapSize = Math.Clamp(mapSize, 512u, 4096u);
         worldSpan = Math.Clamp(worldSpan, 80f, DefaultWorldSpan);
         var texelWorldSize = worldSpan / mapSize;
-        var focus = new Vector3(
-            MathF.Round(focusPosition.X / texelWorldSize) * texelWorldSize,
-            focusPosition.Y,
-            MathF.Round(focusPosition.Z / texelWorldSize) * texelWorldSize);
-
         var up = MathF.Abs(Vector3.Dot(sunDirection, Vector3.UnitY)) > 0.96f
             ? Vector3.UnitZ
             : Vector3.UnitY;
+        var lightRight = Vector3.Normalize(Vector3.Cross(up, sunDirection));
+        var lightUp = Vector3.Cross(sunDirection, lightRight);
+        var focusRight = Vector3.Dot(focusPosition, lightRight);
+        var focusUp = Vector3.Dot(focusPosition, lightUp);
+        var focus = focusPosition
+            + lightRight * (MathF.Round(focusRight / texelWorldSize) * texelWorldSize - focusRight)
+            + lightUp * (MathF.Round(focusUp / texelWorldSize) * texelWorldSize - focusUp);
 
         var eye = focus + sunDirection * 520f;
         var lightView = Matrix4x4.CreateLookAt(eye, focus, up);
