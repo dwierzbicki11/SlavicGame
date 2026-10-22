@@ -263,6 +263,22 @@ internal static class RiverInteractionRegression
             ref waterAtB,
             ref waterIndicesB);
 
+        foreach (var (vertices, indices) in new[]
+                 { (waterAtA, waterIndicesA), (waterAtB, waterIndicesB) })
+        {
+            check(indices.Length > 0 && indices.Length % 3 == 0 &&
+                  indices.All(index => index < vertices.Length),
+                "Animated river surface and both foam banks have valid triangle indices");
+
+            check(Enumerable.Range(0, indices.Length / 3).All(triangle =>
+            {
+                var a = vertices[indices[triangle * 3]].Position;
+                var b = vertices[indices[triangle * 3 + 1]].Position;
+                var c = vertices[indices[triangle * 3 + 2]].Position;
+                return Vector3.Cross(b - a, c - a).Y > 0f;
+            }), "Water and foam triangles face upward on both banks throughout animation");
+        }
+
         check(waterAtA.Length == waterAtB.Length &&
               waterAtA.Length > 100 &&
               waterAtA.Zip(waterAtB).Any(pair =>
