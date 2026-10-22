@@ -80,6 +80,29 @@ internal static class NpcCrowdSteeringRegression
                 NpcCrowdSteering.MinimumSpacing - 0.01f,
             "Other NPC yields around the protected dialogue speaker");
 
+        foreach (var workerFirst in new[] { true, false })
+        {
+            var worker = CreateActor(world, "worker", 60f, -40f, moving: false);
+            var walker = CreateActor(world, "walker", 60f, -40f, moving: true);
+            var worksite = workerFirst
+                ? new List<NpcWorldActor> { worker, walker }
+                : new List<NpcWorldActor> { walker, worker };
+
+            NpcCrowdSteering.Resolve(world, worksite);
+
+            check(worksite.Single(actor => actor.Id == "worker").Position == worker.Position &&
+                  HorizontalDistance(worksite[0], worksite[1]) >=
+                      NpcCrowdSteering.MinimumSpacing - 0.01f,
+                "Passer yields without displacing a stationary worker in either actor order");
+
+            worksite = new List<NpcWorldActor> { worker, walker };
+            NpcCrowdSteering.Resolve(world, worksite, protectedActorId: "walker");
+            check(worksite[1].Position == walker.Position &&
+                  HorizontalDistance(worksite[0], worksite[1]) >=
+                      NpcCrowdSteering.MinimumSpacing - 0.01f,
+                "Dialogue protection takes priority over a stationary worker");
+        }
+
         world.SetPlayerPosition(new Vector3(72f, 0f, -40f));
         var movingThroughPlayer = new List<NpcWorldActor>
         {
