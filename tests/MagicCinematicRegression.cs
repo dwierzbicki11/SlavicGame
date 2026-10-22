@@ -118,12 +118,29 @@ public static class MagicCinematicRegression
         check(magic.TryStart(world, Vector3.UnitZ), "Heal starts");
         check(magic.Message == "ZIVA", "Incantation begins with its first spoken word");
         check(world.Player.Stamina == 65 && world.Player.Health == 60, "Cost paid once before cast resolves");
+        var healCooldown = magic.Cooldown;
+        check(!magic.SelectSpell("spell.reveal-trace") && magic.Current.Id == "spell.mend",
+            "Direct spell selection cannot replace an active healing incantation");
+        magic.SelectNext(world);
+        check(magic.Current.Id == "spell.mend" && world.Player.Stamina == 65 && magic.Cooldown == healCooldown,
+            "Rejected selection preserves the active spell, paid cost and cooldown");
         check(!magic.TryStart(world, Vector3.UnitZ), "Casting cannot stack");
+        var castingCooldown = magic.Cooldown;
+        var castingRemaining = magic.CastingRemaining;
+        check(!magic.SelectSpell("spell.reveal-trace") && magic.Current.Id == "spell.mend",
+            "Direct spell selection cannot replace an active incantation");
+        magic.SelectNext(world);
+        check(magic.Current.Id == "spell.mend" && magic.Cooldown == castingCooldown &&
+              magic.CastingRemaining == castingRemaining && world.Player.Stamina == 65,
+            "Rejected spell changes preserve cast timing, cooldown and paid cost");
         magic.Update(world, 0.5);
         check(magic.Message == "ZIVA DAR" && magic.CastingProgress > 0.5, "Incantation reveals the next word during windup");
         check(world.Player.Health == 60, "Windup does not heal early");
         magic.Update(world, 0.5);
         check(world.Player.Health == 85 && !magic.IsCasting, "Completed incantation heals");
+        check(magic.RevealRemaining == 0 && magic.SelectSpell("spell.reveal-trace") &&
+              magic.SelectSpell("spell.mend"),
+            "Original spell effect resolves and selection unlocks after completion");
         check(!magic.TryStart(world, Vector3.UnitZ), "Cooldown blocks repeats");
         var legacy = SaveGameService.Capture(world) with { Magic = null, Tracks = [] };
         var oldWorld = WorldGenerator.Generate();
@@ -134,6 +151,9 @@ public static class MagicCinematicRegression
         var restored = WorldGenerator.Generate();
         SaveGameService.Restore(restored, json);
         check(restored.Magic.Selected == 1 && restored.Magic.Cooldown > 0, "Save preserves selected spell and cooldown");
+        check(restored.Magic.SelectSpell("spell.reveal-trace") &&
+              restored.Magic.Current.Id == "spell.reveal-trace",
+            "Direct selection remains available after casting while cooldown is active");
         magic.Update(world, 10);
         world.Player.Restore(); world.Player.TakeDamage(30);
         check(magic.TryStart(world, Vector3.UnitZ), "Second heal starts after cooldown");

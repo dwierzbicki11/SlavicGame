@@ -127,6 +127,28 @@ internal static class NpcReactionRegression
             guarding.IsMoving,
             "Community guard takes a guarding stance toward an engaged predator");
 
+        var guardDefinition = world.Npcs.Single(npc => npc.Id == "community-guard");
+        var threatPosition = new Vector2(threat.Position.X, threat.Position.Z);
+        foreach (var direction in new[] { Vector2.UnitX, -Vector2.UnitX, Vector2.UnitY, -Vector2.UnitY })
+        {
+            foreach (var distance in new[] { 2f, NpcReactionSystem.GuardStandOffDistance, 12f })
+            {
+                var basePosition = threatPosition + direction * distance;
+                var reaction = NpcReactionSystem.Resolve(
+                    world, guardDefinition, basePosition, Vector2.UnitY,
+                    true, protectedByDialogue: false);
+                var expected = threatPosition + direction * NpcReactionSystem.GuardStandOffDistance;
+
+                check(
+                    reaction.Kind == NpcReactionKind.GuardThreat &&
+                    Vector2.Distance(reaction.Position, expected) < 0.001f,
+                    $"Guard keeps stand-off on its own side of the threat ({direction}, {distance})");
+                check(
+                    Vector2.Dot(reaction.Forward, -direction) > 0.999f,
+                    $"Guard faces the threat from its defensive position ({direction}, {distance})");
+            }
+        }
+
         var protectedReaction = NpcReactionSystem.Resolve(
             world,
             world.Npcs.Single(npc => npc.Id == "settler-farmer-02"),
