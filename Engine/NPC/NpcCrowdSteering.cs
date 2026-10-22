@@ -69,6 +69,14 @@ public static class NpcCrowdSteering
                 if (aProtected && bProtected)
                     continue;
 
+                // Keep stationary workers at their stations when a passer-by
+                // can yield. A dialogue speaker always has higher priority.
+                if (!aProtected && !bProtected && a.IsMoving != b.IsMoving)
+                {
+                    aProtected = !a.IsMoving;
+                    bProtected = !b.IsMoving;
+                }
+
                 var push = MathF.Min(
                     MaxPushPerPass,
                     penetration * (aProtected || bProtected ? 1f : 0.5f));
