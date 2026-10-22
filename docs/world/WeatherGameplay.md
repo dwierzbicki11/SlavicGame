@@ -54,6 +54,11 @@ Schedule może mieć weather override później:
 
 Vertical slice: opcjonalne.
 
+Runtime mieszkańców `settler-*` przerywa pracę podczas burzy lub przy
+`RainIntensity >= 0.85`, wybierając trasę schronienia. Zaplanowany `rest`
+pozostaje odpoczynkiem w domu, również po północy; dopiero rozpoczęcie pracy
+uruchamia pogodowy wybór schronienia. Główni NPC questowi zachowują harmonogram.
+
 ## Ritual
 
 Rytuał pierwszego questa nie wymaga konkretnej losowej pogody.
