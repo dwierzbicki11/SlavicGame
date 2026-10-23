@@ -171,6 +171,35 @@ internal static class AssetIntegrationRegression
                     WaterLandscape.SurfaceHalfWidth(model.Position.Z)),
             "Rocky riverbank models sit outside the animated water ribbon");
 
+        foreach (var terrain in new[]
+                 {
+                     new Terrain(128, 128, 2f), // River lies outside this map.
+                     new Terrain(129, 33, 4f), // River crosses a short, narrow map.
+                     new Terrain(257, 65, 2f) // Same bounds with a finer grid.
+                 })
+        {
+            var extentX = (terrain.Width - 1) * terrain.CellSize * 0.5f;
+            var extentZ = (terrain.Depth - 1) * terrain.CellSize * 0.5f;
+            var expected = riverbankA.Where(model =>
+                MathF.Abs(model.Position.X) <= extentX &&
+                MathF.Abs(model.Position.Z) <= extentZ).ToArray();
+            var clipped = RiverbankPropGenerator.Generate(terrain);
+
+            check(clipped.Count == expected.Length &&
+                  clipped.Zip(expected).All(pair =>
+                      pair.First.Id == pair.Second.Id &&
+                      pair.First.Position.X == pair.Second.Position.X &&
+                      pair.First.Position.Z == pair.Second.Position.Z &&
+                      pair.First.Scale == pair.Second.Scale &&
+                      pair.First.YawRadians == pair.Second.YawRadians),
+                "Riverbank dressing clips to terrain bounds while preserving seeded placements");
+            check(clipped.All(model => MathF.Abs(model.Position.Y -
+                      (terrain.SampleHeight(model.Position) - 0.05f)) < 0.00001f),
+                "Clipped riverbank models use the local terrain height");
+            check(extentX < 200f ? clipped.Count == 0 : clipped.Count > 0,
+                "Riverbank clipping handles both absent and partially visible river channels");
+        }
+
         var clutterA = GroundClutterGenerator.Generate(world.Terrain);
         var clutterB = GroundClutterGenerator.Generate(world.Terrain);
         check(clutterA.Count == clutterB.Count && clutterA.Count >= 300,
