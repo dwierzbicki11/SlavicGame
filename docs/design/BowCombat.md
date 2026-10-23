@@ -112,6 +112,7 @@ Pierwszy grywalny runtime łuku jest podpięty do vertical slice.
 - **E** przy strzale wbitej w teren — odzyskanie `arrow-basic`.
 
 Poza Aim LMB nadal uruchamia melee.
+Celowanie i naciąg są niedostępne podczas przygotowania, aktywnego ciosu i fazy powrotu ataku wręcz. Rozpoczęcie melee przerywa istniejący naciąg przy ponownej walidacji łuku, bez zużycia strzały.
 
 ### Starter loadout
 Jednorazowy migration flag `starter-bow-loadout-granted` daje:
