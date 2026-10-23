@@ -463,7 +463,7 @@ The first production R0 side-quest slot is now playable directly from field disc
 
 ### NPC local crowd steering
 
-R0 settlers now apply deterministic local separation after their scheduled routine motion. Nearby NPCs yield around each other and moving settlers keep personal space from the player, while a dialogue speaker remains fixed. The pass stays deliberately lightweight and reuses normal world collision resolution instead of introducing a full navmesh.
+R0 settlers now apply deterministic local separation after their scheduled routine motion. Nearby NPCs yield around each other and moving settlers keep personal space from the player, while a dialogue speaker remains fixed. Stationary NPCs also keep their authored poses (including at workstations); moving NPCs take the full separation displacement when yielding to them. Overlapping stationary poses are left for layout authoring to resolve. The pass stays deliberately lightweight and reuses normal world collision resolution instead of introducing a full navmesh.
 
 
 ### Visible NPC workstations
