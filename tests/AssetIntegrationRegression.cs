@@ -171,6 +171,22 @@ internal static class AssetIntegrationRegression
                     WaterLandscape.SurfaceHalfWidth(model.Position.Z)),
             "Rocky riverbank models sit outside the animated water ribbon");
 
+        var smallRiverbank = RiverbankPropGenerator.Generate(new Terrain(301, 101, 2f));
+        var expectedRiverbank = riverbankA.Where(model =>
+            MathF.Abs(model.Position.X) <= 300f &&
+            MathF.Abs(model.Position.Z) <= 100f).ToArray();
+        check(smallRiverbank.Count > 0 && smallRiverbank.Count < riverbankA.Count &&
+              smallRiverbank.Select(model => model.Id).SequenceEqual(
+                  expectedRiverbank.Select(model => model.Id)) &&
+              smallRiverbank.Zip(expectedRiverbank).All(pair =>
+                  pair.First.Position.X == pair.Second.Position.X &&
+                  pair.First.Position.Z == pair.Second.Position.Z &&
+                  pair.First.Scale == pair.Second.Scale &&
+                  pair.First.YawRadians == pair.Second.YawRadians),
+            "Smaller terrain clips riverbank dressing without changing surviving placements");
+        check(RiverbankPropGenerator.Generate(new Terrain()).Count == 0,
+            "Terrain without the river does not receive out-of-bounds riverbank rocks");
+
         var clutterA = GroundClutterGenerator.Generate(world.Terrain);
         var clutterB = GroundClutterGenerator.Generate(world.Terrain);
         check(clutterA.Count == clutterB.Count && clutterA.Count >= 300,
