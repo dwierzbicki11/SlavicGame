@@ -1,4 +1,5 @@
 using System.Numerics;
+using SlavicGame.Engine.Combat;
 using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Magic;
@@ -96,7 +97,8 @@ public sealed class SpellCasting
 
     public bool TryStart(WorldState world, Vector3 direction)
     {
-        if (!world.Player.IsAlive || world.Dodge.IsActive || world.Cinematics.IsPlaying || world.Rituals.IsPerforming || IsCasting) return false;
+        if (!world.Player.IsAlive || world.Dodge.IsActive || world.Cinematics.IsPlaying || world.Rituals.IsPerforming || IsCasting ||
+            world.Melee.Controller.State != MeleeAttackState.Free) return false;
         if (!SpellLessons.IsLearned(world, Current.Id))
         {
             Message = $"NIE ZNASZ: {Current.Name} / L NAUKA";

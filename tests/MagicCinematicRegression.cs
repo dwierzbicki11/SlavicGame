@@ -1,4 +1,5 @@
 using System.Numerics;
+using SlavicGame.Engine.Combat;
 using SlavicGame.Engine.Magic;
 using SlavicGame.Engine.Gameplay;
 using SlavicGame.Engine.Audio;
@@ -9,8 +10,35 @@ using SlavicGame.Engine.Dialogue;
 
 public static class MagicCinematicRegression
 {
+    private static void CheckMeleeCastingExclusion(Action<bool, string> check)
+    {
+        foreach (var elapsed in new[] { 0d, 0.20d, 0.35d })
+        {
+            var world = WorldGenerator.Generate();
+            world.Progress.SetFlag(SpellLessons.LearnedFlag("spell.spark"));
+            check(world.Melee.TryStart(world), "Melee starts before casting exclusion check");
+            world.Melee.Update(world, Vector3.UnitZ, elapsed);
+            var state = world.Melee.Controller.State;
+            var stamina = world.Player.Stamina;
+
+            check(state is MeleeAttackState.Windup or MeleeAttackState.ActiveAttack or MeleeAttackState.Recovery,
+                "Casting exclusion fixture covers an ongoing melee phase");
+            check(!world.Magic.TryStart(world, Vector3.UnitZ) &&
+                  !world.Magic.IsCasting && world.Magic.Cooldown == 0 &&
+                  world.Player.Stamina == stamina && world.Melee.Controller.State == state,
+                $"Melee {state} rejects casting without spending stamina or starting cooldown");
+
+            world.Melee.Update(world, Vector3.UnitZ, 1d);
+            check(world.Magic.TryStart(world, Vector3.UnitZ) &&
+                  world.Player.Stamina == stamina - world.Magic.Current.Cost,
+                "Casting becomes available after melee recovery and pays its cost once");
+            check(!world.Melee.TryStart(world), "Incantation also blocks a new melee attack");
+        }
+    }
+
     public static void Run(Action<bool, string> check)
     {
+        CheckMeleeCastingExclusion(check);
         var world = WorldGenerator.Generate();
         var magic = world.Magic;
         check(MagicLanguage.Words.Count == 6 && MagicLanguage.Words.Select(word => word.Id).Distinct().Count() == 6,
