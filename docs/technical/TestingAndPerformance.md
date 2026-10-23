@@ -32,6 +32,13 @@ Systemy możliwe do uruchomienia bez Vulkan:
 - shader compilation;
 - GPU resource lifetime.
 
+Bramka logów testów FSR3/FG (`tools/check-vulkan-validation.py`) wymaga
+pełnego wiersza wyniku wybranego testu z dodatnią liczbą zakończonych kontroli.
+Wynik innego testu nie potwierdza zakończenia sceny, prezentacji ani orientacji.
+Każdy komunikat `Validation Error:` w logu nadal odrzuca cały przebieg.
+Regresje samej bramki działają bez GPU i natywnego providera:
+`python3 -m unittest discover -s tests/tools -p 'test_*.py' -v`.
+
 ### Playtest
 - czytelność;
 - pacing;
