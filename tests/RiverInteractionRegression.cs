@@ -22,6 +22,26 @@ internal static class RiverInteractionRegression
         check(world.WaterInteraction.IsInWater,
             "Player standing inside the carved channel is detected as in water");
 
+        var elevatedWorld = WorldGenerator.Generate();
+        elevatedWorld.SetPlayerPosition(new Vector3(x, 0f, z));
+        var surface = WaterLandscape.WaterLevel(z);
+        elevatedWorld.SetPlayerHeight(surface + 0.2f);
+        elevatedWorld.WaterInteraction.Reset(elevatedWorld.PlayerPosition);
+        elevatedWorld.WaterInteraction.Update(elevatedWorld, 0.2);
+
+        check(!elevatedWorld.WaterInteraction.IsInWater &&
+              elevatedWorld.WaterInteraction.WaterDepth == 0f &&
+              elevatedWorld.WaterInteraction.Wetness == 0f &&
+              elevatedWorld.WaterInteraction.SplashPulse == 0f,
+            "Player above the river surface remains dry without water contact");
+
+        elevatedWorld.SetPlayerHeight(surface - 0.2f);
+        elevatedWorld.WaterInteraction.Update(elevatedWorld, 0.2);
+        check(elevatedWorld.WaterInteraction.IsInWater &&
+              MathF.Abs(elevatedWorld.WaterInteraction.WaterDepth - 0.2f) < 0.001f &&
+              elevatedWorld.WaterInteraction.Wetness > 0f,
+            "Re-entering the river measures immersion from the player's feet");
+
         world.SetPlayerPosition(new Vector3(
             WaterLandscape.CenterX(z + 1f),
             0f,

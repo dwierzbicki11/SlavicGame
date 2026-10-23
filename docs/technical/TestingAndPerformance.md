@@ -19,6 +19,11 @@ Systemy możliwe do uruchomienia bez Vulkan:
 - pogoda jako stan;
 - logika interakcji.
 
+Regresja rzeki (`tests/RiverInteractionRegression.cs`) sprawdza również kontakt
+stóp postaci z lustrem wody: nad powierzchnią postać pozostaje sucha i nie
+generuje rozbryzgów, a po zanurzeniu głębokość kontaktu odpowiada położeniu stóp.
+Głębokość samego koryta pozostaje osobnym pomiarem (`DepthAt`).
+
 ### Integration
 - input + movement;
 - world + AI;

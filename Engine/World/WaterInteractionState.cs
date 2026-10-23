@@ -76,10 +76,14 @@ public sealed class WaterInteractionState
         HeatExposure = world.Campfires.HeatAt(world, position);
         RainExposure = Math.Clamp(world.Weather.RainIntensity, 0f, 1f);
 
-        WaterDepth = DepthAt(world, position);
+        var waterLevel = WaterLandscape.WaterLevel(position.Z);
+        // Channel depth describes the terrain; contact also depends on the
+        // player's feet, which can be above the surface during a jump.
+        WaterDepth = MathF.Min(
+            DepthAt(world, position),
+            MathF.Max(0f, waterLevel - position.Y));
         IsInWater = WaterDepth > 0.03f;
 
-        var waterLevel = WaterLandscape.WaterLevel(position.Z);
         SurfacePosition = new Vector3(
             position.X,
             waterLevel + 0.035f,
