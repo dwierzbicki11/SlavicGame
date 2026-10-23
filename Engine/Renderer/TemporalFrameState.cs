@@ -55,12 +55,14 @@ public sealed class TemporalFrameState
         // consumed by GLSL as column-major data, so View * Projection here is
         // seen by the shader as Projection * View.
         var currentViewProjection = view * jitteredProjection;
-        if (!Matrix4x4.Invert(
+        if (!IsFinite(currentViewProjection) ||
+            !Matrix4x4.Invert(
                 currentViewProjection,
-                out var inverseCurrentViewProjection))
+                out var inverseCurrentViewProjection) ||
+            !IsFinite(inverseCurrentViewProjection))
         {
             throw new InvalidOperationException(
-                "Current camera view-projection matrix is not invertible.");
+                "Current camera view-projection matrix must be finite with a finite inverse.");
         }
 
         var resetHistory = !_hasHistory || _resetRequested;
@@ -134,6 +136,16 @@ public sealed class TemporalFrameState
         projection.M32 += jitterNdc.Y * projection.M34;
         return projection;
     }
+
+    private static bool IsFinite(Matrix4x4 matrix) =>
+        float.IsFinite(matrix.M11) && float.IsFinite(matrix.M12) &&
+        float.IsFinite(matrix.M13) && float.IsFinite(matrix.M14) &&
+        float.IsFinite(matrix.M21) && float.IsFinite(matrix.M22) &&
+        float.IsFinite(matrix.M23) && float.IsFinite(matrix.M24) &&
+        float.IsFinite(matrix.M31) && float.IsFinite(matrix.M32) &&
+        float.IsFinite(matrix.M33) && float.IsFinite(matrix.M34) &&
+        float.IsFinite(matrix.M41) && float.IsFinite(matrix.M42) &&
+        float.IsFinite(matrix.M43) && float.IsFinite(matrix.M44);
 
     private static float Halton(uint index, uint basis)
     {
