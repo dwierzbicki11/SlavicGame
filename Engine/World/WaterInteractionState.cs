@@ -195,7 +195,9 @@ public sealed class WaterInteractionState
         var ground =
             world.Terrain.SampleHeight(position);
 
-        return MathF.Max(0f, waterLevel - ground);
+        // The player's feet can be above the river bed during a jump.
+        // Keep terrain as the lower bound for ground-level position queries.
+        return MathF.Max(0f, waterLevel - MathF.Max(ground, position.Y));
     }
 
     public static float MovementSpeedMultiplierForDepth(
