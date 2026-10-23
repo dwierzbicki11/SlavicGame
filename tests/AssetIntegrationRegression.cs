@@ -171,6 +171,24 @@ internal static class AssetIntegrationRegression
                     WaterLandscape.SurfaceHalfWidth(model.Position.Z)),
             "Rocky riverbank models sit outside the animated water ribbon");
 
+        var compactBanks = RiverbankPropGenerator.Generate(new Terrain(241, 81, 2f));
+        check(compactBanks.Count > 0 && compactBanks.Count < riverbankA.Count &&
+                compactBanks.All(model => MathF.Abs(model.Position.X) <= 240f &&
+                                          MathF.Abs(model.Position.Z) <= 80f),
+            "Riverbank model origins stay within rectangular terrain bounds");
+        var expectedBanks = riverbankA.Where(model =>
+            MathF.Abs(model.Position.X) <= 240f && MathF.Abs(model.Position.Z) <= 80f).ToArray();
+        check(compactBanks.Count == expectedBanks.Length &&
+                compactBanks.Zip(expectedBanks).All(pair =>
+                    pair.First.Id == pair.Second.Id &&
+                    pair.First.Position.X == pair.Second.Position.X &&
+                    pair.First.Position.Z == pair.Second.Position.Z &&
+                    pair.First.Scale == pair.Second.Scale &&
+                    pair.First.YawRadians == pair.Second.YawRadians),
+            "Clipping riverbanks preserves shared candidate identities and appearance");
+        check(RiverbankPropGenerator.Generate(new Terrain(33, 33, 2f)).Count == 0,
+            "Terrain without the river receives no riverbank models");
+
         var clutterA = GroundClutterGenerator.Generate(world.Terrain);
         var clutterB = GroundClutterGenerator.Generate(world.Terrain);
         check(clutterA.Count == clutterB.Count && clutterA.Count >= 300,
