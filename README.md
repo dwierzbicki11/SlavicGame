@@ -465,6 +465,8 @@ The first production R0 side-quest slot is now playable directly from field disc
 
 R0 settlers now apply deterministic local separation after their scheduled routine motion. Nearby NPCs yield around each other and moving settlers keep personal space from the player, while a dialogue speaker remains fixed. The pass stays deliberately lightweight and reuses normal world collision resolution instead of introducing a full navmesh.
 
+For two NPCs at exactly the same position, the fallback separation direction is tied to their IDs and remains consistent when their actor-list order changes, including when one is the active dialogue speaker.
+
 
 ### Visible NPC workstations
 
