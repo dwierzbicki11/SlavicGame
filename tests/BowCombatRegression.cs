@@ -276,6 +276,32 @@ internal static class BowCombatRegression
         check(wallWorld.Bow.Projectiles.Count == 0 && wallWorld.Bow.RecoverableArrows.Count == 1,
             "Obstacle volumes stop arrows before they pass through a hut");
 
+        // The launch offset must not teleport an arrow through a nearby corner.
+        var cornerWorld = WorldGenerator.Generate();
+        var cornerWall = cornerWorld.Obstacles.First(item => item.Id == "village-hut-a");
+        var cornerOrigin = cornerWall.Position + new Vector3(
+            -cornerWall.HalfSize.X + 0.2f,
+            cornerWall.Height * 0.5f,
+            -cornerWall.HalfSize.Y - 0.1f);
+        cornerWorld.Bow.SetAiming(cornerWorld, true);
+        cornerWorld.Bow.TryStartDraw(cornerWorld);
+        cornerWorld.Bow.Update(cornerWorld, 1.3);
+        var cornerAmmo = cornerWorld.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId);
+        check(cornerWorld.Bow.TryRelease(cornerWorld, cornerOrigin,
+                Vector3.Normalize(new Vector3(-1f, 0f, 1f))),
+            "Shot into a nearby corner still releases successfully");
+        check(cornerWorld.Bow.Projectiles.Count == 0 &&
+              cornerWorld.Bow.RecoverableArrows.Count == 1,
+            "Launch segment collision prevents an arrow skipping through a hut corner");
+        var cornerImpact = cornerWorld.Bow.RecoverableArrows.Single().Position;
+        check(MathF.Abs(cornerImpact.Z - (cornerWall.Position.Z - cornerWall.HalfSize.Y)) < 0.001f &&
+              cornerImpact.X > cornerWall.Position.X - cornerWall.HalfSize.X,
+            "Launch collision sticks the arrow at the first wall surface");
+        cornerWorld.Bow.Update(cornerWorld, 0.1);
+        check(cornerWorld.Bow.RecoverableArrows.Count == 1 &&
+              cornerWorld.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == cornerAmmo - 1,
+            "Launch collision consumes one arrow and is not resolved twice");
+
         var blocked = WorldGenerator.Generate();
         blocked.Bow.SetAiming(blocked, true);
         blocked.Bow.TryStartDraw(blocked);
