@@ -137,6 +137,18 @@ Mgła używana jako mechanika musi zachować czytelność również na niższych
 
 Renderer jest prototypem. Dokument nie deklaruje gotowości produkcyjnej ani końcowych wymagań sprzętowych.
 
+### Kierunek obserwacji dla odbłysków terenu
+
+Shader terenu wyznacza kierunek obserwacji w przestrzeni świata jako
+`cameraPosition - worldPosition`. Pozycja kamery pochodzi z odwrotności
+macierzy widoku w vertex shaderze, zgodnie ze ścieżką modeli PBR.
+Odbłyski mokrego gruntu reagują dzięki temu na położenie kamery zamiast
+na początek układu świata. Zmiana dodaje jeden interpolator `vec3` i obliczenie
+w vertex shaderze, bez nowych tekstur lub deskryptorów. Ustawienia wyłączające
+specular/PBR zachowują dotychczasową ścieżkę; zmiana nie wpływa na gameplay.
+Weryfikacja: kompilacja shaderów Vulkan oraz kontrola wizualna mokrego terenu
+z kilku pozycji kamery (także daleko od początku świata).
+
 
 ## Vulkan fullscreen orientation
 
