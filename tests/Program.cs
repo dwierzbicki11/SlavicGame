@@ -298,6 +298,23 @@ Check(relationships.Get("herbalist", RelationshipKind.Trust) == 12,
     "Character relationship state");
 
 var nightSchedule = new NpcScheduleSlot(19, 6, "old-village", "night-watch");
+var allDaySchedule = new NpcScheduleSlot(0, 24, "old-village", "watch");
+Check(new[] { -1d, 0d, 6d, 12d, 23.999d, 24d, 48d }.All(allDaySchedule.Contains),
+    "All-day NPC schedule includes midnight and normalized hours");
+Check(new NpcScheduleSlot(6, 30, "old-village", "watch").Contains(2),
+    "All-day NPC schedule supports an offset day boundary");
+Check(!new NpcScheduleSlot(6, 6, "old-village", "watch").Contains(6),
+    "Equal NPC schedule bounds remain empty");
+Check(!allDaySchedule.Contains(double.NaN) && !allDaySchedule.Contains(double.PositiveInfinity) &&
+      !new NpcScheduleSlot(double.NaN, 24, "old-village", "watch").Contains(12) &&
+      !new NpcScheduleSlot(0, double.PositiveInfinity, "old-village", "watch").Contains(12),
+    "NPC schedules reject non-finite hours and bounds");
+Check(nightSchedule.Contains(19) && !nightSchedule.Contains(6),
+    "Overnight NPC schedule includes its start and excludes its end");
+var allDayNpc = new NpcDefinition("all-day-watch", NpcRole.CommunityGuard, [allDaySchedule]);
+Check(ReferenceEquals(allDayNpc.GetSchedule(0), allDaySchedule) &&
+      ReferenceEquals(allDayNpc.GetSchedule(12), allDaySchedule),
+    "NPC definition selects its all-day activity at midnight and noon");
 Check(nightSchedule.Contains(23) && nightSchedule.Contains(2) && !nightSchedule.Contains(12),
     "NPC schedule supports overnight ranges");
 Check(nightSchedule.Contains(19) && !nightSchedule.Contains(6) &&

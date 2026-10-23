@@ -38,6 +38,11 @@ public sealed record NpcScheduleSlot(
         hour = ((hour % 24.0) + 24.0) % 24.0;
         var start = ((StartHour % 24.0) + 24.0) % 24.0;
         var end = ((EndHour % 24.0) + 24.0) % 24.0;
+        // Distinct bounds a whole day apart describe an all-day activity.
+        // Identical bounds remain an empty interval.
+        if (start == end)
+            return StartHour != EndHour;
+
         return start <= end
             ? hour >= start && hour < end
             : hour >= start || hour < end;
