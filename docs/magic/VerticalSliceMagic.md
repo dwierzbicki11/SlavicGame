@@ -2,6 +2,13 @@
 
 Dokument uszczegóławia jeden czar i jeden rytuał pierwszego vertical slice. Całość mechaniczna jest F.
 
+## Wybór czaru podczas inkantacji — runtime
+
+Od rozpoczęcia do zakończenia lub przerwania inkantacji nie można zmienić wybranego czaru,
+ani przez `SelectNext`, ani przez `SelectSpell`. Efekt odpowiada dzięki temu opłaconemu
+kosztowi staminy i czasowi odnowienia. Po zakończeniu inkantacji wybór jest ponownie
+dostępny, także podczas cooldownu.
+
 ## Czar: spell.reveal-trace
 
 **Robocza nazwa:** Odsłonięcie śladu  
@@ -206,6 +213,10 @@ Sterowanie:
 - `L` — spróbuj nauczyć się dostępnego czaru w bieżącym miejscu;
 - `Q` — zmienia tylko pomiędzy już poznanymi czarami;
 - `F` — nie pozwala rzucić niepoznanego czaru.
+
+Podczas inkantacji wybór czaru jest zablokowany zarówno dla `Q`, jak i bezpośredniego
+`SelectSpell` (zwraca `false`). Rozpoczęty czar zachowuje swój koszt, cooldown i efekt;
+wybór jest ponownie dostępny po zakończeniu lub przerwaniu inkantacji.
 
 HUD nie pokazuje inkantacji ani kosztu czaru przed jego poznaniem.
 
