@@ -229,6 +229,29 @@ internal static class BowCombatRegression
         check(Vector3.Distance(slow, fast) < 0.005f,
             "Arrow trajectory is independent of 10 versus 120 FPS");
 
+        foreach (var step in new[] { 0.001, 1.0 / 90.0 })
+        {
+            var close = WorldGenerator.Generate();
+            var target = close.Enemies.First();
+            var center = target.Position + Vector3.UnitY * 0.78f;
+            // Release offsets the arrow by +0.42 Z and -0.08 Y.
+            var closeOrigin = center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+            var health = target.Health;
+            var ammoBefore = close.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId);
+            close.Bow.SetAiming(close, true);
+            check(close.Bow.TryStartDraw(close) &&
+                  close.Bow.TryRelease(close, closeOrigin, Vector3.UnitZ),
+                "Point-blank shot releases inside the target collision volume");
+            close.Bow.Update(close, step);
+            check(target.Health < health && close.Bow.Projectiles.Count == 0,
+                "Arrow starting inside a target hits immediately even at high FPS");
+            var healthAfter = target.Health;
+            close.Bow.Update(close, 0.1);
+            check(target.Health == healthAfter &&
+                  close.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == ammoBefore - 1,
+                "Point-blank impact damages once and consumes exactly one arrow");
+        }
+
         var wounded = WorldGenerator.Generate();
         var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);
         wounded.Wildlife.TryDamage(wounded, deer.Id, 20f);

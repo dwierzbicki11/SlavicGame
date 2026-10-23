@@ -108,6 +108,44 @@ internal static class NpcCrowdSteeringRegression
                 NpcCrowdSteering.PlayerSpacing - 0.01f,
             "Moving NPC keeps personal space from the player");
 
+        world.SetPlayerPosition(new Vector3(400f, 0f, 400f));
+        foreach (var workerFirst in new[] { true, false })
+        {
+            var worker = CreateActor(world, "worker", 60f, -40f, moving: false);
+            var walker = CreateActor(world, "passer", 60f, -40f, moving: true);
+            var workstationCrowd = workerFirst
+                ? new List<NpcWorldActor> { worker, walker }
+                : new List<NpcWorldActor> { walker, worker };
+
+            NpcCrowdSteering.Resolve(world, workstationCrowd);
+
+            check(workstationCrowd.Single(actor => actor.Id == worker.Id) == worker,
+                $"Stationary worker retains its workstation pose (worker first: {workerFirst})");
+            check(HorizontalDistance(workstationCrowd[0], workstationCrowd[1]) >=
+                    NpcCrowdSteering.MinimumSpacing - 0.01f,
+                $"Passer yields all required space to the stationary worker (worker first: {workerFirst})");
+
+            var protectedCrowd = workerFirst
+                ? new List<NpcWorldActor> { worker, walker }
+                : new List<NpcWorldActor> { walker, worker };
+            NpcCrowdSteering.Resolve(world, protectedCrowd, walker.Id);
+
+            check(protectedCrowd.Single(actor => actor.Id == walker.Id) == walker &&
+                  HorizontalDistance(protectedCrowd[0], protectedCrowd[1]) >=
+                    NpcCrowdSteering.MinimumSpacing - 0.01f,
+                $"Dialogue protection takes precedence over stationary worker priority (worker first: {workerFirst})");
+        }
+
+        var stationaryCrowd = new List<NpcWorldActor>
+        {
+            CreateActor(world, "idle-a", 60f, -40f, moving: false),
+            CreateActor(world, "idle-b", 60f, -40f, moving: false)
+        };
+        NpcCrowdSteering.Resolve(world, stationaryCrowd);
+        check(HorizontalDistance(stationaryCrowd[0], stationaryCrowd[1]) >=
+                NpcCrowdSteering.MinimumSpacing - 0.01f,
+            "Two stationary NPCs still separate instead of locking in overlap");
+
         world.Time.SetTimeOfDay(10.0);
         world.Weather.SetCondition(
             WeatherKind.Clear,
