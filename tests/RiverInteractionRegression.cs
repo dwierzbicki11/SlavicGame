@@ -11,6 +11,25 @@ internal static class RiverInteractionRegression
     {
         ArgumentNullException.ThrowIfNull(check);
 
+        check(RiverbankPropGenerator.Generate(new Terrain(33, 33, 4f)).Count == 0,
+            "Terrain without a river contains no riverbank rocks beyond its edges");
+
+        foreach (var terrain in new[] { new Terrain(161, 33, 4f), new Terrain(101, 129, 4f) })
+        {
+            var rocks = RiverbankPropGenerator.Generate(terrain);
+            var extentX = (terrain.Width - 1) * terrain.CellSize * 0.5f;
+            var extentZ = (terrain.Depth - 1) * terrain.CellSize * 0.5f;
+            check(rocks.Count > 0 && rocks.All(rock =>
+                    MathF.Abs(rock.Position.X) <= extentX &&
+                    MathF.Abs(rock.Position.Z) <= extentZ),
+                "Riverbank rocks stay on rectangular terrain where the river intersects it");
+            check(rocks.All(rock => MathF.Abs(rock.Position.Y -
+                    (terrain.SampleHeight(rock.Position) - 0.05f)) < 0.0001f),
+                "Riverbank rocks remain grounded after filtering terrain boundaries");
+            check(rocks.SequenceEqual(RiverbankPropGenerator.Generate(terrain)),
+                "Riverbank placement remains deterministic on smaller terrain");
+        }
+
         var world = WorldGenerator.Generate();
         var z = 0f;
         var x = WaterLandscape.CenterX(z);
