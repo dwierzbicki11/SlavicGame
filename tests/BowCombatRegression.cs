@@ -265,6 +265,25 @@ internal static class BowCombatRegression
         check(wounded.Wildlife.Actors.Single(actor => actor.Id == deer.Id).Health == 0f,
             "Melee wounds and bow hits use one shared wildlife health pool");
 
+        var closeWorld = WorldGenerator.Generate();
+        var closeEnemy = closeWorld.Enemies.First();
+        var closeCenter = closeEnemy.Position + Vector3.UnitY * 0.78f;
+        // Release offsets the projectile by +0.42 forward and -0.08 vertically.
+        var closeOrigin = closeCenter - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+        closeWorld.Bow.SetAiming(closeWorld, true);
+        check(closeWorld.Bow.TryStartDraw(closeWorld), "Point-blank bow draw starts");
+        closeWorld.Bow.Update(closeWorld, 1.3);
+        check(closeWorld.Bow.TryRelease(closeWorld, closeOrigin, Vector3.UnitZ),
+            "Point-blank arrow releases inside target collision volume");
+        var closeHealth = closeEnemy.Health;
+        closeWorld.Bow.Update(closeWorld, 0.001);
+        check(closeEnemy.Health < closeHealth && closeWorld.Bow.Projectiles.Count == 0,
+            "Arrow starting inside a target hits immediately without waiting to exit");
+        var healthAfterCloseHit = closeEnemy.Health;
+        closeWorld.Bow.Update(closeWorld, 0.1);
+        check(closeEnemy.Health == healthAfterCloseHit,
+            "Point-blank arrow applies damage exactly once");
+
         var wallWorld = WorldGenerator.Generate();
         var wall = wallWorld.Obstacles.First(item => item.Id == "village-hut-a");
         var wallOrigin = wall.Position + new Vector3(0f, wall.Height * 0.5f, -wall.HalfSize.Y - 2f);

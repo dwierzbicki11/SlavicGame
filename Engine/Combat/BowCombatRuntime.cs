@@ -586,6 +586,11 @@ public sealed class BowCombatRuntime
         var segmentLengthSquared =
             segment.LengthSquared();
 
+        var offset = from - center;
+        // An overlapping projectile has already hit, even if this step stays inside.
+        if (offset.LengthSquared() <= radius * radius)
+            return true;
+
         if (segmentLengthSquared < 0.0000001f)
             return false;
 
