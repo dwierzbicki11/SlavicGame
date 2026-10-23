@@ -43,6 +43,15 @@ internal static class NpcCrowdSteeringRegression
                     pair.Second.Position) < 0.000001f),
             "Crowd steering is deterministic and cannot jitter from random pushes");
 
+        var reversedActors = new List<NpcWorldActor> { overlapB, overlapA };
+        NpcCrowdSteering.Resolve(world, reversedActors);
+
+        check(
+            deterministicA.All(actor => Vector3.DistanceSquared(
+                actor.Position,
+                reversedActors.Single(other => other.Id == actor.Id).Position) < 0.000001f),
+            "Coincident NPCs separate in the same direction regardless of pair enumeration order");
+
         var speaker = CreateActor(
             world,
             "speaker",
