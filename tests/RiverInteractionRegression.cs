@@ -22,6 +22,32 @@ internal static class RiverInteractionRegression
         check(world.WaterInteraction.IsInWater,
             "Player standing inside the carved channel is detected as in water");
 
+        var groundedPosition = world.PlayerPosition;
+        var waterLevel = WaterLandscape.WaterLevel(z);
+        check(WaterInteractionState.DepthAt(world,
+                  groundedPosition with { Y = waterLevel }) == 0f,
+            "Feet exactly on river surface have zero immersion");
+        world.SetPlayerHeight(waterLevel - 0.2f);
+        world.WaterInteraction.Update(world, 0.1);
+        check(MathF.Abs(world.WaterInteraction.WaterDepth - 0.2f) < 0.001f,
+            "Partially submerged jumping player uses feet height for immersion");
+
+        world.WaterInteraction.Reset(world.PlayerPosition);
+        world.SetPlayerHeight(waterLevel + 0.1f);
+        world.WaterInteraction.Update(world, 0.1);
+        check(!world.WaterInteraction.IsInWater &&
+              world.WaterInteraction.WaterDepth == 0f &&
+              world.WaterInteraction.Wetness == 0f &&
+              world.WaterInteraction.MovementSpeedMultiplier == 1f &&
+              WaterInteractionState.CurrentSpeedForDepth(world.WaterInteraction.WaterDepth) == 0f,
+            "Jumping above river surface clears immersion, wetting and current penalties");
+
+        world.SetPlayerPosition(groundedPosition);
+        world.WaterInteraction.Reset(world.PlayerPosition);
+        world.WaterInteraction.Update(world, 0.1);
+        check(world.WaterInteraction.IsInWater && world.WaterInteraction.Wetness > 0f,
+            "Landing back in river restores water contact and wetting");
+
         world.SetPlayerPosition(new Vector3(
             WaterLandscape.CenterX(z + 1f),
             0f,
