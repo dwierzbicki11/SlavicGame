@@ -138,8 +138,7 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
             !float.IsFinite(cameraFar) || cameraFar <= cameraNear ||
             !float.IsFinite(verticalFov) || verticalFov <= 0 || verticalFov >= MathF.PI)
             throw new ArgumentException("FG requires finite frame timing and a valid camera projection.");
-        if (!Matrix4x4.Invert(frame.View, out var inverseView))
-            throw new ArgumentException("FG camera view must be invertible.", nameof(frame));
+        var inverseView = ValidateCamera(frame);
         EnsureSize(depth.Description.Width, depth.Description.Height,
             output.Description.Width, output.Description.Height, output.Description.Format);
 
@@ -202,6 +201,23 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
         _lastFrameId = frameId;
         return !reset;
     }
+
+    // Validate before allocating a context or recording commands: NaN matrices
+    // can report successful inversion and would otherwise reach the AMD SDK.
+    internal static Matrix4x4 ValidateCamera(in TemporalFrameData frame)
+    {
+        if (!float.IsFinite(frame.JitterPixels.X) || !float.IsFinite(frame.JitterPixels.Y) ||
+            !IsFinite(frame.View) || !Matrix4x4.Invert(frame.View, out var inverseView) ||
+            !IsFinite(inverseView))
+            throw new ArgumentException("FG requires finite jitter and a finite, invertible camera view.", nameof(frame));
+        return inverseView;
+    }
+
+    private static bool IsFinite(in Matrix4x4 m) =>
+        float.IsFinite(m.M11) && float.IsFinite(m.M12) && float.IsFinite(m.M13) && float.IsFinite(m.M14) &&
+        float.IsFinite(m.M21) && float.IsFinite(m.M22) && float.IsFinite(m.M23) && float.IsFinite(m.M24) &&
+        float.IsFinite(m.M31) && float.IsFinite(m.M32) && float.IsFinite(m.M33) && float.IsFinite(m.M34) &&
+        float.IsFinite(m.M41) && float.IsFinite(m.M42) && float.IsFinite(m.M43) && float.IsFinite(m.M44);
 
     public void RequestReset()
     {
