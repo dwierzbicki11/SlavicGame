@@ -138,8 +138,7 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
             !float.IsFinite(cameraFar) || cameraFar <= cameraNear ||
             !float.IsFinite(verticalFov) || verticalFov <= 0 || verticalFov >= MathF.PI)
             throw new ArgumentException("FG requires finite frame timing and a valid camera projection.");
-        if (!Matrix4x4.Invert(frame.View, out var inverseView))
-            throw new ArgumentException("FG camera view must be invertible.", nameof(frame));
+        var inverseView = ValidateCamera(frame);
         EnsureSize(depth.Description.Width, depth.Description.Height,
             output.Description.Width, output.Description.Height, output.Description.Format);
 
@@ -214,6 +213,27 @@ internal sealed class FidelityFxFrameGeneration : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         _commands.WaitAll();
     }
+
+    // Validate before allocating a context or beginning a command buffer: Invert
+    // can report success for NaN inputs and return a non-finite inverse.
+    internal static Matrix4x4 ValidateCamera(in TemporalFrameData frame)
+    {
+        if (!float.IsFinite(frame.JitterPixels.X) || !float.IsFinite(frame.JitterPixels.Y) ||
+            !IsFinite(frame.View) || !Matrix4x4.Invert(frame.View, out var inverseView) ||
+            !IsFinite(inverseView))
+            throw new ArgumentException("FG camera view and jitter must be finite and the view invertible.", nameof(frame));
+        return inverseView;
+    }
+
+    private static bool IsFinite(in Matrix4x4 matrix) =>
+        float.IsFinite(matrix.M11) && float.IsFinite(matrix.M12) &&
+        float.IsFinite(matrix.M13) && float.IsFinite(matrix.M14) &&
+        float.IsFinite(matrix.M21) && float.IsFinite(matrix.M22) &&
+        float.IsFinite(matrix.M23) && float.IsFinite(matrix.M24) &&
+        float.IsFinite(matrix.M31) && float.IsFinite(matrix.M32) &&
+        float.IsFinite(matrix.M33) && float.IsFinite(matrix.M34) &&
+        float.IsFinite(matrix.M41) && float.IsFinite(matrix.M42) &&
+        float.IsFinite(matrix.M43) && float.IsFinite(matrix.M44);
 
     private void EnsureSize(uint renderWidth, uint renderHeight,
         uint displayWidth, uint displayHeight, uint format)
