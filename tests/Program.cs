@@ -41,6 +41,7 @@ VerticalSliceQuestInteractionRegression.Run(Check);
 SwampPredatorEncounterRegression.Run(Check);
 SwampApparitionRegression.Run(Check);
 WorldItemVisualRegression.Run(Check);
+RiverbankPropRegression.Run(Check);
 RiverInteractionRegression.Run(Check);
 WeatherVisualRegression.Run(Check);
 CampfireInteractionRegression.Run(Check);
