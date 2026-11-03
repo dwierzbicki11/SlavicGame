@@ -80,6 +80,36 @@ internal static class NpcCrowdSteeringRegression
                 NpcCrowdSteering.MinimumSpacing - 0.01f,
             "Other NPC yields around the protected dialogue speaker");
 
+        foreach (var workerFirst in new[] { true, false })
+        {
+            var worker = CreateActor(world, "worker", 60f, -40f, moving: false);
+            var walker = CreateActor(world, "walker", 60.2f, -40f, moving: true);
+            var workstationActors = workerFirst
+                ? new List<NpcWorldActor> { worker, walker }
+                : new List<NpcWorldActor> { walker, worker };
+
+            NpcCrowdSteering.Resolve(world, workstationActors);
+
+            check(
+                workstationActors.Single(actor => actor.Id == "worker").Position == worker.Position,
+                $"Stationary worker stays at the workstation (workerFirst={workerFirst})");
+            check(
+                HorizontalDistance(workstationActors[0], workstationActors[1]) >=
+                    NpcCrowdSteering.MinimumSpacing - 0.01f,
+                $"Walking NPC yields fully to stationary worker (workerFirst={workerFirst})");
+        }
+
+        var stationaryActors = new List<NpcWorldActor>
+        {
+            CreateActor(world, "worker-a", 60f, -40f, moving: false),
+            CreateActor(world, "worker-b", 60.2f, -40f, moving: false)
+        };
+        var stationaryBefore = stationaryActors.ToArray();
+        NpcCrowdSteering.Resolve(world, stationaryActors);
+        check(
+            stationaryActors.SequenceEqual(stationaryBefore),
+            "Crowd steering preserves authored poses when both NPCs are stationary");
+
         world.SetPlayerPosition(new Vector3(72f, 0f, -40f));
         var movingThroughPlayer = new List<NpcWorldActor>
         {
