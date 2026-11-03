@@ -171,17 +171,23 @@ public sealed class BowCombatRuntime
         var velocity = Lerp(MinimumVelocity, MaximumVelocity, draw);
         var damage = Lerp(MinimumDamage, MaximumDamage, draw);
 
-        _projectiles.Add(new Projectile
+        var projectile = new Projectile
         {
             Id = _nextId++,
             Position = origin + direction * 0.42f - Vector3.UnitY * 0.08f,
             Velocity = direction * velocity,
             Damage = damage,
             Age = 0f
-        });
+        };
+
+        Message = $"STRZAL / NACIAG {draw * 100f:0}%";
+        // Sweep the launch offset too, so nearby geometry cannot be skipped.
+        if (TryFindHit(world, origin, projectile.Position, out var hit))
+            ResolveHit(world, projectile, origin, projectile.Position, hit);
+        else
+            _projectiles.Add(projectile);
 
         RefreshViews();
-        Message = $"STRZAL / NACIAG {draw * 100f:0}%";
         return true;
     }
 
