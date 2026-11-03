@@ -55,6 +55,28 @@ internal static class NpcWeatherBehaviorRegression
               shrineKeeper.Activity == "tend-shrine",
             "Core quest NPC schedules are not silently overridden by ambient storm behavior");
 
+        foreach (var hour in new[] { 23.0, 0.0, 4.0 })
+        {
+            world.Time.SetTimeOfDay(hour);
+            world.NpcWorld.Update(world);
+            var resting = world.NpcWorld.Actors
+                .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+                .ToArray();
+
+            check(resting.Length == 14 &&
+                  resting.All(actor => actor.Activity == "rest" && !actor.IsMoving),
+                $"Storm preserves all settlers' scheduled rest at {hour}:00");
+        }
+
+        world.Time.SetTimeOfDay(5);
+        world.NpcWorld.Update(world);
+        check(world.NpcWorld.Find("settler-fisher-01")?.Activity ==
+                  NpcSituationalBehavior.StormShelterSwampActivity &&
+              world.NpcWorld.Find("settler-farmer-01")?.Activity == "rest",
+            "At dawn only the working fisher seeks storm shelter while the farmer keeps resting");
+
+        world.Time.SetTimeOfDay(10);
+
         world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
         world.NpcWorld.Update(world);
 
@@ -67,5 +89,26 @@ internal static class NpcWeatherBehaviorRegression
               resumed.Any(actor => actor.Activity == "field-work") &&
               resumed.Any(actor => actor.Activity == "market-trade"),
             "Settlers resume authored work routines after the storm ends");
+
+        foreach (var hour in new[] { 23.0, 2.0 })
+        {
+            world.Time.SetTimeOfDay(hour);
+            world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
+            world.NpcWorld.Update(world);
+            var resting = world.NpcWorld.Actors
+                .Where(actor => actor.Id.StartsWith("settler-", StringComparison.Ordinal))
+                .ToArray();
+
+            world.Weather.SetCondition(WeatherKind.Storm, immediate: true);
+            world.NpcWorld.Update(world);
+
+            check(resting.Length == 14 && resting.All(before =>
+                    before.Activity == "rest" &&
+                    world.NpcWorld.Find(before.Id) is { } after &&
+                    after.Activity == "rest" &&
+                    !after.IsMoving &&
+                    after.Position == before.Position),
+                $"Storm preserves all settlers' home rest at {hour}:00");
+        }
     }
 }

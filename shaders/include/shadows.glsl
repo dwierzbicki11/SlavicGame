@@ -6,7 +6,7 @@ float SampleSunShadow(
     sampler shadowSampler,
     mat4 lightViewProjection,
     vec3 worldPosition,
-    vec3 worldNormal,
+    vec3 surfaceNormal,
     vec3 sunDirection)
 {
     vec4 lightClip =
@@ -25,8 +25,10 @@ float SampleSunShadow(
         return 1.0;
     }
 
+    // Bias follows the underlying surface, not normal-map detail: texture
+    // normals do not change the geometry stored in the shadow depth map.
     float ndotl = max(
-        dot(normalize(worldNormal), normalize(sunDirection)),
+        dot(normalize(surfaceNormal), normalize(sunDirection)),
         0.0);
     float bias = max(0.00022, 0.00110 * (1.0 - ndotl));
 

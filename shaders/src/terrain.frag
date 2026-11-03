@@ -300,7 +300,7 @@ void main()
             ShadowSampler,
             LightViewProjection,
             fsin_WorldPosition,
-            normal,
+            baseNormal,
             sunDirection);
     }
     float directShadow = cloudShadow * geometryShadow;
