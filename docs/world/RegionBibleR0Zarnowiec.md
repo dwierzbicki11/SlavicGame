@@ -284,7 +284,7 @@ Oba brzegi dostają deterministyczny pas `riverbank_rocky_r0_01.glb`. Te modele 
 Po przebudowie koryta rzeka ma również lekką warstwę interakcji i ambience.
 
 ### Player ripples
-- `WaterInteractionState` wykrywa, czy gracz stoi wewnątrz rzeczywistego wet ribbonu i czy grunt jest pod lokalnym poziomem wody;
+- `WaterInteractionState` wykrywa, czy gracz stoi wewnątrz rzeczywistego wet ribbonu i czy grunt jest pod lokalnym poziomem wody; zanurzenie uwzględnia wysokość stóp gracza, więc nad taflą podczas skoku nie narastają przemoczenie ani efekty brodzenia;
 - intensywność zależy od poziomej prędkości gracza;
 - `WaterInteractionMesh` rysuje maksymalnie trzy rozszerzające się ringi po 24 segmenty;
 - poza wodą geometria ripple nie jest generowana.

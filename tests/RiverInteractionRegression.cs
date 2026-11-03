@@ -15,6 +15,25 @@ internal static class RiverInteractionRegression
         var z = 0f;
         var x = WaterLandscape.CenterX(z);
 
+        var waterLevel = WaterLandscape.WaterLevel(z);
+        var aboveWater = new Vector3(x, waterLevel + 0.5f, z);
+        check(WaterInteractionState.DepthAt(world, aboveWater) == 0f &&
+              WaterInteractionState.CurrentVelocityAt(world, aboveWater) == Vector3.Zero,
+            "Feet above the river surface have no immersion or current");
+        check(MathF.Abs(WaterInteractionState.DepthAt(
+                  world, new Vector3(x, waterLevel - 0.2f, z)) - 0.2f) < 0.001f,
+            "Partial immersion measures water above the feet rather than above the bed");
+
+        world.SetPlayerPosition(aboveWater);
+        world.SetPlayerHeight(aboveWater.Y);
+        world.WaterInteraction.Reset(world.PlayerPosition);
+        world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
+        world.WaterInteraction.Update(world, 0.2);
+        check(!world.WaterInteraction.IsInWater &&
+              world.WaterInteraction.Wetness == 0f &&
+              world.WaterInteraction.SplashPulse == 0f,
+            "Player above the river stays dry and produces no wading splash");
+
         world.SetPlayerPosition(new Vector3(x, 0f, z));
         world.WaterInteraction.Reset(world.PlayerPosition);
         world.WaterInteraction.Update(world, 0.1);
