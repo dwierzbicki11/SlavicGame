@@ -12,6 +12,7 @@ layout(location = 1) out vec3 fsin_WorldNormal;
 layout(location = 2) out vec3 fsin_PrimaryWeights;
 layout(location = 3) out vec3 fsin_SecondaryWeights;
 layout(location = 4) out float fsin_Distance;
+layout(location = 5) out vec3 fsin_CameraPosition;
 
 void main()
 {
@@ -23,4 +24,5 @@ void main()
     fsin_PrimaryWeights = PrimaryWeights;
     fsin_SecondaryWeights = SecondaryWeights;
     fsin_Distance = length(viewPosition.xyz);
+    fsin_CameraPosition = inverse(View)[3].xyz;
 }
