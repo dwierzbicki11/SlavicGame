@@ -145,6 +145,16 @@ Mesa lavapipe. They do not establish physical-monitor cadence, input feel,
 visual quality or FPS on a Ryzen 5 5600G/Vega 7; those remain real-hardware
 validation tasks.
 
+The CI log gate (`tools/check-vulkan-validation.py`) requires the selected
+scene, presentation or orientation proof to report a positive check count
+and `checks passed;` on its own summary line. A partial heading combined with
+another proof's result is rejected, as is any `Validation Error:` in the log.
+Run the gate's GPU-independent regressions locally with:
+
+```bash
+python3 -m unittest discover -s tests -p test_vulkan_validation.py -v
+```
+
 ## UI behavior
 
 The graphics menu exposes **BILINEAR**, **FSR1** and **FSR3**, plus

@@ -129,7 +129,11 @@ public sealed class WildlifeTrackTrailState
             while (accumulated >= stride)
             {
                 accumulated -= stride;
-                TryStamp(world, actor, forward);
+                // Place each stride along the segment, including the distance
+                // carried over from the previous update.
+                var stampPosition = actor.Position -
+                    new Vector3(forward.X, 0f, forward.Y) * accumulated;
+                TryStamp(world, actor, stampPosition, forward);
             }
 
             _distance[actor.Id] = accumulated;
@@ -179,9 +183,10 @@ public sealed class WildlifeTrackTrailState
     private void TryStamp(
         WorldState world,
         WildlifeWorldActor actor,
+        Vector3 position,
         Vector2 forward)
     {
-        var position = actor.Position;
+        position.Y = world.Terrain.SampleHeight(position);
 
         if (WaterInteractionState.DepthAt(world, position) > 0.035f)
             return;
