@@ -274,6 +274,10 @@ Rzeka nie używa już jednej lewitującej płaszczyzny na stałej wysokości.
 - suchy shoulder brzegu, który wraca do oryginalnego terenu zamiast być wciskany pod wodę;
 - powierzchnię wody węższą od pełnego profilu koryta.
 
+Koryto i pas przybrzeżny tylko obniżają teren. Naturalne zagłębienia poniżej
+poziomu brzegu zachowują swoją wysokość, aby na granicy tafli nie powstawał
+skok profilu. Testy regresji sprawdzają oba brzegi, także na wysokości brodu R0.
+
 Woda jest generowana jako 5-kolumnowy ribbon co 4 m. Dwa przesuwające się downstream pasma fazy zmieniają kolor i dają niewielkie przemieszczenie wysokości, więc przepływ jest widoczny bez kosztownych odbić/SSR.
 
 Oba brzegi dostają deterministyczny pas `riverbank_rocky_r0_01.glb`. Te modele używają short-range cullingu, dzięki czemu wizualne koryto nie obciąża mocno słabszych iGPU.

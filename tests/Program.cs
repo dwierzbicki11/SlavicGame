@@ -86,6 +86,23 @@ Check(WaterLandscape.ShapeHeight(
     "dry bank rises above the water instead of being forced underneath it");
 Check(WaterLandscape.ShapeHeight(0f, 0f, 4f) == 4f,
     "river preserves distant spawn terrain");
+foreach (var z in new[] { -500f, WaterLandscape.R0FordZ, 0f, 500f })
+{
+    var lowTerrain = WaterLandscape.WaterLevel(z) - 2f;
+    foreach (var side in new[] { -1f, 1f })
+    {
+        var edgeX = WaterLandscape.CenterX(z) + side * WaterLandscape.SurfaceHalfWidth(z);
+        var inside = WaterLandscape.ShapeHeight(edgeX - side * 0.01f, z, lowTerrain);
+        var outside = WaterLandscape.ShapeHeight(edgeX + side * 0.01f, z, lowTerrain);
+        Check(MathF.Abs(inside - outside) < 0.001f,
+            "river shore stays continuous across the wet edge on naturally low terrain");
+        foreach (var distance in new[] { 0.01f, 2f, 4f, 7.99f, 8f })
+        {
+            Check(WaterLandscape.ShapeHeight(edgeX + side * distance, z, lowTerrain) <= lowTerrain,
+                "river shoulder never raises naturally low terrain");
+        }
+    }
+}
 Check(WaterLandscape.WaterLevel(500f) < WaterLandscape.WaterLevel(-500f),
     "river water level falls in the downstream +Z direction");
 Check(WaterLandscape.FlowDirection(0f).Y > 0.8f,
