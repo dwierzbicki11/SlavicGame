@@ -33,6 +33,8 @@ internal static class WildlifeTrackingRegression
                 WaterInteractionState.DepthAt(world, mark.Position) <= 0.035f),
             "Wildlife tracks only stamp on readable non-submerged ground");
 
+        CheckStridePlacement(world, check);
+
         var fresh = marks.OrderBy(mark => mark.AgeSeconds).First();
         check(fresh.Freshness is TrackFreshness.Fresh or TrackFreshness.Recent,
             "Newest wildlife mark reports a useful freshness class");
@@ -91,5 +93,46 @@ internal static class WildlifeTrackingRegression
 
         check(world.Progress.Tracking.Tracks.Count == durableBefore,
             "Ambient hunting tracks never create durable quest evidence");
+    }
+
+    private static void CheckStridePlacement(WorldState world, Action<bool, string> check)
+    {
+        var snapshot = world.Wildlife.Capture()
+            .First(actor => actor.Id == "boar-wet-01");
+        var start = snapshot.Position;
+        var singleUpdate = new WildlifeTrackTrailState();
+        var splitUpdates = new WildlifeTrackTrailState();
+        singleUpdate.Reset(world);
+        splitUpdates.Reset(world);
+
+        void Move(float distance)
+        {
+            var position = start + Vector3.UnitX * distance;
+            position.Y = world.Terrain.SampleHeight(position);
+            world.Wildlife.Restore(world, [snapshot with { Position = position }]);
+        }
+
+        Move(3.5f);
+        singleUpdate.Update(world, 0d);
+        Move(0.35f);
+        splitUpdates.Update(world, 0d);
+        Move(1.1f);
+        splitUpdates.Update(world, 0d);
+        Move(3.5f);
+        splitUpdates.Update(world, 0d);
+
+        var whole = singleUpdate.Marks.Where(mark => mark.SourceId == snapshot.Id).ToArray();
+        var split = splitUpdates.Marks.Where(mark => mark.SourceId == snapshot.Id).ToArray();
+        check(whole.Length >= 3,
+            "A long boar movement produces multiple readable stride marks");
+        check(whole.Zip(whole.Skip(1)).All(pair =>
+                MathF.Abs(Vector2.Distance(
+                    new Vector2(pair.First.Position.X, pair.First.Position.Z),
+                    new Vector2(pair.Second.Position.X, pair.Second.Position.Z)) - 0.82f) < 0.001f),
+            "Boar tracks follow stride spacing instead of stacking at the movement endpoint");
+        check(whole.Length == split.Length && whole.Zip(split).All(pair =>
+                Vector3.Distance(pair.First.Position, pair.Second.Position) < 0.001f),
+            "Track positions preserve partial strides across updates");
+        world.Wildlife.Restore(world, [snapshot]);
     }
 }

@@ -12,6 +12,39 @@ internal static class BowCombatRegression
 
         var world = WorldGenerator.Generate();
 
+        var meleeWorld = WorldGenerator.Generate();
+        var meleeAmmo = meleeWorld.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId);
+        check(meleeWorld.Melee.TryStart(meleeWorld),
+            "Melee starts before attempting to switch to bow");
+        foreach (var phase in new[]
+                 { MeleeAttackState.Windup, MeleeAttackState.ActiveAttack, MeleeAttackState.Recovery })
+        {
+            check(meleeWorld.Melee.Controller.State == phase,
+                $"Bow exclusion is tested during melee {phase}");
+            meleeWorld.Bow.SetAiming(meleeWorld, true);
+            check(!meleeWorld.Bow.IsAiming && !meleeWorld.Bow.TryStartDraw(meleeWorld) &&
+                  !meleeWorld.Bow.TryRelease(meleeWorld, meleeWorld.PlayerPosition, Vector3.UnitZ),
+                $"Melee {phase} prevents bow aim, draw and release");
+            meleeWorld.Melee.Controller.Update(meleeWorld.Player,
+                phase == MeleeAttackState.Windup ? 0.18 :
+                phase == MeleeAttackState.ActiveAttack ? 0.12 : 0.32);
+        }
+        check(meleeWorld.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == meleeAmmo &&
+              meleeWorld.Bow.Projectiles.Count == 0,
+            "Blocked bow attempts during melee preserve ammunition and spawn no arrows");
+        meleeWorld.Bow.SetAiming(meleeWorld, true);
+        check(meleeWorld.Melee.Controller.State == MeleeAttackState.Free &&
+              meleeWorld.Bow.IsAiming && meleeWorld.Bow.TryStartDraw(meleeWorld),
+            "Bow becomes available after melee recovery ends");
+
+        // Revalidation must also cancel a draw if melee starts after aiming.
+        check(meleeWorld.Melee.TryStart(meleeWorld),
+            "Melee can begin after bow draw starts");
+        check(!meleeWorld.Bow.TryRelease(meleeWorld, meleeWorld.PlayerPosition, Vector3.UnitZ) &&
+              !meleeWorld.Bow.IsAiming && !meleeWorld.Bow.IsDrawing &&
+              meleeWorld.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == meleeAmmo,
+            "Release during melee cancels the existing draw without spending ammo");
+
         check(
             world.Progress.Inventory.Contains(BowCombatRuntime.BowItemId) &&
             world.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == 16,
@@ -195,6 +228,29 @@ internal static class BowCombatRegression
         var fast = Flight(1.0 / 120.0);
         check(Vector3.Distance(slow, fast) < 0.005f,
             "Arrow trajectory is independent of 10 versus 120 FPS");
+
+        foreach (var step in new[] { 0.001, 1.0 / 90.0 })
+        {
+            var close = WorldGenerator.Generate();
+            var target = close.Enemies.First();
+            var center = target.Position + Vector3.UnitY * 0.78f;
+            // Release offsets the arrow by +0.42 Z and -0.08 Y.
+            var closeOrigin = center - Vector3.UnitZ * 0.42f + Vector3.UnitY * 0.08f;
+            var health = target.Health;
+            var ammoBefore = close.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId);
+            close.Bow.SetAiming(close, true);
+            check(close.Bow.TryStartDraw(close) &&
+                  close.Bow.TryRelease(close, closeOrigin, Vector3.UnitZ),
+                "Point-blank shot releases inside the target collision volume");
+            close.Bow.Update(close, step);
+            check(target.Health < health && close.Bow.Projectiles.Count == 0,
+                "Arrow starting inside a target hits immediately even at high FPS");
+            var healthAfter = target.Health;
+            close.Bow.Update(close, 0.1);
+            check(target.Health == healthAfter &&
+                  close.Progress.Inventory.Count(BowCombatRuntime.ArrowItemId) == ammoBefore - 1,
+                "Point-blank impact damages once and consumes exactly one arrow");
+        }
 
         var wounded = WorldGenerator.Generate();
         var deer = wounded.Wildlife.Actors.First(actor => actor.Species == WildlifeSpecies.Deer);

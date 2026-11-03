@@ -112,6 +112,7 @@ Pierwszy grywalny runtime łuku jest podpięty do vertical slice.
 - **E** przy strzale wbitej w teren — odzyskanie `arrow-basic`.
 
 Poza Aim LMB nadal uruchamia melee.
+Celowanie i naciąg są niedostępne podczas przygotowania, aktywnego ciosu i fazy powrotu ataku wręcz. Rozpoczęcie melee przerywa istniejący naciąg przy ponownej walidacji łuku, bez zużycia strzały.
 
 ### Starter loadout
 Jednorazowy migration flag `starter-bow-loadout-granted` daje:
@@ -155,6 +156,7 @@ Flying/stuck arrows używają tego samego actor bufferu.
 
 ### QA lock
 Regresje wymagają cancel bez utraty ammo, ammo -1 dokładnie przy release, full draw, fizycznego trafienia przeciwnika, aggro po trafieniu, terrain stick + retrieval, kill wildlife + persistence oraz poprawnej geometrii bow/arrow.
+Strzała rozpoczynająca krok symulacji wewnątrz bryły przeciwnika lub wildlife trafia natychmiast, także przy bardzo wysokim FPS, i zadaje obrażenia tylko raz.
 
 ## Integration with current hunting runtime
 
