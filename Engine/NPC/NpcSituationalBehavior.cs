@@ -23,6 +23,10 @@ public static class NpcSituationalBehavior
         if (!npc.Id.StartsWith("settler-", StringComparison.Ordinal))
             return slot.Activity;
 
+        // Residents already resting at home do not need an outdoor shelter route.
+        if (string.Equals(slot.Activity, "rest", StringComparison.Ordinal))
+            return slot.Activity;
+
         var severeWeather =
             world.Weather.Condition == WeatherKind.Storm ||
             world.Weather.RainIntensity >= 0.85f;

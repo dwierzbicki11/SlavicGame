@@ -372,6 +372,11 @@ Przejście do spatial grid/navmesh jest wymagane dopiero po pomiarze, jeśli doc
 
 ## Runtime visible-workstation pass
 
+Crowd steering daje pierwszeństwo stojącemu NPC przy kolizji z przechodniem:
+przechodzień przyjmuje całe odsunięcie, dzięki czemu pracownik zachowuje pozycję
+i orientację przy modelu stanowiska. Ochrona aktywnego rozmówcy ma wyższy
+priorytet. Dwie stojące postacie nadal dzielą odsunięcie między siebie.
+
 Modele osadników są już połączone z realnymi stanowiskami pracy w świecie. Zamiast odgrywać `Interact` na pustym gruncie, wybrane dzienne aktywności mają teraz własne workstation definitions.
 
 ### Stanowiska
@@ -422,7 +427,7 @@ Gdy gracz wykonuje atak wręcz albo aktywnie inkantuje czar w pobliżu:
 ### Physical threat
 Jeśli żywy przeciwnik znajduje się w aktywnym stanie `Alert`, `Chase` albo `Attack` blisko NPC:
 - cywile przechodzą w `FleeThreat` i odsuwają się od przeciwnika;
-- strażnik przechodzi w `GuardThreat` i podchodzi do kontrolowanego dystansu od zagrożenia.
+- strażnik przechodzi w `GuardThreat` i zajmuje pozycję 4,5 m od zagrożenia, po swojej dotychczasowej stronie przeciwnika, patrząc w jego kierunku. Jeśli jest bliżej, odsuwa się; jeśli dalej, podchodzi.
 
 To nie jest jeszcze pełne combat AI strażnika — `GuardThreat` jest reakcją pozycyjną i wizualną, nie automatycznym zadawaniem obrażeń.
 

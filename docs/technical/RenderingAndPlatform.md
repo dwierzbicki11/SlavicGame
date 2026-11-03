@@ -77,6 +77,15 @@ Dane gry muszą działać w testach CPU-only.
 
 ## Materiały
 
+Bias słonecznej mapy cieni dla terenu i modeli PBR używa bazowej normalnej
+powierzchni, przed zastosowaniem normal map. Detal normal map wpływa na BRDF,
+ale nie zmienia geometrii zapisanej w mapie głębokości, więc nie powinien
+sterować biasem i powodować plam samocieniowania. Zmiana nie dodaje próbek
+tekstur ani passów GPU, zachowuje ścieżkę z wyłączonymi cieniami i nie wpływa
+na gameplay. Weryfikacja wizualna: porównać cienie na terenie i modelach przy
+włączaniu normal mappingu, również przy niskim kącie słońca; wzór normal map
+nie powinien zmieniać biasu cieni.
+
 Docelowy materiał powinien rozdzielać:
 - albedo;
 - normal;
@@ -221,3 +230,18 @@ FidelityFX line with the required Vulkan backend: FidelityFX SDK 1.1.4 / FSR 3.1
 The newer SDK 2.x line is not treated as a drop-in target while its documented Vulkan
 support is unavailable. We do not label the current temporal foundation as "FSR 3"
 until the real AMD dispatch path is connected and validated.
+
+## Stabilizacja mapy cieni słońca
+
+`ShadowMapRenderer.CalculateLightViewProjection` wyrównuje środek mapy do
+texeli w osiach right/up światła, z uwzględnieniem aktualnej rozdzielczości
+mapy i jej zasięgu. Siatka jest zakotwiczona w przestrzeni świata; przesunięcia
+kamery mniejsze od texela nie zmieniają współrzędnych XY odbiorników, dopóki
+środek pozostaje w tej samej komórce zaokrąglania. Dotyczy to również ruchu
+pionowego i słońca blisko zenitu. Zmiana kierunku słońca nadal obraca siatkę.
+
+Regresja CPU `ShadowStabilityRegression` sprawdza stabilność wewnątrz komórki
+oraz przesunięcia o całe texele dla map 512/2048/4096 i zasięgów 80/420 m.
+Poprawka nie zmienia liczby próbek PCF ani zasobów GPU i nie wpływa na gameplay.
+Weryfikacja wizualna wymaga uruchomienia Vulkan i powolnego ruchu kamery,
+w tym zmiany jej wysokości, przy włączonych cieniach.
