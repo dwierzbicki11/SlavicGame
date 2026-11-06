@@ -14,25 +14,42 @@ public static class WildlifeTrackEffectMesh
     {
         ArgumentNullException.ThrowIfNull(world);
 
+        if (world.WildlifeTracks.Marks.Count == 0)
+            return;
+
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
+
+        if (world.WildlifeTracks.Marks.Count == 0)
+            return;
+
         var player2 = new Vector2(
             world.PlayerPosition.X,
             world.PlayerPosition.Z);
+        var maxDistanceSquared = MaxRenderDistance * MaxRenderDistance;
 
         foreach (var mark in world.WildlifeTracks.Marks
+                     .Where(mark => Vector2.DistanceSquared(
+                         new Vector2(mark.Position.X, mark.Position.Z),
+                         player2) <= maxDistanceSquared)
                      .OrderBy(mark => Vector2.DistanceSquared(
                          new Vector2(mark.Position.X, mark.Position.Z),
                          player2))
                      .Take(MaxVisibleMarks))
         {
-            var mark2 = new Vector2(mark.Position.X, mark.Position.Z);
-            if (Vector2.DistanceSquared(mark2, player2) >
-                MaxRenderDistance * MaxRenderDistance)
-            {
-                continue;
-            }
-
             var fade = mark.Freshness switch
             {
                 TrackFreshness.Fresh => 1.00f,
@@ -88,9 +105,6 @@ public static class WildlifeTrackEffectMesh
                     color);
             }
         }
-
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
 
         void AddHoofPair(
             Vector3 center,
@@ -213,9 +227,12 @@ public static class WildlifeTrackEffectMesh
                     color,
                     Vector3.UnitY));
 
-            triangles.AddRange(
-                [start, start + 2, start + 1,
-                 start, start + 3, start + 2]);
+            triangles.Add(start);
+            triangles.Add(start + 2);
+            triangles.Add(start + 1);
+            triangles.Add(start);
+            triangles.Add(start + 3);
+            triangles.Add(start + 2);
         }
     }
 }

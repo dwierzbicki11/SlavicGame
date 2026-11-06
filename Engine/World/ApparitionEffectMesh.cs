@@ -22,6 +22,24 @@ public static class ApparitionEffectMesh
 
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, seconds, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        float seconds,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
+
+        var apparition = world.Apparition;
+        if (!apparition.IsVisible)
+            return;
 
         var materialization =
             Math.Clamp(
@@ -175,8 +193,12 @@ public static class ApparitionEffectMesh
                     ringStarts[ring + 1] +
                     segment;
 
-                triangles.AddRange(
-                    [a, c, b, a, d, c]);
+                triangles.Add(a);
+                triangles.Add(c);
+                triangles.Add(b);
+                triangles.Add(a);
+                triangles.Add(d);
+                triangles.Add(c);
             }
         }
 
@@ -270,9 +292,6 @@ public static class ApparitionEffectMesh
                 response);
         }
 
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
-
         void AddTrailingVeil(
             Vector3 origin,
             float time,
@@ -358,10 +377,9 @@ public static class ApparitionEffectMesh
                             visibility,
                         Vector3.UnitY));
 
-                triangles.AddRange(
-                    [start,
-                     start + 2,
-                     start + 1]);
+                triangles.Add(start);
+                triangles.Add(start + 2);
+                triangles.Add(start + 1);
             }
         }
 
@@ -374,16 +392,15 @@ public static class ApparitionEffectMesh
                 checked(
                     (uint)output.Count);
 
-            var offsets =
-                new[]
-                {
-                    Vector3.UnitY,
-                    -Vector3.UnitY,
-                    Vector3.UnitX,
-                    Vector3.UnitZ,
-                    -Vector3.UnitX,
-                    -Vector3.UnitZ
-                };
+            ReadOnlySpan<Vector3> offsets =
+            [
+                Vector3.UnitY,
+                -Vector3.UnitY,
+                Vector3.UnitX,
+                Vector3.UnitZ,
+                -Vector3.UnitX,
+                -Vector3.UnitZ
+            ];
 
             foreach (var offset
                      in offsets)
@@ -407,13 +424,12 @@ public static class ApparitionEffectMesh
                     2 +
                     (i + 1) % 4;
 
-                triangles.AddRange(
-                    [start,
-                     a,
-                     b,
-                     start + 1,
-                     b,
-                     a]);
+                triangles.Add(start);
+                triangles.Add(a);
+                triangles.Add(b);
+                triangles.Add(start + 1);
+                triangles.Add(b);
+                triangles.Add(a);
             }
         }
     }

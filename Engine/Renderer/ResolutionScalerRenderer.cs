@@ -166,31 +166,37 @@ public sealed class ResolutionScalerRenderer : IDisposable
         RecreateSceneTarget(width, height);
         RecreateFsrTarget(width, height);
 
+        var preserveTextureRows =
+            graphicsDevice.BackendType == GraphicsBackend.Vulkan &&
+            !graphicsDevice.IsClipSpaceYInverted;
+
         _bilinearPipeline = CreateFullscreenPipeline(
             factory,
             _bilinearShaders,
             _bilinearLayout,
-            swapchainOutput);
+            swapchainOutput,
+            preserveTextureRows: preserveTextureRows);
 
         _easuPipeline = CreateFullscreenPipeline(
             factory,
             _easuShaders,
             _easuLayout,
             _fsrFramebuffer!.OutputDescription,
-            preserveTextureRows: graphicsDevice.BackendType == GraphicsBackend.Vulkan &&
-                                 !graphicsDevice.IsClipSpaceYInverted);
+            preserveTextureRows: preserveTextureRows);
 
         _easuSwapchainPipeline = CreateFullscreenPipeline(
             factory,
             _easuShaders,
             _easuLayout,
-            swapchainOutput);
+            swapchainOutput,
+            preserveTextureRows: preserveTextureRows);
 
         _rcasPipeline = CreateFullscreenPipeline(
             factory,
             _rcasShaders,
             _rcasLayout,
-            swapchainOutput);
+            swapchainOutput,
+            preserveTextureRows: preserveTextureRows);
 
         SetPresentationSource(ResolvedSceneView);
 

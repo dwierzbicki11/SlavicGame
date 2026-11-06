@@ -21,6 +21,25 @@ public static class WaterInteractionMesh
 
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, seconds, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        float seconds,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
+
+        var state = world.WaterInteraction;
+        if (!state.IsInWater || state.MovementIntensity <= 0.02f)
+            return;
+
         var center = state.SurfacePosition;
         var strength = Math.Clamp(state.MovementIntensity, 0f, 1f);
 
@@ -37,9 +56,6 @@ public static class WaterInteractionMesh
 
             AppendRing(output, triangles, center, radius, width, color);
         }
-
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
     }
 
     private static void AppendRing(

@@ -21,13 +21,44 @@ public static class ActorModelMesh
         out TerrainVertex[] vertices,
         out uint[] indices)
     {
+        var vertexList = new List<TerrainVertex>();
+        var indexList = new List<uint>();
+        Build(
+            world,
+            playerModel,
+            npcModels,
+            enemyModel,
+            viewerPosition,
+            animationSeconds,
+            playerYaw,
+            includePlayer,
+            vertexList,
+            indexList);
+        vertices = vertexList.ToArray();
+        indices = indexList.ToArray();
+    }
+
+    public static void Build(
+        WorldState world,
+        GlbModel playerModel,
+        IReadOnlyDictionary<string, GlbModel> npcModels,
+        GlbModel enemyModel,
+        Vector3 viewerPosition,
+        double animationSeconds,
+        float playerYaw,
+        bool includePlayer,
+        List<TerrainVertex> vertexList,
+        List<uint> indexList)
+    {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(playerModel);
         ArgumentNullException.ThrowIfNull(npcModels);
         ArgumentNullException.ThrowIfNull(enemyModel);
+        ArgumentNullException.ThrowIfNull(vertexList);
+        ArgumentNullException.ThrowIfNull(indexList);
 
-        var vertexList = new List<TerrainVertex>();
-        var indexList = new List<uint>();
+        vertexList.Clear();
+        indexList.Clear();
         var time = (float)Math.Max(0d, animationSeconds);
 
         if (includePlayer && world.Player.IsAlive)
@@ -35,11 +66,14 @@ public static class ActorModelMesh
             var playerTransform =
                 Matrix4x4.CreateRotationY(playerYaw) *
                 Matrix4x4.CreateTranslation(world.PlayerPosition);
-            Append(
-                playerModel.BuildMesh(playerTransform, "Idle", time, sourceIsZUp: true),
+            playerModel.AppendTerrainMesh(
+                playerTransform,
                 new Vector3(0.24f, 0.36f, 0.18f),
                 vertexList,
-                indexList);
+                indexList,
+                "Idle",
+                time,
+                sourceIsZUp: true);
         }
 
         foreach (var npc in world.NpcWorld.Actors)
@@ -84,15 +118,14 @@ public static class ActorModelMesh
                 (time + StableAnimationOffset(npc.Id)) *
                 profile.AnimationSpeed;
 
-            Append(
-                npcModel.BuildMesh(
-                    npcTransform,
-                    clip,
-                    animationTime,
-                    sourceIsZUp: true),
+            npcModel.AppendTerrainMesh(
+                npcTransform,
                 profile.BaseColor,
                 vertexList,
-                indexList);
+                indexList,
+                clip,
+                animationTime,
+                sourceIsZUp: true);
 
             AppendAccessory(
                 profile.PrimaryAccessory,
@@ -129,17 +162,17 @@ public static class ActorModelMesh
             // This quadruped is authored with its head along source/engine +X.
             var yaw = MathF.Atan2(-enemy.FacingDirection.Z, enemy.FacingDirection.X);
             var transform = Matrix4x4.CreateRotationY(yaw) * Matrix4x4.CreateTranslation(enemy.Position);
-            Append(
-                enemyModel.BuildMesh(transform, clip, clipTime, sourceIsZUp: true),
+            enemyModel.AppendTerrainMesh(
+                transform,
                 enemy.IsAttackWindingUp
                     ? new Vector3(0.72f, 0.38f, 0.08f)
                     : new Vector3(0.30f, 0.20f, 0.13f),
                 vertexList,
-                indexList);
+                indexList,
+                clip,
+                clipTime,
+                sourceIsZUp: true);
         }
-
-        vertices = vertexList.ToArray();
-        indices = indexList.ToArray();
     }
 
     private static void AppendAccessory(

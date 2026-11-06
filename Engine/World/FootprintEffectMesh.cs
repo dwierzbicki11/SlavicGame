@@ -16,6 +16,22 @@ public static class FootprintEffectMesh
 
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
+
+        if (world.Footprints.Footprints.Count == 0)
+            return;
 
         foreach (var footprint in world.Footprints.Footprints)
         {
@@ -88,12 +104,12 @@ public static class FootprintEffectMesh
                 color,
                 Vector3.UnitY));
 
-            triangles.AddRange(
-                [start, start + 2, start + 1,
-                 start, start + 3, start + 2]);
+            triangles.Add(start);
+            triangles.Add(start + 2);
+            triangles.Add(start + 1);
+            triangles.Add(start);
+            triangles.Add(start + 3);
+            triangles.Add(start + 2);
         }
-
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
     }
 }

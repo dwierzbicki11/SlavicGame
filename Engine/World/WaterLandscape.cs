@@ -116,6 +116,23 @@ public static class WaterLandscape
     {
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        AppendSurface(terrain, seconds, camera, range, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void AppendSurface(
+        Terrain terrain,
+        float seconds,
+        Vector3 camera,
+        float range,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(terrain);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
+
         var extentZ = (terrain.Depth - 1) * terrain.CellSize * 0.5f;
         var extentX = (terrain.Width - 1) * terrain.CellSize * 0.5f;
 
@@ -179,9 +196,6 @@ public static class WaterLandscape
             range,
             extentZ,
             extentX);
-
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
 
         void AddWaterVertex(float x, float z, float across)
         {

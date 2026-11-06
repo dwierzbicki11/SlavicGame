@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Text;
 using System.Text.Json;
+using SlavicGame.Engine.World;
 
 namespace SlavicGame.Engine.Assets;
 
@@ -56,6 +57,9 @@ public sealed class GlbModel
     private readonly int[] _sceneRoots;
     private readonly Dictionary<string, AnimationClip> _animations;
     private readonly GlbMaterialData[] _materials;
+    private readonly int _totalVertexCount;
+    private readonly int _totalIndexCount;
+    private readonly int _totalPrimitiveCount;
 
     public IReadOnlyCollection<string> AnimationNames => _animations.Keys;
 
@@ -84,6 +88,32 @@ public sealed class GlbModel
         _sceneRoots = sceneRoots;
         _animations = animations;
         _materials = materials;
+
+        var totalVertices = 0;
+        var totalIndices = 0;
+        var totalPrimitives = 0;
+        foreach (var root in _sceneRoots)
+            CountSceneGeometry(root);
+        _totalVertexCount = totalVertices;
+        _totalIndexCount = totalIndices;
+        _totalPrimitiveCount = totalPrimitives;
+
+        void CountSceneGeometry(int nodeIndex)
+        {
+            var node = _nodes[nodeIndex];
+            if (node.Mesh is int meshIndex)
+            {
+                foreach (var primitive in _meshes[meshIndex])
+                {
+                    totalVertices += primitive.Positions.Length;
+                    totalIndices += primitive.Indices.Length;
+                    totalPrimitives++;
+                }
+            }
+
+            foreach (var child in node.Children)
+                CountSceneGeometry(child);
+        }
     }
 
     public static GlbModel Load(string path)
@@ -138,19 +168,24 @@ public sealed class GlbModel
         float animationTimeSeconds = 0f,
         bool sourceIsZUp = true)
     {
-        var pbr = BuildPbrMesh(instanceTransform, animationName, animationTimeSeconds, sourceIsZUp);
-        return new MeshGeometry(pbr.Vertices.Select(vertex => vertex.Position).ToArray(), pbr.Indices);
-    }
+        var nodeCount = _nodes.Length;
+        Span<Vector3> translations = nodeCount <= 64
+            ? stackalloc Vector3[nodeCount]
+            : new Vector3[nodeCount];
+        Span<Quaternion> rotations = nodeCount <= 64
+            ? stackalloc Quaternion[nodeCount]
+            : new Quaternion[nodeCount];
+        Span<Vector3> scales = nodeCount <= 64
+            ? stackalloc Vector3[nodeCount]
+            : new Vector3[nodeCount];
 
-    public PbrMeshGeometry BuildPbrMesh(
-        Matrix4x4 instanceTransform,
-        string? animationName = null,
-        float animationTimeSeconds = 0f,
-        bool sourceIsZUp = true)
-    {
-        var translations = _nodes.Select(node => node.Translation).ToArray();
-        var rotations = _nodes.Select(node => node.Rotation).ToArray();
-        var scales = _nodes.Select(node => node.Scale).ToArray();
+        for (var i = 0; i < nodeCount; i++)
+        {
+            var node = _nodes[i];
+            translations[i] = node.Translation;
+            rotations[i] = node.Rotation;
+            scales[i] = node.Scale;
+        }
 
         if (!string.IsNullOrWhiteSpace(animationName))
         {
@@ -159,15 +194,184 @@ public sealed class GlbModel
             ApplyAnimation(clip, animationTimeSeconds, translations, rotations, scales);
         }
 
-        var vertices = new List<PbrVertex>();
-        var indices = new List<uint>();
-        var ranges = new List<GlbDrawRange>();
+        var positions = _totalVertexCount == 0
+            ? Array.Empty<Vector3>()
+            : new Vector3[_totalVertexCount];
+        var indices = _totalIndexCount == 0
+            ? Array.Empty<uint>()
+            : new uint[_totalIndexCount];
+        var vertexCursor = 0;
+        var indexCursor = 0;
+        var sourceToEngine = sourceIsZUp
+            ? Matrix4x4.CreateRotationX(-MathF.PI / 2f)
+            : Matrix4x4.Identity;
+        var rootTransform = sourceToEngine * instanceTransform;
+
+        foreach (var root in _sceneRoots)
+            AppendPositionNode(root, Matrix4x4.Identity, translations, rotations, scales);
+
+        return new MeshGeometry(positions, indices);
+
+        void AppendPositionNode(
+            int nodeIndex,
+            Matrix4x4 parent,
+            ReadOnlySpan<Vector3> nodeTranslations,
+            ReadOnlySpan<Quaternion> nodeRotations,
+            ReadOnlySpan<Vector3> nodeScales)
+        {
+            var node = _nodes[nodeIndex];
+            var local = node.Matrix ?? (
+                Matrix4x4.CreateScale(nodeScales[nodeIndex]) *
+                Matrix4x4.CreateFromQuaternion(nodeRotations[nodeIndex]) *
+                Matrix4x4.CreateTranslation(nodeTranslations[nodeIndex]));
+            var world = local * parent;
+
+            if (node.Mesh is int meshIndex)
+            {
+                var final = world * rootTransform;
+                foreach (var primitive in _meshes[meshIndex])
+                {
+                    var startVertex = checked((uint)vertexCursor);
+                    var srcPositions = primitive.Positions;
+                    for (var i = 0; i < srcPositions.Length; i++)
+                        positions[vertexCursor++] = Vector3.Transform(srcPositions[i], final);
+
+                    var srcIndices = primitive.Indices;
+                    for (var i = 0; i < srcIndices.Length; i++)
+                        indices[indexCursor++] = startVertex + srcIndices[i];
+                }
+            }
+
+            foreach (var child in node.Children)
+                AppendPositionNode(child, world, nodeTranslations, nodeRotations, nodeScales);
+        }
+    }
+
+    public void AppendTerrainMesh(
+        Matrix4x4 instanceTransform,
+        Vector3 color,
+        List<TerrainVertex> vertices,
+        List<uint> indices,
+        string? animationName = null,
+        float animationTimeSeconds = 0f,
+        bool sourceIsZUp = true)
+    {
+        ArgumentNullException.ThrowIfNull(vertices);
+        ArgumentNullException.ThrowIfNull(indices);
+
+        var nodeCount = _nodes.Length;
+        Span<Vector3> translations = nodeCount <= 64
+            ? stackalloc Vector3[nodeCount]
+            : new Vector3[nodeCount];
+        Span<Quaternion> rotations = nodeCount <= 64
+            ? stackalloc Quaternion[nodeCount]
+            : new Quaternion[nodeCount];
+        Span<Vector3> scales = nodeCount <= 64
+            ? stackalloc Vector3[nodeCount]
+            : new Vector3[nodeCount];
+
+        for (var i = 0; i < nodeCount; i++)
+        {
+            var node = _nodes[i];
+            translations[i] = node.Translation;
+            rotations[i] = node.Rotation;
+            scales[i] = node.Scale;
+        }
+
+        if (!string.IsNullOrWhiteSpace(animationName))
+        {
+            if (!_animations.TryGetValue(animationName, out var clip))
+                throw new KeyNotFoundException($"Animation '{animationName}' is not present in this GLB.");
+            ApplyAnimation(clip, animationTimeSeconds, translations, rotations, scales);
+        }
+
+        vertices.EnsureCapacity(vertices.Count + _totalVertexCount);
+        indices.EnsureCapacity(indices.Count + _totalIndexCount);
+
+        var sourceToEngine = sourceIsZUp
+            ? Matrix4x4.CreateRotationX(-MathF.PI / 2f)
+            : Matrix4x4.Identity;
+        var rootTransform = sourceToEngine * instanceTransform;
+
+        foreach (var root in _sceneRoots)
+            AppendTerrainNode(root, Matrix4x4.Identity, translations, rotations, scales);
+
+        void AppendTerrainNode(
+            int nodeIndex,
+            Matrix4x4 parent,
+            ReadOnlySpan<Vector3> nodeTranslations,
+            ReadOnlySpan<Quaternion> nodeRotations,
+            ReadOnlySpan<Vector3> nodeScales)
+        {
+            var node = _nodes[nodeIndex];
+            var local = node.Matrix ?? (
+                Matrix4x4.CreateScale(nodeScales[nodeIndex]) *
+                Matrix4x4.CreateFromQuaternion(nodeRotations[nodeIndex]) *
+                Matrix4x4.CreateTranslation(nodeTranslations[nodeIndex]));
+            var world = local * parent;
+
+            if (node.Mesh is int meshIndex)
+            {
+                var final = world * rootTransform;
+                foreach (var primitive in _meshes[meshIndex])
+                {
+                    var startVertex = checked((uint)vertices.Count);
+                    var srcPositions = primitive.Positions;
+                    for (var i = 0; i < srcPositions.Length; i++)
+                        vertices.Add(new TerrainVertex(Vector3.Transform(srcPositions[i], final), color));
+
+                    var srcIndices = primitive.Indices;
+                    for (var i = 0; i < srcIndices.Length; i++)
+                        indices.Add(startVertex + srcIndices[i]);
+                }
+            }
+
+            foreach (var child in node.Children)
+                AppendTerrainNode(child, world, nodeTranslations, nodeRotations, nodeScales);
+        }
+    }
+
+    public PbrMeshGeometry BuildPbrMesh(
+        Matrix4x4 instanceTransform,
+        string? animationName = null,
+        float animationTimeSeconds = 0f,
+        bool sourceIsZUp = true)
+    {
+        var nodeCount = _nodes.Length;
+        Span<Vector3> translations = nodeCount <= 64
+            ? stackalloc Vector3[nodeCount]
+            : new Vector3[nodeCount];
+        Span<Quaternion> rotations = nodeCount <= 64
+            ? stackalloc Quaternion[nodeCount]
+            : new Quaternion[nodeCount];
+        Span<Vector3> scales = nodeCount <= 64
+            ? stackalloc Vector3[nodeCount]
+            : new Vector3[nodeCount];
+
+        for (var i = 0; i < nodeCount; i++)
+        {
+            var node = _nodes[i];
+            translations[i] = node.Translation;
+            rotations[i] = node.Rotation;
+            scales[i] = node.Scale;
+        }
+
+        if (!string.IsNullOrWhiteSpace(animationName))
+        {
+            if (!_animations.TryGetValue(animationName, out var clip))
+                throw new KeyNotFoundException($"Animation '{animationName}' is not present in this GLB.");
+            ApplyAnimation(clip, animationTimeSeconds, translations, rotations, scales);
+        }
+
+        var vertices = new List<PbrVertex>(_totalVertexCount);
+        var indices = new List<uint>(_totalIndexCount);
+        var ranges = new List<GlbDrawRange>(_totalPrimitiveCount);
         var sourceToEngine = sourceIsZUp
             ? Matrix4x4.CreateRotationX(-MathF.PI / 2f)
             : Matrix4x4.Identity;
 
         foreach (var root in _sceneRoots)
-            AppendNode(root, Matrix4x4.Identity);
+            AppendNode(root, Matrix4x4.Identity, translations, rotations, scales);
 
         return new PbrMeshGeometry(
             vertices.ToArray(),
@@ -175,13 +379,18 @@ public sealed class GlbModel
             ranges.ToArray(),
             _materials);
 
-        void AppendNode(int nodeIndex, Matrix4x4 parent)
+        void AppendNode(
+            int nodeIndex,
+            Matrix4x4 parent,
+            ReadOnlySpan<Vector3> nodeTranslations,
+            ReadOnlySpan<Quaternion> nodeRotations,
+            ReadOnlySpan<Vector3> nodeScales)
         {
             var node = _nodes[nodeIndex];
             var local = node.Matrix ?? (
-                Matrix4x4.CreateScale(scales[nodeIndex]) *
-                Matrix4x4.CreateFromQuaternion(rotations[nodeIndex]) *
-                Matrix4x4.CreateTranslation(translations[nodeIndex]));
+                Matrix4x4.CreateScale(nodeScales[nodeIndex]) *
+                Matrix4x4.CreateFromQuaternion(nodeRotations[nodeIndex]) *
+                Matrix4x4.CreateTranslation(nodeTranslations[nodeIndex]));
             var world = local * parent;
 
             if (node.Mesh is int meshIndex)
@@ -221,7 +430,7 @@ public sealed class GlbModel
             }
 
             foreach (var child in node.Children)
-                AppendNode(child, world);
+                AppendNode(child, world, nodeTranslations, nodeRotations, nodeScales);
         }
     }
 
@@ -254,9 +463,9 @@ public sealed class GlbModel
     private static void ApplyAnimation(
         AnimationClip clip,
         float timeSeconds,
-        Vector3[] translations,
-        Quaternion[] rotations,
-        Vector3[] scales)
+        Span<Vector3> translations,
+        Span<Quaternion> rotations,
+        Span<Vector3> scales)
     {
         var time = clip.Duration <= 0f
             ? 0f

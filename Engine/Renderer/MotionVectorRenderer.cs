@@ -101,6 +101,10 @@ public sealed class MotionVectorRenderer : IDisposable
         _dynamicShaders = ShaderLibrary.LoadPair(factory, "motion_dynamic");
         RecreateTarget(width, height);
 
+        var preserveTextureRows =
+            graphicsDevice.BackendType == GraphicsBackend.Vulkan &&
+            !graphicsDevice.IsClipSpaceYInverted;
+
         _pipeline = factory.CreateGraphicsPipeline(
             new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
@@ -114,7 +118,8 @@ public sealed class MotionVectorRenderer : IDisposable
                 PrimitiveTopology.TriangleList,
                 new ShaderSetDescription(
                     Array.Empty<VertexLayoutDescription>(),
-                    _shaders),
+                    _shaders,
+                    [new SpecializationConstant(0, preserveTextureRows ? 1u : 0u)]),
                 [_layout],
                 _framebuffer!.OutputDescription));
 
@@ -213,7 +218,7 @@ public sealed class MotionVectorRenderer : IDisposable
         var parameters = new Vector4(
             _width,
             _height,
-            _graphicsDevice.IsClipSpaceYInverted ? -1f : 1f,
+            _graphicsDevice.IsClipSpaceYInverted ? 1f : -1f,
             frame.ResetHistory ? 1f : 0f);
         commandList.UpdateBuffer(_constants, 128, parameters);
 
@@ -267,7 +272,7 @@ public sealed class MotionVectorRenderer : IDisposable
             new Vector4(
                 _width,
                 _height,
-                _graphicsDevice.IsClipSpaceYInverted ? -1f : 1f,
+                _graphicsDevice.IsClipSpaceYInverted ? 1f : -1f,
                 frame.ResetHistory ? 1f : 0f));
 
         commandList.SetFramebuffer(_dynamicFramebuffer);

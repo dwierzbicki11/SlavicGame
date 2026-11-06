@@ -26,6 +26,32 @@ public static class WildlifeModelMesh
 
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, models, animationSeconds, cameraPosition, maxDistance, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        IReadOnlyDictionary<string, GlbModel> models,
+        double animationSeconds,
+        Vector3 cameraPosition,
+        float maxDistance,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(models);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
+
+        if (!double.IsFinite(animationSeconds) ||
+            !float.IsFinite(maxDistance) ||
+            maxDistance <= 0f)
+        {
+            return;
+        }
+
         var maxDistanceSquared = maxDistance * maxDistance;
         var time = (float)Math.Max(0d, animationSeconds);
 
@@ -69,26 +95,15 @@ public static class WildlifeModelMesh
                 Matrix4x4.CreateRotationY(actor.YawRadians) *
                 Matrix4x4.CreateTranslation(actor.Position);
 
-            var mesh = model.BuildMesh(
+            model.AppendTerrainMesh(
                 transform,
+                profile.Color,
+                output,
+                triangles,
                 clip,
                 time + StableAnimationOffset(actor.Id),
                 sourceIsZUp: true);
-
-            var start = checked((uint)output.Count);
-            foreach (var position in mesh.Positions)
-            {
-                output.Add(new TerrainVertex(
-                    position,
-                    profile.Color));
-            }
-
-            foreach (var index in mesh.Indices)
-                triangles.Add(start + index);
         }
-
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
     }
 
     private static string SelectClip(WildlifeWorldActor actor) =>

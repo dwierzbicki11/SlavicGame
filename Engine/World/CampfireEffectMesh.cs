@@ -14,6 +14,20 @@ public static class CampfireEffectMesh
 
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, seconds, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        float seconds,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
 
         foreach (var fire in CampfireSystem.Fires)
         {
@@ -57,9 +71,6 @@ public static class CampfireEffectMesh
                 new Vector3(3.8f, 1.52f, 0.16f));
         }
 
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
-
         void AddGroundGlow(
             Vector3 center,
             float radius,
@@ -83,9 +94,12 @@ public static class CampfireEffectMesh
                 color,
                 Vector3.UnitY));
 
-            triangles.AddRange(
-                [start, start + 2, start + 1,
-                 start, start + 3, start + 2]);
+            triangles.Add(start);
+            triangles.Add(start + 2);
+            triangles.Add(start + 1);
+            triangles.Add(start);
+            triangles.Add(start + 3);
+            triangles.Add(start + 2);
         }
 
         void AddFlame(
@@ -125,7 +139,9 @@ public static class CampfireEffectMesh
             {
                 var a = start + 1 + i;
                 var b = start + 1 + (i + 1) % 4;
-                triangles.AddRange([start, a, b]);
+                triangles.Add(start);
+                triangles.Add(a);
+                triangles.Add(b);
             }
         }
     }

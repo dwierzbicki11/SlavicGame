@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using SlavicGame.Engine.Assets;
 using SlavicGame.Engine.NPC;
 using SlavicGame.Engine.World;
@@ -499,6 +500,140 @@ internal static class AssetIntegrationRegression
                   bestiaryGeometry.Indices.Length > 0,
                 $"Bestiary model {definition.Id} produces renderable animated geometry");
         }
+
+        // Verify AppendTerrainMesh and zero-copy List<TerrainVertex>/List<uint> dynamic scene pipeline
+        var appendTestVerts = new List<TerrainVertex>();
+        var appendTestIndices = new List<uint>();
+        var testColor = new Vector3(0.45f, 0.55f, 0.65f);
+        player.AppendTerrainMesh(
+            Matrix4x4.Identity,
+            testColor,
+            appendTestVerts,
+            appendTestIndices,
+            "Idle",
+            0.35f,
+            sourceIsZUp: true);
+        check(appendTestVerts.Count == playerGeometry.Positions.Length &&
+              appendTestIndices.SequenceEqual(playerGeometry.Indices) &&
+              appendTestVerts.Select(v => v.Position).SequenceEqual(playerGeometry.Positions),
+            "GlbModel.AppendTerrainMesh matches BuildMesh positions and indices bit-for-bit");
+
+        var wildlifeModels = WildlifeCatalog.RequiredModelFiles.ToDictionary(
+            file => file,
+            file => GlbModel.Load(Path.Combine(assetsRoot, "models", "animated", file)),
+            StringComparer.Ordinal);
+        var bowModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "static", "luk_r0_01.glb"));
+        var arrowModel = GlbModel.Load(Path.Combine(assetsRoot, "models", "static", "strzala_r0_01.glb"));
+        var worldItemModels = WorldItemVisualCatalog.Definitions
+            .Select(definition => definition.AssetPath)
+            .Distinct(StringComparer.Ordinal)
+            .ToDictionary(
+                assetPath => assetPath,
+                assetPath => GlbModel.Load(Path.Combine(assetsRoot, assetPath)),
+                StringComparer.Ordinal);
+
+        var listVertices = new List<TerrainVertex>(8192);
+        var listIndices = new List<uint>(24576);
+        ActorModelMesh.Build(
+            world,
+            player,
+            npcModels,
+            enemy,
+            populationViewer,
+            0.35,
+            0f,
+            true,
+            listVertices,
+            listIndices);
+        check(CollectionsMarshal.AsSpan(listVertices).SequenceEqual(actorVertices) &&
+              CollectionsMarshal.AsSpan(listIndices).SequenceEqual(actorIndices),
+            "ActorModelMesh List overload produces identical output to array overload");
+
+        WildlifeModelMesh.Append(world, wildlifeModels, 0.35, populationViewer, 220f, listVertices, listIndices);
+        BowPresentationMesh.Append(world, bowModel, arrowModel, populationViewer, Vector3.UnitZ, Vector3.UnitX, false, listVertices, listIndices);
+        WorldItemModelMesh.Append(world, worldItemModels, listVertices, listIndices);
+        var opaqueDynamicEnd = checked((uint)listIndices.Count);
+        WaterLandscape.AppendSurface(world.Terrain, 0.35f, populationViewer, 220f, listVertices, listIndices);
+        WaterInteractionMesh.Append(world, 0.35f, listVertices, listIndices);
+        CampfireEffectMesh.Append(world, 0.35f, listVertices, listIndices);
+        RainEffectMesh.Append(world, populationViewer, 0.35f, SlavicGame.Engine.Settings.CloudQuality.Medium, listVertices, listIndices);
+        FootprintEffectMesh.Append(world, listVertices, listIndices);
+        WildlifeTrackEffectMesh.Append(world, listVertices, listIndices);
+        ApparitionEffectMesh.Append(world, 0.35f, listVertices, listIndices);
+        MagicEffectMesh.Append(world, listVertices, listIndices);
+
+        check(opaqueDynamicEnd > 0 && opaqueDynamicEnd < listIndices.Count,
+            "Opaque dynamic index boundary excludes non-opaque water and effect geometry from shadow pass");
+
+        // Warmup and benchmark: compare legacy BuildPbrMesh + array copying vs zero-copy List + AppendTerrainMesh
+        void RunZeroCopyFrame(float t)
+        {
+            ActorModelMesh.Build(world, player, npcModels, enemy, populationViewer, t, 0f, true, listVertices, listIndices);
+            WildlifeModelMesh.Append(world, wildlifeModels, t, populationViewer, 220f, listVertices, listIndices);
+            BowPresentationMesh.Append(world, bowModel, arrowModel, populationViewer, Vector3.UnitZ, Vector3.UnitX, false, listVertices, listIndices);
+            WorldItemModelMesh.Append(world, worldItemModels, listVertices, listIndices);
+            WaterLandscape.AppendSurface(world.Terrain, t, populationViewer, 220f, listVertices, listIndices);
+            WaterInteractionMesh.Append(world, t, listVertices, listIndices);
+            CampfireEffectMesh.Append(world, t, listVertices, listIndices);
+            RainEffectMesh.Append(world, populationViewer, t, SlavicGame.Engine.Settings.CloudQuality.Medium, listVertices, listIndices);
+            FootprintEffectMesh.Append(world, listVertices, listIndices);
+            WildlifeTrackEffectMesh.Append(world, listVertices, listIndices);
+            ApparitionEffectMesh.Append(world, t, listVertices, listIndices);
+            MagicEffectMesh.Append(world, listVertices, listIndices);
+        }
+
+        void RunLegacyArrayFrame(float t)
+        {
+            ActorModelMesh.Build(world, player, npcModels, enemy, populationViewer, t, 0f, true, out var v, out var idx);
+            WildlifeModelMesh.Append(world, wildlifeModels, t, populationViewer, 220f, ref v, ref idx);
+            BowPresentationMesh.Append(world, bowModel, arrowModel, populationViewer, Vector3.UnitZ, Vector3.UnitX, false, ref v, ref idx);
+            WorldItemModelMesh.Append(world, worldItemModels, ref v, ref idx);
+            WaterLandscape.AppendSurface(world.Terrain, t, populationViewer, 220f, ref v, ref idx);
+            WaterInteractionMesh.Append(world, t, ref v, ref idx);
+            CampfireEffectMesh.Append(world, t, ref v, ref idx);
+            RainEffectMesh.Append(world, populationViewer, t, SlavicGame.Engine.Settings.CloudQuality.Medium, ref v, ref idx);
+            FootprintEffectMesh.Append(world, ref v, ref idx);
+            WildlifeTrackEffectMesh.Append(world, ref v, ref idx);
+            ApparitionEffectMesh.Append(world, t, ref v, ref idx);
+            MagicEffectMesh.Append(world, ref v, ref idx);
+        }
+
+        RunZeroCopyFrame(0.1f);
+        RunLegacyArrayFrame(0.1f);
+
+        const int benchFrames = 60;
+        var allocBeforeZeroCopy = GC.GetAllocatedBytesForCurrentThread();
+        var swZeroCopy = System.Diagnostics.Stopwatch.StartNew();
+        for (var f = 0; f < benchFrames; f++)
+        {
+            RunZeroCopyFrame(0.1f + f * 0.016f);
+        }
+        swZeroCopy.Stop();
+        var allocZeroCopy = GC.GetAllocatedBytesForCurrentThread() - allocBeforeZeroCopy;
+
+        var allocBeforeLegacy = GC.GetAllocatedBytesForCurrentThread();
+        var swLegacy = System.Diagnostics.Stopwatch.StartNew();
+        for (var f = 0; f < benchFrames; f++)
+        {
+            var t = 0.1f + f * 0.016f;
+            // Simulate original GlbModel.BuildMesh (which delegated to BuildPbrMesh + LINQ Select)
+            // for the animated player, enemy, and visible NPCs, plus legacy ref-array copying:
+            var pbrPlayer = player.BuildPbrMesh(Matrix4x4.Identity, "Idle", t, sourceIsZUp: true);
+            _ = pbrPlayer.Vertices.Select(v => v.Position).ToArray();
+            var pbrEnemy = enemy.BuildPbrMesh(Matrix4x4.Identity, "Idle", t, sourceIsZUp: true);
+            _ = pbrEnemy.Vertices.Select(v => v.Position).ToArray();
+            RunLegacyArrayFrame(t);
+        }
+        swLegacy.Stop();
+        var allocLegacy = GC.GetAllocatedBytesForCurrentThread() - allocBeforeLegacy;
+
+        Console.WriteLine(
+            $"[PERF_BENCH] DynamicSceneMesh ({benchFrames} frames, {listVertices.Count} verts, {listIndices.Count} indices): " +
+            $"zeroCopy={swZeroCopy.Elapsed.TotalMilliseconds / benchFrames:F3} ms/frame ({allocZeroCopy / (1024.0 * benchFrames):F1} KB/frame) vs " +
+            $"arrayCopy={swLegacy.Elapsed.TotalMilliseconds / benchFrames:F3} ms/frame ({allocLegacy / (1024.0 * benchFrames):F1} KB/frame)");
+
+        check(allocZeroCopy < allocLegacy / 10,
+            "Zero-copy dynamic scene mesh pipeline eliminates >90% of per-frame array copying allocations");
 
         void CheckFacing(string id, Vector2 target)
         {

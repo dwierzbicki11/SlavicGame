@@ -16,6 +16,21 @@ public static class WorldItemModelMesh
 
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, models, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        IReadOnlyDictionary<string, GlbModel> models,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(models);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
 
         foreach (var definition in WorldItemVisualCatalog.Definitions)
         {
@@ -38,21 +53,15 @@ public static class WorldItemModelMesh
                 Matrix4x4.CreateRotationY(definition.YawRadians) *
                 Matrix4x4.CreateTranslation(position);
 
-            var geometry = model.BuildMesh(
+            model.AppendTerrainMesh(
                 transform,
+                definition.Color,
+                output,
+                triangles,
                 animationName: null,
                 animationTimeSeconds: 0f,
                 sourceIsZUp: true);
-
-            AppendGeometry(
-                geometry,
-                definition.Color,
-                output,
-                triangles);
         }
-
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
     }
 
     private static void AppendGeometry(

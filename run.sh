@@ -19,6 +19,11 @@ fi
 echo "[SlavicGame] compile shaders..."
 "$ROOT_DIR/tools/compile-shaders.sh"
 
+if [[ "$(uname -s)" == Linux && ! -f "$ROOT_DIR/native/fidelityfx/libslavic_fsr3_vk.so" ]]; then
+    echo "[SlavicGame] setup native FidelityFX FSR 3.1.4 + Frame Generation..."
+    "$ROOT_DIR/tools/setup-fidelityfx.sh"
+fi
+
 echo "[SlavicGame] restore..."
 dotnet restore "$PROJECT"
 

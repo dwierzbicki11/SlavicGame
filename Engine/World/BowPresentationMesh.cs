@@ -21,8 +21,45 @@ public static class BowPresentationMesh
         ArgumentNullException.ThrowIfNull(bowModel);
         ArgumentNullException.ThrowIfNull(arrowModel);
 
+        if (!world.Bow.IsAiming &&
+            world.Bow.Projectiles.Count == 0 &&
+            world.Bow.RecoverableArrows.Count == 0)
+        {
+            return;
+        }
+
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(
+            world,
+            bowModel,
+            arrowModel,
+            cameraPosition,
+            lookDirection,
+            cameraRight,
+            firstPerson,
+            output,
+            triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        GlbModel bowModel,
+        GlbModel arrowModel,
+        Vector3 cameraPosition,
+        Vector3 lookDirection,
+        Vector3 cameraRight,
+        bool firstPerson,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(bowModel);
+        ArgumentNullException.ThrowIfNull(arrowModel);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
 
         if (world.Bow.IsAiming)
         {
@@ -44,13 +81,14 @@ public static class BowPresentationMesh
                     forward,
                     Vector3.UnitY);
 
-            AppendGeometry(
-                bowModel.BuildMesh(
-                    transform,
-                    animationName: null,
-                    animationTimeSeconds: 0f,
-                    sourceIsZUp: true),
-                new Vector3(0.38f, 0.24f, 0.11f));
+            bowModel.AppendTerrainMesh(
+                transform,
+                new Vector3(0.38f, 0.24f, 0.11f),
+                output,
+                triangles,
+                animationName: null,
+                animationTimeSeconds: 0f,
+                sourceIsZUp: true);
 
             if (world.Bow.IsDrawing)
             {
@@ -93,9 +131,6 @@ public static class BowPresentationMesh
                 new Vector3(0.43f, 0.30f, 0.15f));
         }
 
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
-
         void AppendArrow(
             Vector3 position,
             Vector3 direction,
@@ -110,32 +145,14 @@ public static class BowPresentationMesh
                     MathF.Abs(Vector3.Dot(direction, Vector3.UnitY)) > 0.99f
                         ? Vector3.UnitX : Vector3.UnitY);
 
-            AppendGeometry(
-                arrowModel.BuildMesh(
-                    transform,
-                    animationName: null,
-                    animationTimeSeconds: 0f,
-                    sourceIsZUp: true),
-                color);
-        }
-
-        void AppendGeometry(
-            MeshGeometry geometry,
-            Vector3 color)
-        {
-            var start =
-                checked((uint)output.Count);
-
-            foreach (var position in geometry.Positions)
-            {
-                output.Add(
-                    new TerrainVertex(
-                        position,
-                        color));
-            }
-
-            foreach (var index in geometry.Indices)
-                triangles.Add(start + index);
+            arrowModel.AppendTerrainMesh(
+                transform,
+                color,
+                output,
+                triangles,
+                animationName: null,
+                animationTimeSeconds: 0f,
+                sourceIsZUp: true);
         }
     }
 

@@ -15,6 +15,22 @@ public static class MagicEffectMesh
 
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(WorldState world, List<TerrainVertex> output, List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
+
+        var ritualVisible = world.Rituals.IsPerforming || world.Rituals.CompletionGlowRemaining > 0;
+        if (world.Magic.FlashRemaining <= 0 &&
+            world.Magic.RevealRemaining <= 0 &&
+            !ritualVisible)
+            return;
 
         if (world.Magic.FlashRemaining > 0)
             AddDiamond(world.Magic.FlashPosition, world.Magic.FlashColor, 0.45f);
@@ -39,9 +55,6 @@ public static class MagicEffectMesh
 
         if (ritualVisible)
             AddRitualVisuals();
-
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
 
         void AddRitualVisuals()
         {
@@ -148,8 +161,12 @@ public static class MagicEffectMesh
                     color,
                     Vector3.UnitY));
 
-                triangles.AddRange(
-                    [start, start + 1, start + 2, start, start + 2, start + 3]);
+                triangles.Add(start);
+                triangles.Add(start + 1);
+                triangles.Add(start + 2);
+                triangles.Add(start);
+                triangles.Add(start + 2);
+                triangles.Add(start + 3);
             }
         }
 
@@ -171,8 +188,12 @@ public static class MagicEffectMesh
             output.Add(new TerrainVertex(b, color, Vector3.UnitY));
             output.Add(new TerrainVertex(c, color, Vector3.UnitY));
             output.Add(new TerrainVertex(d, color, Vector3.UnitY));
-            triangles.AddRange(
-                [start, start + 1, start + 2, start, start + 2, start + 3]);
+            triangles.Add(start);
+            triangles.Add(start + 1);
+            triangles.Add(start + 2);
+            triangles.Add(start);
+            triangles.Add(start + 2);
+            triangles.Add(start + 3);
         }
 
         Vector3 Ground(Vector3 center, float xOffset, float zOffset) =>
@@ -187,15 +208,16 @@ public static class MagicEffectMesh
         void AddDiamond(Vector3 p, Vector3 color, float size)
         {
             var start = (uint)output.Count;
-            foreach (var offset in new[]
-                     {
-                         Vector3.UnitY,
-                         -Vector3.UnitY,
-                         Vector3.UnitX,
-                         Vector3.UnitZ,
-                         -Vector3.UnitX,
-                         -Vector3.UnitZ
-                     })
+            ReadOnlySpan<Vector3> offsets =
+            [
+                Vector3.UnitY,
+                -Vector3.UnitY,
+                Vector3.UnitX,
+                Vector3.UnitZ,
+                -Vector3.UnitX,
+                -Vector3.UnitZ
+            ];
+            foreach (var offset in offsets)
             {
                 output.Add(new TerrainVertex(p + offset * size, color, offset));
             }
@@ -204,7 +226,12 @@ public static class MagicEffectMesh
             {
                 uint a = start + 2 + i;
                 uint b = start + 2 + (i + 1) % 4;
-                triangles.AddRange([start, a, b, start + 1, b, a]);
+                triangles.Add(start);
+                triangles.Add(a);
+                triangles.Add(b);
+                triangles.Add(start + 1);
+                triangles.Add(b);
+                triangles.Add(a);
             }
         }
     }

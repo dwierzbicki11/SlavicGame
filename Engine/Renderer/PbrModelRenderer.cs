@@ -213,6 +213,8 @@ public sealed class PbrModelRenderer : IDisposable
         commandList.SetGraphicsResourceSet(0, cameraSet);
         commandList.SetGraphicsResourceSet(2, shadowSet);
 
+        ResourceSet? boundMaterialSet = null;
+
         foreach (var renderable in _renderables)
         {
             var delta = new Vector2(
@@ -255,9 +257,13 @@ public sealed class PbrModelRenderer : IDisposable
 
             foreach (var draw in geometry.Draws)
             {
-                commandList.SetGraphicsResourceSet(
-                    1,
-                    draw.MaterialSets[(int)_textureQuality]);
+                var materialSet = draw.MaterialSets[(int)_textureQuality];
+                if (!ReferenceEquals(boundMaterialSet, materialSet))
+                {
+                    commandList.SetGraphicsResourceSet(1, materialSet);
+                    boundMaterialSet = materialSet;
+                }
+
                 commandList.DrawIndexed(
                     draw.IndexCount,
                     instanceCount: 1,
@@ -322,19 +328,17 @@ public sealed class PbrModelRenderer : IDisposable
                 renderable,
                 shadowCasterDistance,
                 lodQuality);
+            if (geometry.IndexCount <= 0)
+                continue;
 
             commandList.SetVertexBuffer(0, geometry.VertexBuffer);
             commandList.SetIndexBuffer(geometry.IndexBuffer, IndexFormat.UInt32);
-
-            foreach (var draw in geometry.Draws)
-            {
-                commandList.DrawIndexed(
-                    draw.IndexCount,
-                    instanceCount: 1,
-                    indexStart: draw.IndexStart,
-                    vertexOffset: 0,
-                    instanceStart: 0);
-            }
+            commandList.DrawIndexed(
+                (uint)geometry.IndexCount,
+                instanceCount: 1,
+                indexStart: 0,
+                vertexOffset: 0,
+                instanceStart: 0);
         }
     }
 

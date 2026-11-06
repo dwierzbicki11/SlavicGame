@@ -22,11 +22,33 @@ public static class RainEffectMesh
         if (rain <= 0.025f)
             return;
 
-        var maxCount = GraphicsQualityCatalog.RainStreakCount(quality);
-        var count = Math.Max(1, (int)MathF.Ceiling(maxCount * rain));
-
         var output = new List<TerrainVertex>(vertices);
         var triangles = new List<uint>(indices);
+        Append(world, cameraPosition, seconds, quality, output, triangles);
+        vertices = output.ToArray();
+        indices = triangles.ToArray();
+    }
+
+    public static void Append(
+        WorldState world,
+        Vector3 cameraPosition,
+        float seconds,
+        CloudQuality quality,
+        List<TerrainVertex> output,
+        List<uint> triangles)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(triangles);
+
+        var rain = Math.Clamp(world.Weather.RainIntensity, 0f, 1f);
+        if (rain <= 0.025f)
+            return;
+
+        var maxCount = GraphicsQualityCatalog.RainStreakCount(quality);
+        var count = Math.Max(1, (int)MathF.Ceiling(maxCount * rain));
+        output.EnsureCapacity(output.Count + count * 4);
+        triangles.EnsureCapacity(triangles.Count + count * 6);
 
         var wind = world.Weather.WindIntensity;
         var streakLength = 0.65f + rain * 0.75f;
@@ -73,13 +95,13 @@ public static class RainEffectMesh
             output.Add(new TerrainVertex(position + half + side, color, Vector3.UnitY));
             output.Add(new TerrainVertex(position + half - side, color, Vector3.UnitY));
 
-            triangles.AddRange(
-                [start, start + 2, start + 1,
-                 start, start + 3, start + 2]);
+            triangles.Add(start);
+            triangles.Add(start + 2);
+            triangles.Add(start + 1);
+            triangles.Add(start);
+            triangles.Add(start + 3);
+            triangles.Add(start + 2);
         }
-
-        vertices = output.ToArray();
-        indices = triangles.ToArray();
     }
 
     private static float Hash01(uint value)

@@ -1,3 +1,4 @@
+using System.Numerics;
 using SlavicGame.Engine.Renderer;
 using SlavicGame.Engine.Settings;
 using SlavicGame.Engine.Renderer.FidelityFx;
@@ -53,6 +54,7 @@ internal static class UpscalerOrientationProof
             Math.Abs(baseline[2] - baseline[5]) < 100 ||
             Enumerable.Range(0, 4).Any(i => Math.Abs(baseline[i * 3 + 1] - 64) > 2))
             throw new Exception("BILINEAR readback did not preserve the asymmetric test image");
+        ValidateBytes("BILINEAR", baseline);
         var fsr = Read(UpscalerMode.Fsr1, view);
         for (int i = 0; i < baseline.Length; i++)
             if (Math.Abs(baseline[i] - fsr[i]) > 8)
@@ -123,6 +125,62 @@ internal static class UpscalerOrientationProof
             clear.End();
             device.SubmitCommands(clear);
             device.WaitForIdle();
+        }
+        using (var depthSampled = factory.CreateTexture(TextureDescription.Texture2D(width, height, 1, 1,
+            PixelFormat.R32_Float, TextureUsage.Sampled)))
+        using (var depthSampledView = factory.CreateTextureView(depthSampled))
+        using (var motionStaging = factory.CreateTexture(TextureDescription.Texture2D(width, height, 1, 1,
+            PixelFormat.R16_G16_Float, TextureUsage.Staging)))
+        using (var motionRenderer = new MotionVectorRenderer())
+        {
+            var depthPixels = new float[count];
+            for (uint y = 0; y < height; y++)
+                for (uint x = 0; x < width; x++)
+                    depthPixels[y * width + x] = y < height / 2 ? 1.0f : 0.5f;
+            device.UpdateTexture(depthSampled, depthPixels, 0, 0, 0, width, height, 1, 0, 0);
+            motionRenderer.Initialize(device, depthSampledView, depth, width, height);
+            var temporalState = new TemporalFrameState();
+            var proj = Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI / 3f, (float)width / height, 0.1f, 100f);
+            var viewMatrix = Matrix4x4.CreateLookAt(new Vector3(0f, 2f, 5f), new Vector3(0f, 2f, 0f), Vector3.UnitY);
+            _ = temporalState.BeginFrame(proj, viewMatrix, width, height, enableJitter: true);
+            var jitterFrame = temporalState.BeginFrame(proj, viewMatrix, width, height, enableJitter: true);
+            using (var mvCommands = factory.CreateCommandList())
+            {
+                mvCommands.Begin();
+                motionRenderer.Render(mvCommands, jitterFrame);
+                mvCommands.End();
+                device.SubmitCommands(mvCommands);
+            }
+            using (var mvCopy = factory.CreateCommandList())
+            {
+                mvCopy.Begin();
+                mvCopy.CopyTexture(motionRenderer.MotionVectorTexture, motionStaging);
+                mvCopy.End();
+                device.SubmitCommands(mvCopy);
+                device.WaitForIdle();
+            }
+            var mvMap = device.Map<Half>(motionStaging, MapMode.Read);
+            try
+            {
+                uint midX = width / 2, topY = height / 4, botY = height * 3 / 4;
+                float topMvX = (float)mvMap[midX * 2, topY];
+                float topMvY = (float)mvMap[midX * 2 + 1, topY];
+                float botMvX = (float)mvMap[midX * 2, botY];
+                float botMvY = (float)mvMap[midX * 2 + 1, botY];
+                float signY = device.IsClipSpaceYInverted ? 1f : -1f;
+                float expectedMvX = (jitterFrame.PreviousJitterPixels.X - jitterFrame.JitterPixels.X) / width;
+                float expectedMvY = (jitterFrame.PreviousJitterPixels.Y - jitterFrame.JitterPixels.Y) * signY / height;
+                if (MathF.Abs(topMvX) > 1e-4f || MathF.Abs(topMvY) > 1e-4f ||
+                    MathF.Abs(botMvX - expectedMvX) > 2e-3f || MathF.Abs(botMvY - expectedMvY) > 2e-3f)
+                    throw new Exception(
+                        $"MOTION_VECTORS inverted depth rows or clipYSign at {width}x{height}, " +
+                        $"clipYInverted={device.IsClipSpaceYInverted}: top=({topMvX},{topMvY}), " +
+                        $"bot=({botMvX},{botMvY}), expectedBot=({expectedMvX},{expectedMvY})");
+                Console.WriteLine(
+                    $"PASS: MOTION_VECTORS preserves depth rows and jitter sign at {width}x{height} " +
+                    $"(clipYInverted={device.IsClipSpaceYInverted})");
+            }
+            finally { device.Unmap(motionStaging); }
         }
         device.UpdateTexture(motion, new byte[count * 4], 0, 0, 0, width, height, 1, 0, 0);
         device.UpdateTexture(reactive, new byte[count], 0, 0, 0, width, height, 1, 0, 0);

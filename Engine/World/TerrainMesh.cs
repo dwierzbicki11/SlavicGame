@@ -11,8 +11,10 @@ public readonly struct TerrainVertex
     public readonly Vector3 Normal;
 
     public TerrainVertex(Vector3 position, Vector3 color)
-        : this(position, color, Vector3.UnitY)
     {
+        Position = position;
+        Color = color;
+        Normal = Vector3.UnitY;
     }
 
     public TerrainVertex(Vector3 position, Vector3 color, Vector3 normal)

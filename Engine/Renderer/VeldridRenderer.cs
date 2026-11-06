@@ -81,6 +81,8 @@ public sealed class VeldridRenderer : IDisposable
     private uint _actorIndexCount;
     private uint _actorVertexCapacity;
     private uint _actorIndexCapacity;
+    private readonly List<TerrainVertex> _actorVertices = new(8192);
+    private readonly List<uint> _actorIndices = new(24576);
     private uint _dynamicMotionVertexCapacity;
     private DynamicMotionVertex[] _dynamicMotionUpload = [];
     private uint _hudVertexCapacity;
@@ -741,8 +743,8 @@ public sealed class VeldridRenderer : IDisposable
             animationSeconds,
             camera.Yaw,
             camera.Mode != CameraMode.FirstPerson,
-            out var actorVertices,
-            out var actorIndices);
+            _actorVertices,
+            _actorIndices);
         WildlifeModelMesh.Append(
             world,
             _wildlifeModels,
@@ -751,8 +753,8 @@ public sealed class VeldridRenderer : IDisposable
             MathF.Min(
                 GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
                 220f),
-            ref actorVertices,
-            ref actorIndices);
+            _actorVertices,
+            _actorIndices);
         BowPresentationMesh.Append(
             world,
             _bowModel!,
@@ -761,59 +763,59 @@ public sealed class VeldridRenderer : IDisposable
             camera.GetLookDirection(),
             camera.GetMoveRight(),
             camera.Mode == CameraMode.FirstPerson,
-            ref actorVertices,
-            ref actorIndices);
+            _actorVertices,
+            _actorIndices);
         WorldItemModelMesh.Append(
             world,
             _worldItemModels,
-            ref actorVertices,
-            ref actorIndices);
-        var opaqueDynamicVertexCount = actorVertices.Length;
-        var opaqueDynamicEnd = checked((uint)actorIndices.Length);
+            _actorVertices,
+            _actorIndices);
+        var opaqueDynamicVertexCount = _actorVertices.Count;
+        var opaqueDynamicEnd = checked((uint)_actorIndices.Count);
 
         var waterStart = opaqueDynamicEnd;
         WaterLandscape.AppendSurface(world.Terrain, (float)animationSeconds, camera.Position,
             GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
-            ref actorVertices, ref actorIndices);
+            _actorVertices, _actorIndices);
         WaterInteractionMesh.Append(
             world,
             (float)animationSeconds,
-            ref actorVertices,
-            ref actorIndices);
-        var waterEnd = checked((uint)actorIndices.Length);
+            _actorVertices,
+            _actorIndices);
+        var waterEnd = checked((uint)_actorIndices.Count);
 
         var transientStart = waterEnd;
         CampfireEffectMesh.Append(
             world,
             (float)animationSeconds,
-            ref actorVertices,
-            ref actorIndices);
+            _actorVertices,
+            _actorIndices);
         RainEffectMesh.Append(
             world,
             camera.Position,
             (float)animationSeconds,
             settings.CloudQuality,
-            ref actorVertices,
-            ref actorIndices);
-        var transientEnd = checked((uint)actorIndices.Length);
+            _actorVertices,
+            _actorIndices);
+        var transientEnd = checked((uint)_actorIndices.Count);
 
         FootprintEffectMesh.Append(
             world,
-            ref actorVertices,
-            ref actorIndices);
+            _actorVertices,
+            _actorIndices);
         WildlifeTrackEffectMesh.Append(
             world,
-            ref actorVertices,
-            ref actorIndices);
+            _actorVertices,
+            _actorIndices);
 
-        var spectralStart = checked((uint)actorIndices.Length);
+        var spectralStart = checked((uint)_actorIndices.Count);
         ApparitionEffectMesh.Append(
             world,
             (float)animationSeconds,
-            ref actorVertices,
-            ref actorIndices);
-        MagicEffectMesh.Append(world, ref actorVertices, ref actorIndices);
-        var spectralEnd = checked((uint)actorIndices.Length);
+            _actorVertices,
+            _actorIndices);
+        MagicEffectMesh.Append(world, _actorVertices, _actorIndices);
+        var spectralEnd = checked((uint)_actorIndices.Count);
 
         // Opaque moving actors already have per-object motion vectors. Marking
         // them reactive wastes another geometry pass and weakens temporal reuse.
@@ -827,13 +829,13 @@ public sealed class VeldridRenderer : IDisposable
             }
             : [];
 
-        EnsureActorCapacity(actorVertices.Length, actorIndices.Length);
-        _actorIndexCount = (uint)actorIndices.Length;
+        EnsureActorCapacity(_actorVertices.Count, _actorIndices.Count);
+        _actorIndexCount = (uint)_actorIndices.Count;
 
         DynamicMotionVertex[] dynamicMotionVertices = [];
         if (_temporalInputsEnabled && _motionVectors.IsInitialized)
         {
-            var dynamicMotionSpan = actorVertices.AsSpan(0, opaqueDynamicVertexCount);
+            var dynamicMotionSpan = CollectionsMarshal.AsSpan(_actorVertices).Slice(0, opaqueDynamicVertexCount);
             EnsureDynamicMotionCapacity(dynamicMotionSpan.Length);
             if (_dynamicMotionUpload.Length < dynamicMotionSpan.Length)
             {
@@ -1311,10 +1313,16 @@ public sealed class VeldridRenderer : IDisposable
         _commandList.UpdateBuffer(_atmosphereBuffer, 128, graphicsFeatures2);
         _commandList.UpdateBuffer(_atmosphereBuffer, 144, graphicsFeatures3);
         _commandList.UpdateBuffer(_hudScreenBuffer, 0, screenSize);
-        if (actorVertices.Length > 0)
+        if (_actorVertices.Count > 0)
         {
-            _commandList.UpdateBuffer(_actorVertexBuffer, 0, actorVertices);
-            _commandList.UpdateBuffer(_actorIndexBuffer, 0, actorIndices);
+            _commandList.UpdateBuffer(
+                _actorVertexBuffer,
+                0,
+                CollectionsMarshal.AsSpan(_actorVertices));
+            _commandList.UpdateBuffer(
+                _actorIndexBuffer,
+                0,
+                CollectionsMarshal.AsSpan(_actorIndices));
         }
         if (dynamicMotionVertices.Length > 0 &&
             _dynamicMotionVertexBuffer is not null)
@@ -1322,7 +1330,7 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.UpdateBuffer(
                 _dynamicMotionVertexBuffer,
                 0,
-                _dynamicMotionUpload.AsSpan(0, dynamicMotionVertices.Length));
+                _dynamicMotionUpload.AsSpan(0, opaqueDynamicVertexCount));
         }
         if (_hudVertices.Count > 0)
         {
@@ -1359,7 +1367,7 @@ public sealed class VeldridRenderer : IDisposable
                 _commandList,
                 _actorVertexBuffer,
                 _actorIndexBuffer,
-                _actorIndexCount);
+                opaqueDynamicEnd);
         }
 
         _commandList.SetFramebuffer(framebuffer);
