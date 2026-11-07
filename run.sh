@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
-git pull origin main
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [[ "$CURRENT_BRANCH" == "main" ]] && git diff --quiet 2>/dev/null; then
+        git pull origin main || true
+    fi
+fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT="$ROOT_DIR/SlavicGame.csproj"
 CONFIGURATION="${CONFIGURATION:-Release}"

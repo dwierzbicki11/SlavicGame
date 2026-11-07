@@ -29,6 +29,16 @@ layout(location = 2) in float fsin_Distance;
 layout(location = 3) in vec3 fsin_WorldPosition;
 layout(location = 0) out vec4 fsout_Color;
 
+vec3 FilmicToneMap(vec3 c)
+{
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c1 = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return clamp((c * (a * c + b)) / (c * (c1 * c + d) + e), 0.0, 1.0);
+}
+
 void main()
 {
     vec3 normal = normalize(fsin_Normal);
@@ -76,5 +86,7 @@ void main()
     fogFactor = clamp(fogFactor, 0.0, 0.94);
     color = mix(color, FogColorDensity.rgb, fogFactor);
 
+    color = FilmicToneMap(color);
+    color = pow(max(color, vec3(0.0)), vec3(1.0 / 2.2));
     fsout_Color = vec4(color, 1.0);
 }

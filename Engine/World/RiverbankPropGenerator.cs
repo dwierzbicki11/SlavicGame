@@ -40,12 +40,15 @@ public static class RiverbankPropGenerator
                 position.Y = terrain.SampleHeight(position) - 0.05f;
 
                 var scale = 0.62f + random.NextSingle() * 0.42f;
+                var scaleX = scale * (0.88f + random.NextSingle() * 0.24f);
+                var scaleY = scale * (0.64f + random.NextSingle() * 0.16f);
+                var scaleZ = scale * (0.88f + random.NextSingle() * 0.24f);
                 result.Add(new WorldModelInstance(
                     $"riverbank-rock-{index++:000}",
                     "models/static/riverbank_rocky_r0_01.glb",
                     position,
-                    new Vector3(scale, scale * 0.72f, scale),
-                    yaw + (random.NextSingle() - 0.5f) * 0.35f,
+                    new Vector3(scaleX, scaleY, scaleZ),
+                    random.NextSingle() * MathF.Tau,
                     Vector3.One));
             }
         }

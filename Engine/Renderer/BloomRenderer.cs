@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using SlavicGame.Engine.Settings;
 using Veldrid;
 
@@ -17,11 +18,9 @@ public sealed class BloomRenderer : IDisposable
     private Framebuffer? _framebufferA;
     private Framebuffer? _framebufferB;
 
-    private DeviceBuffer? _paramsBuffer;
+    private readonly DeviceBuffer?[] _passBuffers = new DeviceBuffer?[5];
     private ResourceLayout? _layout;
-    private ResourceSet? _sourceSet;
-    private ResourceSet? _setA;
-    private ResourceSet? _setB;
+    private readonly ResourceSet?[] _passSets = new ResourceSet?[5];
     private Pipeline? _pipeline;
     private Shader[]? _shaders;
 
@@ -30,6 +29,12 @@ public sealed class BloomRenderer : IDisposable
     private uint _bloomWidth;
     private uint _bloomHeight;
     private int _downsampleFactor;
+    private uint _lastParamSourceWidth;
+    private uint _lastParamSourceHeight;
+    private uint _lastParamBloomWidth;
+    private uint _lastParamBloomHeight;
+    private BloomQuality _lastParamQuality;
+    private float _lastParamThreshold = float.NaN;
     private bool _disposed;
 
     public TextureView OutputView =>
@@ -45,7 +50,8 @@ public sealed class BloomRenderer : IDisposable
         _graphicsDevice = graphicsDevice;
         _colorFormat = sceneOutput.ColorAttachments[0].Format;
         var factory = graphicsDevice.ResourceFactory;
-        _paramsBuffer = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        for (var i = 0; i < _passBuffers.Length; i++)
+            _passBuffers[i] = factory.CreateBuffer(new BufferDescription(32, BufferUsage.UniformBuffer));
         _layout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             new ResourceLayoutElementDescription("BloomParameters", ResourceKind.UniformBuffer, ShaderStages.Fragment),
             new ResourceLayoutElementDescription("SourceColor", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
@@ -81,28 +87,23 @@ public sealed class BloomRenderer : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(commandList);
-        if (_graphicsDevice is null || _paramsBuffer is null || _pipeline is null || _sourceSet is null || _setA is null || _setB is null || _framebufferA is null || _framebufferB is null)
+        if (_graphicsDevice is null || _pipeline is null || _framebufferA is null || _framebufferB is null)
             throw new InvalidOperationException("Bloom renderer is not initialized.");
         EnsureTargets(quality);
         if (quality == BloomQuality.Off) return OutputView;
 
-        WriteParameters(commandList, 1f / _sourceWidth, 1f / _sourceHeight, Math.Clamp(threshold, 0f, 4f), 0f, 0f, 0f, 1f);
-        Draw(commandList, _framebufferA, _sourceSet);
+        var clampedThreshold = Math.Clamp(threshold, 0f, 4f);
+        EnsurePassParameters(quality, clampedThreshold);
+
+        Draw(commandList, _framebufferA, _passSets[0]!);
 
         // Low is intentionally a single-pass quarter-resolution bloom. The 4-tap
         // threshold/downsample already produces a soft highlight and avoiding two
         // extra fullscreen blur passes is important on fill-rate/bandwidth-limited iGPUs.
         if (quality == BloomQuality.Low) return OutputView;
 
-        var iterations = quality == BloomQuality.High ? 2 : 1;
-        for (var iteration = 0; iteration < iterations; iteration++)
-        {
-            var radius = quality == BloomQuality.High ? 2.8f + iteration * 0.8f : 2.25f;
-            WriteParameters(commandList, 1f / _bloomWidth, 1f / _bloomHeight, 0f, 1f, 1f, 0f, radius);
-            Draw(commandList, _framebufferB, _setA);
-            WriteParameters(commandList, 1f / _bloomWidth, 1f / _bloomHeight, 0f, 1f, 0f, 1f, radius);
-            Draw(commandList, _framebufferA, _setB);
-        }
+        Draw(commandList, _framebufferB, _passSets[1]!);
+        Draw(commandList, _framebufferA, _passSets[2]!);
         return OutputView;
     }
 
@@ -112,22 +113,61 @@ public sealed class BloomRenderer : IDisposable
         commandList.SetPipeline(_pipeline); commandList.SetGraphicsResourceSet(0, resourceSet); commandList.Draw(3);
     }
 
-    private void WriteParameters(CommandList commandList, float texelX, float texelY, float threshold, float mode, float directionX, float directionY, float radius)
+    private void EnsurePassParameters(BloomQuality quality, float threshold)
     {
-        if (_paramsBuffer is null) throw new InvalidOperationException("Bloom parameter buffer is missing.");
-        commandList.UpdateBuffer(_paramsBuffer, 0, new Vector4(texelX, texelY, threshold, mode));
-        commandList.UpdateBuffer(_paramsBuffer, 16, new Vector4(directionX, directionY, radius, 0f));
+        if (_graphicsDevice is null) return;
+        if (_lastParamSourceWidth == _sourceWidth &&
+            _lastParamSourceHeight == _sourceHeight &&
+            _lastParamBloomWidth == _bloomWidth &&
+            _lastParamBloomHeight == _bloomHeight &&
+            _lastParamQuality == quality &&
+            MathF.Abs(_lastParamThreshold - threshold) < 0.0001f)
+        {
+            return;
+        }
+
+        UpdatePassBuffer(0, 1f / _sourceWidth, 1f / _sourceHeight, threshold, 0f, 0f, 0f, 1f);
+        var radius0 = quality == BloomQuality.High ? 2.8f : 2.25f;
+        UpdatePassBuffer(1, 1f / _bloomWidth, 1f / _bloomHeight, 0f, 1f, 1f, 0f, radius0);
+        UpdatePassBuffer(2, 1f / _bloomWidth, 1f / _bloomHeight, 0f, 1f, 0f, 1f, radius0);
+        var radius1 = 3.6f;
+        UpdatePassBuffer(3, 1f / _bloomWidth, 1f / _bloomHeight, 0f, 1f, 1f, 0f, radius1);
+        UpdatePassBuffer(4, 1f / _bloomWidth, 1f / _bloomHeight, 0f, 1f, 0f, 1f, radius1);
+
+        _lastParamSourceWidth = _sourceWidth;
+        _lastParamSourceHeight = _sourceHeight;
+        _lastParamBloomWidth = _bloomWidth;
+        _lastParamBloomHeight = _bloomHeight;
+        _lastParamQuality = quality;
+        _lastParamThreshold = threshold;
+    }
+
+    private void UpdatePassBuffer(int passIndex, float texelX, float texelY, float threshold, float mode, float directionX, float directionY, float radius)
+    {
+        var buffer = _passBuffers[passIndex] ?? throw new InvalidOperationException("Bloom parameter buffer is missing.");
+        var uniform = new BloomUniform(
+            new Vector4(texelX, texelY, threshold, mode),
+            new Vector4(directionX, directionY, radius, 0f));
+        _graphicsDevice!.UpdateBuffer(buffer, 0, ref uniform);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly struct BloomUniform(Vector4 thresholdAndTexel, Vector4 blurDirectionAndRadius)
+    {
+        public readonly Vector4 ThresholdAndTexel = thresholdAndTexel;
+        public readonly Vector4 BlurDirectionAndRadius = blurDirectionAndRadius;
     }
 
     private void EnsureTargets(BloomQuality quality)
     {
         if (_graphicsDevice is null) throw new InvalidOperationException("Bloom renderer is not initialized.");
-        var factor = quality switch { BloomQuality.Low => 4, BloomQuality.Medium => 2, BloomQuality.High => 2, _ => 4 };
+        var factor = 4;
         var width = Math.Max(1u, _sourceWidth / checked((uint)factor));
         var height = Math.Max(1u, _sourceHeight / checked((uint)factor));
         if (_textureA is not null && _bloomWidth == width && _bloomHeight == height && _downsampleFactor == factor) return;
         _graphicsDevice.WaitForIdle();
-        _sourceSet?.Dispose(); _setA?.Dispose(); _setB?.Dispose(); _framebufferA?.Dispose(); _framebufferB?.Dispose();
+        DisposeSets();
+        _framebufferA?.Dispose(); _framebufferB?.Dispose();
         _viewA?.Dispose(); _viewB?.Dispose(); _textureA?.Dispose(); _textureB?.Dispose();
         var factory = _graphicsDevice.ResourceFactory;
         _textureA = CreateTarget(factory, width, height); _textureB = CreateTarget(factory, width, height);
@@ -141,21 +181,40 @@ public sealed class BloomRenderer : IDisposable
 
     private void RebindSets()
     {
-        if (_graphicsDevice is null || _layout is null || _paramsBuffer is null || _sourceView is null || _viewA is null || _viewB is null) return;
-        _sourceSet?.Dispose(); _setA?.Dispose(); _setB?.Dispose();
+        if (_graphicsDevice is null || _layout is null || _passBuffers[0] is null || _sourceView is null || _viewA is null || _viewB is null) return;
+        DisposeSets();
         var factory = _graphicsDevice.ResourceFactory;
-        _sourceSet = factory.CreateResourceSet(new ResourceSetDescription(_layout, _paramsBuffer, _sourceView, _graphicsDevice.LinearSampler));
-        _setA = factory.CreateResourceSet(new ResourceSetDescription(_layout, _paramsBuffer, _viewA, _graphicsDevice.LinearSampler));
-        _setB = factory.CreateResourceSet(new ResourceSetDescription(_layout, _paramsBuffer, _viewB, _graphicsDevice.LinearSampler));
+        var sampler = _graphicsDevice.LinearSampler;
+        _passSets[0] = factory.CreateResourceSet(new ResourceSetDescription(_layout, _passBuffers[0]!, _sourceView, sampler));
+        _passSets[1] = factory.CreateResourceSet(new ResourceSetDescription(_layout, _passBuffers[1]!, _viewA, sampler));
+        _passSets[2] = factory.CreateResourceSet(new ResourceSetDescription(_layout, _passBuffers[2]!, _viewB, sampler));
+        _passSets[3] = factory.CreateResourceSet(new ResourceSetDescription(_layout, _passBuffers[3]!, _viewA, sampler));
+        _passSets[4] = factory.CreateResourceSet(new ResourceSetDescription(_layout, _passBuffers[4]!, _viewB, sampler));
+    }
+
+    private void DisposeSets()
+    {
+        for (var i = 0; i < _passSets.Length; i++)
+        {
+            _passSets[i]?.Dispose();
+            _passSets[i] = null;
+        }
     }
 
     public void Dispose()
     {
         if (_disposed) return; _disposed = true;
-        _pipeline?.Dispose(); _sourceSet?.Dispose(); _setA?.Dispose(); _setB?.Dispose(); _layout?.Dispose(); _paramsBuffer?.Dispose();
+        _pipeline?.Dispose();
+        DisposeSets();
+        _layout?.Dispose();
+        for (var i = 0; i < _passBuffers.Length; i++)
+        {
+            _passBuffers[i]?.Dispose();
+            _passBuffers[i] = null;
+        }
         _framebufferA?.Dispose(); _framebufferB?.Dispose(); _viewA?.Dispose(); _viewB?.Dispose(); _textureA?.Dispose(); _textureB?.Dispose();
         if (_shaders is not null) foreach (var shader in _shaders) shader.Dispose();
-        _pipeline = null; _sourceSet = null; _setA = null; _setB = null; _layout = null; _paramsBuffer = null;
+        _pipeline = null; _layout = null;
         _framebufferA = null; _framebufferB = null; _viewA = null; _viewB = null; _textureA = null; _textureB = null; _shaders = null; _sourceView = null; _graphicsDevice = null;
     }
 }

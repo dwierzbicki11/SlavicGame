@@ -212,11 +212,11 @@ public static class WaterLandscape
                 MathF.Sin(secondaryPhase) * 0.012f;
 
             var edge = MathF.Abs(across);
-            var deep = new Vector3(0.025f, 0.135f, 0.18f);
-            var bright = new Vector3(0.085f, 0.31f, 0.34f);
-            var shallow = new Vector3(0.13f, 0.30f, 0.27f);
+            var deep = new Vector3(0.016f, 0.088f, 0.125f);
+            var bright = new Vector3(0.065f, 0.235f, 0.265f);
+            var shallow = new Vector3(0.105f, 0.245f, 0.220f);
             var color = Vector3.Lerp(deep, bright, flow * 0.72f);
-            color = Vector3.Lerp(color, shallow, edge * 0.30f);
+            color = Vector3.Lerp(color, shallow, edge * 0.35f);
 
             output.Add(new TerrainVertex(
                 new Vector3(x, WaterLevel(z) + wave, z),
@@ -281,8 +281,8 @@ public static class WaterLandscape
                 var c2 = baseCenter + along + across;
                 var d2 = baseCenter + along - across;
                 var color = Vector3.Lerp(
-                    new Vector3(0.26f, 0.47f, 0.48f),
-                    new Vector3(0.62f, 0.79f, 0.77f),
+                    new Vector3(0.35f, 0.52f, 0.52f),
+                    new Vector3(0.72f, 0.88f, 0.86f),
                     0.35f + pulse * 0.45f);
 
                 var start = checked((uint)vertices.Count);

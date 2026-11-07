@@ -48,6 +48,8 @@ public sealed class GameEngine : IDisposable
     private bool _applyingSettings;
     private bool _frameGenerationStartupRequested;
     private bool _frameGenerationEverActive;
+    private readonly DynamicResolutionController _drsController = new();
+    private ResolutionSize _baseRenderResolution = new(1280, 720);
     private string? _voicedCinematicId;
     private int _voicedCinematicShot = -1;
     private const double AutosaveIntervalSeconds = 120.0;
@@ -132,7 +134,6 @@ public sealed class GameEngine : IDisposable
             previousSeconds = currentSeconds;
 
             _time.Advance(deltaSeconds);
-            UpdateFps(deltaSeconds);
 
             if (_frontend.IsPlaying)
             {
@@ -282,6 +283,18 @@ public sealed class GameEngine : IDisposable
                 ? null
                 : _frontend.BuildView(_settings);
 
+            if (_frontend.IsPlaying &&
+                _drsController.Update(
+                    (float)deltaSeconds,
+                    _settings.DynamicResolution,
+                    _baseRenderResolution,
+                    out var drsResolution))
+            {
+                _renderer.SetRenderResolution(
+                    drsResolution.Width,
+                    drsResolution.Height);
+            }
+
             _renderer.Render(
                 _world,
                 _camera,
@@ -290,6 +303,7 @@ public sealed class GameEngine : IDisposable
                 _time.DeltaSeconds,
                 _settings,
                 menuView);
+            UpdateFps(deltaSeconds, _renderer.LastPresentedFrameCount);
             SyncFrameGenerationRuntimeStatus();
 
             ApplyFrameRateLimit(frameStartTimestamp);
@@ -407,15 +421,23 @@ public sealed class GameEngine : IDisposable
                         manualRenderResolution)
                     : manualRenderResolution;
 
+            _renderer.SetUpscaler(_settings.Upscaler);
+            if (_renderer.TrySetFrameGeneration(_settings.FrameGeneration))
+            {
+                _frameGenerationStartupRequested = _settings.FrameGeneration;
+            }
             _renderer.SetRenderResolution(
                 renderResolution.Width,
                 renderResolution.Height);
+            _baseRenderResolution = renderResolution;
+            _drsController.Reset();
             _renderer.SetShadowResolution(
                 GraphicsQualityCatalog.ShadowMapSize(_settings.ShadowQuality));
             _renderer.SetShadowDistance(
                 GraphicsQualityCatalog.ShadowDistance(_settings.ShadowDistance));
             _renderer.SetTextureQuality(_settings.TextureQuality);
             _renderer.SetVSync(_settings.VSync);
+            SyncFrameGenerationRuntimeStatus();
 
             _camera.FieldOfView =
                 MathF.PI / 180f * _settings.FieldOfViewDegrees;
@@ -489,7 +511,7 @@ public sealed class GameEngine : IDisposable
             _renderer.FrameGenerationDiagnostic;
     }
 
-    private void UpdateFps(double deltaSeconds)
+    private void UpdateFps(double deltaSeconds, int presentedFrames = 1)
     {
         if (deltaSeconds <= 0)
         {
@@ -497,7 +519,7 @@ public sealed class GameEngine : IDisposable
         }
 
         _fpsAccumulator += deltaSeconds;
-        _fpsFrames++;
+        _fpsFrames += Math.Max(1, presentedFrames);
 
         if (_fpsAccumulator >= 0.5)
         {

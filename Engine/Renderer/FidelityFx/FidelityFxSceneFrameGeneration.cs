@@ -128,8 +128,7 @@ internal sealed class FidelityFxSceneFrameGeneration : IDisposable
             // A cached Veldrid resource set may already expect this layout;
             // changing only the tracker does not record the AMD write-to-draw
             // dependency. Queue the real barrier before the WSI consumer.
-            vk.TransitionImageLayout(_output, 5);
-            vk.SynchronizeNativeDispatch();
+            vk.TransitionImageLayoutAndSynchronize(_output, 5);
         }
     }
 

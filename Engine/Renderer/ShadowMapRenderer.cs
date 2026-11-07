@@ -1,6 +1,7 @@
 using System.Numerics;
 using SlavicGame.Engine.Assets;
 using SlavicGame.Engine.Diagnostics;
+using SlavicGame.Engine.Settings;
 using SlavicGame.Engine.World;
 using Veldrid;
 
@@ -14,9 +15,30 @@ public sealed class ShadowMapRenderer : IDisposable
     private GraphicsDevice? _graphicsDevice;
     private uint _mapSize = DefaultMapSize;
     private float _worldSpan = DefaultWorldSpan;
+
+    // Active shadow map (used by main scene sampling)
     private Texture? _depthTexture;
     private TextureView? _depthView;
     private Framebuffer? _framebuffer;
+
+    // Static shadow map cache (holds terrain + static PBR models)
+    private Texture? _staticDepthTexture;
+    private TextureView? _staticDepthView;
+    private Framebuffer? _staticFramebuffer;
+
+    // Static shadow cache invalidation trackers
+    private bool _staticCacheValid;
+    private Matrix4x4 _cachedMatrix;
+    private Vector3 _cachedFocus;
+    private Vector3 _cachedSunDirection;
+    private TerrainDetailQuality _cachedTerrainDetail;
+    private ModelLodQuality _cachedModelLod;
+    private float _cachedShadowDistance;
+    private float _cachedVegetationDistance;
+    private float _cachedGroundClutterDistance;
+    private FarVegetationMode _cachedFarVegetation;
+    private int _framesSinceStaticUpdate;
+
     private DeviceBuffer? _depthMatrixBuffer;
     private ResourceLayout? _depthLayout;
     private ResourceLayout? _sampleLayout;
@@ -31,6 +53,7 @@ public sealed class ShadowMapRenderer : IDisposable
     public uint MapSize => _mapSize;
     public float WorldSpan => _worldSpan;
     public float HalfWorldSpan => _worldSpan * 0.5f;
+    public bool StaticCacheValid => _staticCacheValid;
 
     public ResourceLayout SampleLayout =>
         _sampleLayout ?? throw new InvalidOperationException("Shadow map renderer is not initialized.");
@@ -58,6 +81,7 @@ public sealed class ShadowMapRenderer : IDisposable
         _graphicsDevice = graphicsDevice;
         var factory = graphicsDevice.ResourceFactory;
 
+        // Active depth texture
         _depthTexture = factory.CreateTexture(TextureDescription.Texture2D(
             _mapSize,
             _mapSize,
@@ -65,10 +89,22 @@ public sealed class ShadowMapRenderer : IDisposable
             arrayLayers: 1,
             PixelFormat.R32_Float,
             TextureUsage.DepthStencil | TextureUsage.Sampled));
-
         _depthView = factory.CreateTextureView(_depthTexture);
         _framebuffer = factory.CreateFramebuffer(new FramebufferDescription(
             new FramebufferAttachmentDescription(_depthTexture, 0),
+            Array.Empty<FramebufferAttachmentDescription>()));
+
+        // Static cache depth texture
+        _staticDepthTexture = factory.CreateTexture(TextureDescription.Texture2D(
+            _mapSize,
+            _mapSize,
+            mipLevels: 1,
+            arrayLayers: 1,
+            PixelFormat.R32_Float,
+            TextureUsage.DepthStencil | TextureUsage.Sampled));
+        _staticDepthView = factory.CreateTextureView(_staticDepthTexture);
+        _staticFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+            new FramebufferAttachmentDescription(_staticDepthTexture, 0),
             Array.Empty<FramebufferAttachmentDescription>()));
 
         _depthMatrixBuffer = factory.CreateBuffer(new BufferDescription(
@@ -141,8 +177,142 @@ public sealed class ShadowMapRenderer : IDisposable
                 new VertexElementDescription(
                     "Normal", VertexElementSemantic.Normal, VertexElementFormat.Float3)));
 
+        _staticCacheValid = false;
+
         EngineLog.Info(
-            $"Sun shadow map initialized: {_mapSize}x{_mapSize}, world span {_worldSpan:0}m.");
+            $"Sun shadow map initialized: {_mapSize}x{_mapSize}, world span {_worldSpan:0}m (Static Cache Enabled).");
+    }
+
+    public bool ShouldUpdateStaticShadow(
+        Vector3 focusPosition,
+        Vector3 sunDirection,
+        TerrainDetailQuality terrainDetail,
+        float shadowDistance,
+        float vegetationDistance,
+        float groundClutterDistance,
+        ModelLodQuality modelLod,
+        FarVegetationMode farVegetation)
+    {
+        if (!_staticCacheValid ||
+            _staticFramebuffer is null ||
+            _staticDepthTexture is null)
+        {
+            return true;
+        }
+
+        if (_cachedTerrainDetail != terrainDetail ||
+            _cachedModelLod != modelLod ||
+            _cachedFarVegetation != farVegetation ||
+            MathF.Abs(_cachedShadowDistance - shadowDistance) > 1f ||
+            MathF.Abs(_cachedVegetationDistance - vegetationDistance) > 1f ||
+            MathF.Abs(_cachedGroundClutterDistance - groundClutterDistance) > 1f)
+        {
+            return true;
+        }
+
+        // Sun angular movement threshold (~1 deg)
+        var sunNormalized = Vector3.Normalize(sunDirection);
+        if (Vector3.Dot(sunNormalized, _cachedSunDirection) < 0.99985f)
+        {
+            return true;
+        }
+
+        // Camera movement threshold: 10.0 meters in world space.
+        // Static shadow geometry is rendered with a +10m..32m boundary margin.
+        if (Vector3.DistanceSquared(focusPosition, _cachedFocus) > 100.0f)
+        {
+            return true;
+        }
+
+        // Periodic static shadow refresh (every 480 frames ~8s)
+        if (_framesSinceStaticUpdate > 480)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public Matrix4x4 BeginStaticPass(
+        CommandList commandList,
+        Vector3 focusPosition,
+        Vector3 sunDirection,
+        TerrainDetailQuality terrainDetail,
+        float shadowDistance,
+        float vegetationDistance,
+        float groundClutterDistance,
+        ModelLodQuality modelLod,
+        FarVegetationMode farVegetation)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(commandList);
+
+        if (_staticFramebuffer is null || _depthMatrixBuffer is null)
+            throw new InvalidOperationException("Shadow map renderer is not initialized.");
+
+        var matrix = CalculateLightViewProjection(
+            focusPosition,
+            sunDirection,
+            _mapSize,
+            _worldSpan);
+
+        commandList.UpdateBuffer(_depthMatrixBuffer, 0, matrix);
+
+        _cachedMatrix = matrix;
+        _cachedFocus = focusPosition;
+        _cachedSunDirection = Vector3.Normalize(sunDirection);
+        _cachedTerrainDetail = terrainDetail;
+        _cachedShadowDistance = shadowDistance;
+        _cachedVegetationDistance = vegetationDistance;
+        _cachedGroundClutterDistance = groundClutterDistance;
+        _cachedModelLod = modelLod;
+        _cachedFarVegetation = farVegetation;
+        _framesSinceStaticUpdate = 0;
+
+        commandList.SetFramebuffer(_staticFramebuffer);
+        commandList.SetFullViewports();
+        commandList.SetFullScissorRects();
+        commandList.ClearDepthStencil(1f);
+
+        return matrix;
+    }
+
+    public void EndStaticPassAndPrepareActive(CommandList commandList)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(commandList);
+
+        if (_depthTexture is null || _staticDepthTexture is null || _framebuffer is null)
+            throw new InvalidOperationException("Shadow map renderer is not initialized.");
+
+        // Fast GPU copy of static geometry depth into active shadow map
+        commandList.CopyTexture(_staticDepthTexture, _depthTexture);
+
+        // Bind active shadow framebuffer without clearing so loadOp = Load preserves static depth
+        commandList.SetFramebuffer(_framebuffer);
+        commandList.SetFullViewports();
+        commandList.SetFullScissorRects();
+
+        _staticCacheValid = true;
+    }
+
+    public void BeginActivePassFromCache(CommandList commandList)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(commandList);
+
+        if (_depthTexture is null || _staticDepthTexture is null || _framebuffer is null)
+            throw new InvalidOperationException("Shadow map renderer is not initialized.");
+
+        _framesSinceStaticUpdate++;
+
+        // Fast GPU copy of cached static depth into active shadow map
+        commandList.CopyTexture(_staticDepthTexture, _depthTexture);
+
+        // Bind active shadow framebuffer without clearing so dynamic actors can render on top
+        commandList.SetFramebuffer(_framebuffer);
+        commandList.SetFullViewports();
+        commandList.SetFullScissorRects();
     }
 
     public Matrix4x4 UpdateLight(
@@ -175,6 +345,7 @@ public sealed class ShadowMapRenderer : IDisposable
 
         commandList.SetFramebuffer(_framebuffer);
         commandList.SetFullViewports();
+        commandList.SetFullScissorRects();
         commandList.ClearDepthStencil(1f);
     }
 
@@ -217,6 +388,10 @@ public sealed class ShadowMapRenderer : IDisposable
         _depthView?.Dispose();
         _depthTexture?.Dispose();
 
+        _staticFramebuffer?.Dispose();
+        _staticDepthView?.Dispose();
+        _staticDepthTexture?.Dispose();
+
         var factory = _graphicsDevice.ResourceFactory;
         _depthTexture = factory.CreateTexture(TextureDescription.Texture2D(
             mapSize,
@@ -229,6 +404,19 @@ public sealed class ShadowMapRenderer : IDisposable
         _framebuffer = factory.CreateFramebuffer(new FramebufferDescription(
             new FramebufferAttachmentDescription(_depthTexture, 0),
             Array.Empty<FramebufferAttachmentDescription>()));
+
+        _staticDepthTexture = factory.CreateTexture(TextureDescription.Texture2D(
+            mapSize,
+            mapSize,
+            mipLevels: 1,
+            arrayLayers: 1,
+            PixelFormat.R32_Float,
+            TextureUsage.DepthStencil | TextureUsage.Sampled));
+        _staticDepthView = factory.CreateTextureView(_staticDepthTexture);
+        _staticFramebuffer = factory.CreateFramebuffer(new FramebufferDescription(
+            new FramebufferAttachmentDescription(_staticDepthTexture, 0),
+            Array.Empty<FramebufferAttachmentDescription>()));
+
         _sampleSet = factory.CreateResourceSet(new ResourceSetDescription(
             _sampleLayout,
             _depthMatrixBuffer,
@@ -236,13 +424,24 @@ public sealed class ShadowMapRenderer : IDisposable
             _graphicsDevice.PointSampler));
 
         _mapSize = mapSize;
+        _staticCacheValid = false;
         EngineLog.Info($"Sun shadow map resolution changed to {_mapSize}x{_mapSize}.");
     }
 
     public void SetWorldSpan(float worldSpan)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        _worldSpan = Math.Clamp(worldSpan, 80f, DefaultWorldSpan);
+        var clamped = Math.Clamp(worldSpan, 80f, DefaultWorldSpan);
+        if (MathF.Abs(_worldSpan - clamped) > 0.1f)
+        {
+            _worldSpan = clamped;
+            _staticCacheValid = false;
+        }
+    }
+
+    public void InvalidateStaticCache()
+    {
+        _staticCacheValid = false;
     }
 
     public static Matrix4x4 CalculateLightViewProjection(
@@ -356,9 +555,14 @@ public sealed class ShadowMapRenderer : IDisposable
         _sampleLayout?.Dispose();
         _depthLayout?.Dispose();
         _depthMatrixBuffer?.Dispose();
+
         _framebuffer?.Dispose();
         _depthView?.Dispose();
         _depthTexture?.Dispose();
+
+        _staticFramebuffer?.Dispose();
+        _staticDepthView?.Dispose();
+        _staticDepthTexture?.Dispose();
 
         _terrainPipeline = null;
         _pbrPipeline = null;
@@ -372,6 +576,9 @@ public sealed class ShadowMapRenderer : IDisposable
         _framebuffer = null;
         _depthView = null;
         _depthTexture = null;
+        _staticFramebuffer = null;
+        _staticDepthView = null;
+        _staticDepthTexture = null;
         _graphicsDevice = null;
     }
 }

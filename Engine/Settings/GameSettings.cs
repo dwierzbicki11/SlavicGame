@@ -166,6 +166,14 @@ public enum FrameRateLimit
     Fps120
 }
 
+public enum DynamicResolutionMode
+{
+    Off,
+    Target60,
+    Target30,
+    Auto
+}
+
 public readonly record struct ResolutionSize(int Width, int Height)
 {
     public override string ToString() => $"{Width}X{Height}";
@@ -675,6 +683,7 @@ public sealed class GameSettings
     public ModelLodQuality ModelLod { get; set; } = ModelLodQuality.Quality;
     public FarVegetationMode FarVegetation { get; set; } = FarVegetationMode.Impostors;
     public UpscalerMode Upscaler { get; set; } = UpscalerMode.Fsr1;
+    public DynamicResolutionMode DynamicResolution { get; set; } = DynamicResolutionMode.Off;
     public bool FrameGeneration { get; set; }
 
     [JsonIgnore]
@@ -740,6 +749,8 @@ public sealed class GameSettings
             FarVegetation = FarVegetationMode.Impostors;
         if (!Enum.IsDefined(Upscaler))
             Upscaler = UpscalerMode.Fsr1;
+        if (!Enum.IsDefined(DynamicResolution))
+            DynamicResolution = DynamicResolutionMode.Off;
         if (!Enum.IsDefined(FsrQuality))
             FsrQuality = FsrQualityMode.Quality;
         if (!Enum.IsDefined(AntiAliasing))

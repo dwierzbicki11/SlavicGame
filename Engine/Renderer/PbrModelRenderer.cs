@@ -11,7 +11,8 @@ namespace SlavicGame.Engine.Renderer;
 
 public sealed class PbrModelRenderer : IDisposable
 {
-    private const float ChunkSize = 192f;
+    private const float DefaultChunkSize = 64f;
+    private const float ClutterChunkSize = 32f;
     private readonly List<Renderable> _renderables = [];
     private readonly List<Texture> _ownedTextures = [];
     private readonly List<TextureView> _ownedTextureViews = [];
@@ -135,8 +136,16 @@ public sealed class PbrModelRenderer : IDisposable
                     assetGroup.Key,
                     textureQuality);
 
+            var kind = ClassifyAsset(assetGroup.Key);
+            var chunkSize = kind == RenderableKind.GroundClutter
+                ? ClutterChunkSize
+                : DefaultChunkSize;
+            var radiusPadding = kind == RenderableKind.GroundClutter
+                ? 4f
+                : 12f;
+
             foreach (var chunkGroup in assetGroup.GroupBy(
-                         instance => GetChunkKey(instance.Position)))
+                         instance => GetChunkKey(instance.Position, chunkSize)))
             {
                 var instances = chunkGroup.ToArray();
 
@@ -170,11 +179,11 @@ public sealed class PbrModelRenderer : IDisposable
                 var radius = instances.Max(instance =>
                     Vector2.Distance(
                         new Vector2(instance.Position.X, instance.Position.Z),
-                        new Vector2(center.X, center.Z))) + 40f;
+                        new Vector2(center.X, center.Z))) + radiusPadding;
 
                 _renderables.Add(new Renderable(
                     $"{assetGroup.Key}@{chunkGroup.Key.X},{chunkGroup.Key.Z}",
-                    ClassifyAsset(assetGroup.Key),
+                    kind,
                     center,
                     radius,
                     lod0,
@@ -209,55 +218,59 @@ public sealed class PbrModelRenderer : IDisposable
         vegetationDistance = Math.Max(0f, vegetationDistance);
         groundClutterDistance = Math.Max(0f, groundClutterDistance);
 
+        var clutterMaxDistance = Math.Min(renderDistance, groundClutterDistance);
+        var vegetationMaxDistance = Math.Min(renderDistance, vegetationDistance);
+        var impostorStart = GraphicsQualityCatalog.VegetationImpostorStart(lodQuality);
+        var impostorStartSq = impostorStart * impostorStart;
+        var cullFarTrees = farVegetationMode != FarVegetationMode.FullMeshes;
+        var (baseLod1, baseLod2) = GraphicsQualityCatalog.ModelLodDistances(lodQuality);
+
         commandList.SetPipeline(_pipeline);
         commandList.SetGraphicsResourceSet(0, cameraSet);
         commandList.SetGraphicsResourceSet(2, shadowSet);
 
         ResourceSet? boundMaterialSet = null;
+        var qualityIndex = (int)_textureQuality;
 
         foreach (var renderable in _renderables)
         {
-            var delta = new Vector2(
-                renderable.Center.X - cameraPosition.X,
-                renderable.Center.Z - cameraPosition.Z);
             var categoryDistance = renderable.Kind switch
             {
-                RenderableKind.GroundClutter =>
-                    Math.Min(renderDistance, groundClutterDistance),
-                RenderableKind.Tree or RenderableKind.Vegetation =>
-                    Math.Min(renderDistance, vegetationDistance),
+                RenderableKind.GroundClutter => clutterMaxDistance,
+                RenderableKind.Tree or RenderableKind.Vegetation => vegetationMaxDistance,
                 _ => renderDistance
             };
 
             if (categoryDistance <= 0f)
                 continue;
 
-            var distanceSquared = delta.LengthSquared();
+            var dx = renderable.Center.X - cameraPosition.X;
+            var dz = renderable.Center.Z - cameraPosition.Z;
+            var distanceSquared = dx * dx + dz * dz;
             var maxDistance = categoryDistance + renderable.Radius;
             if (distanceSquared > maxDistance * maxDistance)
                 continue;
-            if (!frustum.IntersectsSphere(renderable.Center, renderable.Radius))
-                continue;
-
-            var distance = MathF.Sqrt(distanceSquared);
-            if (renderable.Kind == RenderableKind.Tree &&
-                farVegetationMode != FarVegetationMode.FullMeshes &&
-                distance >= GraphicsQualityCatalog.VegetationImpostorStart(lodQuality))
+            if (cullFarTrees &&
+                renderable.Kind == RenderableKind.Tree &&
+                distanceSquared >= impostorStartSq)
             {
                 continue;
             }
+            if (!frustum.IntersectsSphere(renderable.Center, renderable.Radius))
+                continue;
 
-            var geometry = SelectLodGeometry(
+            var geometry = SelectLodGeometrySquared(
                 renderable,
-                distance,
-                lodQuality);
+                distanceSquared,
+                baseLod1,
+                baseLod2);
 
             commandList.SetVertexBuffer(0, geometry.VertexBuffer);
             commandList.SetIndexBuffer(geometry.IndexBuffer, IndexFormat.UInt32);
 
             foreach (var draw in geometry.Draws)
             {
-                var materialSet = draw.MaterialSets[(int)_textureQuality];
+                var materialSet = draw.MaterialSets[qualityIndex];
                 if (!ReferenceEquals(boundMaterialSet, materialSet))
                 {
                     commandList.SetGraphicsResourceSet(1, materialSet);
@@ -287,47 +300,49 @@ public sealed class PbrModelRenderer : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        shadowDistance = Math.Max(0f, shadowDistance);
+        shadowDistance = Math.Max(0f, shadowDistance) + 10f;
         vegetationDistance = Math.Max(0f, vegetationDistance);
-        groundClutterDistance = Math.Max(0f, groundClutterDistance);
+
+        var vegetationMaxDistance = Math.Min(shadowDistance, vegetationDistance);
+        var impostorStart = GraphicsQualityCatalog.VegetationImpostorStart(lodQuality);
+        var impostorStartSq = impostorStart * impostorStart;
+        var cullFarTrees = farVegetationMode != FarVegetationMode.FullMeshes;
+        var (baseLod1, baseLod2) = GraphicsQualityCatalog.ModelLodDistances(ModelLodQuality.Aggressive);
 
         commandList.SetPipeline(shadowPipeline);
         commandList.SetGraphicsResourceSet(0, shadowDepthSet);
 
         foreach (var renderable in _renderables)
         {
-            var delta = new Vector2(
-                renderable.Center.X - focusPosition.X,
-                renderable.Center.Z - focusPosition.Z);
-            var categoryDistance = renderable.Kind switch
-            {
-                RenderableKind.GroundClutter =>
-                    Math.Min(shadowDistance, groundClutterDistance),
-                RenderableKind.Tree or RenderableKind.Vegetation =>
-                    Math.Min(shadowDistance, vegetationDistance),
-                _ => shadowDistance
-            };
+            if (renderable.Kind == RenderableKind.GroundClutter)
+                continue;
+
+            var categoryDistance = renderable.Kind is RenderableKind.Tree or RenderableKind.Vegetation
+                ? vegetationMaxDistance
+                : shadowDistance;
 
             if (categoryDistance <= 0f)
                 continue;
 
-            var distanceSquared = delta.LengthSquared();
+            var dx = renderable.Center.X - focusPosition.X;
+            var dz = renderable.Center.Z - focusPosition.Z;
+            var distanceSquared = dx * dx + dz * dz;
             var maxDistance = categoryDistance + renderable.Radius;
             if (distanceSquared > maxDistance * maxDistance)
                 continue;
 
-            var shadowCasterDistance = MathF.Sqrt(distanceSquared);
-            if (renderable.Kind == RenderableKind.Tree &&
-                farVegetationMode != FarVegetationMode.FullMeshes &&
-                shadowCasterDistance >= GraphicsQualityCatalog.VegetationImpostorStart(lodQuality))
+            if (cullFarTrees &&
+                renderable.Kind == RenderableKind.Tree &&
+                distanceSquared >= impostorStartSq)
             {
                 continue;
             }
 
-            var geometry = SelectLodGeometry(
+            var geometry = SelectLodGeometrySquared(
                 renderable,
-                shadowCasterDistance,
-                lodQuality);
+                distanceSquared,
+                baseLod1,
+                baseLod2);
             if (geometry.IndexCount <= 0)
                 continue;
 
@@ -498,6 +513,7 @@ public sealed class PbrModelRenderer : IDisposable
         var isPine = fileName.StartsWith("sosna_", StringComparison.OrdinalIgnoreCase);
         var isBirch = fileName.StartsWith("brzoza_", StringComparison.OrdinalIgnoreCase);
         var isAlder = fileName.StartsWith("olsza_", StringComparison.OrdinalIgnoreCase);
+        var isOak = fileName.StartsWith("dab_", StringComparison.OrdinalIgnoreCase);
 
         var seed = StableTreeHash(instance.Id);
         var widthX = 0.92f + UnitFromHash(seed ^ 0x68BC21EBu) * 0.16f;
@@ -530,8 +546,8 @@ public sealed class PbrModelRenderer : IDisposable
                 height01 * height01 * (3f - 2f * height01);
 
             var angle = MathF.Atan2(relative.Z, relative.X);
-            var primaryLobes = isPine ? 5f : isBirch ? 4f : 3f;
-            var lobeAmplitude = isPine ? 0.045f : isBirch ? 0.065f : 0.095f;
+            var primaryLobes = isPine ? 5f : isBirch ? 4f : isOak ? 4f : 3f;
+            var lobeAmplitude = isPine ? 0.045f : isBirch ? 0.065f : isOak ? 0.085f : 0.095f;
             var lobe =
                 1f +
                 MathF.Sin(angle * primaryLobes + phase) * lobeAmplitude +
@@ -541,9 +557,9 @@ public sealed class PbrModelRenderer : IDisposable
             var verticalLayer =
                 1f +
                 MathF.Sin(
-                    height01 * MathF.Tau * (isPine ? 5.0f : 3.0f) +
+                    height01 * MathF.Tau * (isPine ? 5.0f : isOak ? 3.5f : 3.0f) +
                     secondaryPhase) *
-                (isPine ? 0.055f : 0.035f);
+                (isPine ? 0.055f : isOak ? 0.045f : 0.035f);
 
             var speciesTaper = 1f;
             if (isPine)
@@ -552,6 +568,8 @@ public sealed class PbrModelRenderer : IDisposable
                 speciesTaper = 0.96f + height01 * 0.05f;
             else if (isAlder)
                 speciesTaper = 1.02f - MathF.Abs(height01 - 0.55f) * 0.08f;
+            else if (isOak)
+                speciesTaper = 1.10f - height01 * 0.14f;
 
             var radialScale = Math.Clamp(
                 lobe * verticalLayer * speciesTaper,
@@ -589,11 +607,17 @@ public sealed class PbrModelRenderer : IDisposable
 
             var windWeight =
                 (0.16f + 0.84f * MathF.Pow(crownWeight, 0.72f)) *
-                (isPine ? 0.78f : isBirch ? 1.0f : isAlder ? 0.92f : 0.88f);
+                (isPine ? 0.78f : isBirch ? 1.0f : isAlder ? 0.92f : isOak ? 0.82f : 0.88f);
+
+            // Volumetric crown normal blending: softens harsh billboard seams and gives natural hemispherical lighting
+            var crownCenter = new Vector3(0f, minY + crownHeight * 0.55f, 0f);
+            var outward = relative - crownCenter;
+            var outwardNormal = outward.LengthSquared() > 0.001f ? Vector3.Normalize(outward) : Vector3.UnitY;
+            var smoothNormal = Vector3.Normalize(Vector3.Lerp(vertex.Normal, outwardNormal, 0.40f));
 
             varied[i] = new PbrVertex(
                 instance.Position + relative,
-                vertex.Normal,
+                smoothNormal,
                 vertex.TexCoord,
                 Math.Clamp(windWeight, 0f, 1f));
         }
@@ -626,14 +650,12 @@ public sealed class PbrModelRenderer : IDisposable
         return (value & 0x00FFFFFFu) / 16777215f;
     }
 
-    private static LodGeometry SelectLodGeometry(
+    private static LodGeometry SelectLodGeometrySquared(
         Renderable renderable,
-        float distance,
-        ModelLodQuality quality)
+        float distanceSquared,
+        float lod1Distance,
+        float lod2Distance)
     {
-        var (lod1Distance, lod2Distance) =
-            GraphicsQualityCatalog.ModelLodDistances(quality);
-
         // Vegetation tolerates a faster transition because its silhouette
         // dominates long before small branch detail does.
         if (renderable.Kind is RenderableKind.Tree or RenderableKind.Vegetation)
@@ -647,9 +669,9 @@ public sealed class PbrModelRenderer : IDisposable
             lod2Distance *= 0.55f;
         }
 
-        if (distance >= lod2Distance && renderable.Lod2 is not null)
+        if (distanceSquared >= lod2Distance * lod2Distance && renderable.Lod2 is not null)
             return renderable.Lod2;
-        if (distance >= lod1Distance && renderable.Lod1 is not null)
+        if (distanceSquared >= lod1Distance * lod1Distance && renderable.Lod1 is not null)
             return renderable.Lod1;
 
         return renderable.Lod0;
@@ -862,6 +884,8 @@ public sealed class PbrModelRenderer : IDisposable
             return 0.92f;
         if (fileName.StartsWith("sosna_", StringComparison.OrdinalIgnoreCase))
             return 0.58f;
+        if (fileName.StartsWith("dab_", StringComparison.OrdinalIgnoreCase))
+            return 0.78f;
 
         return 0.82f;
     }
@@ -901,9 +925,9 @@ public sealed class PbrModelRenderer : IDisposable
             : RenderableKind.World;
     }
 
-    private static (int X, int Z) GetChunkKey(Vector3 position) =>
-        ((int)MathF.Floor(position.X / ChunkSize),
-         (int)MathF.Floor(position.Z / ChunkSize));
+    private static (int X, int Z) GetChunkKey(Vector3 position, float chunkSize) =>
+        ((int)MathF.Floor(position.X / chunkSize),
+         (int)MathF.Floor(position.Z / chunkSize));
 
     private enum RenderableKind
     {

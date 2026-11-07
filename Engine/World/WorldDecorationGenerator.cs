@@ -293,7 +293,8 @@ public static class WorldDecorationGenerator
         float maxScale)
     {
         var position = new Vector3(point.X, 0f, point.Y);
-        position.Y = terrain.SampleHeight(position);
+        // Slightly embed base into terrain so roots and stems never hover on micro-slopes
+        position.Y = terrain.SampleHeight(position) - GetPlacementSinkOffset(asset);
 
         var uniformScale = minScale + random.NextSingle() * (maxScale - minScale);
         var speciesProfile = TreeScaleProfile(asset);
@@ -311,24 +312,62 @@ public static class WorldDecorationGenerator
             Vector3.One));
     }
 
+    private static float GetPlacementSinkOffset(string asset)
+    {
+        var name = Path.GetFileNameWithoutExtension(asset);
+
+        if (name.StartsWith("grzyby_", StringComparison.OrdinalIgnoreCase))
+            return 0.005f;
+
+        if (name.StartsWith("paproc_", StringComparison.OrdinalIgnoreCase))
+            return 0.015f;
+
+        if (name.StartsWith("krzak_", StringComparison.OrdinalIgnoreCase) ||
+            name.StartsWith("korzenie_", StringComparison.OrdinalIgnoreCase))
+            return 0.030f;
+
+        if (name.StartsWith("trzciny_", StringComparison.OrdinalIgnoreCase))
+            return 0.040f;
+
+        return 0.060f;
+    }
+
     private static Vector3 TreeScaleProfile(string asset)
     {
         var name = Path.GetFileNameWithoutExtension(asset);
 
         if (name.StartsWith("sosna_", StringComparison.OrdinalIgnoreCase))
-            return new Vector3(0.91f, 1.10f, 0.91f);
+            return new Vector3(0.88f, 1.15f, 0.88f);
 
         if (name.StartsWith("brzoza_", StringComparison.OrdinalIgnoreCase))
-            return new Vector3(0.94f, 1.07f, 0.94f);
+            return new Vector3(0.92f, 1.10f, 0.92f);
 
         if (name.StartsWith("olsza_", StringComparison.OrdinalIgnoreCase))
-            return new Vector3(1.02f, 1.03f, 1.02f);
+            return new Vector3(1.04f, 1.02f, 1.04f);
 
         if (name.StartsWith("dab_", StringComparison.OrdinalIgnoreCase) ||
             name.StartsWith("dab_stary_", StringComparison.OrdinalIgnoreCase))
         {
-            return new Vector3(1.06f, 0.98f, 1.06f);
+            return new Vector3(1.10f, 0.96f, 1.10f);
         }
+
+        if (name.StartsWith("paproc_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(1.12f, 0.86f, 1.12f);
+
+        if (name.StartsWith("krzak_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(1.06f, 0.95f, 1.06f);
+
+        if (name.StartsWith("trzciny_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(0.86f, 1.18f, 0.86f);
+
+        if (name.StartsWith("pien_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(1.10f, 0.90f, 1.10f);
+
+        if (name.StartsWith("grzyby_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(1.08f, 0.92f, 1.08f);
+
+        if (name.StartsWith("korzenie_", StringComparison.OrdinalIgnoreCase))
+            return new Vector3(1.15f, 0.82f, 1.15f);
 
         return Vector3.One;
     }

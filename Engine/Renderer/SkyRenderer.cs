@@ -21,7 +21,10 @@ public sealed class SkyRenderer : IDisposable
 
         _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
             BlendStateDescription.SingleOverrideBlend,
-            DepthStencilStateDescription.Disabled,
+            // The sky is drawn after opaque scene geometry at depth 1.0. Early
+            // depth testing then skips the expensive atmosphere/cloud shader
+            // for every pixel already covered by terrain, models or actors.
+            DepthStencilStateDescription.DepthOnlyLessEqualRead,
             new RasterizerStateDescription(
                 FaceCullMode.None,
                 PolygonFillMode.Solid,

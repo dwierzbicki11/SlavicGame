@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using SlavicGame.Engine.Diagnostics;
 using Veldrid;
 
@@ -206,21 +207,16 @@ public sealed class MotionVectorRenderer : IDisposable
                 "Motion-vector renderer is not initialized.");
         }
 
-        commandList.UpdateBuffer(
-            _constants,
-            0,
-            frame.InverseCurrentViewProjection);
-        commandList.UpdateBuffer(
-            _constants,
-            64,
-            frame.PreviousViewProjection);
-
         var parameters = new Vector4(
             _width,
             _height,
             _graphicsDevice.IsClipSpaceYInverted ? 1f : -1f,
             frame.ResetHistory ? 1f : 0f);
-        commandList.UpdateBuffer(_constants, 128, parameters);
+        var uniform = new MotionUniform(
+            frame.InverseCurrentViewProjection,
+            frame.PreviousViewProjection,
+            parameters);
+        commandList.UpdateBuffer(_constants, 0, ref uniform);
 
         commandList.SetFramebuffer(_framebuffer);
         commandList.SetFullViewports();
@@ -258,22 +254,15 @@ public sealed class MotionVectorRenderer : IDisposable
                 "Dynamic motion-vector renderer is not initialized.");
         }
 
-        commandList.UpdateBuffer(
-            _dynamicConstants,
-            0,
-            frame.CurrentViewProjection);
-        commandList.UpdateBuffer(
-            _dynamicConstants,
-            64,
-            frame.PreviousViewProjection);
-        commandList.UpdateBuffer(
-            _dynamicConstants,
-            128,
+        var dynamicUniform = new MotionUniform(
+            frame.CurrentViewProjection,
+            frame.PreviousViewProjection,
             new Vector4(
                 _width,
                 _height,
                 _graphicsDevice.IsClipSpaceYInverted ? 1f : -1f,
                 frame.ResetHistory ? 1f : 0f));
+        commandList.UpdateBuffer(_dynamicConstants, 0, ref dynamicUniform);
 
         commandList.SetFramebuffer(_dynamicFramebuffer);
         commandList.SetFullViewports();
@@ -397,5 +386,16 @@ public sealed class MotionVectorRenderer : IDisposable
         _depthSource = null;
         _depthTexture = null;
         _graphicsDevice = null;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly struct MotionUniform(
+        Matrix4x4 firstMatrix,
+        Matrix4x4 secondMatrix,
+        Vector4 parameters)
+    {
+        public readonly Matrix4x4 FirstMatrix = firstMatrix;
+        public readonly Matrix4x4 SecondMatrix = secondMatrix;
+        public readonly Vector4 Parameters = parameters;
     }
 }

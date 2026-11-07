@@ -201,7 +201,10 @@ public sealed class TerrainMaterialRenderer : IDisposable
         CommandList commandList,
         ResourceSet cameraSet,
         ResourceSet shadowSet,
-        TerrainDetailQuality terrainDetail)
+        TerrainDetailQuality terrainDetail,
+        System.Numerics.Vector3 cameraPosition,
+        CameraFrustum frustum,
+        float renderDistance)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         var materialSet = _materialSets[(int)_textureQuality];
@@ -215,23 +218,101 @@ public sealed class TerrainMaterialRenderer : IDisposable
         commandList.SetGraphicsResourceSet(2, shadowSet);
         commandList.SetVertexBuffer(0, geometry.VertexBuffer);
         commandList.SetIndexBuffer(geometry.IndexBuffer, IndexFormat.UInt32);
-        commandList.DrawIndexed(geometry.IndexCount);
+
+        var cullDistance = MathF.Max(64f, renderDistance);
+        var runStart = 0u;
+        var runCount = 0u;
+
+        foreach (var chunk in geometry.Chunks)
+        {
+            var dx = chunk.Center.X - cameraPosition.X;
+            var dz = chunk.Center.Z - cameraPosition.Z;
+            var maxDist = cullDistance + chunk.Radius;
+            var visible =
+                dx * dx + dz * dz <= maxDist * maxDist &&
+                frustum.IntersectsSphere(chunk.Center, chunk.Radius);
+
+            if (visible)
+            {
+                if (runCount == 0)
+                {
+                    runStart = chunk.IndexStart;
+                    runCount = chunk.IndexCount;
+                }
+                else if (runStart + runCount == chunk.IndexStart)
+                {
+                    runCount += chunk.IndexCount;
+                }
+                else
+                {
+                    commandList.DrawIndexed(runCount, 1, runStart, 0, 0);
+                    runStart = chunk.IndexStart;
+                    runCount = chunk.IndexCount;
+                }
+            }
+            else if (runCount > 0)
+            {
+                commandList.DrawIndexed(runCount, 1, runStart, 0, 0);
+                runCount = 0;
+            }
+        }
+
+        if (runCount > 0)
+            commandList.DrawIndexed(runCount, 1, runStart, 0, 0);
     }
 
     public void RenderShadow(
         CommandList commandList,
         Pipeline shadowPipeline,
         ResourceSet shadowDepthSet,
-        TerrainDetailQuality terrainDetail)
+        TerrainDetailQuality terrainDetail,
+        System.Numerics.Vector3 focusPosition,
+        float shadowDistance)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        var geometry = GetGeometry(terrainDetail);
+        var geometry = _geometries[0] ?? GetGeometry(terrainDetail);
 
         commandList.SetPipeline(shadowPipeline);
         commandList.SetGraphicsResourceSet(0, shadowDepthSet);
         commandList.SetVertexBuffer(0, geometry.VertexBuffer);
         commandList.SetIndexBuffer(geometry.IndexBuffer, IndexFormat.UInt32);
-        commandList.DrawIndexed(geometry.IndexCount);
+
+        var cullDistance = MathF.Max(64f, shadowDistance) + 32f;
+        var runStart = 0u;
+        var runCount = 0u;
+
+        foreach (var chunk in geometry.Chunks)
+        {
+            var dx = chunk.Center.X - focusPosition.X;
+            var dz = chunk.Center.Z - focusPosition.Z;
+            var maxDist = cullDistance + chunk.Radius;
+            if (dx * dx + dz * dz <= maxDist * maxDist)
+            {
+                if (runCount == 0)
+                {
+                    runStart = chunk.IndexStart;
+                    runCount = chunk.IndexCount;
+                }
+                else if (runStart + runCount == chunk.IndexStart)
+                {
+                    runCount += chunk.IndexCount;
+                }
+                else
+                {
+                    commandList.DrawIndexed(runCount, 1, runStart, 0, 0);
+                    runStart = chunk.IndexStart;
+                    runCount = chunk.IndexCount;
+                }
+            }
+            else if (runCount > 0)
+            {
+                commandList.DrawIndexed(runCount, 1, runStart, 0, 0);
+                runCount = 0;
+            }
+        }
+
+        if (runCount > 0)
+            commandList.DrawIndexed(runCount, 1, runStart, 0, 0);
     }
 
     private static TerrainGeometry CreateGeometry(
@@ -256,21 +337,96 @@ public sealed class TerrainMaterialRenderer : IDisposable
                 weights.Secondary);
         }
 
+        var xsCount = CountSampleIndices(terrain.Width, gridStep);
+        var zsCount = CountSampleIndices(terrain.Depth, gridStep);
+        const int ChunksPerAxis = 16;
+        var cellsX = xsCount - 1;
+        var cellsZ = zsCount - 1;
+        var chunkedIndices = new uint[indices.Length];
+        var chunks = new List<TerrainChunk>(ChunksPerAxis * ChunksPerAxis);
+        var writeOffset = 0;
+
+        for (var cx = 0; cx < ChunksPerAxis; cx++)
+        {
+            var xStart = (cx * cellsX) / ChunksPerAxis;
+            var xEnd = ((cx + 1) * cellsX) / ChunksPerAxis;
+            if (xEnd <= xStart)
+                continue;
+
+            for (var cz = 0; cz < ChunksPerAxis; cz++)
+            {
+                var zStart = (cz * cellsZ) / ChunksPerAxis;
+                var zEnd = ((cz + 1) * cellsZ) / ChunksPerAxis;
+                if (zEnd <= zStart)
+                    continue;
+
+                var chunkIndexStart = checked((uint)writeOffset);
+                var min = new System.Numerics.Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                var max = new System.Numerics.Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+                for (var xi = xStart; xi <= xEnd; xi++)
+                for (var zi = zStart; zi <= zEnd; zi++)
+                {
+                    var pos = vertices[xi * zsCount + zi].Position;
+                    min = System.Numerics.Vector3.Min(min, pos);
+                    max = System.Numerics.Vector3.Max(max, pos);
+                }
+
+                for (var xi = xStart; xi < xEnd; xi++)
+                for (var zi = zStart; zi < zEnd; zi++)
+                {
+                    var a = (uint)(xi * zsCount + zi);
+                    var b = (uint)((xi + 1) * zsCount + zi);
+                    var c = (uint)((xi + 1) * zsCount + zi + 1);
+                    var d = (uint)(xi * zsCount + zi + 1);
+
+                    chunkedIndices[writeOffset++] = a;
+                    chunkedIndices[writeOffset++] = b;
+                    chunkedIndices[writeOffset++] = c;
+                    chunkedIndices[writeOffset++] = a;
+                    chunkedIndices[writeOffset++] = c;
+                    chunkedIndices[writeOffset++] = d;
+                }
+
+                var chunkIndexCount = checked((uint)writeOffset) - chunkIndexStart;
+                var center = (min + max) * 0.5f;
+                var radius = System.Numerics.Vector3.Distance(center, max) + 4f;
+                chunks.Add(new TerrainChunk(chunkIndexStart, chunkIndexCount, center, radius));
+            }
+        }
+
         var vertexBuffer = factory.CreateBuffer(new BufferDescription(
             TerrainSurfaceVertex.SizeInBytes * checked((uint)vertices.Length),
             BufferUsage.VertexBuffer));
         var indexBuffer = factory.CreateBuffer(new BufferDescription(
-            sizeof(uint) * checked((uint)indices.Length),
+            sizeof(uint) * checked((uint)chunkedIndices.Length),
             BufferUsage.IndexBuffer));
 
         graphicsDevice.UpdateBuffer(vertexBuffer, 0, vertices);
-        graphicsDevice.UpdateBuffer(indexBuffer, 0, indices);
+        graphicsDevice.UpdateBuffer(indexBuffer, 0, chunkedIndices);
 
         return new TerrainGeometry(
             vertexBuffer,
             indexBuffer,
-            checked((uint)indices.Length),
-            vertices.Length);
+            checked((uint)chunkedIndices.Length),
+            vertices.Length,
+            chunks.ToArray());
+    }
+
+    private static int CountSampleIndices(int size, int gridStep)
+    {
+        var count = 0;
+        var last = -1;
+        for (var value = 0; value < size - 1; value += gridStep)
+        {
+            count++;
+            last = value;
+        }
+
+        if (count == 0 || last != size - 1)
+            count++;
+
+        return count;
     }
 
     private TerrainGeometry GetGeometry(TerrainDetailQuality quality)
@@ -361,11 +517,18 @@ public sealed class TerrainMaterialRenderer : IDisposable
         _shaders = null;
     }
 
+    private readonly record struct TerrainChunk(
+        uint IndexStart,
+        uint IndexCount,
+        System.Numerics.Vector3 Center,
+        float Radius);
+
     private sealed record TerrainGeometry(
         DeviceBuffer VertexBuffer,
         DeviceBuffer IndexBuffer,
         uint IndexCount,
-        int VertexCount) : IDisposable
+        int VertexCount,
+        TerrainChunk[] Chunks) : IDisposable
     {
         public void Dispose()
         {

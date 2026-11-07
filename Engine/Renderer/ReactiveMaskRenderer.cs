@@ -20,9 +20,8 @@ public sealed class ReactiveMaskRenderer : IDisposable
     private Texture? _maskTexture;
     private TextureView? _maskView;
     private Framebuffer? _framebuffer;
-    private DeviceBuffer? _parameters;
     private ResourceLayout? _parameterLayout;
-    private ResourceSet? _parameterSet;
+    private readonly Dictionary<int, (DeviceBuffer Buffer, ResourceSet Set)> _strengthSets = new();
     private Pipeline? _pipeline;
     private Shader[]? _shaders;
     private Texture? _depthTexture;
@@ -56,19 +55,12 @@ public sealed class ReactiveMaskRenderer : IDisposable
         _depthTexture = depthTexture;
 
         var factory = graphicsDevice.ResourceFactory;
-        _parameters = factory.CreateBuffer(new BufferDescription(
-            16,
-            BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _parameterLayout = factory.CreateResourceLayout(
             new ResourceLayoutDescription(
                 new ResourceLayoutElementDescription(
                     "ReactiveParameters",
                     ResourceKind.UniformBuffer,
                     ShaderStages.Fragment)));
-        _parameterSet = factory.CreateResourceSet(
-            new ResourceSetDescription(
-                _parameterLayout,
-                _parameters));
 
         _shaders = ShaderLibrary.LoadPair(factory, "reactive_mask");
         RecreateTarget(width, height);
@@ -146,11 +138,31 @@ public sealed class ReactiveMaskRenderer : IDisposable
 
         if (_framebuffer is null ||
             _pipeline is null ||
-            _parameterSet is null ||
-            _parameters is null)
+            _parameterLayout is null ||
+            _graphicsDevice is null)
         {
             throw new InvalidOperationException(
                 "Reactive-mask renderer is not initialized.");
+        }
+
+        // Ensure all needed strength ResourceSets exist before starting the render pass
+        // so we never call commandList.UpdateBuffer (which splits VkRenderPass) mid-pass.
+        for (var i = 0; i < ranges.Count; i++)
+        {
+            if (ranges[i].IndexCount == 0)
+                continue;
+            var key = QuantizeStrength(ranges[i].Strength);
+            if (!_strengthSets.ContainsKey(key))
+            {
+                var strength = Math.Clamp(ranges[i].Strength, 0f, 1f);
+                var buf = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(
+                    16,
+                    BufferUsage.UniformBuffer));
+                _graphicsDevice.UpdateBuffer(buf, 0, new Vector4(strength, 0f, 0f, 0f));
+                var set = _graphicsDevice.ResourceFactory.CreateResourceSet(
+                    new ResourceSetDescription(_parameterLayout, buf));
+                _strengthSets[key] = (buf, set);
+            }
         }
 
         commandList.SetFramebuffer(_framebuffer);
@@ -159,22 +171,24 @@ public sealed class ReactiveMaskRenderer : IDisposable
         commandList.ClearColorTarget(0, RgbaFloat.Black);
         commandList.SetPipeline(_pipeline);
         commandList.SetGraphicsResourceSet(0, cameraSet);
-        commandList.SetGraphicsResourceSet(1, _parameterSet);
         commandList.SetVertexBuffer(0, vertexBuffer);
         commandList.SetIndexBuffer(indexBuffer, IndexFormat.UInt32);
 
         // Low-strength opaque dynamics first, highly unstable translucent/
         // emissive content last. If geometry overlaps at the same depth the
         // stronger temporal reaction wins without needing a max-blend path.
+        ResourceSet? boundSet = null;
         foreach (var range in ranges
                      .Where(item => item.IndexCount > 0)
                      .OrderBy(item => item.Strength))
         {
-            var strength = Math.Clamp(range.Strength, 0f, 1f);
-            commandList.UpdateBuffer(
-                _parameters,
-                0,
-                new Vector4(strength, 0f, 0f, 0f));
+            var key = QuantizeStrength(range.Strength);
+            var set = _strengthSets[key].Set;
+            if (!ReferenceEquals(boundSet, set))
+            {
+                commandList.SetGraphicsResourceSet(1, set);
+                boundSet = set;
+            }
             commandList.DrawIndexed(
                 range.IndexCount,
                 1,
@@ -185,6 +199,9 @@ public sealed class ReactiveMaskRenderer : IDisposable
 
         return MaskView;
     }
+
+    private static int QuantizeStrength(float strength) =>
+        Math.Clamp((int)MathF.Round(strength * 1000f), 0, 1000);
 
     private void RecreateTarget(uint width, uint height)
     {
@@ -234,9 +251,13 @@ public sealed class ReactiveMaskRenderer : IDisposable
         _disposed = true;
 
         _pipeline?.Dispose();
-        _parameterSet?.Dispose();
+        foreach (var (_, (buf, set)) in _strengthSets)
+        {
+            set.Dispose();
+            buf.Dispose();
+        }
+        _strengthSets.Clear();
         _parameterLayout?.Dispose();
-        _parameters?.Dispose();
         _framebuffer?.Dispose();
         _maskView?.Dispose();
         _maskTexture?.Dispose();
@@ -245,9 +266,7 @@ public sealed class ReactiveMaskRenderer : IDisposable
                 shader.Dispose();
 
         _pipeline = null;
-        _parameterSet = null;
         _parameterLayout = null;
-        _parameters = null;
         _framebuffer = null;
         _maskView = null;
         _maskTexture = null;

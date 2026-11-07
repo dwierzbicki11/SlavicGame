@@ -39,12 +39,16 @@ internal sealed class FrameGenerationPresenter : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         // Exclude this presenter's preceding CPU delay from the estimate.
         // Otherwise a slow frame feeds its own delay into the next frame and
-        // progressively lowers the render rate. A user limit denotes rendered
-        // frames; two output slots fit within its requested interval.
+        // progressively lowers the render rate. Because rendering and
+        // presentation share the main thread, only pace with spare budget up
+        // to an explicit frame-rate cap; when CPU/GPU-bound, keep only the
+        // minimal 1 ms anti-collapse spacing so FG never stalls simulation.
         var interval = double.IsFinite(frameDeltaSeconds) && frameDeltaSeconds > 0 ? frameDeltaSeconds : 1.0 / 60;
         var workInterval = Math.Max(0.002, interval - _pacingSeconds);
-        if (renderedFrameLimit > 0) workInterval = Math.Max(workInterval, 1.0 / renderedFrameLimit);
-        _minimumSpacing = Math.Clamp(workInterval * 0.5, 0.001, 0.05);
+        var spareInterval = renderedFrameLimit > 0
+            ? Math.Max(0.0, (1.0 / renderedFrameLimit) - workInterval)
+            : 0.0;
+        _minimumSpacing = Math.Clamp(spareInterval * 0.5, 0.001, 0.05);
         _pacingSeconds = 0;
     }
 

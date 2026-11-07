@@ -18,6 +18,14 @@ if (!OperatingSystem.IsLinux())
 }
 if (Environment.GetEnvironmentVariable("SLAVICGAME_TEST_FSR3_NATIVE") != "1")
     throw new InvalidOperationException("Set SLAVICGAME_TEST_FSR3_NATIVE=1 for the required scene GPU proof.");
+if (args.Contains("--benchmark"))
+{
+    Environment.SetEnvironmentVariable(FidelityFxSceneFrameGeneration.SceneValidationVariable, null);
+    Environment.SetEnvironmentVariable(FidelityFxUpscalerPolicy.EnvironmentVariable, null);
+    VulkanRuntimeCompatibility.EnsureInitialized();
+    RendererBenchmark.Run(args);
+    return;
+}
 Environment.SetEnvironmentVariable(FidelityFxSceneFrameGeneration.SceneValidationVariable, "1");
 Environment.SetEnvironmentVariable(FidelityFxUpscalerPolicy.EnvironmentVariable, null);
 VulkanRuntimeCompatibility.EnsureInitialized();

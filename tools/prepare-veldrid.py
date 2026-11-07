@@ -71,6 +71,7 @@ namespace Veldrid
 
     path = OUTPUT / 'src/Veldrid/Vk/VkGraphicsDevice.cs'
     text = path.read_text(encoding='utf-8-sig')
+    text = replace_once(text, '        private const int SharedCommandPoolCount = 4;', '        private const int SharedCommandPoolCount = 16;')
     text = replace_once(text, '        public VkInstance Instance => _instance;', '''        public VkInstance Instance => _instance;
         public uint InstanceApiVersion { get; private set; }
         public uint PhysicalDeviceApiVersion => _physicalDeviceProperties.apiVersion;
@@ -157,7 +158,46 @@ namespace Veldrid
                 CheckResult(result);''', '''                VkResult result = vkQueueSubmit(_graphicsQueue, 1, ref si, vkFence);
                 if (result != VkResult.Success)
                     throw new VeldridException("Vulkan queue submission failed with VkResult " + result);''')
-    text = replace_once(text, '        private class SharedCommandPool', '''        internal void SynchronizeNativeDispatch()
+    text = replace_once(text, '''        internal void TransitionImageLayout(VkTexture texture, VkImageLayout layout)
+        {
+            SharedCommandPool pool = GetFreeCommandPool();''', '''        internal void TransitionImageLayout(VkTexture texture, VkImageLayout layout)
+        {
+            if (texture.GetImageLayout(0, 0) == layout) return;
+            SharedCommandPool pool = GetFreeCommandPool();''')
+    text = replace_once(text, '        private class SharedCommandPool', '''        internal void RecordImageLayoutTransition(IntPtr commandBuffer, VkTexture texture, VkImageLayout layout)
+        {
+            if (texture.GetImageLayout(0, 0) == layout) return;
+            VkCommandBuffer cb = new VkCommandBuffer(commandBuffer);
+            texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ActualArrayLayers, layout);
+        }
+
+        internal void RecordNativeDispatchBarrier(IntPtr commandBuffer)
+        {
+            VkCommandBuffer cb = new VkCommandBuffer(commandBuffer);
+            VkMemoryBarrier barrier = VkMemoryBarrier.New();
+            barrier.srcAccessMask = VkAccessFlags.MemoryWrite;
+            barrier.dstAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            vkCmdPipelineBarrier(cb, VkPipelineStageFlags.AllCommands,
+                VkPipelineStageFlags.AllCommands, VkDependencyFlags.None,
+                1, ref barrier, 0, null, 0, null);
+        }
+
+        internal void TransitionImageLayoutAndSynchronize(VkTexture texture, VkImageLayout layout)
+        {
+            SharedCommandPool pool = GetFreeCommandPool();
+            VkCommandBuffer cb = pool.BeginNewCommandBuffer();
+            if (texture.GetImageLayout(0, 0) != layout)
+                texture.TransitionImageLayout(cb, 0, texture.MipLevels, 0, texture.ActualArrayLayers, layout);
+            VkMemoryBarrier barrier = VkMemoryBarrier.New();
+            barrier.srcAccessMask = VkAccessFlags.MemoryWrite;
+            barrier.dstAccessMask = VkAccessFlags.MemoryRead | VkAccessFlags.MemoryWrite;
+            vkCmdPipelineBarrier(cb, VkPipelineStageFlags.AllCommands,
+                VkPipelineStageFlags.AllCommands, VkDependencyFlags.None,
+                1, ref barrier, 0, null, 0, null);
+            pool.EndAndSubmit(cb);
+        }
+
+        internal void SynchronizeNativeDispatch()
         {
             // The external SDK has its own layout tracker. Its final image
             // transitions must be visible to subsequent Veldrid sampling,
@@ -200,7 +240,16 @@ namespace Veldrid
         public bool CanReadSwapchainImages(Swapchain swapchain)
             => Util.AssertSubtype<Swapchain, VkSwapchain>(swapchain).CanReadImages;
 
-        public void SynchronizeNativeDispatch() => _gd.SynchronizeNativeDispatch();''')
+        public void SynchronizeNativeDispatch() => _gd.SynchronizeNativeDispatch();
+
+        public void RecordImageLayoutTransition(IntPtr commandBuffer, Texture texture, uint layout)
+            => _gd.RecordImageLayoutTransition(commandBuffer, Util.AssertSubtype<Texture, VkTexture>(texture), (Vulkan.VkImageLayout)layout);
+
+        public void RecordNativeDispatchBarrier(IntPtr commandBuffer)
+            => _gd.RecordNativeDispatchBarrier(commandBuffer);
+
+        public void TransitionImageLayoutAndSynchronize(Texture texture, uint layout)
+            => _gd.TransitionImageLayoutAndSynchronize(Util.AssertSubtype<Texture, VkTexture>(texture), (Vulkan.VkImageLayout)layout);''')
     text = replace_once(text, '    public class BackendInfoVulkan', '''    public readonly struct VulkanPresentationResult
     {
         public readonly bool Presented;
@@ -271,6 +320,50 @@ namespace Veldrid
             vkCmdPipelineBarrier(_cb, VkPipelineStageFlags.Transfer,
                 VkPipelineStageFlags.AllCommands, VkDependencyFlags.None,
                 0, null, 1, &barrier, 0, null);''')
+    text = replace_once(text, '''            if (!sourceIsStaging && !destIsStaging)
+            {
+                VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = VkImageAspectFlags.Color,
+                    layerCount = layerCount,
+                    mipLevel = srcMipLevel,
+                    baseArrayLayer = srcBaseArrayLayer
+                };
+
+                VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = VkImageAspectFlags.Color,
+                    layerCount = layerCount,
+                    mipLevel = dstMipLevel,
+                    baseArrayLayer = dstBaseArrayLayer
+                };''', '''            if (!sourceIsStaging && !destIsStaging)
+            {
+                VkImageAspectFlags srcAspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
+                    ? (FormatHelpers.IsStencilFormat(srcVkTexture.Format)
+                        ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                        : VkImageAspectFlags.Depth)
+                    : VkImageAspectFlags.Color;
+                VkImageAspectFlags dstAspect = (dstVkTexture.Usage & TextureUsage.DepthStencil) != 0
+                    ? (FormatHelpers.IsStencilFormat(dstVkTexture.Format)
+                        ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
+                        : VkImageAspectFlags.Depth)
+                    : VkImageAspectFlags.Color;
+
+                VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = srcAspect,
+                    layerCount = layerCount,
+                    mipLevel = srcMipLevel,
+                    baseArrayLayer = srcBaseArrayLayer
+                };
+
+                VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
+                {
+                    aspectMask = dstAspect,
+                    layerCount = layerCount,
+                    mipLevel = dstMipLevel,
+                    baseArrayLayer = dstBaseArrayLayer
+                };''')
     path.write_text(text)
 
     # Pipeline compatibility requires identical dependency descriptions in
@@ -325,6 +418,33 @@ namespace Veldrid
             {
                 barrier.srcAccessMask = oldLayout == VkImageLayout.TransferDstOptimal
                     ? VkAccessFlags.TransferWrite : VkAccessFlags.TransferRead;''')
+    text = replace_once(text, '''            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.DepthStencilAttachmentOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+                barrier.dstAccessMask = VkAccessFlags.DepthStencilAttachmentWrite;
+                srcStageFlags = VkPipelineStageFlags.Transfer;
+                dstStageFlags = VkPipelineStageFlags.LateFragmentTests;
+            }''', '''            else if (oldLayout == VkImageLayout.TransferDstOptimal && newLayout == VkImageLayout.DepthStencilAttachmentOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.TransferWrite;
+                barrier.dstAccessMask = VkAccessFlags.DepthStencilAttachmentWrite;
+                srcStageFlags = VkPipelineStageFlags.Transfer;
+                dstStageFlags = VkPipelineStageFlags.LateFragmentTests;
+            }
+            else if (oldLayout == VkImageLayout.DepthStencilAttachmentOptimal && newLayout == VkImageLayout.TransferSrcOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.DepthStencilAttachmentWrite;
+                barrier.dstAccessMask = VkAccessFlags.TransferRead;
+                srcStageFlags = VkPipelineStageFlags.LateFragmentTests;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }
+            else if (oldLayout == VkImageLayout.DepthStencilAttachmentOptimal && newLayout == VkImageLayout.TransferDstOptimal)
+            {
+                barrier.srcAccessMask = VkAccessFlags.DepthStencilAttachmentWrite;
+                barrier.dstAccessMask = VkAccessFlags.TransferWrite;
+                srcStageFlags = VkPipelineStageFlags.LateFragmentTests;
+                dstStageFlags = VkPipelineStageFlags.Transfer;
+            }''')
     text = replace_once(text, '                Debug.Fail("Invalid image layout transition.");',
                         '                throw new VeldridException("Unsupported Vulkan image layout transition: " + oldLayout + " -> " + newLayout);')
     # Depth/color/transfer outputs are consumed by both the scene fragment

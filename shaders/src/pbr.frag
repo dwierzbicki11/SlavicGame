@@ -91,6 +91,16 @@ vec3 FresnelSchlick(float cosTheta, vec3 f0)
     return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+vec3 FilmicToneMap(vec3 c)
+{
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c1 = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return clamp((c * (a * c + b)) / (c * (c1 * c + d) + e), 0.0, 1.0);
+}
+
 void main()
 {
     vec4 baseSample = texture(sampler2D(BaseColorTexture, MaterialSampler), fsin_TexCoord);
@@ -106,7 +116,7 @@ void main()
 
     vec3 baseNormal = normalize(fsin_WorldNormal);
     vec3 normal = baseNormal;
-    if (modelPbr > 0.5 && normalMapping > 0.5)
+    if (modelPbr > 0.5 && normalMapping > 0.5 && fsin_Distance < 48.0)
     {
         vec3 sampledNormal = texture(
             sampler2D(NormalTexture, MaterialSampler),
@@ -123,9 +133,9 @@ void main()
     float roughness = 0.82;
     if (modelPbr > 0.5 && specularEnabled > 0.5)
     {
-        vec3 mr = texture(
-            sampler2D(MetallicRoughnessTexture, MaterialSampler),
-            fsin_TexCoord).rgb;
+        vec3 mr = fsin_Distance < 65.0
+            ? texture(sampler2D(MetallicRoughnessTexture, MaterialSampler), fsin_TexCoord).rgb
+            : vec3(0.0, 1.0, 1.0);
         metallic = clamp(MaterialFactors.x * mr.b, 0.0, 1.0);
         roughness = clamp(MaterialFactors.y * mr.g, 0.06, 1.0);
         roughness = mix(
@@ -178,7 +188,7 @@ void main()
     }
 
     float geometryShadow = 1.0;
-    if (GraphicsFeatures0.z > 0.5)
+    if (GraphicsFeatures0.z > 0.5 && ndotl > 0.001)
     {
         geometryShadow = SampleSunShadow(
             ShadowMap,
@@ -214,10 +224,11 @@ void main()
         float backLight = max(dot(-normal, lightDirection), 0.0);
         float grazing = 1.0 - ndotv;
         float transmission =
-            backLight * backLight * 0.12 +
-            grazing * grazing * 0.018;
+            backLight * backLight * 0.16 +
+            grazing * grazing * 0.024;
+        vec3 leafSubsurface = albedo * vec3(1.15, 1.25, 0.75);
         color +=
-            albedo *
+            leafSubsurface *
             sunColor *
             transmission *
             lightStrength *
@@ -230,7 +241,7 @@ void main()
     fogFactor = clamp(fogFactor, 0.0, 0.94);
     color = mix(color, FogColorDensity.rgb, fogFactor);
 
-    color = color / (color + vec3(1.0));
+    color = FilmicToneMap(color);
     color = pow(max(color, vec3(0.0)), vec3(1.0 / 2.2));
     fsout_Color = vec4(color, alpha);
 }

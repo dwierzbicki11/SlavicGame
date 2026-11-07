@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using SlavicGame.Engine.Settings;
 using Veldrid;
 
@@ -19,6 +20,7 @@ public sealed class PostProcessRenderer : IDisposable
     private TextureView? _bloomView;
     private uint _width;
     private uint _height;
+    private PostProcessUniform? _lastUniform;
     private bool _disposed;
 
     public TextureView OutputView => _targetView ?? throw new InvalidOperationException("Post-process renderer is not initialized.");
@@ -84,15 +86,19 @@ public sealed class PostProcessRenderer : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(commandList);
         ArgumentNullException.ThrowIfNull(settings);
-        if (_paramsBuffer is null || _framebuffer is null || _pipeline is null || _set is null) throw new InvalidOperationException("Post-process renderer is not initialized.");
+        if (_paramsBuffer is null || _framebuffer is null || _pipeline is null || _set is null || _graphicsDevice is null) throw new InvalidOperationException("Post-process renderer is not initialized.");
         var texel = new Vector4(
             1f / Math.Max(1u, _width),
             1f / Math.Max(1u, _height),
             !disableFxaa && settings.AntiAliasing == AntiAliasingMode.Fxaa ? 1f : 0f,
             0f);
         var controls = new Vector4(settings.BloomStrength, 0.72f, settings.Brightness, settings.Gamma);
-        commandList.UpdateBuffer(_paramsBuffer, 0, texel);
-        commandList.UpdateBuffer(_paramsBuffer, 16, controls);
+        var uniform = new PostProcessUniform(texel, controls);
+        if (_lastUniform is not { } last || last.Texel != uniform.Texel || last.Controls != uniform.Controls)
+        {
+            _graphicsDevice.UpdateBuffer(_paramsBuffer, 0, ref uniform);
+            _lastUniform = uniform;
+        }
         commandList.SetFramebuffer(_framebuffer);
         commandList.SetFullViewports();
         commandList.SetFullScissorRects();
@@ -128,5 +134,12 @@ public sealed class PostProcessRenderer : IDisposable
         _pipeline?.Dispose(); _set?.Dispose(); _layout?.Dispose(); _paramsBuffer?.Dispose(); _framebuffer?.Dispose(); _targetView?.Dispose(); _targetTexture?.Dispose();
         if (_shaders is not null) foreach (var shader in _shaders) shader.Dispose();
         _pipeline = null; _set = null; _layout = null; _paramsBuffer = null; _framebuffer = null; _targetView = null; _targetTexture = null; _shaders = null; _sourceView = null; _bloomView = null; _graphicsDevice = null;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly struct PostProcessUniform(Vector4 texel, Vector4 controls)
+    {
+        public readonly Vector4 Texel = texel;
+        public readonly Vector4 Controls = controls;
     }
 }

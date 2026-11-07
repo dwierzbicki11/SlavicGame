@@ -21,6 +21,16 @@ layout(location = 3) in vec3 fsin_WorldPosition;
 
 layout(location = 0) out vec4 fsout_Color;
 
+vec3 FilmicToneMap(vec3 c)
+{
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c1 = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return clamp((c * (a * c + b)) / (c * (c1 * c + d) + e), 0.0, 1.0);
+}
+
 float Hash21(vec2 p)
 {
     p = fract(p * vec2(123.34, 456.21));
@@ -207,5 +217,7 @@ void main()
         FogColorDensity.rgb,
         clamp(fogFactor, 0.0, 0.94));
 
+    color = FilmicToneMap(color);
+    color = pow(max(color, vec3(0.0)), vec3(1.0 / 2.2));
     fsout_Color = vec4(color, 1.0);
 }

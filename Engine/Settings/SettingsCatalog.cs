@@ -234,6 +234,19 @@ public static class SettingsCatalog
             (s, direction) =>
                 s.FsrQuality = CycleEnum(s.FsrQuality, direction)),
         new(
+            "dynamic-resolution",
+            SettingCategory.PostProcessing,
+            "SKALOWANIE DRS",
+            s => s.DynamicResolution switch
+            {
+                DynamicResolutionMode.Target60 => "CEL 60 FPS",
+                DynamicResolutionMode.Target30 => "CEL 30 FPS",
+                DynamicResolutionMode.Auto => "AUTO",
+                _ => "WYL"
+            },
+            (s, direction) =>
+                s.DynamicResolution = CycleEnum(s.DynamicResolution, direction)),
+        new(
             "fsr-sharpness",
             SettingCategory.PostProcessing,
             "FSR OSTROSC",

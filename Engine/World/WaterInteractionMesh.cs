@@ -49,10 +49,12 @@ public static class WaterInteractionMesh
             var radius = 0.30f + phase * 2.35f;
             var width = 0.035f + 0.025f * (1f - phase);
             var brightness = (1f - phase) * strength;
+            var rippleBase = new Vector3(0.035f, 0.155f, 0.185f);
+            var rippleFoam = new Vector3(0.72f, 0.88f, 0.86f);
             var color = Vector3.Lerp(
-                new Vector3(0.09f, 0.22f, 0.24f),
-                new Vector3(0.45f, 0.70f, 0.69f),
-                brightness);
+                rippleBase,
+                rippleFoam,
+                brightness * brightness);
 
             AppendRing(output, triangles, center, radius, width, color);
         }

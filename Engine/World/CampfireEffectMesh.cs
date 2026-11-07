@@ -46,29 +46,35 @@ public static class CampfireEffectMesh
                     seconds * 7.4f +
                     fire.Position.X * 0.11f +
                     fire.Position.Y * 0.07f);
-            var sway =
+            var swayX =
                 MathF.Sin(
-                    seconds * 4.9f +
+                    seconds * 5.2f +
                     fire.Position.Y * 0.09f) *
-                0.10f *
+                0.09f *
+                fire.VisualScale;
+            var swayZ =
+                MathF.Cos(
+                    seconds * 4.4f +
+                    fire.Position.X * 0.13f) *
+                0.07f *
                 fire.VisualScale;
 
             AddGroundGlow(
                 center,
-                0.72f * fire.VisualScale,
-                new Vector3(1.65f, 0.46f, 0.05f));
+                0.78f * fire.VisualScale * (0.94f + pulse * 0.12f),
+                new Vector3(1.85f, 0.44f, 0.035f) * (0.86f + pulse * 0.28f));
 
             AddFlame(
-                center + new Vector3(sway, 0f, 0f),
+                center + new Vector3(swayX, 0f, swayZ),
                 0.34f * fire.VisualScale * (0.92f + pulse * 0.16f),
-                0.90f * fire.VisualScale * (0.90f + pulse * 0.20f),
-                new Vector3(3.2f, 0.78f, 0.08f));
+                0.92f * fire.VisualScale * (0.90f + pulse * 0.20f),
+                new Vector3(3.6f, 1.15f, 0.12f));
 
             AddFlame(
-                center + new Vector3(-sway * 0.55f, 0.05f, sway * 0.35f),
-                0.20f * fire.VisualScale,
-                0.58f * fire.VisualScale * (0.92f + (1f - pulse) * 0.18f),
-                new Vector3(3.8f, 1.52f, 0.16f));
+                center + new Vector3(-swayX * 0.60f, 0.05f, -swayZ * 0.60f),
+                0.22f * fire.VisualScale,
+                0.62f * fire.VisualScale * (0.92f + (1f - pulse) * 0.18f),
+                new Vector3(4.2f, 2.05f, 0.24f));
         }
 
         void AddGroundGlow(

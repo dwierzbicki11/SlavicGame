@@ -34,6 +34,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
     private ResourceSet? _easuSet;
     private ResourceSet? _rcasSet;
     private TextureView? _presentationSource;
+    private readonly Dictionary<TextureView, (ResourceSet BilinearSet, ResourceSet EasuSet)> _presentationSetCache =
+        new(ReferenceEqualityComparer.Instance);
 
     private Pipeline? _bilinearPipeline;
     private Pipeline? _easuPipeline;
@@ -55,6 +57,11 @@ public sealed class ResolutionScalerRenderer : IDisposable
     private uint _outputHeight;
     private uint _fsr3OutputWidth;
     private uint _fsr3OutputHeight;
+    private uint _lastEasuInputWidth;
+    private uint _lastEasuInputHeight;
+    private uint _lastEasuOutputWidth;
+    private uint _lastEasuOutputHeight;
+    private float _lastRcasSharpness = float.NaN;
 
     public Framebuffer SceneFramebuffer =>
         _sceneFramebuffer ??
@@ -217,8 +224,8 @@ public sealed class ResolutionScalerRenderer : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        width = Math.Clamp(width, 640u, 7680u);
-        height = Math.Clamp(height, 360u, 4320u);
+        width = Math.Clamp(width, 320u, 7680u);
+        height = Math.Clamp(height, 180u, 4320u);
 
         if (_sceneFramebuffer is not null &&
             _width == width &&
@@ -352,17 +359,28 @@ public sealed class ResolutionScalerRenderer : IDisposable
         bool capture)
     {
         if (_easuSet is null ||
-            _easuConstants is null)
+            _easuConstants is null ||
+            _graphicsDevice is null)
         {
             throw new InvalidOperationException("FSR1 EASU resources are not initialized.");
         }
 
-        var easu = BuildEasuConstants(
-            _width,
-            _height,
-            outputWidth,
-            outputHeight);
-        commandList.UpdateBuffer(_easuConstants, 0, easu);
+        if (_lastEasuInputWidth != _width ||
+            _lastEasuInputHeight != _height ||
+            _lastEasuOutputWidth != outputWidth ||
+            _lastEasuOutputHeight != outputHeight)
+        {
+            var easu = BuildEasuConstants(
+                _width,
+                _height,
+                outputWidth,
+                outputHeight);
+            _graphicsDevice.UpdateBuffer(_easuConstants, 0, easu);
+            _lastEasuInputWidth = _width;
+            _lastEasuInputHeight = _height;
+            _lastEasuOutputWidth = outputWidth;
+            _lastEasuOutputHeight = outputHeight;
+        }
 
         if (_singlePassEasuCompatibility)
         {
@@ -387,8 +405,12 @@ public sealed class ResolutionScalerRenderer : IDisposable
             throw new InvalidOperationException("FSR1 RCAS resources are not initialized.");
         }
 
-        var rcas = BuildRcasConstants(sharpness);
-        commandList.UpdateBuffer(_rcasConstants, 0, rcas);
+        if (MathF.Abs(_lastRcasSharpness - sharpness) > 0.0001f)
+        {
+            var rcas = BuildRcasConstants(sharpness);
+            _graphicsDevice.UpdateBuffer(_rcasConstants, 0, rcas);
+            _lastRcasSharpness = sharpness;
+        }
 
         // EASU adds a raster pass only when upscaling. Preserve source row
         // order here: with Veldrid's standard Vulkan clip direction the
@@ -420,28 +442,72 @@ public sealed class ResolutionScalerRenderer : IDisposable
         }
 
         if (ReferenceEquals(_presentationSource, source) &&
+            !source.IsDisposed &&
             _bilinearSet is not null &&
             _easuSet is not null)
         {
             return;
         }
 
-        _bilinearSet?.Dispose();
-        _easuSet?.Dispose();
+        if (!source.IsDisposed &&
+            _presentationSetCache.TryGetValue(source, out var cached))
+        {
+            _bilinearSet = cached.BilinearSet;
+            _easuSet = cached.EasuSet;
+            _presentationSource = source;
+            return;
+        }
+
+        List<TextureView>? disposedKeys = null;
+        foreach (var entry in _presentationSetCache)
+        {
+            if (entry.Key.IsDisposed)
+            {
+                disposedKeys ??= [];
+                disposedKeys.Add(entry.Key);
+            }
+        }
+        if (disposedKeys is not null)
+        {
+            foreach (var key in disposedKeys)
+            {
+                if (_presentationSetCache.Remove(key, out var retired))
+                {
+                    retired.BilinearSet.Dispose();
+                    retired.EasuSet.Dispose();
+                }
+            }
+        }
 
         var factory = _graphicsDevice.ResourceFactory;
-        _bilinearSet = factory.CreateResourceSet(new ResourceSetDescription(
+        var bilinearSet = factory.CreateResourceSet(new ResourceSetDescription(
             _bilinearLayout,
             source,
             _graphicsDevice.LinearSampler));
 
-        _easuSet = factory.CreateResourceSet(new ResourceSetDescription(
+        var easuSet = factory.CreateResourceSet(new ResourceSetDescription(
             _easuLayout,
             _easuConstants,
             source,
             _graphicsDevice.LinearSampler));
 
+        _presentationSetCache[source] = (bilinearSet, easuSet);
+        _bilinearSet = bilinearSet;
+        _easuSet = easuSet;
         _presentationSource = source;
+    }
+
+    private void ClearPresentationSetCache()
+    {
+        foreach (var (_, sets) in _presentationSetCache)
+        {
+            sets.BilinearSet.Dispose();
+            sets.EasuSet.Dispose();
+        }
+        _presentationSetCache.Clear();
+        _bilinearSet = null;
+        _easuSet = null;
+        _presentationSource = null;
     }
 
     private void RecreateSceneTarget(uint width, uint height)
@@ -451,11 +517,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
 
         var factory = _graphicsDevice.ResourceFactory;
 
-        _bilinearSet?.Dispose();
-        _easuSet?.Dispose();
-        _bilinearSet = null;
-        _easuSet = null;
-        _presentationSource = null;
+        ClearPresentationSetCache();
 
         _sceneFramebuffer?.Dispose();
         _resolvedColorView?.Dispose();
@@ -753,8 +815,7 @@ public sealed class ResolutionScalerRenderer : IDisposable
         _easuSwapchainPipeline?.Dispose();
         _rcasPipeline?.Dispose();
 
-        _bilinearSet?.Dispose();
-        _easuSet?.Dispose();
+        ClearPresentationSetCache();
         _rcasSet?.Dispose();
 
         _bilinearLayout?.Dispose();

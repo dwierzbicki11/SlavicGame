@@ -9,7 +9,7 @@ namespace SlavicGame.Engine.Renderer;
 
 public sealed class FarVegetationRenderer : IDisposable
 {
-    private const float ChunkSize = 192f;
+    private const float ChunkSize = 64f;
 
     private readonly List<ProxyBatch> _batches = [];
     private Pipeline? _pipeline;
@@ -171,7 +171,7 @@ public sealed class FarVegetationRenderer : IDisposable
             var radius = instances.Max(instance =>
                 Vector2.Distance(
                     new Vector2(instance.Position.X, instance.Position.Z),
-                    new Vector2(center.X, center.Z))) + 34f;
+                    new Vector2(center.X, center.Z))) + 12f;
 
             _batches.Add(new ProxyBatch(
                 center,
@@ -214,7 +214,7 @@ public sealed class FarVegetationRenderer : IDisposable
                 batch.Center.Z - cameraPosition.Z);
             var distance = delta.Length();
 
-            if (distance + batch.Radius < startDistance)
+            if (distance + 12f < startDistance)
                 continue;
             if (distance - batch.Radius > maximumDistance)
                 continue;

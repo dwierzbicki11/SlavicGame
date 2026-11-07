@@ -171,25 +171,30 @@ public sealed class FidelityFxUpscaler : IDisposable
 
         EnsureOutputSize(output.Width, output.Height);
 
-        // These transitions are queued after Veldrid's scene submission and
-        // before the native FSR command buffer on the exact same VkQueue.
-        _vk.TransitionImageLayout(
+        var commandBuffer = _commands.Begin();
+        // Record input/output layout transitions directly into the native
+        // dispatch command buffer on the same VkQueue instead of submitting
+        // 5 separate SharedCommandPool command buffers per frame.
+        _vk.RecordImageLayoutTransition(
+            commandBuffer,
             color,
             VkImageLayoutShaderReadOnlyOptimal);
-        _vk.TransitionImageLayout(
+        _vk.RecordImageLayoutTransition(
+            commandBuffer,
             depth,
             VkImageLayoutShaderReadOnlyOptimal);
-        _vk.TransitionImageLayout(
+        _vk.RecordImageLayoutTransition(
+            commandBuffer,
             motionVectors,
             VkImageLayoutShaderReadOnlyOptimal);
-        _vk.TransitionImageLayout(
+        _vk.RecordImageLayoutTransition(
+            commandBuffer,
             reactive,
             VkImageLayoutShaderReadOnlyOptimal);
-        _vk.TransitionImageLayout(
+        _vk.RecordImageLayoutTransition(
+            commandBuffer,
             output,
             VkImageLayoutGeneral);
-
-        var commandBuffer = _commands.Begin();
         var desc = new FfxDispatchDescUpscale
         {
             Header = new FfxApiHeader
@@ -262,6 +267,28 @@ public sealed class FidelityFxUpscaler : IDisposable
                 _contextMemory,
                 descriptorMemory);
 
+            // FidelityFX leaves the output in UAV/general state. Synchronize
+            // Veldrid's layout tracker and record the compute-write -> sampled-read
+            // transition and barrier into the same command buffer before submitting.
+            _vk.OverrideImageLayout(output, VkImageLayoutGeneral);
+            _vk.OverrideImageLayout(
+                color,
+                VkImageLayoutShaderReadOnlyOptimal);
+            _vk.OverrideImageLayout(
+                depth,
+                VkImageLayoutShaderReadOnlyOptimal);
+            _vk.OverrideImageLayout(
+                motionVectors,
+                VkImageLayoutShaderReadOnlyOptimal);
+            _vk.OverrideImageLayout(
+                reactive,
+                VkImageLayoutShaderReadOnlyOptimal);
+            _vk.RecordImageLayoutTransition(
+                commandBuffer,
+                output,
+                VkImageLayoutShaderReadOnlyOptimal);
+            _vk.RecordNativeDispatchBarrier(commandBuffer);
+
             // Even on an API error the provider may have recorded valid
             // cleanup/barrier work, so finish the command buffer before
             // reporting the error and advancing the ring.
@@ -277,29 +304,6 @@ public sealed class FidelityFxUpscaler : IDisposable
         {
             Marshal.FreeHGlobal(descriptorMemory);
         }
-
-        // FidelityFX leaves the output in UAV/general state. Keep Veldrid's
-        // layout tracker synchronized before its display-resolution sampling
-        // pass records the next transition.
-        _vk.OverrideImageLayout(output, VkImageLayoutGeneral);
-        _vk.OverrideImageLayout(
-            color,
-            VkImageLayoutShaderReadOnlyOptimal);
-        _vk.OverrideImageLayout(
-            depth,
-            VkImageLayoutShaderReadOnlyOptimal);
-        _vk.OverrideImageLayout(
-            motionVectors,
-            VkImageLayoutShaderReadOnlyOptimal);
-        _vk.OverrideImageLayout(
-            reactive,
-            VkImageLayoutShaderReadOnlyOptimal);
-
-        // Veldrid tracks its own compute writes, but cannot infer native AMD
-        // writes when a storage-capable image is bound for graphics sampling.
-        // Queue the compute-write -> sampled-read barrier on the same queue.
-        _vk.TransitionImageLayout(output, VkImageLayoutShaderReadOnlyOptimal);
-        _vk.SynchronizeNativeDispatch();
     }
 
     private void CreateContext(

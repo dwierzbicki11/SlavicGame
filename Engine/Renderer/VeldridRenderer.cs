@@ -104,6 +104,7 @@ public sealed class VeldridRenderer : IDisposable
     internal bool FrameGenerationActive =>
         _frameGeneration is not null && _framePresenter is not null;
     internal string FrameGenerationDiagnostic { get; private set; } = "Scene FG validation was not requested.";
+    public int LastPresentedFrameCount { get; private set; } = 1;
 
     // An externally owned framebuffer drives the complete production renderer
     // without an OS window. Only the final SwapBuffers operation is omitted.
@@ -649,6 +650,7 @@ public sealed class VeldridRenderer : IDisposable
             return;
         }
 
+        LastPresentedFrameCount = 1;
         var sceneFrameId = _sceneFrameId++;
 
         var menuVisible = menuView is not null;
@@ -752,7 +754,7 @@ public sealed class VeldridRenderer : IDisposable
             camera.Position,
             MathF.Min(
                 GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
-                220f),
+                110f),
             _actorVertices,
             _actorIndices);
         BowPresentationMesh.Append(
@@ -1298,20 +1300,36 @@ public sealed class VeldridRenderer : IDisposable
             GraphicsQualityCatalog.TerrainDetailLevel(settings.TerrainDetail),
             0f);
         var cameraFrustum = CameraFrustum.Create(camera, aspect);
+        var fgActive =
+            temporalExtentValid &&
+            _frameGeneration is not null &&
+            _motionVectors.IsInitialized;
+        if (fgActive)
+        {
+            try { _frameGeneration?.EnsureDisplaySize(displayWidth, displayHeight); }
+            catch (Exception exception)
+            {
+                DisableSceneFrameGeneration(exception);
+                fgActive = false;
+            }
+        }
+
+        var atmosphereUniform = new AtmosphereUniform(
+            fogParameters,
+            lightingParameters,
+            sunColorTime,
+            skyWeather,
+            moonParameters,
+            celestialParameters,
+            graphicsFeatures0,
+            graphicsFeatures1,
+            graphicsFeatures2,
+            graphicsFeatures3);
 
         _commandList.Begin();
         _commandList.UpdateBuffer(_projectionBuffer, 0, projection);
         _commandList.UpdateBuffer(_viewBuffer, 0, view);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 0, fogParameters);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 16, lightingParameters);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 32, sunColorTime);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 48, skyWeather);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 64, moonParameters);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 80, celestialParameters);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 96, graphicsFeatures0);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 112, graphicsFeatures1);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 128, graphicsFeatures2);
-        _commandList.UpdateBuffer(_atmosphereBuffer, 144, graphicsFeatures3);
+        _commandList.UpdateBuffer(_atmosphereBuffer, 0, ref atmosphereUniform);
         _commandList.UpdateBuffer(_hudScreenBuffer, 0, screenSize);
         if (_actorVertices.Count > 0)
         {
@@ -1342,27 +1360,57 @@ public sealed class VeldridRenderer : IDisposable
 
         if (shadowEnabled)
         {
-            _shadows.UpdateLight(
-                _commandList,
-                camera.Position,
-                celestial.SunDirection);
-            _shadows.BeginDepthPass(_commandList);
+            var shadowDist = GraphicsQualityCatalog.ShadowDistance(settings.ShadowDistance);
+            var vegDist = GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance);
+            var clutterDist = GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter);
 
-            _terrain.RenderShadow(
-                _commandList,
-                _shadows.TerrainPipeline,
-                _shadows.DepthSet,
-                settings.TerrainDetail);
-            _pbrModels.RenderShadow(
-                _commandList,
-                _shadows.PbrPipeline,
-                _shadows.DepthSet,
-                camera.Position,
-                GraphicsQualityCatalog.ShadowDistance(settings.ShadowDistance),
-                GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
-                GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter),
-                settings.ModelLod,
-                settings.FarVegetation);
+            if (_shadows.ShouldUpdateStaticShadow(
+                    camera.Position,
+                    celestial.SunDirection,
+                    settings.TerrainDetail,
+                    shadowDist,
+                    vegDist,
+                    clutterDist,
+                    settings.ModelLod,
+                    settings.FarVegetation))
+            {
+                _shadows.BeginStaticPass(
+                    _commandList,
+                    camera.Position,
+                    celestial.SunDirection,
+                    settings.TerrainDetail,
+                    shadowDist,
+                    vegDist,
+                    clutterDist,
+                    settings.ModelLod,
+                    settings.FarVegetation);
+
+                _terrain.RenderShadow(
+                    _commandList,
+                    _shadows.TerrainPipeline,
+                    _shadows.DepthSet,
+                    settings.TerrainDetail,
+                    camera.Position,
+                    shadowDist);
+
+                _pbrModels.RenderShadow(
+                    _commandList,
+                    _shadows.PbrPipeline,
+                    _shadows.DepthSet,
+                    camera.Position,
+                    shadowDist,
+                    vegDist,
+                    clutterDist,
+                    settings.ModelLod,
+                    settings.FarVegetation);
+
+                _shadows.EndStaticPassAndPrepareActive(_commandList);
+            }
+            else
+            {
+                _shadows.BeginActivePassFromCache(_commandList);
+            }
+
             _shadows.RenderActors(
                 _commandList,
                 _actorVertexBuffer,
@@ -1370,19 +1418,22 @@ public sealed class VeldridRenderer : IDisposable
                 opaqueDynamicEnd);
         }
 
+        var renderDist = GraphicsQualityCatalog.RenderDistance(settings.RenderDistance);
+
         _commandList.SetFramebuffer(framebuffer);
         _commandList.SetFullViewports();
         _commandList.SetFullScissorRects();
         _commandList.ClearColorTarget(0, atmosphereColor);
         _commandList.ClearDepthStencil(1f);
 
-        _sky.Render(_commandList, _cameraSet);
-
         _terrain.Render(
             _commandList,
             _cameraSet,
             _shadows.SampleSet,
-            settings.TerrainDetail);
+            settings.TerrainDetail,
+            camera.Position,
+            cameraFrustum,
+            renderDist);
 
         _pbrModels.Render(
             _commandList,
@@ -1390,7 +1441,7 @@ public sealed class VeldridRenderer : IDisposable
             _shadows.SampleSet,
             camera.Position,
             cameraFrustum,
-            GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
+            renderDist,
             GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance),
             GraphicsQualityCatalog.GroundClutterDistance(settings.GroundClutter),
             settings.ModelLod,
@@ -1419,6 +1470,10 @@ public sealed class VeldridRenderer : IDisposable
             _commandList.SetIndexBuffer(_actorIndexBuffer, IndexFormat.UInt32);
             _commandList.DrawIndexed(_actorIndexCount);
         }
+
+        // Sky last among opaque passes: depth-tested at the far plane so its
+        // raymarched clouds only run on genuinely visible sky pixels.
+        _sky.Render(_commandList, _cameraSet);
 
         if (fsr3Active && _reactiveMask.IsInitialized)
         {
@@ -1483,13 +1538,29 @@ public sealed class VeldridRenderer : IDisposable
         var displaySource = presentationSource;
         var displayUpscaler = spatialFallbackUpscaler;
         var displaySharpness = settings.FsrSharpness;
-        var fgActive =
-            temporalExtentValid &&
-            _frameGeneration is not null &&
-            _motionVectors.IsInitialized;
         if ((fsr3Active || fgActive) &&
             _resolutionScaler.SampleableDepthTexture is { } fsrDepth)
         {
+            var capturedDisplayBeforeSubmit = false;
+            Exception? preSubmitFgFailure = null;
+            if (!fsr3Active && fgActive && _frameGeneration is { } preSubmitFg)
+            {
+                try
+                {
+                    _resolutionScaler.CaptureDisplayColor(
+                        _commandList,
+                        preSubmitFg.HudlessFramebuffer,
+                        displayUpscaler,
+                        displaySharpness,
+                        displaySource);
+                    capturedDisplayBeforeSubmit = true;
+                }
+                catch (Exception exception)
+                {
+                    preSubmitFgFailure = exception;
+                }
+            }
+
             // Submit all scene, motion, reactive, bloom and post-process work
             // before recording AMD's native Vulkan compute dispatch.
             _commandList.End();
@@ -1528,7 +1599,7 @@ public sealed class VeldridRenderer : IDisposable
 
             if (_frameGeneration is { } fgScene)
             {
-                Exception? fgFailure = null;
+                var fgFailure = preSubmitFgFailure;
 
                 if (fsr3ProducedFrame)
                 {
@@ -1555,21 +1626,24 @@ public sealed class VeldridRenderer : IDisposable
                 }
                 else
                 {
-                    // FSR1/bilinear still need a display-sized HUD-free image
-                    // before the native frame-interpolation dispatch.
-                    _commandList.Begin();
-                    try
+                    if (!capturedDisplayBeforeSubmit && fgFailure is null)
                     {
-                        _resolutionScaler.CaptureDisplayColor(
-                            _commandList,
-                            fgScene.HudlessFramebuffer,
-                            displayUpscaler,
-                            displaySharpness,
-                            displaySource);
+                        // Fallback when FSR3 failed mid-frame: capture a
+                        // display-sized HUD-free image before FG dispatch.
+                        _commandList.Begin();
+                        try
+                        {
+                            _resolutionScaler.CaptureDisplayColor(
+                                _commandList,
+                                fgScene.HudlessFramebuffer,
+                                displayUpscaler,
+                                displaySharpness,
+                                displaySource);
+                        }
+                        catch (Exception exception) { fgFailure = exception; }
+                        _commandList.End();
+                        _graphicsDevice.SubmitCommands(_commandList);
                     }
-                    catch (Exception exception) { fgFailure = exception; }
-                    _commandList.End();
-                    _graphicsDevice.SubmitCommands(_commandList);
 
                     if (fgFailure is null)
                     {
@@ -1608,6 +1682,7 @@ public sealed class VeldridRenderer : IDisposable
 
         var paired = _offscreenTarget is null && _framePresenter is not null &&
             _frameGeneration is { HasGeneratedFrame: true };
+        var generatedPresented = false;
         if (paired)
         {
             // AMD has consumed the actual current scene and submitted the
@@ -1618,7 +1693,7 @@ public sealed class VeldridRenderer : IDisposable
             BeforeFramePresentation?.Invoke(_commandList, swapchainFramebuffer,
                 PresentedFrameKind.Generated, sceneFrameId);
             _commandList.End();
-            _framePresenter!.Submit(_commandList, PresentedFrameKind.Generated, sceneFrameId, paired: true);
+            generatedPresented = _framePresenter!.Submit(_commandList, PresentedFrameKind.Generated, sceneFrameId, paired: true);
             _commandList.Begin();
             swapchainFramebuffer = OutputFramebuffer;
         }
@@ -1628,7 +1703,11 @@ public sealed class VeldridRenderer : IDisposable
                 PresentedFrameKind.Rendered, sceneFrameId);
         _commandList.End();
         if (_framePresenter is not null)
-            _framePresenter.Submit(_commandList, PresentedFrameKind.Rendered, sceneFrameId, paired);
+        {
+            var renderedPresented = _framePresenter.Submit(_commandList, PresentedFrameKind.Rendered, sceneFrameId, paired);
+            var presentedCount = (generatedPresented ? 1 : 0) + (renderedPresented ? 1 : 0);
+            LastPresentedFrameCount = Math.Max(1, presentedCount);
+        }
         else
         {
             _graphicsDevice.SubmitCommands(_commandList);
@@ -1904,22 +1983,22 @@ public sealed class VeldridRenderer : IDisposable
         var baseColor = time.IsNight
             ? new Vector3(0.0035f, 0.0060f, 0.0140f)
             : new Vector3(
-                0.025f + daylight * 0.055f,
-                0.045f + daylight * 0.075f,
-                0.065f + daylight * 0.095f);
+                0.038f + daylight * 0.065f,
+                0.060f + daylight * 0.085f,
+                0.088f + daylight * 0.115f);
 
         var cloudColor = time.IsNight
             ? new Vector3(0.007f, 0.009f, 0.014f)
-            : new Vector3(0.09f, 0.095f, 0.10f);
+            : new Vector3(0.11f, 0.115f, 0.12f);
         var fogColor = time.IsNight
             ? new Vector3(0.010f, 0.012f, 0.016f)
-            : new Vector3(0.17f, 0.18f, 0.17f);
+            : new Vector3(0.19f, 0.20f, 0.19f);
 
         var cloudy = Vector3.Lerp(baseColor, cloudColor, weather.Cloudiness * 0.72f);
         var twilightTint = Vector3.Lerp(
             cloudy,
-            new Vector3(0.30f, 0.105f, 0.045f),
-            celestial.TwilightFactor * 0.34f * (1f - weather.Cloudiness * 0.5f));
+            new Vector3(0.35f, 0.135f, 0.055f),
+            celestial.TwilightFactor * 0.36f * (1f - weather.Cloudiness * 0.5f));
         var fogBlend = Math.Clamp(weather.FogDensity / 0.032f, 0f, 1f) * 0.58f;
         var final = Vector3.Lerp(twilightTint, fogColor, fogBlend);
         return new RgbaFloat(final.X, final.Y, final.Z, 1f);
@@ -1932,6 +2011,159 @@ public sealed class VeldridRenderer : IDisposable
 
         _terrain.SetTextureQuality(quality);
         _pbrModels.SetTextureQuality(quality);
+    }
+
+    public void SetUpscaler(UpscalerMode upscalerMode)
+    {
+        if (_graphicsDevice is null)
+            return;
+
+        _fsr3Requested =
+            upscalerMode == UpscalerMode.Fsr3 ||
+            _fsr3ForcedByEnvironment;
+
+        if (_fsr3Requested &&
+            _fsr3Upscaler is null &&
+            !_fsr3DisabledAfterError &&
+            _resolutionScaler.SampleableDepthView is { } temporalDepth &&
+            _resolutionScaler.SampleableDepthTexture is { } temporalDepthTexture &&
+            _cameraLayout is not null)
+        {
+            _graphicsDevice.WaitForIdle();
+            EnsureTemporalMotionResources(temporalDepth, temporalDepthTexture);
+            if (!_reactiveMask.IsInitialized)
+            {
+                _reactiveMask.Initialize(
+                    _graphicsDevice,
+                    _cameraLayout,
+                    temporalDepthTexture,
+                    _resolutionScaler.Width,
+                    _resolutionScaler.Height);
+            }
+
+            var outputWidth = Math.Max(1u, OutputFramebuffer.Width);
+            var outputHeight = Math.Max(1u, OutputFramebuffer.Height);
+            if (FidelityFxUpscaler.TryCreate(
+                    _graphicsDevice,
+                    outputWidth,
+                    outputHeight,
+                    out _fsr3Upscaler,
+                    out var fsr3Diagnostic))
+            {
+                _resolutionScaler.EnsureFsr3Output(outputWidth, outputHeight);
+                EngineLog.Info(fsr3Diagnostic);
+            }
+            else
+            {
+                _fsr3DisabledAfterError = true;
+                EngineLog.Warn(
+                    "FSR3 request fell back to the normal presentation path: " +
+                    fsr3Diagnostic);
+            }
+        }
+
+        _temporalInputsEnabled =
+            FidelityFxStartupPolicy.NeedsTemporalInputs(
+                TemporalInputPolicy.IsEnabled(),
+                _fsr3Requested,
+                _fsr3DisabledAfterError) ||
+            _frameGeneration is not null;
+    }
+
+    public bool TrySetFrameGeneration(bool enabled)
+    {
+        if (_graphicsDevice is null)
+            return false;
+
+        var requested =
+            enabled ||
+            FidelityFxSceneFrameGeneration.IsSceneValidationRequested();
+        if (!requested)
+        {
+            if (_frameGeneration is not null)
+            {
+                _graphicsDevice.WaitForIdle();
+                _frameGeneration.Dispose();
+                _frameGeneration = null;
+            }
+            FrameGenerationDiagnostic = "Frame Generation is disabled in settings.";
+            _temporalInputsEnabled =
+                FidelityFxStartupPolicy.NeedsTemporalInputs(
+                    TemporalInputPolicy.IsEnabled(),
+                    _fsr3Requested,
+                    _fsr3DisabledAfterError);
+            ResetTemporalHistory();
+            return true;
+        }
+
+        if (_frameGeneration is not null)
+        {
+            if (_offscreenTarget is null)
+                _framePresenter ??= new FrameGenerationPresenter(_graphicsDevice);
+            _temporalInputsEnabled = true;
+            return true;
+        }
+
+        if (_resolutionScaler.SampleableDepthView is not { } temporalDepth ||
+            _resolutionScaler.SampleableDepthTexture is not { } temporalDepthTexture)
+        {
+            return false;
+        }
+
+        _graphicsDevice.WaitForIdle();
+        EnsureTemporalMotionResources(temporalDepth, temporalDepthTexture);
+
+        if (FidelityFxSceneFrameGeneration.TryCreate(
+                _graphicsDevice,
+                out _frameGeneration,
+                out var fgDiagnostic))
+        {
+            FrameGenerationDiagnostic = fgDiagnostic;
+            if (_offscreenTarget is null)
+                _framePresenter ??= new FrameGenerationPresenter(_graphicsDevice);
+            _temporalInputsEnabled = true;
+            ResetTemporalHistory();
+            EngineLog.Info("Frame Generation setting: " + fgDiagnostic);
+            return true;
+        }
+
+        FrameGenerationDiagnostic = fgDiagnostic;
+        _temporalInputsEnabled =
+            FidelityFxStartupPolicy.NeedsTemporalInputs(
+                TemporalInputPolicy.IsEnabled(),
+                _fsr3Requested,
+                _fsr3DisabledAfterError);
+        EngineLog.Warn("Frame Generation setting: " + fgDiagnostic);
+        return true;
+    }
+
+    private void EnsureTemporalMotionResources(
+        TextureView temporalDepth,
+        Texture temporalDepthTexture)
+    {
+        if (_graphicsDevice is null)
+            return;
+
+        if (!_motionVectors.IsInitialized)
+        {
+            _motionVectors.Initialize(
+                _graphicsDevice,
+                temporalDepth,
+                temporalDepthTexture,
+                _resolutionScaler.Width,
+                _resolutionScaler.Height);
+        }
+
+        if (_dynamicMotionVertexBuffer is null)
+        {
+            _dynamicMotionVertexCapacity = 64;
+            _dynamicMotionVertexBuffer =
+                _graphicsDevice.ResourceFactory.CreateBuffer(
+                    new BufferDescription(
+                        DynamicMotionVertex.SizeInBytes *
+                        _dynamicMotionVertexCapacity,
+                        BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+        }
     }
 
     public void SetRenderResolution(int width, int height)
@@ -2144,6 +2376,31 @@ public sealed class VeldridRenderer : IDisposable
 
         _commandList = null;
         _graphicsDevice = null;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly struct AtmosphereUniform(
+        Vector4 fogParameters,
+        Vector4 lightingParameters,
+        Vector4 sunColorTime,
+        Vector4 skyWeather,
+        Vector4 moonParameters,
+        Vector4 celestialParameters,
+        Vector4 graphicsFeatures0,
+        Vector4 graphicsFeatures1,
+        Vector4 graphicsFeatures2,
+        Vector4 graphicsFeatures3)
+    {
+        public readonly Vector4 FogParameters = fogParameters;
+        public readonly Vector4 LightingParameters = lightingParameters;
+        public readonly Vector4 SunColorTime = sunColorTime;
+        public readonly Vector4 SkyWeather = skyWeather;
+        public readonly Vector4 MoonParameters = moonParameters;
+        public readonly Vector4 CelestialParameters = celestialParameters;
+        public readonly Vector4 GraphicsFeatures0 = graphicsFeatures0;
+        public readonly Vector4 GraphicsFeatures1 = graphicsFeatures1;
+        public readonly Vector4 GraphicsFeatures2 = graphicsFeatures2;
+        public readonly Vector4 GraphicsFeatures3 = graphicsFeatures3;
     }
 
     private readonly struct HudVertex

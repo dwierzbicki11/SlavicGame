@@ -21,6 +21,16 @@ layout(set = 0, binding = 2) uniform AtmosphereBuffer
 layout(location = 0) in vec3 fsin_WorldDirection;
 layout(location = 0) out vec4 fsout_Color;
 
+vec3 FilmicToneMap(vec3 c)
+{
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c1 = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return clamp((c * (a * c + b)) / (c * (c1 * c + d) + e), 0.0, 1.0);
+}
+
 float Hash12(vec2 p)
 {
     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -182,36 +192,44 @@ void main()
         GraphicsFeatures1.x;
 
     // Dense procedural star catalogue. Daylight, moon glow and clouds wash it out.
-    float stars = StarField(direction, timeSeconds);
     float starVisibility =
         GraphicsFeatures1.z *
         pow(nightFactor, 1.65) *
         smoothstep(-0.03, 0.18, direction.y) *
         (1.0 - cloudiness * 0.92);
-    vec3 starColor = mix(
-        vec3(0.72, 0.80, 1.0),
-        vec3(1.0, 0.89, 0.68),
-        Hash12(floor(direction.xz * 317.0)));
-    color += starColor * stars * starVisibility;
+    if (starVisibility > 0.001)
+    {
+        float stars = StarField(direction, timeSeconds);
+        vec3 starColor = mix(
+            vec3(0.72, 0.80, 1.0),
+            vec3(1.0, 0.89, 0.68),
+            Hash12(floor(direction.xz * 317.0)));
+        color += starColor * stars * starVisibility;
+    }
 
     // Moon follows the opposite celestial arc to the sun.
-    vec3 moon = RenderMoon(direction, moonDirection, lunarPhase);
     float moonVisibility =
         GraphicsFeatures1.y *
         MoonParameters.w *
         smoothstep(-0.035, 0.025, moonDirection.y) *
         (1.0 - cloudiness * 0.82);
-    float moonHalo = pow(max(dot(direction, moonDirection), 0.0), 96.0);
-    color += moon * moonVisibility * 1.8;
-    color += vec3(0.34, 0.43, 0.58) * moonHalo * moonVisibility * 0.08;
+    if (moonVisibility > 0.001)
+    {
+        vec3 moon = RenderMoon(direction, moonDirection, lunarPhase);
+        float moonHalo = pow(max(dot(direction, moonDirection), 0.0), 96.0);
+        color += moon * moonVisibility * 1.8;
+        color += vec3(0.34, 0.43, 0.58) * moonHalo * moonVisibility * 0.08;
+    }
 
-    vec2 cloudMarch = CloudRaymarch(
-        direction,
-        sunDirection,
-        timeSeconds,
-        wind,
-        cloudiness * GraphicsFeatures0.x,
-        int(GraphicsFeatures2.z + 0.5));
+    vec2 cloudMarch = (GraphicsFeatures0.x > 0.5 && direction.y > 0.015 && cloudiness > 0.005)
+        ? CloudRaymarch(
+            direction,
+            sunDirection,
+            timeSeconds,
+            wind,
+            cloudiness,
+            int(GraphicsFeatures2.z + 0.5))
+        : vec2(0.0, 1.0);
     float cloudOpacity = cloudMarch.x;
     if (cloudOpacity > 0.001)
     {
@@ -260,8 +278,8 @@ void main()
         clamp(FogColorDensity.w / 0.032, 0.0, 1.0) * 0.28);
     color = mix(color, FogColorDensity.rgb, horizonHaze * hazeStrength);
 
-    // Keep sky HDR enough for bright celestial discs, then compress gently.
-    color = color / (color + vec3(0.72));
+    // Keep sky HDR enough for bright celestial discs, then compress filmically.
+    color = FilmicToneMap(color);
     color = pow(max(color, vec3(0.0)), vec3(1.0 / 2.2));
     fsout_Color = vec4(color, 1.0);
 }
