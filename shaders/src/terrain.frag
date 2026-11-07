@@ -364,11 +364,25 @@ void main()
     vec3 color = diffuse +
         sunColor * specular * wetSpecular * daylight * directShadow * 0.42;
 
-    float density = max(FogColorDensity.w * GraphicsFeatures0.w, 0.00001);
+    float fogEnabled = GraphicsFeatures0.w;
+    float density = max(FogColorDensity.w * fogEnabled, 0.00001);
     float fogFactor =
         1.0 - exp(-density * fsin_Distance * (1.0 + fsin_Distance * 0.0018));
-    fogFactor = clamp(fogFactor, 0.0, 0.95);
-    color = mix(color, FogColorDensity.rgb, fogFactor);
+
+    // Snująca się słowiańska mgła przyziemna w dolinach i nad Czarnymi Mokradłami
+    float swampWeight = weightsB.y;
+    float twilightFactor = clamp(CelestialParameters.z, 0.0, 1.0);
+    float lowGround = clamp((3.2 - fsin_WorldPosition.y) * 0.26 + swampWeight * 0.38, 0.0, 1.0);
+    float groundMist = lowGround *
+                       smoothstep(10.0, 56.0, fsin_Distance) *
+                       fogEnabled *
+                       mix(0.24, 0.48, max(twilightFactor, nightFactor));
+    fogFactor = clamp(max(fogFactor, groundMist), 0.0, 0.95);
+
+    vec3 viewRay = normalize(fsin_WorldPosition);
+    float sunScatter = pow(max(dot(viewRay, sunDirection), 0.0), 5.0) * (1.0 - nightFactor);
+    vec3 slavicFogColor = mix(FogColorDensity.rgb, sunColor * vec3(1.02, 0.78, 0.52), sunScatter * 0.34);
+    color = mix(color, slavicFogColor, fogFactor);
 
     color = FilmicToneMap(color);
     color = pow(max(color, vec3(0.0)), vec3(1.0 / 2.2));

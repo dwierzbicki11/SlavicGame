@@ -16,17 +16,28 @@ public readonly record struct TerrainSurfaceWeights(
 
 public static class TerrainSurfaceClassifier
 {
-    private static readonly Vector2 VillageCenter = new(0f, -85f);
-    private static readonly Vector2 SwampCenter = new(95f, 35f);
+    private static readonly Vector2 VillageCenter = ForestLayout.VillageCenter;
+    private static readonly Vector2 SwampCenter = ForestLayout.SwampCenter;
+    private static readonly Vector2 ShrineCenter = ForestLayout.ShrineCenter;
 
     public static TerrainSurfaceWeights Classify(Vector3 position, Vector3 normal)
     {
         var point = new Vector2(position.X, position.Z);
         var slope = 1f - Math.Clamp(normal.Y, 0f, 1f);
 
-        var forestMask = CircleMask(point, Vector2.Zero, 68f, 115f);
-        var villageClearing = CircleMask(point, VillageCenter, 30f, 58f);
+        // Expansive Slavic primeval forest floor (Puszcza Żywia, Sacred Grove, and outer knieje)
+        var forestMask = CircleMask(point, Vector2.Zero, 155f, 265f);
+        forestMask = MathF.Max(forestMask, CircleMask(point, ShrineCenter, 48f, 92f));
+        var villageClearing = CircleMask(point, VillageCenter, 34f, 60f);
+        var strongholdClearing = CircleMask(point, ForestLayout.StrongholdCenter, 32f, 52f);
+        var fishingClearing = CircleMask(point, ForestLayout.FishingHamletCenter, 18f, 36f);
+        var woodcutterClearing = CircleMask(point, ForestLayout.WoodcutterCampCenter, 16f, 34f);
+        var caravanClearing = CircleMask(point, ForestLayout.CaravanCampCenter, 10f, 22f);
         forestMask *= 1f - villageClearing * 0.96f;
+        forestMask *= 1f - strongholdClearing * 0.96f;
+        forestMask *= 1f - fishingClearing * 0.94f;
+        forestMask *= 1f - woodcutterClearing * 0.94f;
+        forestMask *= 1f - caravanClearing * 0.90f;
 
         foreach (var zone in ForestLayout.Zones)
         {
@@ -35,15 +46,11 @@ public static class TerrainSurfaceClassifier
                 CircleMask(
                     point,
                     zone.Center,
-                    zone.Radius * 0.48f,
-                    zone.Radius * 0.82f));
+                    zone.Radius * 0.58f,
+                    zone.Radius * 0.92f));
         }
 
-        var trailDistance = DistanceToSegment(point, Vector2.Zero, VillageCenter);
-        foreach (var zone in ForestLayout.Zones)
-            trailDistance = MathF.Min(
-                trailDistance,
-                DistanceToSegment(point, Vector2.Zero, zone.Center));
+        var trailDistance = ForestLayout.TrailDistance(point);
 
         var macroNoise =
             0.50f +
@@ -52,12 +59,33 @@ public static class TerrainSurfaceClassifier
             0.13f * MathF.Sin((position.X + position.Z) * 0.011f);
         macroNoise = Math.Clamp(macroNoise, 0f, 1f);
 
-        var pathEdge = 9.6f + (macroNoise - 0.5f) * 3.2f;
-        var pathMask = 1f - SmoothStep(4.0f, pathEdge, trailDistance);
+        // Organic path edge with subtle wheel-rut / foot-worn micro-variation
+        var microTrack = 0.5f + 0.5f * MathF.Sin(position.X * 0.23f - position.Z * 0.19f);
+        var pathEdge = 8.4f + (macroNoise - 0.5f) * 3.0f + (microTrack - 0.5f) * 1.1f;
+        var pathMask = 1f - SmoothStep(3.2f, pathEdge, trailDistance);
         pathMask = MathF.Max(
             pathMask,
-            CircleMask(point, VillageCenter, 18f, 42f) *
+            CircleMask(point, VillageCenter, 20f, 44f) *
+            (0.72f + macroNoise * 0.18f));
+        pathMask = MathF.Max(
+            pathMask,
+            CircleMask(point, ForestLayout.StrongholdCenter, 24f, 48f) *
+            (0.74f + macroNoise * 0.18f));
+        pathMask = MathF.Max(
+            pathMask,
+            CircleMask(point, ForestLayout.FishingHamletCenter, 14f, 32f) *
+            (0.70f + macroNoise * 0.18f));
+        pathMask = MathF.Max(
+            pathMask,
+            CircleMask(point, ForestLayout.WoodcutterCampCenter, 12f, 28f) *
             (0.68f + macroNoise * 0.18f));
+        pathMask = MathF.Max(
+            pathMask,
+            CircleMask(point, ForestLayout.CaravanCampCenter, 8f, 18f) *
+            (0.70f + macroNoise * 0.18f));
+        pathMask = MathF.Max(
+            pathMask,
+            CircleMask(point, ShrineCenter, 6f, 15f) * 0.65f);
 
         var swampMask = CircleMask(point, SwampCenter, 36f, 82f);
         var moistureNoise =
@@ -81,9 +109,17 @@ public static class TerrainSurfaceClassifier
             1.08f);
         var villageYard = CircleMask(point, VillageCenter, 12f, 34f);
 
+        // Damp muddy verges along deeply shaded forest tracks
+        var trailVergeMud =
+            (1f - SmoothStep(2.2f, 6.8f, MathF.Abs(trailDistance - 3.8f))) *
+            forestMask *
+            moistureNoise *
+            0.24f;
+
         var mud =
             swampMask * (0.28f + moistureNoise * 0.46f) +
             pathMask * lowlandWetness * 0.22f +
+            trailVergeMud +
             villageYard * lowlandWetness * 0.18f;
         var riverBank = 1f - SmoothStep(0f, 20f, WaterLandscape.BankDistance(point));
         mud = Math.Clamp(MathF.Max(mud, riverBank * 0.95f), 0f, 1f);
@@ -92,13 +128,13 @@ public static class TerrainSurfaceClassifier
         var path = pathMask * (1f - swampMask * 0.72f) * (1f - mud * 0.34f);
 
         var litterVariation =
-            0.60f +
+            0.64f +
             0.17f * MathF.Sin(position.X * 0.037f + position.Z * 0.029f) +
             0.18f * macroNoise;
-        var litter = forestMask * Math.Clamp(litterVariation, 0.42f, 0.94f);
+        var litter = forestMask * Math.Clamp(litterVariation, 0.48f, 0.96f);
 
         var uplandGrass = SmoothStep(-0.5f, 3.6f, position.Y) * 0.14f;
-        var grass = MathF.Max(0.08f, 1f - litter * 0.78f + uplandGrass);
+        var grass = MathF.Max(0.08f, 1f - litter * 0.82f + uplandGrass);
 
         // Strong semantic surfaces suppress the generic forest/grass base.
         var swampSuppression = 1f - Math.Clamp(swampMask, 0f, 1f);
@@ -155,20 +191,6 @@ public static class TerrainSurfaceClassifier
     {
         var distance = Vector2.Distance(point, center);
         return 1f - SmoothStep(innerRadius, outerRadius, distance);
-    }
-
-    private static float DistanceToSegment(Vector2 point, Vector2 a, Vector2 b)
-    {
-        var ab = b - a;
-        var lengthSquared = ab.LengthSquared();
-        if (lengthSquared < 0.0001f)
-            return Vector2.Distance(point, a);
-
-        var t = Math.Clamp(
-            Vector2.Dot(point - a, ab) / lengthSquared,
-            0f,
-            1f);
-        return Vector2.Distance(point, a + ab * t);
     }
 
     private static float SmoothStep(float edge0, float edge1, float value)

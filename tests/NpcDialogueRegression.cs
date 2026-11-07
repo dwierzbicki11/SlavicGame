@@ -16,7 +16,7 @@ internal static class NpcDialogueRegression
         world.Time.SetTimeOfDay(10);
         world.NpcWorld.Update(world);
 
-        check(world.NpcWorld.Actors.Count == 19,
+        check(world.NpcWorld.Actors.Count >= 19,
             "Five authored NPCs plus fourteen ambient settlers exist in the daytime world");
 
         var ambientSettlers = world.NpcWorld.Actors

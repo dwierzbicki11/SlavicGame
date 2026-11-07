@@ -97,6 +97,65 @@ internal static class NpcWorkstationRegression
                         StringComparison.Ordinal)) == true,
             "Fisher net-mending station uses visible rope");
 
+        // Verify village building & prop collision boxes block the player while the central gate passage stays open
+        var requiredVillageObstacleIds = new[]
+        {
+            "village-granary",
+            "village-forge",
+            "village-market",
+            "village-gate-west",
+            "village-gate-east",
+            "village-cart-market-collision",
+            "village-forge-anvil-collision",
+            "village-firepit-collision",
+            "workstation-woodworker-bench-collision",
+            "workstation-potter-table-collision"
+        };
+        check(requiredVillageObstacleIds.All(id =>
+                world.Obstacles.Any(obstacle =>
+                    string.Equals(obstacle.Id, id, StringComparison.Ordinal))),
+            "Village granary, forge, market, gate towers, carts, anvil, firepit, and workbenches register collision boxes");
+
+        world.SetPlayerPosition(new Vector3(-18.6f, 0f, -77.5f));
+        world.MovePlayerPosition(new Vector3(-18.6f, 0f, -80f));
+        check(world.PlayerPosition.Z > -78.1f,
+            "Swept player movement cannot clip into the village granary");
+
+        world.SetPlayerPosition(new Vector3(0f, 0f, -110f));
+        world.MovePlayerPosition(new Vector3(0f, 0f, -108f));
+        check(MathF.Abs(world.PlayerPosition.X) < 0.05f &&
+              MathF.Abs(world.PlayerPosition.Z - (-108f)) < 0.05f,
+            "Central village gate roadway remains passable between the two gate tower obstacles");
+
+        // Verify continuous real-time updates across workstation cycles do not teleport NPCs
+        world.SetPlayerPosition(new Vector3(400f, 0f, 400f));
+        world.Time.SetTimeOfDay(10.0);
+        world.Weather.SetCondition(WeatherKind.Clear, immediate: true);
+        world.NpcWorld.Update(world);
+        var previousPositions = world.NpcWorld.Actors.ToDictionary(
+            actor => actor.Id,
+            actor => new Vector2(actor.Position.X, actor.Position.Z),
+            StringComparer.Ordinal);
+        var maxObservedStep = 0f;
+        for (var step = 0; step < 80; step++)
+        {
+            world.Time.Update(0.25);
+            world.NpcWorld.Update(world);
+            foreach (var actor in world.NpcWorld.Actors)
+            {
+                var current = new Vector2(actor.Position.X, actor.Position.Z);
+                if (previousPositions.TryGetValue(actor.Id, out var prev))
+                {
+                    var d = Vector2.Distance(prev, current);
+                    if (d > maxObservedStep)
+                        maxObservedStep = d;
+                }
+                previousPositions[actor.Id] = current;
+            }
+        }
+        check(maxObservedStep < 1.25f,
+            $"Continuous NPC updates transition smoothly without Enderman-style teleports (maxStep={maxObservedStep:F3}m)");
+
         static double? FindWorkTime(
             WorldState world,
             string npcId,

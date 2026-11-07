@@ -98,6 +98,16 @@ void main()
 
     color *= brightness;
 
+    // Subtelny słowiański grading barwny (ciepłe bursztynowe światła, głębokie leśne/popielate cienie i lekka winieta)
+    float luma = Luma(color);
+    vec3 shadowTint = vec3(0.95, 0.98, 1.04);
+    vec3 highlightTint = vec3(1.04, 1.00, 0.93);
+    color *= mix(shadowTint, highlightTint, smoothstep(0.12, 0.78, luma));
+
+    vec2 centeredUv = fsin_TexCoord * 2.0 - 1.0;
+    float vignette = 1.0 - dot(centeredUv, centeredUv) * 0.085;
+    color *= clamp(vignette, 0.82, 1.0);
+
     // Scene shaders already emit display-gamma color. The default gamma 2.2
     // is therefore an identity transform; avoid an expensive per-pixel pow()
     // on the common/default path, which matters on bandwidth/ALU-limited iGPUs.

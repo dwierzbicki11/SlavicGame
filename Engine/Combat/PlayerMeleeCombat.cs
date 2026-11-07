@@ -22,6 +22,8 @@ public sealed class PlayerMeleeCombat
     public MeleeAttackController Controller { get; } = new();
     public string Message { get; private set; } = "LPM ATAK";
 
+    public void Reset() => Controller.Reset();
+
     public bool TryStart(WorldState world)
     {
         ArgumentNullException.ThrowIfNull(world);
@@ -101,6 +103,13 @@ public sealed class PlayerMeleeCombat
                             actor.Position,
                             profile.BodyRadius);
                     }))
+            .Concat(
+                world.Bestiary.Actors
+                    .Where(actor => actor.IsAlive)
+                    .Select(actor => new MeleeHitCandidate(
+                        actor.Id,
+                        actor.Position,
+                        0.95f)))
             .Where(candidate => world.Obstacles.All(obstacle =>
                 !obstacle.BlocksHorizontalSegment(world.PlayerPosition, candidate.Position)))
             .ToArray();
@@ -112,6 +121,17 @@ public sealed class PlayerMeleeCombat
             HalfAngleDegrees,
             candidates);
 
+        var effectiveDamage = attack.Damage;
+        if (world.Progress.Inventory.Contains("sword-slavic-spatha"))
+            effectiveDamage += 25f;
+        else if (world.Progress.Inventory.Contains("topor-bojowy"))
+            effectiveDamage += 18f;
+        else if (world.Progress.Inventory.Contains("miecz-druzynnika"))
+            effectiveDamage += 10f;
+
+        if (world.Progress.HasFlag(SlavicShrineSystem.SvarogBlessingFlag))
+            effectiveDamage += 12f;
+
         foreach (var hit in hits)
         {
             var enemy = world.Enemies.FirstOrDefault(item =>
@@ -122,7 +142,7 @@ public sealed class PlayerMeleeCombat
 
             if (enemy is not null)
             {
-                enemy.TakeDamage(attack.Damage);
+                enemy.TakeDamage(effectiveDamage);
 
                 if (!enemy.IsAlive)
                 {
@@ -146,6 +166,28 @@ public sealed class PlayerMeleeCombat
                 continue;
             }
 
+            var bestiaryBefore =
+                world.Bestiary.Actors.FirstOrDefault(actor =>
+                    string.Equals(
+                        actor.Id,
+                        hit.TargetId,
+                        StringComparison.Ordinal));
+
+            if (bestiaryBefore is not null)
+            {
+                if (world.Bestiary.TryDamage(world, hit.TargetId, effectiveDamage))
+                {
+                    var bestiaryAfter = world.Bestiary.Actors.First(actor =>
+                        string.Equals(actor.Id, hit.TargetId, StringComparison.Ordinal));
+
+                    Message = bestiaryAfter.IsAlive
+                        ? $"TRAFIENIE: {bestiaryAfter.DisplayName.ToUpperInvariant()} / HP {bestiaryAfter.Health:0}/{bestiaryAfter.MaxHealth:0}"
+                        : $"POKONANO: {bestiaryAfter.DisplayName.ToUpperInvariant()} / E ZBIERZ TROFEUM";
+                }
+
+                continue;
+            }
+
             var wildlifeBefore =
                 world.Wildlife.Actors.FirstOrDefault(actor =>
                     string.Equals(
@@ -157,7 +199,7 @@ public sealed class PlayerMeleeCombat
                 !world.Wildlife.TryDamage(
                     world,
                     hit.TargetId,
-                    attack.Damage))
+                    effectiveDamage))
             {
                 continue;
             }

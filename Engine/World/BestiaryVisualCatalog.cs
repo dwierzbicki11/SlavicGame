@@ -63,6 +63,16 @@ public static class BestiaryVisualCatalog
             .OrderBy(file => file, StringComparer.Ordinal)
             .ToArray();
 
+    public static BestiaryVisualDefinition For(BestiarySpecies species) => species switch
+    {
+        BestiarySpecies.Topielec => Get("topielec"),
+        BestiarySpecies.Poludnica => Get("poludnica"),
+        BestiarySpecies.Upior => Get("upior"),
+        BestiarySpecies.Boginka => Get("boginka"),
+        BestiarySpecies.ForestGuardian => Get("forest-guardian"),
+        _ => throw new ArgumentOutOfRangeException(nameof(species), species, null)
+    };
+
     public static BestiaryVisualDefinition Get(string id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);

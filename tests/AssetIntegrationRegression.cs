@@ -140,7 +140,7 @@ internal static class AssetIntegrationRegression
 
         var decorationsA = WorldDecorationGenerator.Generate(world.Terrain);
         var decorationsB = WorldDecorationGenerator.Generate(world.Terrain);
-        check(decorationsA.Count == 1065 && decorationsB.Count == 1065,
+        check(decorationsA.Count == 9690 && decorationsB.Count == 9690,
             "Forest and riverbank pass has a bounded deterministic instance budget");
         check(decorationsA.Zip(decorationsB).All(pair =>
                 pair.First.AssetPath == pair.Second.AssetPath &&
@@ -189,6 +189,9 @@ internal static class AssetIntegrationRegression
         check(VillageBoundaryLayout.Placements.Any(wall =>
                 wall.AssetPath.EndsWith("wall_wattle_straight.glb", StringComparison.Ordinal)),
             "Village boundary uses the new wattle asset");
+        check(VillageBoundaryLayout.Placements.Any(wall =>
+                wall.Id.StartsWith("stronghold-", StringComparison.Ordinal)),
+            "Gród Borzywoj includes fortified palisade enclosure lines");
 
         check(RegionalPropLayout.Placements.Count >= 50,
             "R0 regional prop pass adds a substantial set of curated world models");
@@ -201,6 +204,24 @@ internal static class AssetIntegrationRegression
         check(RegionalPropLayout.Placements.Count(item =>
                 item.Id.StartsWith("shrine-", StringComparison.Ordinal)) >= 10,
             "Stone Circle receives ruins graves and ritual dressing");
+        check(RegionalPropLayout.Placements.Count(item =>
+                item.Id.StartsWith("stronghold-", StringComparison.Ordinal)) >= 20,
+            "Gród Borzywoj receives fortified halls, barracks, towers and trade carts");
+        check(RegionalPropLayout.Placements.Count(item =>
+                item.Id.StartsWith("fishing-", StringComparison.Ordinal)) >= 15,
+            "Przystań Rybacka receives river bridge, piers, huts and fishing gear");
+        check(RegionalPropLayout.Placements.Count(item =>
+                item.Id.StartsWith("smolnik-", StringComparison.Ordinal)) >= 10,
+            "Osada Smolników receives cabins, barns, timber wagons and wood piles");
+        check(RegionalPropLayout.Placements.Count(item =>
+                item.Id.StartsWith("caravan-", StringComparison.Ordinal)) >= 8,
+            "Caravan camp receives merchant trade wagons and travel supplies");
+        check(RegionalPropLayout.Placements.Count(item =>
+                item.AssetPath.EndsWith("wozek_reczny_r0_01.glb", StringComparison.Ordinal)) >= 8,
+            "World includes multiple working wagons, trade carts and logging carts");
+        check(RegionalPropLayout.Placements.Any(item =>
+                item.AssetPath.EndsWith("most_drewniany_r0_01.glb", StringComparison.Ordinal)),
+            "Przystań Rybacka places a wooden bridge spanning across the river channel");
         check(RegionalPropLayout.Placements.Any(item =>
                 item.AssetPath.EndsWith("chata_r0_variant_04.glb", StringComparison.Ordinal)) &&
               RegionalPropLayout.Placements.Any(item =>
@@ -517,6 +538,16 @@ internal static class AssetIntegrationRegression
               appendTestIndices.SequenceEqual(playerGeometry.Indices) &&
               appendTestVerts.Select(v => v.Position).SequenceEqual(playerGeometry.Positions),
             "GlbModel.AppendTerrainMesh matches BuildMesh positions and indices bit-for-bit");
+        check(player.HasAuthoredNormals &&
+              enemy.HasAuthoredNormals &&
+              npcModels.Values.All(m => m.HasAuthoredNormals) &&
+              player.Materials.Count >= 6 &&
+              appendTestVerts.Select(v => v.Color).Distinct().Count() >= 5 &&
+              appendTestVerts.Any(v => Vector3.Distance(v.Normal, Vector3.UnitY) > 0.25f),
+            "Animated character GLBs expose authored 3D normals and multi-material palettes in AppendTerrainMesh");
+        check(File.Exists(Path.Combine(AppContext.BaseDirectory, "shaders", "bin", "character.vert.spv")) &&
+              File.Exists(Path.Combine(AppContext.BaseDirectory, "shaders", "bin", "character.frag.spv")),
+            "Dedicated character SPIR-V shaders (character.vert.spv / character.frag.spv) are compiled and deployed");
 
         var wildlifeModels = WildlifeCatalog.RequiredModelFiles.ToDictionary(
             file => file,

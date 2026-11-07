@@ -12,6 +12,7 @@
     <Compile Include="../Engine/AI/*.cs" Link="AI/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Animation/*.cs" Link="Animation/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Assets/*.cs" Link="Assets/%(Filename)%(Extension)" />
+    <Compile Include="../Engine/Characters/*.cs" Link="Characters/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Audio/*.cs"
              Exclude="../Engine/Audio/SdlPcmPlayer.cs;../Engine/Audio/VoiceOverService.cs;../Engine/Audio/RiverAmbienceService.cs;../Engine/Audio/AudioDirector.cs"
              Link="Audio/%(Filename)%(Extension)" />
@@ -37,9 +38,11 @@
     <Compile Include="../Engine/Core/GameTime.cs" Link="GameTime.cs" />
     <Compile Include="../Engine/Diagnostics/*.cs" Link="Diagnostics/%(Filename)%(Extension)" />
     <Compile Include="../Engine/Renderer/ShadowMapRenderer.cs" Link="ShadowMapRenderer.cs" />
+    <Compile Include="../Engine/Renderer/CharacterRenderer.cs" Link="CharacterRenderer.cs" />
     <Compile Include="../Engine/Renderer/ShaderLibrary.cs" Link="ShaderLibrary.cs" />
     <Compile Include="../Engine/Renderer/Camera3D.cs" Link="Camera3D.cs" />
     <Compile Include="../Engine/Renderer/BitmapFont.cs" Link="BitmapFont.cs" />
+    <Compile Include="../Engine/Renderer/MinimapRenderer.cs" Link="MinimapRenderer.cs" />
     <Compile Include="../Engine/Renderer/CameraFrustum.cs" Link="CameraFrustum.cs" />
     <Compile Include="../Engine/Renderer/CelestialLighting.cs" Link="CelestialLighting.cs" />
     <Compile Include="../Engine/Renderer/PresentationPolicy.cs" Link="PresentationPolicy.cs" />
@@ -68,6 +71,9 @@
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../assets/textures/terrain/**/*.png"
              Link="assets/textures/terrain/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../shaders/bin/*.spv"
+             Link="shaders/bin/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

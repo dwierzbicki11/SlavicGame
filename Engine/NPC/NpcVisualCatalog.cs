@@ -183,6 +183,78 @@ public static class NpcVisualCatalog
                 NpcAccessoryKind.ShoulderBundle,
                 NpcAccessoryKind.BeltPouch,
                 1.12f),
+
+            ["stronghold-chieftain"] = new(
+                new Vector3(1.08f, 1.10f, 1.08f),
+                new Vector3(0.55f, 0.22f, 0.18f),
+                new Vector3(0.72f, 0.58f, 0.28f),
+                NpcAccessoryKind.Staff,
+                NpcAccessoryKind.BeltPouch,
+                1.04f),
+
+            ["stronghold-guard"] = new(
+                new Vector3(1.08f, 1.12f, 1.08f),
+                new Vector3(0.35f, 0.33f, 0.30f),
+                new Vector3(0.52f, 0.20f, 0.12f),
+                NpcAccessoryKind.Spear,
+                NpcAccessoryKind.BeltPouch,
+                1.06f),
+
+            ["stronghold-smith"] = new(
+                new Vector3(1.08f, 1.05f, 1.08f),
+                new Vector3(0.36f, 0.26f, 0.18f),
+                new Vector3(0.48f, 0.34f, 0.20f),
+                NpcAccessoryKind.ToolBundle,
+                NpcAccessoryKind.BeltPouch,
+                1.02f),
+
+            ["stronghold-trader"] = new(
+                new Vector3(1.02f, 1.02f, 1.00f),
+                new Vector3(0.38f, 0.32f, 0.24f),
+                new Vector3(0.62f, 0.48f, 0.25f),
+                NpcAccessoryKind.Satchel,
+                NpcAccessoryKind.BeltPouch,
+                0.98f),
+
+            ["fishing-elder"] = new(
+                new Vector3(0.98f, 1.02f, 0.98f),
+                new Vector3(0.26f, 0.34f, 0.38f),
+                new Vector3(0.48f, 0.42f, 0.28f),
+                NpcAccessoryKind.FishingPole,
+                NpcAccessoryKind.Basket,
+                0.95f),
+
+            ["fishing-ferryman"] = new(
+                new Vector3(1.04f, 1.06f, 1.04f),
+                new Vector3(0.30f, 0.36f, 0.25f),
+                new Vector3(0.45f, 0.33f, 0.18f),
+                NpcAccessoryKind.Staff,
+                NpcAccessoryKind.ToolBundle,
+                1.00f),
+
+            ["smolnik-woodcutter"] = new(
+                new Vector3(1.06f, 1.05f, 1.06f),
+                new Vector3(0.40f, 0.28f, 0.18f),
+                new Vector3(0.52f, 0.36f, 0.20f),
+                NpcAccessoryKind.ToolBundle,
+                NpcAccessoryKind.BeltPouch,
+                1.02f),
+
+            ["smolnik-burner"] = new(
+                new Vector3(1.00f, 1.02f, 1.00f),
+                new Vector3(0.24f, 0.22f, 0.20f),
+                new Vector3(0.40f, 0.32f, 0.22f),
+                NpcAccessoryKind.Hood,
+                NpcAccessoryKind.ToolBundle,
+                0.96f),
+
+            ["caravan-merchant"] = new(
+                new Vector3(1.04f, 1.05f, 1.02f),
+                new Vector3(0.42f, 0.34f, 0.22f),
+                new Vector3(0.65f, 0.50f, 0.26f),
+                NpcAccessoryKind.Hood,
+                NpcAccessoryKind.Satchel,
+                1.00f),
         };
 
     public static NpcVisualProfile For(
@@ -253,6 +325,16 @@ public static class NpcVisualCatalog
             "settler-fisher-01" => "npc_hunter_animated.glb",
             "settler-youth-01" => "npc_villager_a_animated.glb",
 
+            "stronghold-chieftain" => "npc_elder_animated.glb",
+            "stronghold-guard" => "npc_hunter_animated.glb",
+            "stronghold-smith" => "npc_villager_a_animated.glb",
+            "stronghold-trader" => "npc_merchant_animated.glb",
+            "fishing-elder" => "npc_elder_animated.glb",
+            "fishing-ferryman" => "npc_hunter_animated.glb",
+            "smolnik-woodcutter" => "npc_hunter_animated.glb",
+            "smolnik-burner" => "npc_villager_a_animated.glb",
+            "caravan-merchant" => "npc_merchant_animated.glb",
+
             _ => role switch
             {
                 NpcRole.Trader => "npc_merchant_animated.glb",
@@ -307,6 +389,9 @@ public static class NpcVisualCatalog
             "river-fishing" or
             "mend-nets" or
             "market-trade" or
+            "tar-burning" or
+            "pier-fishing" or
+            "caravan-trade" or
             "trade-and-prepare" or
             "maintain-crossing" or
             "tend-shrine" or

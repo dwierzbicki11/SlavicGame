@@ -172,7 +172,106 @@ new(
             "Światło znikło? To może teraz dorośli przestaną szeptać, kiedy dzieci są obok.",
             "Jak droga będzie bezpieczna, pierwszy pobiegnę sprawdzić, czy kładka stoi.",
             "W deszcz i tak każą mi biegać z wiadomościami. Tylko błoto jest głębsze.",
-            "Po zmroku już nie biegam za bramę. Nie dlatego, że się boję. Po prostu nie biegam.")
+            "Po zmroku już nie biegam za bramę. Nie dlatego, że się boję. Po prostu nie biegam."),
+
+        new(
+            "stronghold-chieftain",
+            "com.chieftain",
+            "Gród Borzywoj stoi na wzgórzu, by strzec ziem i ludzi przed dziczą.",
+            "Mówią, że coś czyha na mokradłach. Dobrze, że ktoś tam poszedł z mieczem.",
+            "Wieść o ubiciu bestii już dotarła za palisadę. Dobra robota, wędrowcze.",
+            "Światło w bagnie zgasło. Spokój zmarłym, a nam czujność na wałach.",
+            "Mokradła i bór są teraz bezpieczniejsze. Szlaki handlowe znów mogą ruszyć.",
+            "Ulewa rozmiękcza stoki grodu, lecz palisada z dębowych bali wytrzyma każdą nawałnicę.",
+            "Nocą straże czuwają na wieżach. Ogień w palenisku grzeje, lecz czujność nie śpi."),
+
+        new(
+            "stronghold-guard",
+            "com.strongholdguard",
+            "Pilnuję bramy grodu. Za dnia każdy uczciwy człowiek ma wolny wstęp.",
+            "Uważaj na szlaku ku mokradłom. Ponoć w cieniu drzew czai się coś wielkiego.",
+            "Skoro bestia ułożona do snu, mniej niespokojnych nocy na palisadzie.",
+            "Dziwne światła zgasły. Przynajmniej warta nie musi gapić się w mgłę z lękiem.",
+            "Droga do Żarnowca i przystani wolna. Nawet kupcy jadą śmielej.",
+            "Pancerz rdzewieje na deszczu, ale warta nie ma urlopu od wilgoci.",
+            "Stój, kto idzie! W nocy zdejmij kaptur i podaj imię, zanim wejdziesz za częstokół."),
+
+        new(
+            "stronghold-smith",
+            "com.strongholdsmith",
+            "Żelazo z darniowej rudy wymaga cierpliwości i mocnego uderzenia młota.",
+            "Kuję groty do włóczni i okucia tarcz. Jeśli idziesz w bory, naostrz dobrze żelazo.",
+            "Bestia padła? To znak, że dobra stal potrafi przebić nawet twardą skórę.",
+            "Na duchy żelazo niewiele poradzi, ale chłodna stal przynajmniej daje pewność w dłoni.",
+            "Teraz mogę wreszcie wykuwać lemiesze i podkowy zamiast samych grotów.",
+            "W kuźni ciepło, gdy na dworze leje. Przynajmniej węgle nie gasną.",
+            "Palenisko stygnie powoli. Nocą młot milknie, by gród mógł odpocząć."),
+
+        new(
+            "stronghold-trader",
+            "com.strongholdtrader",
+            "Na rynku grodowym znajdziesz żelazo, sól z kopalni i skóry z boreckich lasów.",
+            "Przez niepokoje na mokradłach wozy spóźniają się z towarem.",
+            "Bestia nie żyje? Doskonale! Karawany z Solnego Szlaku wreszcie ruszą bez opóźnień.",
+            "Bez błędnych ogni woźnice nie boją się już nocować na rozdrożach.",
+            "Spokój na trakcie to najlepszy zysk. Złoto krąży, a spichlerze są pełne.",
+            "W deszcz płótna trzeba chronić pod dachem kramu, inaczej wilgoć zniszczy sukno.",
+            "Stragany zwinięte. Po zmroku targ milknie, a sakwy lądują pod wezgłowiem."),
+
+        new(
+            "fishing-elder",
+            "com.fishingelder",
+            "Rzeka rano pachnie sitowiem i rybą. Z wiklinowych więcierzy zawsze coś się wyjmie.",
+            "Nawet sumy w głębinach czuły niepokój. Woda niesie drżenie z mokradeł.",
+            "Po ubiciu drapieżnika ptactwo wodne wróciło na łachy. Znowu będzie połów.",
+            "Nocne blaski nad trzcinami przestały mącić wodę. Zjawa znalazła pokój.",
+            "Przystań odetchnęła. Most stoi twardo, a łodzie pływają po sam brzeg Boru.",
+            "Gdy deszcz marszczy taflę rzeki, ryby żerują tuż pod powierzchnią.",
+            "Nocą rzeka mówi cichym pluskiem. Tylko uważaj, by w ciemności nie spaść z pomostu."),
+
+        new(
+            "fishing-ferryman",
+            "com.ferryman",
+            "Drewniany most łączy Żarnowiec z Grodem Borzywoja. Dębowe bale wytrzymają jeszcze wieki.",
+            "Kto idzie na wschód, niech trzyma się przetartego traktu i nie schodzi w moczary.",
+            "Dobrze, że bestia nie podeszła pod most. Oby szlak pozostał spokojny.",
+            "Cienie nad wodą rozwiały się jak poranna mgła.",
+            "Mostem przejeżdżają wozy ze zbożem i rybami. Tak powinno być zawsze.",
+            "Śliskie deski na kładce. Stawiaj stopy pewnie, bo nurt pod spodem jest bystry.",
+            "W nocy stawiam latarnię na skraju kładki, by żaden zbłąkany wędrowiec nie skręcił w nurt."),
+
+        new(
+            "smolnik-woodcutter",
+            "com.woodcutter",
+            "Żywica z sosen pachnie słońcem. Ścinamy tylko stare pnie, by las rósł zdrowy.",
+            "W głębi lasu słychać było dziwne ryki. Trzymamy siekiery zawsze pod ręką.",
+            "Mówisz, że wielki drapieżnik nie żyje? Możemy bezpiecznie ścinać dęby na skraju.",
+            "Błędne światła przestały mamić wzrok między pniami.",
+            "Wóz pełen bali sosnowych może ruszać do grodu. Bór znowu nam sprzyja.",
+            "Mokre pnie są ciężkie jak ołów, a piła grzęźnie w rozmoczonej korze.",
+            "Po zmroku w lesie rządzi leszy i wilki. Człowiek ma wtedy siedzieć przy ogniu w szałasie."),
+
+        new(
+            "smolnik-burner",
+            "com.burner",
+            "Mielerze dymią dzień i noc. Pędzimy dziegieć i smołę do uszczelniania łodzi i wozów.",
+            "Dym z mielerza odstrasza dzikie zwierzęta, ale przed tym z mokradeł nie chronił.",
+            "Świetna nowina. Teraz możemy wypalać węgiel drzewny bez strachu o kark.",
+            "Nawet zmory nie lubią zapachu dziegciu. Dobrze, że ta z moczarów odeszła.",
+            "Beczki smoły i węgla pojadą do kowala i rybaków na przystani.",
+            "Deszcz studzi kopce mielerzy. Trzeba dorzucać darni, by ogień nie zgasł w środku.",
+            "Nocne doglądanie mielerza to samotna praca, ale czerwony żar dotrzymuje towarzystwa."),
+
+        new(
+            "caravan-merchant",
+            "com.caravanmerchant",
+            "Prowadzimy wozy z dalekich krain. Wieziemy barwne tkaniny, bursztyn i cenną sól.",
+            "Rozbiliśmy obóz na trakcie, bo woźnice bali się jechać dalej przez pogłoski o bestii.",
+            "Drapieżnik ubity powiadasz? Chwała Perunowi! Rozpakujemy najlepsze towary.",
+            "Konie przestały rżeć ze strachu na widok nocnych łun nad bagnem.",
+            "Karawana ruszy na szlak ku grodowi i przystani. Chętnie pohandluję z tobą, wędrowcze.",
+            "Plandeki wozów trzymają suchość, ale konie grzęzną w błotnistych koleinach.",
+            "Ognisko pali się jasno, a strażnicy czuwają przy wozach. Witaj w naszym obozie.")
     ];
 
     private static readonly IReadOnlyDictionary<string, CommunityVoice> VoiceById =
@@ -237,6 +336,37 @@ new(
                     _ => "mt.after-neutral"
                 };
             }
+        }
+
+        if (string.Equals(npcId, TarBurnerSideQuest.GiverId, StringComparison.Ordinal))
+        {
+            var tbQuest = world.Progress.Quests.Get(TarBurnerSideQuest.QuestId);
+            if (tbQuest.Phase == QuestPhase.Unavailable)
+                return "tb.offer";
+            if (tbQuest.Phase is QuestPhase.Active or QuestPhase.Investigation)
+            {
+                if (world.Progress.HasFlag(TarBurnerSideQuest.BurnerHelpedFlag) &&
+                    world.Progress.HasFlag(TarBurnerSideQuest.CartSecuredFlag))
+                {
+                    return "tb.return";
+                }
+                return "tb.search";
+            }
+            if (tbQuest.Phase is QuestPhase.Resolved or QuestPhase.TurnedIn)
+                return "tb.after";
+        }
+
+        if (string.Equals(npcId, TarBurnerSideQuest.BurnerId, StringComparison.Ordinal))
+        {
+            var burnerQuest = world.Progress.Quests.Get(TarBurnerSideQuest.QuestId);
+            if (burnerQuest.Phase is QuestPhase.Active or QuestPhase.Investigation)
+            {
+                if (world.Progress.Inventory.Contains(TarBurnerSideQuest.TarBarrelItemId))
+                    return "tb.burner-barrel";
+                return "tb.burner-search";
+            }
+            if (world.Progress.HasFlag(TarBurnerSideQuest.BurnerHelpedFlag))
+                return "tb.burner-after";
         }
 
         var quest =
@@ -327,6 +457,22 @@ new(
                 StringComparison.Ordinal))
         {
             nodes.AddRange(MissingToolsNodes());
+        }
+
+        if (string.Equals(
+                voice.Id,
+                TarBurnerSideQuest.GiverId,
+                StringComparison.Ordinal))
+        {
+            nodes.AddRange(TarBurnerChieftainNodes());
+        }
+
+        if (string.Equals(
+                voice.Id,
+                TarBurnerSideQuest.BurnerId,
+                StringComparison.Ordinal))
+        {
+            nodes.AddRange(TarBurnerWorkerNodes());
         }
 
         return new DialogueGraph(
@@ -472,6 +618,110 @@ new(
             "mt.after-accusation",
             MissingToolsSideQuest.GiverId,
             "Narzędzie wróciło, ale oskarżenia bez śladów zostawmy na boku. We wsi łatwo zrobić komuś krzywdę słowem.");
+    }
+
+    private static IEnumerable<DialogueNode> TarBurnerChieftainNodes()
+    {
+        yield return new DialogueNode(
+            "tb.offer",
+            TarBurnerSideQuest.GiverId,
+            "Z Osady Smolników nie dotarł transport dziegciu i smoły do grodowej kuźni. Na szlaku widziano porzucony wóz i ślady wilczych pazurów. Sprawdź, co stało się ze smolnikami.",
+            [
+                new DialogueChoice(
+                    "tb.accept",
+                    "Pojadę traktem i zbadam sytuację.",
+                    null,
+                    [],
+                    [
+                        new DialogueEffect(
+                            DialogueEffectKind.AdvanceQuest,
+                            TarBurnerSideQuest.QuestId,
+                            QuestPhase.Active.ToString()),
+                        new DialogueEffect(
+                            DialogueEffectKind.SetWorldFlag,
+                            TarBurnerSideQuest.AcceptedFlag,
+                            "true")
+                    ]),
+                new DialogueChoice(
+                    "tb.decline",
+                    "Mam pilniejsze sprawy.",
+                    null,
+                    [],
+                    [])
+            ]);
+
+        yield return AmbientNode(
+            "tb.search",
+            TarBurnerSideQuest.GiverId,
+            "Trakt ku osadzie smolników wiedzie na południe przez jar. Uważaj na watahę leśnych wilków.");
+
+        yield return new DialogueNode(
+            "tb.return",
+            TarBurnerSideQuest.GiverId,
+            "Wóz zabezpieczony, a smolnicy cali i zdrowi? Dobra robota, wędrowcze! Gród Borzywoj potrafi nagradzać męstwo.",
+            [
+                new DialogueChoice(
+                    "tb.reward",
+                    "Służę grodowi.",
+                    null,
+                    [],
+                    [
+                        new DialogueEffect(
+                            DialogueEffectKind.AdvanceQuest,
+                            TarBurnerSideQuest.QuestId,
+                            QuestPhase.TurnedIn.ToString()),
+                        new DialogueEffect(
+                            DialogueEffectKind.SetWorldFlag,
+                            TarBurnerSideQuest.CompletedFlag,
+                            "true")
+                    ])
+            ]);
+
+        yield return AmbientNode(
+            "tb.after",
+            TarBurnerSideQuest.GiverId,
+            "Dzięki tobie smoła i węgiel znów bezpiecznie docierają do naszej kuźni.");
+    }
+
+    private static IEnumerable<DialogueNode> TarBurnerWorkerNodes()
+    {
+        yield return AmbientNode(
+            "tb.burner-search",
+            TarBurnerSideQuest.BurnerId,
+            "Wataha wilków z boru zaatakowała nasz transport na szlaku! Musieliśmy uciekać, a wóz z beczkami został w wąwozie.");
+
+        yield return new DialogueNode(
+            "tb.burner-barrel",
+            TarBurnerSideQuest.BurnerId,
+            "Odzyskałeś ocalałą beczkę smoły i zabezpieczyłeś wóz? Niech ci Perun wynagrodzi! Weź to srebro i powiedz Kniaziowi, że jesteśmy cali.",
+            [
+                new DialogueChoice(
+                    "tb.burner-give",
+                    "Cieszę się, że jesteście bezpieczni.",
+                    null,
+                    [],
+                    [
+                        new DialogueEffect(
+                            DialogueEffectKind.TakeItem,
+                            TarBurnerSideQuest.TarBarrelItemId,
+                            "",
+                            1),
+                        new DialogueEffect(
+                            DialogueEffectKind.SetWorldFlag,
+                            TarBurnerSideQuest.BurnerHelpedFlag,
+                            "true"),
+                        new DialogueEffect(
+                            DialogueEffectKind.GiveItem,
+                            "forest-resin",
+                            "",
+                            2)
+                    ])
+            ]);
+
+        yield return AmbientNode(
+            "tb.burner-after",
+            TarBurnerSideQuest.BurnerId,
+            "Mielerze dymią dzień i noc. Dym ze smoły wreszcie pachnie spokojem.");
     }
 
     private static DialogueNode AmbientNode(

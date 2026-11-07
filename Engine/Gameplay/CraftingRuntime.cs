@@ -42,7 +42,119 @@ public sealed class CraftingRuntime
             "NAPAR TROPICIELA",
             "herbalist",
             "trade-and-prepare",
-            "recipe.marsh-sight-tonic.learned")
+            "recipe.marsh-sight-tonic.learned"),
+
+        new(
+            new AlchemyRecipe(
+                "recipe.specter-oil",
+                "specter-oil",
+                1,
+                [
+                    new ItemCost("pyl-upiora", 1),
+                    new ItemCost("forest-resin", 1)
+                ]),
+            "OLEJ NA ZMORY",
+            "herbalist",
+            "trade-and-prepare",
+            "recipe.specter-oil.learned"),
+
+        new(
+            new AlchemyRecipe(
+                "recipe.boginka-vitality-tonic",
+                "boginka-vitality-tonic",
+                1,
+                [
+                    new ItemCost("lza-boginki", 1),
+                    new ItemCost("marsh-herb", 1)
+                ]),
+            "ELIKSIR BOGINKI",
+            "herbalist",
+            "trade-and-prepare",
+            "recipe.boginka-vitality-tonic.learned"),
+
+        new(
+            new AlchemyRecipe(
+                "recipe.leshy-protection-charm",
+                "leshy-protection-charm",
+                1,
+                [
+                    new ItemCost("kora-leszego", 1),
+                    new ItemCost("forest-resin", 2)
+                ]),
+            "AMULET LESZEGO",
+            "herbalist",
+            "trade-and-prepare",
+            "recipe.leshy-protection-charm.learned"),
+
+        new(
+            new AlchemyRecipe(
+                "recipe.drowned-tallow",
+                "drowned-tallow",
+                1,
+                [
+                    new ItemCost("pazur-topielca", 1),
+                    new ItemCost("forest-resin", 1)
+                ]),
+            "SMALEC TOPIELCA",
+            "herbalist",
+            "trade-and-prepare",
+            "recipe.drowned-tallow.learned"),
+
+        new(
+            new AlchemyRecipe(
+                "recipe.noonwraith-salve",
+                "noonwraith-salve",
+                1,
+                [
+                    new ItemCost("wieniec-poludnicy", 1),
+                    new ItemCost("marsh-herb", 2)
+                ]),
+            "MASC POLUDNICY",
+            "herbalist",
+            "trade-and-prepare",
+            "recipe.noonwraith-salve.learned"),
+
+        new(
+            new AlchemyRecipe(
+                "recipe.healing-herbal-tincture",
+                "napar-leczniczy",
+                1,
+                [
+                    new ItemCost("ziolo-dziurawiec", 2),
+                    new ItemCost("forest-resin", 1)
+                ]),
+            "NAPAR Z DZIURAWIEC I MIODU",
+            "herbalist",
+            "trade-and-prepare",
+            null),
+
+        new(
+            new AlchemyRecipe(
+                "recipe.comfrey-salve",
+                "masc-zywokostowa",
+                1,
+                [
+                    new ItemCost("ziolo-zywokost", 2),
+                    new ItemCost("forest-resin", 2)
+                ]),
+            "MASC ZYWOKOSTOWA",
+            "herbalist",
+            "trade-and-prepare",
+            null),
+
+        new(
+            new AlchemyRecipe(
+                "recipe.wormwood-extract",
+                "odwar-piolunowy",
+                1,
+                [
+                    new ItemCost("ziolo-piolun", 1),
+                    new ItemCost("ziolo-krwawnik", 1)
+                ]),
+            "ODWAR Z PIOLUNU I KRWAWNIKA",
+            "herbalist",
+            "trade-and-prepare",
+            null)
     ];
 
     public bool IsOpen { get; private set; }
@@ -227,6 +339,23 @@ public sealed class CraftingRuntime
         "marsh-herb" => "ZIELE MOKRADEL",
         "forest-resin" => "ZYWICA LESNA",
         "marsh-sight-tonic" => "NAPAR TROPICIELA",
+        "pazur-topielca" => "PAZUR TOPIELCA",
+        "wieniec-poludnicy" => "WIENIEC POLUDNICY",
+        "pyl-upiora" => "PYL UPIORA",
+        "lza-boginki" => "LZA BOGINKI",
+        "kora-leszego" => "KORA LESZEGO",
+        "specter-oil" => "OLEJ NA ZMORY",
+        "boginka-vitality-tonic" => "ELIKSIR BOGINKI",
+        "leshy-protection-charm" => "AMULET LESZEGO",
+        "drowned-tallow" => "SMALEC TOPIELCA",
+        "noonwraith-salve" => "MASC POLUDNICY",
+        "ziolo-dziurawiec" => "DZIURAWIEC ZWYCZAJNY",
+        "ziolo-piolun" => "PIOLUN POLNY",
+        "ziolo-krwawnik" => "KRWAWNIK POSPOLITY",
+        "ziolo-zywokost" => "KORZEN ZYWOKOSTU",
+        "napar-leczniczy" => "NAPAR Z DZIURAWIEC I MIODU",
+        "masc-zywokostowa" => "MASC ZYWOKOSTOWA",
+        "odwar-piolunowy" => "ODWAR Z PIOLUNU I KRWAWNIKA",
         _ => id.Replace('-', ' ').ToUpperInvariant()
     };
 }

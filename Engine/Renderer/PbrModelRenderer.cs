@@ -124,8 +124,14 @@ public sealed class PbrModelRenderer : IDisposable
             var model = GlbModel.Load(path);
             var lod1Path = ResolveLodPath(assetsRoot, assetGroup.Key, "lod1");
             var lod2Path = ResolveLodPath(assetsRoot, assetGroup.Key, "lod2");
-            var lod1Model = File.Exists(lod1Path) ? GlbModel.Load(lod1Path) : null;
-            var lod2Model = File.Exists(lod2Path) ? GlbModel.Load(lod2Path) : null;
+            var lod1Candidate = File.Exists(lod1Path) ? GlbModel.Load(lod1Path) : null;
+            var lod2Candidate = File.Exists(lod2Path) ? GlbModel.Load(lod2Path) : null;
+            var lod1Model = lod1Candidate is not null && lod1Candidate.Materials.Count >= model.Materials.Count
+                ? lod1Candidate
+                : null;
+            var lod2Model = lod2Candidate is not null && lod2Candidate.Materials.Count >= model.Materials.Count
+                ? lod2Candidate
+                : null;
 
             var materialSets = new ResourceSet[model.Materials.Count][];
             for (var materialIndex = 0; materialIndex < model.Materials.Count; materialIndex++)

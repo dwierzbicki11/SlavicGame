@@ -313,12 +313,28 @@ public sealed class GlbModel
             if (node.Mesh is int meshIndex)
             {
                 var final = world * rootTransform;
+                if (!Matrix4x4.Invert(final, out var inverse))
+                    inverse = Matrix4x4.Identity;
+                var normalMatrix = Matrix4x4.Transpose(inverse);
+
                 foreach (var primitive in _meshes[meshIndex])
                 {
                     var startVertex = checked((uint)vertices.Count);
                     var srcPositions = primitive.Positions;
+                    var srcNormals = primitive.EffectiveNormals;
+                    var primitiveColor = ResolvePrimitiveColor(primitive.MaterialIndex, color);
+
                     for (var i = 0; i < srcPositions.Length; i++)
-                        vertices.Add(new TerrainVertex(Vector3.Transform(srcPositions[i], final), color));
+                    {
+                        var normal = Vector3.TransformNormal(srcNormals[i], normalMatrix);
+                        normal = normal.LengthSquared() < 0.000001f
+                            ? Vector3.UnitY
+                            : Vector3.Normalize(normal);
+                        vertices.Add(new TerrainVertex(
+                            Vector3.Transform(srcPositions[i], final),
+                            primitiveColor,
+                            normal));
+                    }
 
                     var srcIndices = primitive.Indices;
                     for (var i = 0; i < srcIndices.Length; i++)
@@ -329,6 +345,43 @@ public sealed class GlbModel
             foreach (var child in node.Children)
                 AppendTerrainNode(child, world, nodeTranslations, nodeRotations, nodeScales);
         }
+    }
+
+    private Vector3 ResolvePrimitiveColor(int materialIndex, Vector3 instanceColor)
+    {
+        if (_materials.Length <= 1)
+            return instanceColor;
+
+        var clampedIndex = Math.Clamp(materialIndex, 0, _materials.Length - 1);
+        var material = _materials[clampedIndex];
+        var matColor = new Vector3(
+            material.BaseColorFactor.X,
+            material.BaseColorFactor.Y,
+            material.BaseColorFactor.Z);
+
+        // Preserve telegraphed enemy attack windup highlight across multi-material meshes
+        var isWindupHighlight =
+            instanceColor.X > 0.65f &&
+            instanceColor.Y > 0.30f &&
+            instanceColor.Z < 0.12f;
+        if (isWindupHighlight)
+            return Vector3.Lerp(matColor, instanceColor, 0.58f);
+
+        if (clampedIndex == 0 ||
+            string.Equals(material.Name, "cloth", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(material.Name, "body", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(material.Name, "feathers", StringComparison.OrdinalIgnoreCase))
+        {
+            return Vector3.Lerp(instanceColor, matColor, 0.24f);
+        }
+
+        if (string.Equals(material.Name, "trim", StringComparison.OrdinalIgnoreCase))
+            return Vector3.Lerp(matColor, instanceColor, 0.22f);
+
+        if (string.Equals(material.Name, "limb", StringComparison.OrdinalIgnoreCase))
+            return Vector3.Lerp(matColor, instanceColor * 0.72f, 0.35f);
+
+        return matColor;
     }
 
     public PbrMeshGeometry BuildPbrMesh(
@@ -404,7 +457,7 @@ public sealed class GlbModel
                 {
                     var startVertex = checked((uint)vertices.Count);
                     var startIndex = checked((uint)indices.Count);
-                    var normals = primitive.Normals ?? ComputeNormals(primitive.Positions, primitive.Indices);
+                    var normals = primitive.EffectiveNormals;
                     var uvs = primitive.TexCoords ?? new Vector2[primitive.Positions.Length];
 
                     for (var i = 0; i < primitive.Positions.Length; i++)
@@ -725,8 +778,11 @@ public sealed class GlbModel
                     var materialIndex = primitive.TryGetProperty("material", out var materialElement)
                         ? materialElement.GetInt32()
                         : 0;
+                    var effectiveNormals = normals is { Length: > 0 } && normals.Length == positions.Length
+                        ? normals
+                        : ComputeNormals(positions, indices);
 
-                    return new Primitive(positions, normals, texCoords, indices, materialIndex);
+                    return new Primitive(positions, normals, effectiveNormals, texCoords, indices, materialIndex);
                 }).ToArray())
             .ToArray();
     }
@@ -948,6 +1004,7 @@ public sealed class GlbModel
     private sealed record Primitive(
         Vector3[] Positions,
         Vector3[]? Normals,
+        Vector3[] EffectiveNormals,
         Vector2[]? TexCoords,
         uint[] Indices,
         int MaterialIndex);

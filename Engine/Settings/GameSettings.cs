@@ -650,6 +650,7 @@ public sealed class GameSettings
     public bool Fullscreen { get; set; } = true;
     public bool VSync { get; set; }
     public bool ShowFps { get; set; } = true;
+    public bool ShowMinimap { get; set; } = true;
 
     public float MasterVolume { get; set; } = 0.90f;
     public float MusicVolume { get; set; } = 0.55f;

@@ -71,6 +71,23 @@ public sealed class CampfireRuntime
         return true;
     }
 
+    public bool TryRest(WorldState world, string id, out string message)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        if (!IsLit(world, id))
+        {
+            message = "NAJPIERW ROZPAL OGNISKO ABY PRZY NIM ODPOCZAC";
+            return false;
+        }
+
+        world.Player.Restore();
+        world.Time.SetTimeOfDay(world.Time.TimeOfDayHours + 6.0);
+        world.NpcWorld.Update(world);
+        message = "ODPOCZYNEK PRZY OGNISKU: PRZEWINIETO CZAS I W PELNI ODZYSKANO SILY";
+        Message = message;
+        return true;
+    }
+
     public float HeatAt(WorldState world, Vector3 position)
     {
         ArgumentNullException.ThrowIfNull(world);
@@ -154,6 +171,46 @@ public static class CampfireSystem
             VisualScale: 0.92f,
             DefaultLit: false,
             RainExposed: true,
+            IgnitionItem: "forest-resin"),
+        new(
+            "stronghold-courtyard-firepit",
+            new Vector2(-320f, 222f),
+            HeatRadius: 8.0f,
+            VisualScale: 1.15f,
+            DefaultLit: false,
+            RainExposed: false,
+            IgnitionItem: "forest-resin"),
+        new(
+            "fishing-hamlet-firepit",
+            new Vector2(146f, -178f),
+            HeatRadius: 7.0f,
+            VisualScale: 1.0f,
+            DefaultLit: false,
+            RainExposed: true,
+            IgnitionItem: "forest-resin"),
+        new(
+            "caravan-camp-firepit",
+            new Vector2(-155f, 95f),
+            HeatRadius: 7.0f,
+            VisualScale: 1.0f,
+            DefaultLit: false,
+            RainExposed: true,
+            IgnitionItem: "forest-resin"),
+        new(
+            "woodcutter-camp-firepit",
+            new Vector2(-175f, -280f),
+            HeatRadius: 7.5f,
+            VisualScale: 1.05f,
+            DefaultLit: false,
+            RainExposed: true,
+            IgnitionItem: "forest-resin"),
+        new(
+            "shrine-sacred-brazier",
+            new Vector2(-88f, 56f),
+            HeatRadius: 6.5f,
+            VisualScale: 0.95f,
+            DefaultLit: false,
+            RainExposed: false,
             IgnitionItem: "forest-resin")
     ];
 

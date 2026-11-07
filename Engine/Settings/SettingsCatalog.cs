@@ -50,6 +50,8 @@ public static class SettingsCatalog
             s => s.VSync, (s, v) => s.VSync = v),
         Toggle("fps", SettingCategory.Display, "LICZNIK FPS",
             s => s.ShowFps, (s, v) => s.ShowFps = v),
+        Toggle("minimap", SettingCategory.Display, "MINIMAPA",
+            s => s.ShowMinimap, (s, v) => s.ShowMinimap = v),
         new(
             "fps-limit",
             SettingCategory.Display,

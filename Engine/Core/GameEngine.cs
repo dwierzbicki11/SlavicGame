@@ -153,6 +153,7 @@ public sealed class GameEngine : IDisposable
                 else if (!_world.Dialogue.IsOpen &&
                          !_world.Vendors.IsOpen &&
                          !_world.Crafting.IsOpen &&
+                         !_world.Blacksmith.IsOpen &&
                          !_world.Loot.IsOpen &&
                          _window.ConsumeKeyPress(Key.Escape))
                 {
@@ -551,7 +552,7 @@ public sealed class GameEngine : IDisposable
             UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
         }
-        if (_world.Crafting.IsOpen || _world.Vendors.IsOpen)
+        if (_world.Crafting.IsOpen || _world.Blacksmith.IsOpen || _world.Vendors.IsOpen)
         {
             _world.Bow.SetAiming(_world, false);
             _camera.FieldOfView = MathF.PI / 180f * _settings.FieldOfViewDegrees;
@@ -571,6 +572,27 @@ public sealed class GameEngine : IDisposable
                     _world.Crafting.MoveSelection(_world, 1);
                 if (_window.ConsumeKeyPress(Key.E))
                     _world.Crafting.Confirm(_world);
+            }
+
+            UpdatePlayerWhileUiOpen(deltaSeconds);
+            return;
+        }
+
+        if (_world.Blacksmith.IsOpen)
+        {
+            if (_window.ConsumeKeyPress(Key.Escape) ||
+                _window.ConsumeKeyPress(Key.B))
+            {
+                _world.Blacksmith.Close();
+            }
+            else
+            {
+                if (_window.ConsumeKeyPress(Key.W))
+                    _world.Blacksmith.MoveSelection(-1);
+                if (_window.ConsumeKeyPress(Key.S))
+                    _world.Blacksmith.MoveSelection(1);
+                if (_window.ConsumeKeyPress(Key.E))
+                    _world.Blacksmith.Confirm(_world);
             }
 
             UpdatePlayerWhileUiOpen(deltaSeconds);
@@ -627,6 +649,11 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
+        if (_window.ConsumeKeyPress(Key.M))
+        {
+            _settings.ShowMinimap = !_settings.ShowMinimap;
+        }
+
         if (_window.ConsumeKeyPress(Key.K) &&
             !_world.Dodge.IsActive &&
             !_world.Rituals.IsPerforming &&
@@ -637,6 +664,26 @@ public sealed class GameEngine : IDisposable
         }
 
         if (_world.Crafting.IsOpen)
+        {
+            UpdatePlayerWhileUiOpen(deltaSeconds);
+            return;
+        }
+
+        if (_window.ConsumeKeyPress(Key.B) &&
+            !_world.Dialogue.IsOpen &&
+            !_world.Vendors.IsOpen &&
+            !_world.Crafting.IsOpen &&
+            !_world.Blacksmith.IsOpen &&
+            !_world.Loot.IsOpen &&
+            !_world.Dodge.IsActive &&
+            !_world.Rituals.IsPerforming &&
+            !_world.Magic.IsCasting &&
+            !_world.Cinematics.IsPlaying)
+        {
+            _world.Blacksmith.TryOpenNearest(_world);
+        }
+
+        if (_world.Blacksmith.IsOpen)
         {
             UpdatePlayerWhileUiOpen(deltaSeconds);
             return;
@@ -662,6 +709,15 @@ public sealed class GameEngine : IDisposable
 
         if (_window.ConsumeKeyPress(Key.L) && !_world.Rituals.IsPerforming && !_world.Magic.IsCasting)
             _world.SpellLearning.TryLearnCurrent(_world);
+
+        if (_window.ConsumeKeyPress(Key.H) &&
+            !_world.Dodge.IsActive &&
+            !_world.Rituals.IsPerforming &&
+            !_world.Magic.IsCasting &&
+            !_world.Cinematics.IsPlaying)
+        {
+            TryQuickHeal();
+        }
 
         if (_window.ConsumeKeyPress(Key.E) &&
             !_world.Dodge.IsActive &&
@@ -764,10 +820,21 @@ public sealed class GameEngine : IDisposable
 
             if (_window.ConsumeLeftMouseRelease())
             {
+                var isFirstPerson = _camera.Mode == CameraMode.FirstPerson;
+                var camForward = _camera.GetLookDirection();
+                var camPos = _camera.Position;
+                var origin = isFirstPerson
+                    ? camPos
+                    : _world.PlayerPosition + Vector3.UnitY * 1.25f + _camera.GetMoveRight() * 0.28f + camForward * 0.35f;
+                var aimTarget = camPos + camForward * 60f;
+                var releaseDir = isFirstPerson
+                    ? camForward
+                    : Vector3.Normalize(aimTarget - origin);
+
                 if (_world.Bow.TryRelease(
                     _world,
-                    _camera.Position,
-                    _camera.GetLookDirection()))
+                    origin,
+                    releaseDir))
                 {
                     _audio?.PlayEffect("bow.release", _settings);
                 }
@@ -784,6 +851,53 @@ public sealed class GameEngine : IDisposable
     {
         _world.Jump.Update(_world, deltaSeconds);
         _camera.Follow(_world.PlayerPosition, (float)deltaSeconds, _world.Terrain);
+    }
+
+    private void TryQuickHeal()
+    {
+        if (_world.Player.Health >= _world.Player.MaxHealth)
+        {
+            EngineLog.Info("Zdrowie gracza jest w pełni zregenerowane.");
+            return;
+        }
+
+        if (_world.Progress.Inventory.Contains("masc-zywokostowa"))
+        {
+            _world.Progress.Inventory.Remove("masc-zywokostowa", 1);
+            _world.Player.Heal(80f);
+            _audio?.PlayEffect("interaction.pickup", _settings, 0.7f);
+            EngineLog.Info("Użyto maści żywokostowej (+80 HP).");
+            return;
+        }
+
+        if (_world.Progress.Inventory.Contains("napar-leczniczy"))
+        {
+            _world.Progress.Inventory.Remove("napar-leczniczy", 1);
+            _world.Player.Heal(50f);
+            _audio?.PlayEffect("interaction.pickup", _settings, 0.7f);
+            EngineLog.Info("Wypito napar z dziurawca (+50 HP).");
+            return;
+        }
+
+        if (_world.Progress.Inventory.Contains("simple-bandage"))
+        {
+            _world.Progress.Inventory.Remove("simple-bandage", 1);
+            _world.Player.Heal(35f);
+            _audio?.PlayEffect("interaction.pickup", _settings, 0.6f);
+            EngineLog.Info("Zastosowano opatrunek (+35 HP).");
+            return;
+        }
+
+        if (_world.Progress.Inventory.Contains("ziolo-dziurawiec"))
+        {
+            _world.Progress.Inventory.Remove("ziolo-dziurawiec", 1);
+            _world.Player.Heal(15f);
+            _audio?.PlayEffect("interaction.pickup", _settings, 0.5f);
+            EngineLog.Info("Spożyto świeży dziurawiec (+15 HP).");
+            return;
+        }
+
+        EngineLog.Info("Brak ziół lub medykamentów w ekwipunku.");
     }
 
     private static VoiceRequest BuildSpellVoiceRequest(SlavicGame.Engine.Magic.CastSpell spell)

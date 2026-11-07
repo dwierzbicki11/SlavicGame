@@ -10,6 +10,7 @@ public static class WorldModelRenderPolicy
         "garnek_",
         "kowadlo_",
         "krosno_",
+        "kufer_",
         "lawa_wnetrze_",
         "misa_",
         "naczynia_",

@@ -51,10 +51,14 @@ public static class PlayerController
             WaterInteractionState.CanSprintAtDepth(waterDepth);
 
         var jumpSeconds = 0d;
+        world.PlayerIsMoving = isMoving;
+        world.PlayerIsSprinting = sprinting;
         if (isMoving)
         {
             move = Vector3.Normalize(move);
             var speed = (sprinting ? 9f : 5f) * waterSpeedMultiplier;
+            world.PlayerVelocity = move * speed;
+            world.PlayerMotionDistance += speed * (float)movementSeconds;
             if (world.Jump.IsAirborne)
             {
                 // Advance horizontal travel and gravity together. Comparing the first
@@ -72,6 +76,22 @@ public static class PlayerController
                 world.MovePlayerPosition(world.PlayerPosition + move * speed * (float)movementSeconds);
             }
         }
+        else
+        {
+            world.PlayerVelocity = Vector3.Zero;
+        }
+
+        if (world.Bow.IsAiming || world.Melee.Controller.State != SlavicGame.Engine.Combat.MeleeAttackState.Free)
+        {
+            world.PlayerFacingYaw = camera.Yaw;
+        }
+        else if (isMoving)
+        {
+            var desiredYaw = MathF.Atan2(move.X, move.Z);
+            world.PlayerFacingYaw = TurnTowards(world.PlayerFacingYaw, desiredYaw, (float)deltaSeconds * 14f);
+        }
+
+        camera.IsAiming = world.Bow.IsAiming;
 
         var currentVelocity = world.Jump.IsAirborne ? Vector3.Zero :
             WaterInteractionState.CurrentVelocityAt(
@@ -95,6 +115,10 @@ public static class PlayerController
             finalWaterDepth,
             world.WaterInteraction.Wetness,
             world.WaterInteraction.Chill);
+        if (world.Springs.HasBlessedWater)
+        {
+            recoveryMultiplier *= SlavicSpringSystem.StaminaRecoveryMultiplier;
+        }
         world.Player.UpdateStamina(false, dodgeSeconds, recoveryMultiplier: recoveryMultiplier);
         world.Player.UpdateStamina(
             sprinting,
@@ -102,5 +126,13 @@ public static class PlayerController
             WaterInteractionState.StaminaDrainMultiplierForDepth(finalWaterDepth),
             recoveryMultiplier);
         camera.Follow(world.PlayerPosition, (float)deltaSeconds, world.Terrain);
+    }
+
+    private static float TurnTowards(float current, float target, float maxDelta)
+    {
+        var diff = MathF.IEEERemainder(target - current, MathF.PI * 2f);
+        if (MathF.Abs(diff) <= maxDelta)
+            return target;
+        return current + MathF.Sign(diff) * maxDelta;
     }
 }

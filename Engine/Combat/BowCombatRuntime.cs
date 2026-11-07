@@ -20,6 +20,7 @@ public sealed class BowCombatRuntime
 {
     public const string BowItemId = "simple-bow";
     public const string ArrowItemId = "arrow-basic";
+    public const string IronArrowItemId = "arrow-iron";
 
     private const float FullDrawSeconds = 1.25f;
     private const float MinimumDrawFraction = 0.18f;
@@ -40,6 +41,7 @@ public sealed class BowCombatRuntime
         public Vector3 Velocity;
         public float Damage;
         public float Age;
+        public string ArrowType = ArrowItemId;
     }
 
     private sealed class Recoverable
@@ -48,6 +50,7 @@ public sealed class BowCombatRuntime
         public Vector3 Position;
         public float Yaw;
         public float Pitch;
+        public string ArrowType = ArrowItemId;
     }
 
     private readonly List<Projectile> _projectiles = [];
@@ -70,17 +73,34 @@ public sealed class BowCombatRuntime
     public IReadOnlyList<BowProjectileView> Projectiles => _projectileViews;
     public IReadOnlyList<RecoverableArrowView> RecoverableArrows => _recoverableViews;
 
+    public static bool HasArrows(WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        return world.Progress.Inventory.Contains(IronArrowItemId) ||
+               world.Progress.Inventory.Contains(ArrowItemId);
+    }
+
+    public static int TotalArrowCount(WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        return world.Progress.Inventory.Count(IronArrowItemId) +
+               world.Progress.Inventory.Count(ArrowItemId);
+    }
+
     public string HudText(WorldState world)
     {
         ArgumentNullException.ThrowIfNull(world);
 
-        var arrows = world.Progress.Inventory.Count(ArrowItemId);
+        var iron = world.Progress.Inventory.Count(IronArrowItemId);
+        var basic = world.Progress.Inventory.Count(ArrowItemId);
+        var total = iron + basic;
         if (!IsAiming)
             return "";
 
+        var typeTag = iron > 0 ? "STAL" : "DREWNO";
         return IsDrawing
-            ? $"LUK / STRZALY {arrows} / NACIAG {DrawFraction * 100f:0}%"
-            : $"LUK / STRZALY {arrows} / LPM NACIAG";
+            ? $"LUK / STRZALY {total} ({typeTag}) / NACIAG {DrawFraction * 100f:0}%"
+            : $"LUK / STRZALY {total} ({typeTag}) / LPM NACIAG";
     }
 
     public void SetAiming(WorldState world, bool aiming)
@@ -127,7 +147,7 @@ public sealed class BowCombatRuntime
             return false;
         }
 
-        if (!world.Progress.Inventory.Contains(ArrowItemId))
+        if (!HasArrows(world))
         {
             Message = "BRAK STRZAL";
             return false;
@@ -161,15 +181,23 @@ public sealed class BowCombatRuntime
         var draw = MathF.Max(DrawFraction, MinimumDrawFraction);
         CancelDraw();
 
-        if (!world.Progress.Inventory.Remove(ArrowItemId))
+        var arrowType = world.Progress.Inventory.Contains(IronArrowItemId)
+            ? IronArrowItemId
+            : (world.Progress.Inventory.Contains(ArrowItemId) ? ArrowItemId : null);
+
+        if (arrowType is null || !world.Progress.Inventory.Remove(arrowType))
         {
             Message = "BRAK STRZAL";
             return false;
         }
 
+        var isIron = string.Equals(arrowType, IronArrowItemId, StringComparison.Ordinal);
+        var bonusDamage = isIron ? 15f : 0f;
+        var bonusVelocity = isIron ? 8f : 0f;
+
         direction = Vector3.Normalize(direction);
-        var velocity = Lerp(MinimumVelocity, MaximumVelocity, draw);
-        var damage = Lerp(MinimumDamage, MaximumDamage, draw);
+        var velocity = Lerp(MinimumVelocity, MaximumVelocity, draw) + bonusVelocity;
+        var damage = Lerp(MinimumDamage, MaximumDamage, draw) + bonusDamage;
 
         _projectiles.Add(new Projectile
         {
@@ -177,11 +205,14 @@ public sealed class BowCombatRuntime
             Position = origin + direction * 0.42f - Vector3.UnitY * 0.08f,
             Velocity = direction * velocity,
             Damage = damage,
-            Age = 0f
+            Age = 0f,
+            ArrowType = arrowType
         });
 
         RefreshViews();
-        Message = $"STRZAL / NACIAG {draw * 100f:0}%";
+        Message = isIron
+            ? $"STRZAL ZE STALI / NACIAG {draw * 100f:0}%"
+            : $"STRZAL / NACIAG {draw * 100f:0}%";
         return true;
     }
 
@@ -247,10 +278,13 @@ public sealed class BowCombatRuntime
         if (bestIndex < 0)
             return false;
 
-        world.Progress.Inventory.Add(ArrowItemId);
+        var recovered = _recoverable[bestIndex];
+        world.Progress.Inventory.Add(recovered.ArrowType);
         _recoverable.RemoveAt(bestIndex);
         RefreshViews();
-        Message = "ODZYSKANO STRZALE";
+        Message = string.Equals(recovered.ArrowType, IronArrowItemId, StringComparison.Ordinal)
+            ? "ODZYSKANO STRZALE ZE STALI"
+            : "ODZYSKANO STRZALE";
         return true;
     }
 
@@ -374,11 +408,28 @@ public sealed class BowCombatRuntime
                 break;
             }
 
+            case ProjectileHitKind.Bestiary:
+            {
+                if (hit.TargetId is null)
+                    break;
+
+                world.Bestiary.TryDamage(world, hit.TargetId, projectile.Damage);
+                var monster = world.Bestiary.Actors.FirstOrDefault(m => string.Equals(m.Id, hit.TargetId, StringComparison.Ordinal));
+                if (monster is not null)
+                {
+                    Message = monster.IsAlive
+                        ? $"TRAFIENIE: {monster.DisplayName.ToUpperInvariant()} / {monster.Health:0} HP"
+                        : $"POKONANO: {monster.DisplayName.ToUpperInvariant()} / E ZBIERZ TROFEUM";
+                }
+                break;
+            }
+
             case ProjectileHitKind.Terrain:
             {
                 StickArrow(
                     impact,
-                    projectile.Velocity);
+                    projectile.Velocity,
+                    projectile.ArrowType);
                 Message = "STRZALA WBILA SIE W ZIEMIE";
                 break;
             }
@@ -387,7 +438,8 @@ public sealed class BowCombatRuntime
 
     private void StickArrow(
         Vector3 position,
-        Vector3 velocity)
+        Vector3 velocity,
+        string arrowType = ArrowItemId)
     {
         if (_recoverable.Count >= MaxRecoverableArrows)
             _recoverable.RemoveAt(0);
@@ -417,7 +469,8 @@ public sealed class BowCombatRuntime
             Id = _nextId++,
             Position = position + Vector3.UnitY * 0.025f,
             Yaw = yaw,
-            Pitch = pitch
+            Pitch = pitch,
+            ArrowType = arrowType
         });
     }
 
@@ -481,6 +534,28 @@ public sealed class BowCombatRuntime
                 hit = new ProjectileHit(
                     ProjectileHitKind.Wildlife,
                     animal.Id,
+                    fraction);
+            }
+        }
+
+        foreach (var monster in world.Bestiary.Actors)
+        {
+            if (!monster.IsAlive)
+                continue;
+
+            var center = monster.Position + Vector3.UnitY * 0.9f;
+            if (SegmentSphere(
+                    from,
+                    to,
+                    center,
+                    1.1f,
+                    out var fraction) &&
+                fraction < bestFraction)
+            {
+                bestFraction = fraction;
+                hit = new ProjectileHit(
+                    ProjectileHitKind.Bestiary,
+                    monster.Id,
                     fraction);
             }
         }
@@ -663,7 +738,8 @@ public sealed class BowCombatRuntime
     {
         Terrain,
         Enemy,
-        Wildlife
+        Wildlife,
+        Bestiary
     }
 
     private readonly record struct ProjectileHit(

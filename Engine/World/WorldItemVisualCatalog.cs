@@ -50,6 +50,46 @@ public static class WorldItemVisualCatalog
             0.045f),
 
         new(
+            "visual.resource.herb.herb-dziurawiec-start",
+            "ziolo-dziurawiec",
+            "models/static/peczek_ziol_r0_01.glb",
+            new Vector3(-12f, 0f, 15f),
+            new Vector3(0.85f),
+            0.35f,
+            new Vector3(1.4f, 1.15f, 0.22f),
+            0.045f),
+
+        new(
+            "visual.resource.herb.herb-piolun-clearing",
+            "ziolo-piolun",
+            "models/static/peczek_ziol_r0_01.glb",
+            new Vector3(22f, 0f, 32f),
+            new Vector3(0.85f),
+            -0.45f,
+            new Vector3(0.58f, 0.78f, 0.65f),
+            0.045f),
+
+        new(
+            "visual.resource.herb.herb-krwawnik-trail",
+            "ziolo-krwawnik",
+            "models/static/peczek_ziol_r0_01.glb",
+            new Vector3(-5f, 0f, -25f),
+            new Vector3(0.85f),
+            0.82f,
+            new Vector3(1.25f, 1.20f, 1.15f),
+            0.045f),
+
+        new(
+            "visual.resource.herb.herb-zywokost-river",
+            "ziolo-zywokost",
+            "models/static/peczek_ziol_r0_01.glb",
+            new Vector3(110f, 0f, -120f),
+            new Vector3(0.90f),
+            0.12f,
+            new Vector3(0.72f, 0.38f, 0.78f),
+            0.045f),
+
+        new(
             "visual.quest.ritual-thread",
             "ritual-thread",
             "models/static/rope_coil_r0_01.glb",
@@ -106,6 +146,12 @@ public static class WorldItemVisualCatalog
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(definition);
+
+        if (definition.Id.StartsWith("visual.resource.herb.", StringComparison.Ordinal))
+        {
+            var spawnId = definition.Id["visual.resource.herb.".Length..];
+            return SlavicHerbalismSystem.CanHarvest(world, spawnId);
+        }
 
         return definition.Id switch
         {

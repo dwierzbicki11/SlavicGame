@@ -83,6 +83,12 @@ public sealed class PlayerVitals
 
     public void Restore() => SetState(MaxHealth, MaxStamina);
 
+    public void RestoreStamina()
+    {
+        Stamina = MaxStamina;
+        _recoveryDelayRemaining = 0;
+    }
+
     public void SetState(float health, float stamina)
     {
         if (!float.IsFinite(health) || !float.IsFinite(stamina) ||

@@ -60,7 +60,7 @@ public static class NpcWorkstationCatalog
                 new("workstation-woodworker-bench", "models/static/stol_warsztatowy_r0_01.glb",
                     new Vector2(15.1f, -96.2f), new Vector3(0.95f), 0.05f),
                 new("workstation-woodworker-axe", "models/static/siekiera_r0_01.glb",
-                    new Vector2(15.8f, -96.1f), new Vector3(0.82f), -0.32f, 0.72f)
+                    new Vector2(15.4f, -96.2f), new Vector3(0.82f), -0.32f, 0.98f)
             ]),
         new(
             "settler-potter-01",
@@ -73,9 +73,9 @@ public static class NpcWorkstationCatalog
                 new("workstation-potter-table", "models/static/stol_warsztatowy_r0_01.glb",
                     new Vector2(-6.7f, -73.8f), new Vector3(0.88f), 0.02f),
                 new("workstation-potter-vessels", "models/static/naczynia_r0_01.glb",
-                    new Vector2(-6.9f, -73.6f), new Vector3(0.70f), 0.26f, 0.78f),
+                    new Vector2(-7.0f, -73.8f), new Vector3(0.70f), 0.26f, 0.91f),
                 new("workstation-potter-pot", "models/static/garnek_gliniany_r0_01.glb",
-                    new Vector2(-6.2f, -73.6f), new Vector3(0.62f), -0.40f, 0.78f)
+                    new Vector2(-6.3f, -73.8f), new Vector3(0.62f), -0.40f, 0.91f)
             ]),
         new(
             "settler-trader-01",
@@ -93,28 +93,28 @@ public static class NpcWorkstationCatalog
         new(
             "settler-smith-helper-01",
             "forge-work",
-            new Vector2(20.1f, -89.3f),
+            new Vector2(19.6f, -87.2f),
             new Vector2(19.0f, -88.0f),
             0.25,
             0.74f,
             [
                 new("workstation-smith-bucket", "models/static/wiadro_r0_01.glb",
-                    new Vector2(20.4f, -88.5f), new Vector3(0.70f), 0.12f, 0.02f),
+                    new Vector2(20.2f, -87.9f), new Vector3(0.70f), 0.12f, 0.02f),
                 new("workstation-smith-axe", "models/static/siekiera_r0_02.glb",
-                    new Vector2(19.7f, -88.5f), new Vector3(0.76f), 0.72f, 0.58f)
+                    new Vector2(19.5f, -88.1f), new Vector3(0.76f), 0.72f, 0.04f)
             ]),
         new(
             "settler-weaver-01",
             "weave-work",
-            new Vector2(-16.6f, -78.2f),
-            new Vector2(-17.6f, -78.4f),
+            new Vector2(-16.4f, -76.5f),
+            new Vector2(-17.5f, -76.7f),
             0.32,
             0.76f,
             [
                 new("workstation-weaver-loom", "models/static/krosno_r0_01.glb",
-                    new Vector2(-17.7f, -78.4f), new Vector3(0.92f), 0.08f),
+                    new Vector2(-17.6f, -76.7f), new Vector3(0.92f), 0.08f),
                 new("workstation-weaver-stool", "models/static/taboret_r0_01.glb",
-                    new Vector2(-16.9f, -79.0f), new Vector3(0.74f), -0.28f)
+                    new Vector2(-16.7f, -77.2f), new Vector3(0.74f), -0.28f)
             ]),
         new(
             "settler-gatherer-01",
@@ -127,9 +127,9 @@ public static class NpcWorkstationCatalog
                 new("workstation-herbs-table", "models/static/stol_warsztatowy_r0_01.glb",
                     new Vector2(7.0f, -89.0f), new Vector3(0.86f), -0.04f),
                 new("workstation-herbs-bundle", "models/static/peczek_ziol_r0_01.glb",
-                    new Vector2(6.7f, -88.8f), new Vector3(0.82f), 0.28f, 0.77f),
+                    new Vector2(6.7f, -89.0f), new Vector3(0.82f), 0.28f, 0.89f),
                 new("workstation-herbs-dried", "models/static/ziola_suszone_r0_01.glb",
-                    new Vector2(7.3f, -88.8f), new Vector3(0.78f), -0.18f, 0.77f)
+                    new Vector2(8.2f, -89.0f), new Vector3(0.78f), -0.18f, 0.0f)
             ]),
         new(
             "settler-fisher-01",
@@ -142,7 +142,7 @@ public static class NpcWorkstationCatalog
                 new("workstation-fisher-bench", "models/static/lawa_wnetrze_r0_01.glb",
                     new Vector2(20.8f, -74.8f), new Vector3(0.82f), 0.50f),
                 new("workstation-fisher-rope", "models/static/rope_coil_r0_01.glb",
-                    new Vector2(20.5f, -75.0f), new Vector3(0.78f), -0.12f, 0.18f),
+                    new Vector2(20.2f, -74.9f), new Vector3(0.78f), -0.12f, 0.02f),
                 new("workstation-fisher-trap", "models/static/pulapka_rybacka_r0_01.glb",
                     new Vector2(21.4f, -74.7f), new Vector3(0.72f), 0.28f)
             ]),
@@ -157,9 +157,9 @@ public static class NpcWorkstationCatalog
                 new("workstation-herbalist-table", "models/static/stol_warsztatowy_r0_01.glb",
                     new Vector2(5.7f, -91.2f), new Vector3(0.82f), 0.38f),
                 new("workstation-herbalist-basket", "models/static/basket_r0_01.glb",
-                    new Vector2(6.0f, -91.0f), new Vector3(0.68f), -0.32f, 0.02f),
+                    new Vector2(6.5f, -91.0f), new Vector3(0.68f), -0.32f, 0.02f),
                 new("workstation-herbalist-herbs", "models/static/peczek_ziol_r0_01.glb",
-                    new Vector2(5.6f, -91.0f), new Vector3(0.76f), 0.22f, 0.74f)
+                    new Vector2(5.7f, -91.2f), new Vector3(0.76f), 0.22f, 0.85f)
             ]),
         new(
             "crossing-keeper",
@@ -222,10 +222,7 @@ public static class NpcWorkstationCatalog
             return false;
         }
 
-        var phase = PositiveModulo(
-            timeOfDayHours / definition.CycleHours +
-            StablePhase(npcId + ":" + activity),
-            1.0);
+        var phase = SamplePhase(definition, timeOfDayHours);
 
         if (phase >= definition.WorkFraction)
         {
@@ -246,6 +243,17 @@ public static class NpcWorkstationCatalog
             forward,
             false);
         return true;
+    }
+
+    public static double SamplePhase(
+        NpcWorkstationDefinition definition,
+        double timeOfDayHours)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        return PositiveModulo(
+            timeOfDayHours / definition.CycleHours +
+            StablePhase(definition.NpcId + ":" + definition.Activity),
+            1.0);
     }
 
     public static NpcWorkstationDefinition? Find(

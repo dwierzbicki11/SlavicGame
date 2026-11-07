@@ -20,6 +20,11 @@ public sealed class WorldState
     public IReadOnlyList<NpcDefinition> Npcs => _npcs;
     public IReadOnlyList<WorldModelInstance> Models => _models;
     public Vector3 PlayerPosition { get; private set; } = Vector3.Zero;
+    public Vector3 PlayerVelocity { get; set; } = Vector3.Zero;
+    public bool PlayerIsMoving { get; set; }
+    public bool PlayerIsSprinting { get; set; }
+    public float PlayerFacingYaw { get; set; } = MathF.PI;
+    public float PlayerMotionDistance { get; set; }
     public SlavicGame.Engine.Magic.SpellCasting Magic { get; } = new();
     public SlavicGame.Engine.Magic.SpellLearningSystem SpellLearning { get; } = new();
     public SlavicGame.Engine.Magic.RitualExecution Rituals { get; } = new();
@@ -32,10 +37,13 @@ public sealed class WorldState
     public SwampApparitionRuntime Apparition { get; } = new();
     public NpcWorldRuntime NpcWorld { get; } = new();
     public WildlifeWorldRuntime Wildlife { get; } = new();
+    public BestiaryWorldRuntime Bestiary { get; } = new();
     public WildlifeTrackTrailState WildlifeTracks { get; } = new();
     public DialogueRuntime Dialogue { get; } = new();
     public VendorRuntime Vendors { get; } = new();
     public CraftingRuntime Crafting { get; } = new();
+    public BlacksmithCraftingRuntime Blacksmith { get; } = new();
+    public SlavicSpringSystem Springs { get; } = new();
     public LootContainerRuntime Loot { get; } = new();
     public CampfireRuntime Campfires { get; } = new();
     public EnvironmentInteractionSystem EnvironmentInteractions { get; } = new();
@@ -61,6 +69,11 @@ public sealed class WorldState
         _regions.Add(new WorldRegion("old-village", "Żarnowiec", WorldRegionType.Village, 0f, -85f, 32f));
         _regions.Add(new WorldRegion("black-swamp", "Czarne Mokradła", WorldRegionType.Swamp, 95f, 35f, 48f));
         _regions.Add(new WorldRegion("old-shrine", "Kamienny Krąg", WorldRegionType.Shrine, -85f, 55f, 22f));
+        _regions.Add(new WorldRegion("grod-borzywoj", "Gród Borzywoj", WorldRegionType.Village, -320f, 220f, 52f));
+        _regions.Add(new WorldRegion("przystan-rybacka", "Przystań Rybacka", WorldRegionType.Village, 148f, -180f, 38f));
+        _regions.Add(new WorldRegion("osada-smolnikow", "Osada Smolników", WorldRegionType.Village, -175f, -280f, 34f));
+        _regions.Add(new WorldRegion("oboz-kupiecki", "Obóz Kupiecki", WorldRegionType.Village, -155f, 95f, 22f));
+        _regions.Add(new WorldRegion("threshold-waste", "Pustkowie Pierwszego Progu", WorldRegionType.Shrine, -460f, 400f, 60f));
 
         foreach (var forest in ForestLayout.Zones)
             _regions.Add(new WorldRegion(
@@ -75,12 +88,23 @@ public sealed class WorldState
         AddObstacle("village-hut-a", -10f, -88f, 8f, 7f, 5f, new Vector3(0.32f, 0.20f, 0.10f));
         AddObstacle("village-hut-b", 5f, -96f, 9f, 6f, 5.5f, new Vector3(0.29f, 0.18f, 0.09f));
         AddObstacle("village-hut-c", 13f, -78f, 7f, 8f, 4.8f, new Vector3(0.35f, 0.22f, 0.11f));
+        AddObstacle("village-granary", -18f, -80f, 4.1f, 3.0f, 4.2f, new Vector3(0.40f, 0.25f, 0.10f));
+        AddObstacle("village-forge", 21.2f, -91.6f, 5.2f, 3.8f, 4.2f, new Vector3(0.34f, 0.20f, 0.09f));
+        AddObstacle("village-market", -1f, -76f, 3.6f, 2.0f, 3.2f, new Vector3(0.48f, 0.31f, 0.15f));
+        AddObstacle("village-gate-west", -2.7f, -108f, 2.0f, 2.4f, 4.2f, new Vector3(0.36f, 0.22f, 0.09f));
+        AddObstacle("village-gate-east", 2.7f, -108f, 2.0f, 2.4f, 4.2f, new Vector3(0.36f, 0.22f, 0.09f));
+        AddObstacle("workstation-woodworker-bench-collision", 15.1f, -96.2f, 1.8f, 0.7f, 1.0f, new Vector3(0.36f, 0.24f, 0.12f));
+        AddObstacle("workstation-potter-table-collision", -6.7f, -73.8f, 1.7f, 0.7f, 1.0f, new Vector3(0.36f, 0.24f, 0.12f));
+        AddObstacle("workstation-herbs-table-collision", 7.0f, -89.0f, 1.7f, 0.7f, 1.0f, new Vector3(0.36f, 0.24f, 0.12f));
+        AddObstacle("workstation-weaver-loom-collision", -17.6f, -76.7f, 0.5f, 1.5f, 1.8f, new Vector3(0.36f, 0.24f, 0.12f));
 
         var stone = new Vector3(0.30f, 0.31f, 0.28f);
         AddObstacle("shrine-stone-west", -91f, 55f, 2.2f, 2.2f, 4.2f, stone);
         AddObstacle("shrine-stone-east", -79f, 55f, 2.2f, 2.2f, 4.2f, stone);
         AddObstacle("shrine-stone-north", -85f, 49f, 2.2f, 2.2f, 4.2f, stone);
         AddObstacle("shrine-stone-south", -85f, 61f, 2.2f, 2.2f, 4.2f, stone);
+        AddObstacle("shrine-altar-collision", -85f, 55f, 1.8f, 1.2f, 1.4f, stone);
+        AddObstacle("shrine-ruin-collision", -77f, 61f, 1.8f, 1.4f, 2.2f, stone);
 
         AddObstacle("forest-fallen-trunk", 18f, 15f, 8f, 2.2f, 1.2f, new Vector3(0.24f, 0.15f, 0.07f));
         AddObstacle("swamp-standing-stone", 105f, 44f, 3f, 3f, 2.2f, new Vector3(0.20f, 0.23f, 0.20f));
@@ -94,10 +118,10 @@ public sealed class WorldState
         AddModel("village-market", "models/static/stoisko_targowe_r0_01.glb", -1f, -76f, new Vector3(1.20f), 0f, new Vector3(0.48f, 0.31f, 0.15f));
         AddModel("village-gate", "models/static/brama_wioskowa_r0_01.glb", 0f, -108f, new Vector3(1.20f), 0f, new Vector3(0.36f, 0.22f, 0.09f));
 
-        AddModel("forest-oak-a", "models/static/dab_stary_r0_01.glb", -14f, 11f, Vector3.One, 0.2f, new Vector3(0.20f, 0.35f, 0.13f));
-        AddModel("forest-oak-b", "models/static/dab_stary_r0_02.glb", 12f, 7f, Vector3.One, -0.4f, new Vector3(0.18f, 0.32f, 0.12f));
-        AddModel("forest-pine", "models/static/sosna_r0_02.glb", -21f, -4f, Vector3.One, 0.5f, new Vector3(0.16f, 0.30f, 0.11f));
-        AddModel("forest-birch", "models/static/brzoza_r0_02.glb", 22f, -8f, Vector3.One, -0.3f, new Vector3(0.28f, 0.43f, 0.18f));
+        AddModel("forest-oak-a", "models/static/dab_stary_r0_01.glb", -14f, 11f, new Vector3(1.85f, 1.72f, 1.85f), 0.2f, new Vector3(0.20f, 0.35f, 0.13f));
+        AddModel("forest-oak-b", "models/static/dab_stary_r0_02.glb", 12f, 7f, new Vector3(1.78f, 1.66f, 1.78f), -0.4f, new Vector3(0.18f, 0.32f, 0.12f));
+        AddModel("forest-pine", "models/static/sosna_r0_02.glb", -21f, -4f, new Vector3(1.55f, 1.88f, 1.55f), 0.5f, new Vector3(0.16f, 0.30f, 0.11f));
+        AddModel("forest-birch", "models/static/brzoza_r0_02.glb", 22f, -8f, new Vector3(1.48f, 1.68f, 1.48f), -0.3f, new Vector3(0.28f, 0.43f, 0.18f));
         AddModel("forest-ferns", "models/static/paproc_r0_01.glb", 7f, 13f, new Vector3(1.4f), 0f, new Vector3(0.20f, 0.40f, 0.14f));
         AddModel("forest-fallen-trunk", "models/static/powalone_drzewo_r0_01.glb", 18f, 15f, new Vector3(1.4f), 0.15f, new Vector3(0.28f, 0.17f, 0.07f));
 
@@ -233,9 +257,48 @@ public sealed class WorldState
             new NpcScheduleSlot(8, 18, "old-village", "run-errands"),
             new NpcScheduleSlot(18, 8, "old-village", "rest"));
 
+        AddNpc("stronghold-chieftain", NpcRole.ContractGiver,
+            new NpcScheduleSlot(7, 18, "grod-borzywoj", "court"),
+            new NpcScheduleSlot(18, 22, "grod-borzywoj", "feast"),
+            new NpcScheduleSlot(22, 7, "grod-borzywoj", "rest"));
+        AddNpc("stronghold-guard", NpcRole.CommunityGuard,
+            new NpcScheduleSlot(6, 18, "grod-borzywoj", "gate-watch"),
+            new NpcScheduleSlot(18, 6, "grod-borzywoj", "patrol"));
+        AddNpc("stronghold-smith", NpcRole.Worker,
+            new NpcScheduleSlot(6, 18, "grod-borzywoj", "forge-work"),
+            new NpcScheduleSlot(18, 6, "grod-borzywoj", "rest"));
+        AddNpc("stronghold-trader", NpcRole.Trader,
+            new NpcScheduleSlot(7, 19, "grod-borzywoj", "market-trade"),
+            new NpcScheduleSlot(19, 7, "grod-borzywoj", "rest"));
+
+        AddNpc("fishing-elder", NpcRole.Worker,
+            new NpcScheduleSlot(5, 17, "przystan-rybacka", "pier-fishing"),
+            new NpcScheduleSlot(17, 21, "przystan-rybacka", "mend-nets"),
+            new NpcScheduleSlot(21, 5, "przystan-rybacka", "rest"));
+        AddNpc("fishing-ferryman", NpcRole.CrossingKeeper,
+            new NpcScheduleSlot(6, 20, "przystan-rybacka", "bridge-watch"),
+            new NpcScheduleSlot(20, 6, "przystan-rybacka", "rest"));
+
+        AddNpc("smolnik-woodcutter", NpcRole.Worker,
+            new NpcScheduleSlot(6, 18, "osada-smolnikow", "wood-work"),
+            new NpcScheduleSlot(18, 6, "osada-smolnikow", "rest"));
+        AddNpc("smolnik-burner", NpcRole.Worker,
+            new NpcScheduleSlot(5, 19, "osada-smolnikow", "tar-burning"),
+            new NpcScheduleSlot(19, 5, "osada-smolnikow", "rest"));
+
+        AddNpc("caravan-merchant", NpcRole.Trader,
+            new NpcScheduleSlot(7, 20, "oboz-kupiecki", "caravan-trade"),
+            new NpcScheduleSlot(20, 7, "oboz-kupiecki", "rest"));
+
         SetPlayerPosition(Vector3.Zero);
+        PlayerVelocity = Vector3.Zero;
+        PlayerIsMoving = false;
+        PlayerIsSprinting = false;
+        PlayerFacingYaw = MathF.PI;
+        PlayerMotionDistance = 0f;
         NpcWorld.Update(this);
         Wildlife.Reset(this);
+        Bestiary.Reset(this);
         WildlifeTracks.Reset(this);
         Dialogue.Close();
         Vendors.Initialize();
@@ -252,9 +315,11 @@ public sealed class WorldState
         Weather.Update(deltaSeconds, GetCurrentRegion()?.Type);
         NpcWorld.Update(this);
         Wildlife.Update(this, deltaSeconds);
+        Bestiary.Update(this, deltaSeconds);
         WildlifeTracks.Update(this, deltaSeconds);
         Dialogue.Update(this);
         Campfires.Update(this, deltaSeconds);
+        Springs.Update(deltaSeconds);
         WaterInteraction.Update(this, deltaSeconds);
         Footprints.Update(this, deltaSeconds);
         Apparition.Update(this, deltaSeconds);
@@ -274,19 +339,49 @@ public sealed class WorldState
 
     public void SetPlayerPosition(Vector3 position)
     {
-        ApplyPlayerPosition(position, preserveHeight: false);
+        ApplyPlayerPosition(position, preserveHeight: false, sweepFromCurrent: false);
         Jump.Reset();
     }
 
     public void MovePlayerPosition(Vector3 position) =>
-        ApplyPlayerPosition(position, preserveHeight: Jump.IsAirborne);
+        ApplyPlayerPosition(position, preserveHeight: Jump.IsAirborne, sweepFromCurrent: true);
 
-    private void ApplyPlayerPosition(Vector3 position, bool preserveHeight)
+    private void ApplyPlayerPosition(Vector3 position, bool preserveHeight, bool sweepFromCurrent)
     {
         if (!float.IsFinite(position.X) || !float.IsFinite(position.Z) ||
             (preserveHeight && !float.IsFinite(position.Y)))
             throw new ArgumentOutOfRangeException(nameof(position));
-        var horizontal = ResolveHorizontalPosition(new Vector2(position.X, position.Z), PlayerRadius);
+
+        var targetHorizontal = new Vector2(position.X, position.Z);
+        Vector2 horizontal;
+        if (sweepFromCurrent)
+        {
+            var currentHorizontal = new Vector2(PlayerPosition.X, PlayerPosition.Z);
+            var delta = targetHorizontal - currentHorizontal;
+            var dist = delta.Length();
+            if (dist > 0.20f && dist < 8.0f)
+            {
+                var steps = Math.Clamp((int)MathF.Ceiling(dist / 0.20f), 2, 40);
+                var stepped = currentHorizontal;
+                for (var s = 1; s <= steps; s++)
+                {
+                    var nextTarget = Vector2.Lerp(currentHorizontal, targetHorizontal, s / (float)steps);
+                    stepped = ResolveHorizontalPosition(
+                        stepped + (nextTarget - Vector2.Lerp(currentHorizontal, targetHorizontal, (s - 1) / (float)steps)),
+                        PlayerRadius);
+                }
+                horizontal = stepped;
+            }
+            else
+            {
+                horizontal = ResolveHorizontalPosition(targetHorizontal, PlayerRadius);
+            }
+        }
+        else
+        {
+            horizontal = ResolveHorizontalPosition(targetHorizontal, PlayerRadius);
+        }
+
         position.X = horizontal.X;
         position.Z = horizontal.Y;
         PlayerPosition = new Vector3(position.X,
@@ -313,7 +408,7 @@ public sealed class WorldState
         position.X = Math.Clamp(position.X, -halfWidth, halfWidth);
         position.Y = Math.Clamp(position.Y, -halfDepth, halfDepth);
 
-        for (var pass = 0; pass < 2; pass++)
+        for (var pass = 0; pass < 4; pass++)
         {
             foreach (var obstacle in _obstacles)
             {

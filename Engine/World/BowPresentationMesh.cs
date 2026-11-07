@@ -71,8 +71,9 @@ public static class BowPresentationMesh
                   right * 0.34f -
                   Vector3.UnitY * 0.27f
                 : world.PlayerPosition +
-                  Vector3.UnitY * 1.10f +
-                  right * 0.30f;
+                  Vector3.UnitY * 1.25f +
+                  right * 0.28f +
+                  forward * 0.38f;
 
             var transform =
                 Matrix4x4.CreateScale(0.92f) *
@@ -92,16 +93,22 @@ public static class BowPresentationMesh
 
             if (world.Bow.IsDrawing)
             {
-                var nocked =
-                    position +
-                    forward * 0.22f -
-                    right * 0.05f +
-                    Vector3.UnitY * 0.03f;
+                var drawFraction = world.Bow.DrawFraction;
+                var drawOffset = drawFraction * 0.32f;
+                var nocked = position +
+                    forward * (0.24f - drawOffset) -
+                    right * 0.04f +
+                    Vector3.UnitY * 0.02f;
+
+                var isIron = world.Progress.Inventory.Contains(BowCombatRuntime.IronArrowItemId);
+                var arrowColor = isIron
+                    ? new Vector3(0.58f, 0.62f, 0.68f)
+                    : new Vector3(0.46f, 0.31f, 0.14f);
 
                 AppendArrow(
                     nocked,
                     forward,
-                    new Vector3(0.46f, 0.31f, 0.14f));
+                    arrowColor);
             }
         }
 

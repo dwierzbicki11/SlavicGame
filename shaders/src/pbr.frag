@@ -236,10 +236,19 @@ void main()
             (1.0 - nightFactor);
     }
 
+    float fogEnabled = GraphicsFeatures0.w;
     float fogFactor = 1.0 - exp(
-        -(FogColorDensity.w * GraphicsFeatures0.w) * fsin_Distance);
-    fogFactor = clamp(fogFactor, 0.0, 0.94);
-    color = mix(color, FogColorDensity.rgb, fogFactor);
+        -(FogColorDensity.w * fogEnabled) * fsin_Distance);
+    float twilightFactor = clamp(CelestialParameters.z, 0.0, 1.0);
+    float groundMist = clamp((3.0 - fsin_WorldPosition.y) * 0.24, 0.0, 1.0) *
+                       smoothstep(10.0, 54.0, fsin_Distance) *
+                       fogEnabled *
+                       mix(0.20, 0.42, max(twilightFactor, nightFactor));
+    fogFactor = clamp(max(fogFactor, groundMist), 0.0, 0.94);
+
+    float sunScatter = pow(max(dot(-viewDirection, lightDirection), 0.0), 5.0) * (1.0 - nightFactor);
+    vec3 slavicFogColor = mix(FogColorDensity.rgb, sunColor * vec3(1.02, 0.78, 0.52), sunScatter * 0.32);
+    color = mix(color, slavicFogColor, fogFactor);
 
     color = FilmicToneMap(color);
     color = pow(max(color, vec3(0.0)), vec3(1.0 / 2.2));

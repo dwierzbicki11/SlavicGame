@@ -11,19 +11,19 @@ internal static class WildlifeRegression
         var world = WorldGenerator.Generate();
         var actors = world.Wildlife.Actors;
 
-        check(actors.Count == 17,
-            "R0 wildlife runtime registers seventeen ambient animals");
+        check(actors.Count == 27,
+            "R0 wildlife runtime registers twenty-seven ambient animals across regions");
         check(actors.Select(actor => actor.Id).Distinct(StringComparer.Ordinal).Count() == actors.Count,
             "Wildlife spawn IDs are unique");
 
-        check(actors.Count(actor => actor.Species == WildlifeSpecies.Deer) == 5,
-            "R0 wildlife includes five deer");
-        check(actors.Count(actor => actor.Species == WildlifeSpecies.Boar) == 4,
-            "R0 wildlife includes four boars");
-        check(actors.Count(actor => actor.Species == WildlifeSpecies.Wolf) == 3,
-            "R0 wildlife includes three wolves");
-        check(actors.Count(actor => actor.Species == WildlifeSpecies.Raven) == 5,
-            "R0 wildlife includes five ravens");
+        check(actors.Count(actor => actor.Species == WildlifeSpecies.Deer) == 8,
+            "R0 wildlife includes eight deer");
+        check(actors.Count(actor => actor.Species == WildlifeSpecies.Boar) == 6,
+            "R0 wildlife includes six boars");
+        check(actors.Count(actor => actor.Species == WildlifeSpecies.Wolf) == 5,
+            "R0 wildlife includes five wolves");
+        check(actors.Count(actor => actor.Species == WildlifeSpecies.Raven) == 8,
+            "R0 wildlife includes eight ravens");
 
         foreach (var actor in actors)
         {

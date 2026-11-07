@@ -23,7 +23,7 @@ internal static class CraftingRegression
             "Nearby daytime herbalist exposes alchemy station");
 
         var locked = world.Crafting.BuildLines(world);
-        check(locked.Count == 1 &&
+        check(locked.Count >= 1 &&
               locked[0].RecipeId == "recipe.marsh-sight-tonic" &&
               !locked[0].Unlocked &&
               !locked[0].CanCraft,

@@ -82,6 +82,32 @@ public sealed class VendorRuntime
                     2,
                     false,
                     "recipe.marsh-sight-tonic.learned")
+            ]),
+        new(
+            "vendor.stronghold.trader",
+            "stronghold-trader",
+            "KUPIEC DOBROMIR",
+            "market-trade",
+            [
+                new("simple-bandage", "OPATRUNEK", 8, 3, 10, true),
+                new("arrow-basic", "STRZALA", 2, 1, 40, true),
+                new("forest-resin", "ZYWICA LESNA", 5, 2, 8, true),
+                new("iron-chunk", "BRYLA ZELAZA", 12, 5, 12, true),
+                new("leather-strip", "PAS RZEMIENIA", 6, 2, 8, true),
+                new("plank-timber", "DESKA DEBOWA", 8, 3, 10, true)
+            ]),
+        new(
+            "vendor.caravan.merchant",
+            "caravan-merchant",
+            "KUPIEC WITOSZ",
+            "caravan-trade",
+            [
+                new("simple-bandage", "OPATRUNEK", 7, 3, 12, true),
+                new("arrow-basic", "STRZALA", 2, 1, 50, true),
+                new("forest-resin", "ZYWICA LESNA", 4, 2, 10, true),
+                new("iron-chunk", "BRYLA ZELAZA", 10, 4, 16, true),
+                new("leather-strip", "PAS RZEMIENIA", 5, 2, 10, true),
+                new("plank-timber", "DESKA DEBOWA", 7, 3, 12, true)
             ])
     ];
 

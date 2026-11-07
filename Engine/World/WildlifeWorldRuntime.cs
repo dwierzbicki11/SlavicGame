@@ -145,7 +145,23 @@ public static class WildlifeLayout
 
         // Central vertical-slice space
         new("raven-start-01", WildlifeSpecies.Raven, new Vector2(24f, 18f), 34f, 0.25f),
-        new("raven-shrine-01", WildlifeSpecies.Raven, new Vector2(-92f, 64f), 28f, 0.73f)
+        new("raven-shrine-01", WildlifeSpecies.Raven, new Vector2(-92f, 64f), 28f, 0.73f),
+
+        // Gród Borzywoj — uplands and clearing wildlife
+        new("deer-stronghold-01", WildlifeSpecies.Deer, new Vector2(-270f, 260f), 36f, 0.33f),
+        new("deer-stronghold-02", WildlifeSpecies.Deer, new Vector2(-360f, 175f), 32f, 0.61f),
+        new("wolf-ridge-01", WildlifeSpecies.Wolf, new Vector2(-220f, 110f), 40f, 0.28f),
+        new("wolf-ridge-02", WildlifeSpecies.Wolf, new Vector2(-380f, 290f), 38f, 0.85f),
+        new("raven-stronghold-01", WildlifeSpecies.Raven, new Vector2(-320f, 220f), 45f, 0.44f),
+
+        // Przystań Rybacka — river valley wildlife
+        new("deer-river-01", WildlifeSpecies.Deer, new Vector2(115f, -145f), 35f, 0.18f),
+        new("raven-fishing-01", WildlifeSpecies.Raven, new Vector2(165f, -180f), 40f, 0.19f),
+
+        // Osada Smolników — edge of Bór Perunowy
+        new("boar-smolnik-01", WildlifeSpecies.Boar, new Vector2(-135f, -250f), 28f, 0.42f),
+        new("boar-smolnik-02", WildlifeSpecies.Boar, new Vector2(-225f, -310f), 30f, 0.77f),
+        new("raven-smolnik-01", WildlifeSpecies.Raven, new Vector2(-175f, -280f), 36f, 0.62f)
     ];
 }
 

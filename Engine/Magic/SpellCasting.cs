@@ -165,11 +165,26 @@ public sealed class SpellCasting
                     .OrderBy(e => Vector3.DistanceSquared(origin, e.Point))
                     .FirstOrDefault();
 
+                var bestiaryTarget = world.Bestiary.Actors.Where(b => b.IsAlive)
+                    .Select(b => (Monster: b, Point: b.Position + Vector3.UnitY * 0.85f))
+                    .Where(b => Vector3.DistanceSquared(origin, b.Point) <= 18f * 18f &&
+                        Vector3.DistanceSquared(origin, b.Point) > 0.001f &&
+                        Vector3.Dot(Vector3.Normalize(b.Point - origin), _direction) >= 0.90f &&
+                        HasLineOfSight(world, origin, b.Point))
+                    .OrderBy(b => Vector3.DistanceSquared(origin, b.Point))
+                    .FirstOrDefault();
+
                 if (target.Enemy is not null)
                 {
                     target.Enemy.TakeDamage(22f);
                     FlashPosition = target.Point;
                     Message = $"{Current.Incantation} - TRAFIENIE";
+                }
+                else if (bestiaryTarget.Monster is not null)
+                {
+                    world.Bestiary.TryDamage(world, bestiaryTarget.Monster.Id, 22f);
+                    FlashPosition = bestiaryTarget.Point;
+                    Message = $"{Current.Incantation} - TRAFIENIE: {bestiaryTarget.Monster.DisplayName.ToUpperInvariant()}";
                 }
                 else
                 {

@@ -28,6 +28,7 @@ public sealed class VeldridRenderer : IDisposable
     private readonly PostProcessRenderer _postProcess = new();
     private readonly PbrModelRenderer _pbrModels = new();
     private readonly FarVegetationRenderer _farVegetation = new();
+    private readonly CharacterRenderer _characters = new();
 
     private FidelityFxUpscaler? _fsr3Upscaler;
     private FidelityFxSceneFrameGeneration? _frameGeneration;
@@ -564,6 +565,13 @@ public sealed class VeldridRenderer : IDisposable
             new[] { _cameraLayout, _shadows.SampleLayout },
             sceneOutput));
 
+        _characters.Initialize(
+            factory,
+            vertexLayout,
+            _cameraLayout,
+            _shadows.SampleLayout,
+            sceneOutput);
+
         _hudScreenBuffer = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _hudVertexCapacity = 4096;
         _hudVertexBuffer = factory.CreateBuffer(new BufferDescription(
@@ -743,13 +751,23 @@ public sealed class VeldridRenderer : IDisposable
             _enemyModel,
             camera.Position,
             animationSeconds,
-            camera.Yaw,
+            camera.Mode == CameraMode.FirstPerson || world.Bow.IsAiming ? camera.Yaw : world.PlayerFacingYaw,
             camera.Mode != CameraMode.FirstPerson,
             _actorVertices,
             _actorIndices);
         WildlifeModelMesh.Append(
             world,
             _wildlifeModels,
+            animationSeconds,
+            camera.Position,
+            MathF.Min(
+                GraphicsQualityCatalog.RenderDistance(settings.RenderDistance),
+                110f),
+            _actorVertices,
+            _actorIndices);
+        BestiaryModelMesh.Append(
+            world,
+            _bestiaryModels,
             animationSeconds,
             camera.Position,
             MathF.Min(
@@ -772,6 +790,12 @@ public sealed class VeldridRenderer : IDisposable
             _worldItemModels,
             _actorVertices,
             _actorIndices);
+        SlavicFolkloreAtmosphereMesh.AppendCarvedTotems(
+            world,
+            camera.Position,
+            (float)animationSeconds,
+            _actorVertices,
+            _actorIndices);
         var opaqueDynamicVertexCount = _actorVertices.Count;
         var opaqueDynamicEnd = checked((uint)_actorIndices.Count);
 
@@ -789,6 +813,12 @@ public sealed class VeldridRenderer : IDisposable
         var transientStart = waterEnd;
         CampfireEffectMesh.Append(
             world,
+            (float)animationSeconds,
+            _actorVertices,
+            _actorIndices);
+        SlavicFolkloreAtmosphereMesh.AppendFolkloreGlows(
+            world,
+            camera.Position,
             (float)animationSeconds,
             _actorVertices,
             _actorIndices);
@@ -882,7 +912,7 @@ public sealed class VeldridRenderer : IDisposable
                 var top = (displayHeight - panelHeight) * 0.5f;
                 var half = panelWidth * 0.5f;
                 AddHudQuad(left, top, panelWidth, panelHeight, new Vector4(0.02f, 0.025f, 0.018f, 0.96f));
-                AddGameplayText("KUFER NA RYNKU", left + 18, top + 16, panelWidth - 36);
+                AddGameplayText(world.Loot.CurrentContainerTitle, left + 18, top + 16, panelWidth - 36);
                 var visibleRows = Math.Max(1, (int)((panelHeight - 165f) / 26f));
                 foreach (var side in new[] { SlavicGame.Engine.Gameplay.LootPanel.Container, SlavicGame.Engine.Gameplay.LootPanel.Inventory })
                 {
@@ -974,6 +1004,36 @@ public sealed class VeldridRenderer : IDisposable
                     panelLeft + 24,
                     panelTop + panelHeight - 32,
                     panelWidth - 48);
+            }
+            else if (world.Blacksmith.IsOpen)
+            {
+                var lines = world.Blacksmith.BuildLines(world);
+                var panelHeight = MathF.Min(380f, MathF.Max(240f, 175f + lines.Count * 44f));
+                var panelWidth = MathF.Min(820f, displayWidth - 40f);
+                var panelLeft = (displayWidth - panelWidth) * 0.5f;
+                var panelTop = (displayHeight - panelHeight) * 0.5f;
+
+                AddHudQuad(panelLeft, panelTop, panelWidth, panelHeight, new Vector4(0.025f, 0.02f, 0.018f, 0.95f));
+                AddHudQuad(panelLeft + 2f, panelTop + 2f, panelWidth - 4f, 36f, new Vector4(0.20f, 0.14f, 0.08f, 0.85f));
+
+                AddGameplayText("KUZNIA SLOWIANSKA - KOWALSTWO I ORĘŻ", panelLeft + 24, panelTop + 14, panelWidth - 48);
+
+                for (var i = 0; i < lines.Count; i++)
+                {
+                    var line = lines[i];
+                    var prefix = i == world.Blacksmith.SelectedIndex ? "> " : "  ";
+                    var status = line.CanCraft ? "MOZNA WYKUC" : "BRAK SUROWCOW";
+
+                    AddGameplayText($"{prefix}{line.DisplayName} [{line.Description}] / {status}", panelLeft + 34, panelTop + 54 + i * 44, panelWidth - 68);
+                    AddGameplayText($"  {line.RequirementsText}", panelLeft + 52, panelTop + 72 + i * 44, panelWidth - 90);
+                }
+
+                if (!string.IsNullOrWhiteSpace(world.Blacksmith.Message))
+                {
+                    AddGameplayText(world.Blacksmith.Message, panelLeft + 24, panelTop + panelHeight - 68, panelWidth - 48);
+                }
+
+                AddGameplayText("W/S WYBOR  E WYKUJ  B/ESC ZAMKNIJ", panelLeft + 24, panelTop + panelHeight - 32, panelWidth - 48);
             }
             else if (world.Vendors.IsOpen)
             {
@@ -1104,24 +1164,25 @@ public sealed class VeldridRenderer : IDisposable
             }
             else
             {
+                if (world.Progress.HasFlag(SlavicGame.Engine.Gameplay.ActOneCampaignSystem.MilestoneAct1Flag))
+                {
+                    AddHudQuad(displayWidth * 0.5f - 240f, 16f, 480f, 40f, new Vector4(0.12f, 0.08f, 0.02f, 0.90f));
+                    AddHudQuad(displayWidth * 0.5f - 238f, 18f, 476f, 36f, new Vector4(0.85f, 0.68f, 0.22f, 0.35f));
+                    AddGameplayText("★ UKONCZONO AKT I: SPLOT PRZEZNACZENIA (25% GRY) ★", displayWidth * 0.5f - 220f, 26f, 440f);
+                }
+
                 if (world.Enemies.Any(enemy => enemy.IsAttackWindingUp &&
                     Vector3.DistanceSquared(enemy.Position, world.PlayerPosition) < 36f))
-                    AddGameplayText("PRZECIWNIK: ZAMACH - WYJDZ Z ZASIEGU", 18, 386, displayWidth - 36);
-                AddGameplayText(world.Dodge.HudText(world), 18, 410, displayWidth - 36);
-                var currentSpellLearned = SlavicGame.Engine.Magic.SpellLessons.IsLearned(world, world.Magic.Current.Id);
-                AddGameplayText(
-                    currentSpellLearned
-                        ? $"Q CZAR: {world.Magic.Current.Name} / F RZUC / L NAUKA / R RYTUAL"
-                        : "Q CZAR: NIEPOZNANY / L NAUKA / R RYTUAL",
-                    18, 122, displayWidth - 36);
-                AddGameplayText(
-                    currentSpellLearned
-                        ? $"{world.Magic.Current.Incantation} / KOSZT {world.Magic.Current.Cost:0} / ODNOWIENIE {world.Magic.Cooldown:0.0}"
-                        : "INKANTACJA I KOSZT POZOSTAJA NIEZNANE",
-                    18, 146, displayWidth - 36);
-                AddGameplayText(world.Magic.Message, 18, 170, displayWidth - 36);
-                AddGameplayText(world.SpellLearning.Message, 18, 194, displayWidth - 36);
-                AddGameplayText(world.Rituals.Message, 18, 218, displayWidth - 36);
+                {
+                    AddGameplayText("PRZECIWNIK: ZAMACH - UNIKNIJ [SPACJA]", 18, 120, displayWidth - 36);
+                }
+
+                if (!string.IsNullOrWhiteSpace(world.Magic.Message))
+                    AddGameplayText(world.Magic.Message, 18, 144, displayWidth - 36);
+
+                if (!string.IsNullOrWhiteSpace(world.Rituals.Message))
+                    AddGameplayText(world.Rituals.Message, 18, 168, displayWidth - 36);
+
                 var interactionText =
                     world.QuestInteractions.Current?.Prompt ??
                     world.EnvironmentInteractions.Current?.Prompt;
@@ -1130,7 +1191,7 @@ public sealed class VeldridRenderer : IDisposable
                     interactionText = world.Bow.RetrievalPrompt(world);
 
                 if (string.IsNullOrWhiteSpace(interactionText) && world.Loot.CanOpenNearest(world))
-                    interactionText = "E OTWORZ KUFER";
+                    interactionText = world.Loot.CurrentContainerPrompt;
 
                 if (string.IsNullOrWhiteSpace(interactionText))
                     interactionText = world.NpcWorld.HudPrompt(world.PlayerPosition);
@@ -1159,16 +1220,38 @@ public sealed class VeldridRenderer : IDisposable
                             : interactionText + " / K ALCHEMIA";
                 }
 
-                if (!string.IsNullOrWhiteSpace(interactionText))
-                    AddGameplayText(interactionText, 18, 242, displayWidth - 36);
+                if (world.Blacksmith.CanOpenNearest(world))
+                {
+                    interactionText =
+                        string.IsNullOrWhiteSpace(interactionText)
+                            ? "B KOWALSTWO"
+                            : interactionText + " / B KOWALSTWO";
+                }
 
-                AddGameplayText(
-                    world.Bow.IsAiming
-                        ? world.Bow.HudText(world)
-                        : world.Melee.Message,
-                    18,
-                    266,
-                    displayWidth - 36);
+                if (!string.IsNullOrWhiteSpace(interactionText))
+                    AddGameplayText(interactionText, 18, displayHeight - 72f, displayWidth - 36);
+
+                if (world.Bow.IsAiming)
+                {
+                    var reticleX = displayWidth * 0.5f;
+                    var reticleY = displayHeight * 0.5f;
+                    var drawFraction = world.Bow.DrawFraction;
+                    var gap = MathF.Round(float.Lerp(12f, 4f, drawFraction));
+                    var length = MathF.Round(float.Lerp(8f, 6f, drawFraction));
+                    var reticle = drawFraction >= 0.95f
+                        ? new Vector4(1.0f, 0.88f, 0.40f, 0.95f)
+                        : new Vector4(0.92f, 0.92f, 0.86f, 0.92f);
+
+                    AddHudQuad(reticleX - 1.5f, reticleY - 1.5f, 3f, 3f, reticle);
+                    AddHudQuad(reticleX - gap - length, reticleY - 1f, length, 2f, reticle);
+                    AddHudQuad(reticleX + gap, reticleY - 1f, length, 2f, reticle);
+                    AddHudQuad(reticleX - 1f, reticleY - gap - length, 2f, length, reticle);
+                    AddHudQuad(reticleX - 1f, reticleY + gap, 2f, length, reticle);
+
+                    AddGameplayText(world.Bow.HudText(world), 18, 144, displayWidth - 36);
+                    if (!string.IsNullOrWhiteSpace(world.Bow.Message))
+                        AddGameplayText(world.Bow.Message, 18, 168, displayWidth - 36);
+                }
 
                 var predatorEncounter = world.Progress.Encounters.Get(
                     SlavicGame.Engine.Gameplay.SwampPredatorEncounter.Id);
@@ -1186,47 +1269,30 @@ public sealed class VeldridRenderer : IDisposable
                             ? $"DRAPIEZNIK HP {predator.Health:0}/{predator.MaxHealth:0}"
                             : "DRAPIEZNIK POKONANY",
                         18,
-                        290,
+                        192,
                         displayWidth - 36);
                 }
 
-                if (!string.IsNullOrWhiteSpace(world.WaterInteraction.HudStatus))
+                if (world.Springs.HasBlessedWater)
                 {
                     AddGameplayText(
-                        world.WaterInteraction.HudStatus,
+                        $"ZYWA WODA: +50% ENERGII ({(int)Math.Ceiling(world.Springs.BlessedWaterBuffRemainingSeconds)}s)",
                         18,
-                        314,
+                        216,
                         displayWidth - 36);
                 }
+            }
 
-                var wildlifeTrackStatus =
-                    world.WildlifeTracks.HudStatus(world);
-                if (!string.IsNullOrWhiteSpace(wildlifeTrackStatus))
-                {
-                    AddGameplayText(
-                        wildlifeTrackStatus,
-                        18,
-                        338,
-                        displayWidth - 36);
-                }
-
-                if (world.Bow.IsAiming)
-                {
-                    var reticleX = displayWidth * 0.5f;
-                    var reticleY = displayHeight * 0.5f;
-                    var reticle = new Vector4(0.92f, 0.92f, 0.86f, 0.92f);
-
-                    AddHudQuad(reticleX - 13f, reticleY - 1f, 9f, 2f, reticle);
-                    AddHudQuad(reticleX + 4f, reticleY - 1f, 9f, 2f, reticle);
-                    AddHudQuad(reticleX - 1f, reticleY - 13f, 2f, 9f, reticle);
-                    AddHudQuad(reticleX - 1f, reticleY + 4f, 2f, 9f, reticle);
-
-                    AddGameplayText(
-                        world.Bow.Message,
-                        18,
-                        362,
-                        displayWidth - 36);
-                }
+            if (!world.Cinematics.IsPlaying && settings.ShowMinimap)
+            {
+                MinimapRenderer.Render(
+                    world,
+                    camera,
+                    displayWidth,
+                    displayHeight,
+                    AddHudQuad,
+                    AddHudTriangle,
+                    AddHudText);
             }
         }
         if (_hudVertices.Count > _hudVertexCapacity)
@@ -1460,15 +1526,30 @@ public sealed class VeldridRenderer : IDisposable
                     GraphicsQualityCatalog.VegetationDistance(settings.VegetationDistance)));
         }
 
-        _commandList.SetPipeline(_actorPipeline);
-        _commandList.SetGraphicsResourceSet(0, _cameraSet);
-        _commandList.SetGraphicsResourceSet(1, _shadows.SampleSet);
-
-        if (_actorIndexCount > 0)
+        if (opaqueDynamicEnd > 0)
         {
+            _characters.Render(
+                _commandList,
+                _cameraSet,
+                _shadows.SampleSet,
+                _actorVertexBuffer,
+                _actorIndexBuffer,
+                opaqueDynamicEnd);
+        }
+
+        if (_actorIndexCount > opaqueDynamicEnd)
+        {
+            _commandList.SetPipeline(_actorPipeline);
+            _commandList.SetGraphicsResourceSet(0, _cameraSet);
+            _commandList.SetGraphicsResourceSet(1, _shadows.SampleSet);
             _commandList.SetVertexBuffer(0, _actorVertexBuffer);
             _commandList.SetIndexBuffer(_actorIndexBuffer, IndexFormat.UInt32);
-            _commandList.DrawIndexed(_actorIndexCount);
+            _commandList.DrawIndexed(
+                _actorIndexCount - opaqueDynamicEnd,
+                instanceCount: 1,
+                indexStart: opaqueDynamicEnd,
+                vertexOffset: 0,
+                instanceStart: 0);
         }
 
         // Sky last among opaque passes: depth-tested at the far plane so its
@@ -1903,19 +1984,22 @@ public sealed class VeldridRenderer : IDisposable
             staminaRatio <= 0.18f
                 ? new Vector4(0.88f, 0.76f, 0.20f, 1f)
                 : new Vector4(0.72f, 0.58f, 0.18f, 0.95f));
-        AddGameplayText($"HP {health:0}/{maxHealth:0}", barX, 58f, 180f);
-        AddGameplayText($"STAMINA {stamina:0}/{maxStamina:0}", barX, 108f, 236f);
-
         var warningPulse = ((int)Math.Floor(animationSeconds * 4.0)) % 2 == 0;
         if (healthRatio <= 0.25f && warningPulse)
-            AddGameplayText("UWAGA: KRYTYCZNE ZYCIE", barX, 132f, 360f);
+            AddGameplayText("UWAGA: KRYTYCZNE ZYCIE", barX, 112f, 360f);
         if (staminaRatio <= 0.18f && warningPulse)
-            AddGameplayText("UWAGA: BRAK STAMINY", barX, 156f, 360f);
+            AddGameplayText("UWAGA: BRAK STAMINY", barX, 134f, 360f);
     }
 
     private void AddGameplayText(string text, float x, float y, float availableWidth)
     {
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
         var preparedText = BitmapFont.Prepare(text);
+        if (string.IsNullOrWhiteSpace(preparedText))
+            return;
+
         var width = preparedText.Length * BitmapFont.Advance;
         var scale = Math.Clamp(availableWidth / Math.Max(1, width), 0.8f, 2f);
         var (top, bottom) = BitmapFont.VerticalBounds(preparedText);
@@ -1966,6 +2050,54 @@ public sealed class VeldridRenderer : IDisposable
         _hudVertices.Add(new HudVertex(new Vector2(x0, y0), color));
         _hudVertices.Add(new HudVertex(new Vector2(x1, y1), color));
         _hudVertices.Add(new HudVertex(new Vector2(x0, y1), color));
+    }
+
+    private void AddHudTriangle(Vector2 a, Vector2 b, Vector2 c, Vector4 color)
+    {
+        _hudVertices.Add(new HudVertex(a, color));
+        _hudVertices.Add(new HudVertex(b, color));
+        _hudVertices.Add(new HudVertex(c, color));
+    }
+
+    private void AddHudText(
+        string text,
+        float x,
+        float y,
+        float scale,
+        Vector4 color,
+        bool withBackground = false,
+        Vector4? backgroundColor = null)
+    {
+        var preparedText = BitmapFont.Prepare(text);
+        var width = preparedText.Length * BitmapFont.Advance;
+        var (top, bottom) = BitmapFont.VerticalBounds(preparedText);
+        if (withBackground)
+        {
+            var bg = backgroundColor ?? new Vector4(0f, 0f, 0f, 0.72f);
+            AddHudQuad(x - 3f, y + top * scale - 2f, width * scale + 6f, (bottom - top) * scale + 4f, bg);
+        }
+        foreach (var character in preparedText)
+        {
+            if (BitmapFont.Glyphs.TryGetValue(character, out var glyph))
+            {
+                for (var row = 0; row < glyph.Rows.Length; row++)
+                for (var col = 0; col < BitmapFont.Width; col++)
+                {
+                    if ((glyph.Rows[row] & (1 << (BitmapFont.Width - 1 - col))) != 0)
+                    {
+                        var px = x + col * scale;
+                        var py = y + (glyph.TopOffset + row) * scale;
+                        _hudVertices.Add(new HudVertex(new Vector2(px, py), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px + scale, py), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px + scale, py + scale), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px, py), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px + scale, py + scale), color));
+                        _hudVertices.Add(new HudVertex(new Vector2(px, py + scale), color));
+                    }
+                }
+            }
+            x += BitmapFont.Advance * scale;
+        }
     }
 
     private static RgbaFloat GetAtmosphereColor(
@@ -2324,6 +2456,7 @@ public sealed class VeldridRenderer : IDisposable
         _terrain.Dispose();
         _pbrModels.Dispose();
         _farVegetation.Dispose();
+        _characters.Dispose();
 
         _hudPipeline?.Dispose();
         _hudSet?.Dispose();

@@ -64,6 +64,15 @@ EnemyRenderedHitRegression.Run(Check);
 EnemyAttackTelegraphRegression.Run(Check);
 PlayerDodgeRegression.Run(Check);
 PlayerJumpRegression.Run(Check);
+MinimapRegression.Run(Check);
+SlavicShrineAndWagonRegression.Run(Check);
+SlavicBestiaryRegression.Run(Check);
+ActOneCampaignMilestoneRegression.Run(Check);
+SlavicBlacksmithAndActTwoRegression.Run(Check);
+PlayerCharacterAndBowOverhaulRegression.Run(Check);
+SlavicHerbalismAndActTwoQuestsRegression.Run(Check);
+ActTwoCampaignFinaleRegression.Run(Check);
+ActThreeCampaignFinaleRegression.Run(Check);
 
 // River terrain and water must form one sloped channel; animation has to read downstream.
 var riverTerrain = new Terrain(513, 513, 4f);

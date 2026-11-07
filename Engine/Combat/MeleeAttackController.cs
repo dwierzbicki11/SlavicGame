@@ -25,6 +25,14 @@ public sealed class MeleeAttackController
     public AttackDefinition? CurrentAttack => _attack;
     public bool CanDealDamage => State == MeleeAttackState.ActiveAttack;
 
+    public void Reset()
+    {
+        State = MeleeAttackState.Free;
+        _attack = null;
+        _stateRemaining = 0;
+        _hitTargets.Clear();
+    }
+
     public bool TryStart(AttackDefinition attack, PlayerVitals vitals)
     {
         ArgumentNullException.ThrowIfNull(attack);

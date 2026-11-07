@@ -27,15 +27,29 @@ public static class NpcRoutineMotion
                 false);
         }
 
-        var phase =
-            PositiveModulo(
+        var workstation = NpcWorkstationCatalog.Find(npcId, activity);
+        float phase;
+        if (workstation is not null)
+        {
+            var wsPhase = NpcWorkstationCatalog.SamplePhase(
+                workstation,
+                timeOfDayHours);
+            phase = wsPhase < workstation.WorkFraction
+                ? 0f
+                : (float)((wsPhase - workstation.WorkFraction) /
+                          Math.Max(1.0 - workstation.WorkFraction, 0.0001));
+        }
+        else
+        {
+            phase = (float)PositiveModulo(
                 timeOfDayHours / route.CycleHours +
                 StablePhase(npcId),
                 1.0);
+        }
 
         var sample = SampleClosedRoute(
             route.Points,
-            (float)phase);
+            phase);
 
         return new NpcRoutineSample(
             sample.Position,
@@ -49,197 +63,194 @@ public static class NpcRoutineMotion
         (npcId, activity) switch
         {
             ("missing-family", "home-and-search") => new(
-                0.34,
+                0.65,
                 [
-                    new Vector2(-6f, -84f),
-                    new Vector2(-11f, -80f),
-                    new Vector2(-15f, -85f),
-                    new Vector2(-10f, -89f)
+                    new Vector2(-5.5f, -83.5f),
+                    new Vector2(-10f, -82.5f),
+                    new Vector2(-15.2f, -83.5f),
+                    new Vector2(-15.2f, -88.0f)
                 ]),
 
             ("crossing-keeper", "maintain-crossing") => new(
-                0.28,
+                0.45,
                 [
-                    new Vector2(91f, 41f),
-                    new Vector2(95f, 43f),
-                    new Vector2(99f, 40f),
-                    new Vector2(96f, 36f),
-                    new Vector2(92f, 37f)
+                    new Vector2(94.2f, 40.8f),
+                    new Vector2(95.4f, 41.4f),
+                    new Vector2(95.6f, 40.1f),
+                    new Vector2(94.4f, 39.8f)
                 ]),
 
             ("herbalist", "trade-and-prepare") => new(
-                0.36,
+                0.45,
                 [
-                    new Vector2(5f, -92f),
-                    new Vector2(2f, -88f),
-                    new Vector2(7f, -86f),
-                    new Vector2(10f, -91f)
+                    new Vector2(5.0f, -92.0f),
+                    new Vector2(4.2f, -90.8f),
+                    new Vector2(5.4f, -90.2f),
+                    new Vector2(6.2f, -91.6f)
                 ]),
 
             ("community-guard", "patrol") => new(
-                0.62,
+                1.65,
                 [
-                    new Vector2(1f, -106f),
-                    new Vector2(20f, -104f),
-                    new Vector2(27f, -88f),
-                    new Vector2(19f, -72f),
+                    new Vector2(0.5f, -105f),
+                    new Vector2(18f, -104f),
+                    new Vector2(26f, -87f),
+                    new Vector2(19f, -71f),
                     new Vector2(2f, -68f),
-                    new Vector2(-19f, -72f),
-                    new Vector2(-27f, -88f),
-                    new Vector2(-17f, -103f)
+                    new Vector2(-19f, -71f),
+                    new Vector2(-22f, -86f),
+                    new Vector2(-16f, -103f)
                 ]),
 
             ("community-guard", "night-watch") => new(
-                0.48,
+                1.10,
                 [
-                    new Vector2(-2f, -105f),
-                    new Vector2(9f, -105f),
-                    new Vector2(14f, -94f),
-                    new Vector2(2f, -88f),
-                    new Vector2(-10f, -96f)
+                    new Vector2(-1.5f, -105f),
+                    new Vector2(9f, -104f),
+                    new Vector2(13f, -92f),
+                    new Vector2(2f, -86f),
+                    new Vector2(-8f, -95f)
                 ]),
 
             ("shrine-keeper", "tend-shrine") => new(
-                0.42,
+                0.75,
                 [
                     new Vector2(-82f, 58f),
-                    new Vector2(-80f, 53f),
-                    new Vector2(-85f, 50f),
-                    new Vector2(-90f, 53f),
-                    new Vector2(-89f, 59f)
+                    new Vector2(-81.5f, 52.5f),
+                    new Vector2(-85f, 51.8f),
+                    new Vector2(-88.5f, 52.5f),
+                    new Vector2(-88.5f, 58f)
                 ]),
 
             ("settler-farmer-01", "go-to-fields") => new(
-                0.30,
+                0.85,
                 [
                     new Vector2(-20f, -92f),
                     new Vector2(-22f, -83f),
                     new Vector2(-25f, -75f),
-                    new Vector2(-25f, -70f)
+                    new Vector2(-29.0f, -69.4f)
                 ]),
 
             ("settler-farmer-01", "field-work") => new(
-                0.38,
+                0.45,
                 [
-                    new Vector2(-25f, -70f),
-                    new Vector2(-31f, -66f),
-                    new Vector2(-34f, -72f),
-                    new Vector2(-29f, -77f)
+                    new Vector2(-29.0f, -69.4f),
+                    new Vector2(-27.8f, -68.6f),
+                    new Vector2(-27.6f, -70.1f),
+                    new Vector2(-28.8f, -70.6f)
                 ]),
 
             ("settler-farmer-02", "field-work") => new(
-                0.41,
+                0.45,
                 [
-                    new Vector2(-30f, -76f),
-                    new Vector2(-36f, -72f),
-                    new Vector2(-38f, -65f),
-                    new Vector2(-32f, -61f),
-                    new Vector2(-27f, -68f)
+                    new Vector2(-34.1f, -67.2f),
+                    new Vector2(-32.9f, -66.4f),
+                    new Vector2(-32.7f, -67.8f),
+                    new Vector2(-33.8f, -68.4f)
                 ]),
 
             ("settler-woodworker-01", "wood-work") => new(
-                0.26,
+                0.40,
                 [
-                    new Vector2(15f, -97f),
-                    new Vector2(18f, -94f),
-                    new Vector2(22f, -96f),
-                    new Vector2(19f, -101f)
+                    new Vector2(15.2f, -97.2f),
+                    new Vector2(16.3f, -96.8f),
+                    new Vector2(16.2f, -98.0f),
+                    new Vector2(14.9f, -98.1f)
                 ]),
 
             ("settler-potter-01", "craft-work") => new(
-                0.31,
+                0.42,
                 [
-                    new Vector2(-7f, -74f),
-                    new Vector2(-4f, -72f),
-                    new Vector2(-2f, -76f),
-                    new Vector2(-6f, -78f)
+                    new Vector2(-6.7f, -74.8f),
+                    new Vector2(-5.6f, -74.5f),
+                    new Vector2(-5.7f, -75.7f),
+                    new Vector2(-6.9f, -75.8f)
                 ]),
 
             ("settler-trader-01", "market-trade") => new(
-                0.32,
+                0.45,
                 [
-                    new Vector2(3f, -75f),
-                    new Vector2(-1f, -73f),
-                    new Vector2(-5f, -76f),
-                    new Vector2(0f, -79f),
-                    new Vector2(5f, -78f)
+                    new Vector2(2.7f, -75.2f),
+                    new Vector2(2.2f, -74.0f),
+                    new Vector2(3.4f, -74.2f),
+                    new Vector2(3.5f, -75.6f)
                 ]),
 
             ("settler-carrier-01", "carry-goods") => new(
-                0.44,
+                1.20,
                 [
-                    new Vector2(15f, -95f),
-                    new Vector2(11f, -86f),
+                    new Vector2(14f, -94f),
+                    new Vector2(10f, -86f),
                     new Vector2(4f, -79f),
-                    new Vector2(-5f, -76f),
-                    new Vector2(-12f, -82f),
-                    new Vector2(-4f, -90f),
-                    new Vector2(7f, -94f)
+                    new Vector2(-5f, -79f),
+                    new Vector2(-13f, -82f),
+                    new Vector2(-3f, -91f),
+                    new Vector2(8f, -91f)
                 ]),
 
             ("settler-elder-01", "village-square") => new(
-                0.52,
+                0.85,
                 [
                     new Vector2(-3f, -84f),
                     new Vector2(2f, -82f),
                     new Vector2(4f, -87f),
                     new Vector2(-1f, -90f),
-                    new Vector2(-6f, -87f)
+                    new Vector2(-5f, -86f)
                 ]),
 
             ("settler-traveler-01", "arrive-and-trade") => new(
-                0.36,
+                1.25,
                 [
-                    new Vector2(2f, -109f),
-                    new Vector2(2f, -101f),
-                    new Vector2(3f, -92f),
-                    new Vector2(3f, -83f),
-                    new Vector2(3f, -75f)
+                    new Vector2(0.8f, -109f),
+                    new Vector2(1.2f, -101f),
+                    new Vector2(2.5f, -92f),
+                    new Vector2(3.0f, -83f),
+                    new Vector2(3.2f, -75f)
                 ]),
 
             ("settler-smith-helper-01", "forge-work") => new(
-                0.27,
+                0.40,
                 [
-                    new Vector2(22f, -91f),
-                    new Vector2(19f, -88f),
-                    new Vector2(24f, -89f),
-                    new Vector2(17f, -96f)
+                    new Vector2(19.6f, -87.2f),
+                    new Vector2(18.4f, -87.0f),
+                    new Vector2(18.3f, -88.1f),
+                    new Vector2(19.5f, -88.2f)
                 ]),
 
             ("settler-weaver-01", "weave-work") => new(
-                0.34,
+                0.42,
                 [
-                    new Vector2(-17f, -78f),
-                    new Vector2(-13f, -80f),
-                    new Vector2(-18f, -84f),
-                    new Vector2(-22f, -81f)
+                    new Vector2(-16.4f, -76.5f),
+                    new Vector2(-15.3f, -76.2f),
+                    new Vector2(-15.3f, -77.4f),
+                    new Vector2(-16.3f, -77.5f)
                 ]),
 
             ("settler-shepherd-01", "drive-flock") => new(
-                0.42,
+                0.90,
                 [
-                    new Vector2(24f, -80f),
-                    new Vector2(25f, -74f),
-                    new Vector2(27f, -68f),
-                    new Vector2(30f, -64f)
+                    new Vector2(21.5f, -80f),
+                    new Vector2(21.5f, -74f),
+                    new Vector2(25f, -68f),
+                    new Vector2(29f, -64f)
                 ]),
 
             ("settler-shepherd-01", "graze-flock") => new(
-                0.58,
+                1.10,
                 [
-                    new Vector2(30f, -64f),
-                    new Vector2(36f, -61f),
-                    new Vector2(39f, -68f),
-                    new Vector2(33f, -72f),
+                    new Vector2(29f, -64f),
+                    new Vector2(36f, -56f),
+                    new Vector2(39f, -62f),
+                    new Vector2(35f, -68f),
                     new Vector2(27f, -68f)
                 ]),
 
             ("settler-gatherer-01", "gather-herbs") => new(
-                0.74,
+                1.80,
                 [
-                    new Vector2(10f, -98f),
+                    new Vector2(11f, -94f),
                     new Vector2(2f, -89f),
-                    new Vector2(-9f, -76f),
+                    new Vector2(-8f, -76f),
                     new Vector2(-21f, -65f),
                     new Vector2(-34f, -56f),
                     new Vector2(-27f, -48f),
@@ -247,16 +258,16 @@ public static class NpcRoutineMotion
                 ]),
 
             ("settler-gatherer-01", "sort-herbs") => new(
-                0.30,
+                0.42,
                 [
-                    new Vector2(7f, -90f),
-                    new Vector2(4f, -88f),
-                    new Vector2(8f, -85f),
-                    new Vector2(11f, -90f)
+                    new Vector2(7.0f, -90.0f),
+                    new Vector2(6.0f, -89.8f),
+                    new Vector2(6.2f, -90.9f),
+                    new Vector2(7.3f, -90.8f)
                 ]),
 
             ("settler-fisher-01", "river-fishing") => new(
-                0.52,
+                0.95,
                 [
                     new Vector2(103f, 29f),
                     new Vector2(108f, 26f),
@@ -267,70 +278,72 @@ public static class NpcRoutineMotion
                 ]),
 
             ("settler-fisher-01", "mend-nets") => new(
-                0.33,
+                0.42,
                 [
-                    new Vector2(20f, -75f),
-                    new Vector2(24f, -77f),
-                    new Vector2(23f, -82f),
-                    new Vector2(18f, -80f)
+                    new Vector2(20.0f, -75.3f),
+                    new Vector2(19.0f, -75.6f),
+                    new Vector2(19.2f, -76.6f),
+                    new Vector2(20.3f, -76.3f)
                 ]),
 
             ("settler-youth-01", "run-errands") => new(
-                0.39,
+                1.55,
                 [
                     new Vector2(-1f, -84f),
-                    new Vector2(20f, -90f),
-                    new Vector2(4f, -75f),
-                    new Vector2(-19f, -81f),
-                    new Vector2(-4f, -101f),
-                    new Vector2(15f, -95f)
+                    new Vector2(8f, -85f),
+                    new Vector2(17f, -86f),
+                    new Vector2(6f, -73f),
+                    new Vector2(-8f, -73f),
+                    new Vector2(-15f, -83f),
+                    new Vector2(-2f, -94f),
+                    new Vector2(12f, -91f)
                 ]),
 
             ("settler-farmer-01", "shelter-storm") => ShelterRoute(
-                new Vector2(-20f, -92f),
-                new Vector2(-25f, -90f)),
+                new Vector2(-20f, -93.5f),
+                new Vector2(-22f, -90.5f)),
             ("settler-farmer-02", "shelter-storm") => ShelterRoute(
-                new Vector2(-24f, -98f),
-                new Vector2(-27f, -94f)),
+                new Vector2(-19.2f, -97.5f),
+                new Vector2(-19.5f, -94.0f)),
             ("settler-woodworker-01", "shelter-storm") => ShelterRoute(
-                new Vector2(20f, -101f),
-                new Vector2(22f, -96f)),
+                new Vector2(17.5f, -95.0f),
+                new Vector2(16.0f, -92.5f)),
             ("settler-potter-01", "shelter-storm") => ShelterRoute(
-                new Vector2(-13f, -90f),
-                new Vector2(-8f, -88f)),
+                new Vector2(-5.2f, -89.5f),
+                new Vector2(-4.5f, -86.5f)),
             ("settler-trader-01", "shelter-storm") => ShelterRoute(
-                new Vector2(8f, -88f),
-                new Vector2(4f, -84f)),
+                new Vector2(8.0f, -88.0f),
+                new Vector2(4.5f, -84.5f)),
             ("settler-carrier-01", "shelter-storm") => ShelterRoute(
-                new Vector2(15f, -95f),
-                new Vector2(11f, -91f)),
+                new Vector2(12.5f, -94.5f),
+                new Vector2(11.0f, -91.0f)),
             ("settler-elder-01", "shelter-storm") => ShelterRoute(
-                new Vector2(-12f, -86f),
-                new Vector2(-7f, -86f)),
+                new Vector2(-9.5f, -83.2f),
+                new Vector2(-6.5f, -83.5f)),
             ("settler-traveler-01", "shelter-storm") => ShelterRoute(
-                new Vector2(18f, -76f),
-                new Vector2(12f, -80f)),
+                new Vector2(17.8f, -75.5f),
+                new Vector2(17.5f, -79.5f)),
             ("settler-smith-helper-01", "shelter-storm") => ShelterRoute(
-                new Vector2(17f, -99f),
-                new Vector2(21f, -94f)),
+                new Vector2(17.5f, -88.5f),
+                new Vector2(17.8f, -91.5f)),
             ("settler-weaver-01", "shelter-storm") => ShelterRoute(
-                new Vector2(-21f, -94f),
-                new Vector2(-17f, -89f)),
+                new Vector2(-15.2f, -80.0f),
+                new Vector2(-14.5f, -77.5f)),
             ("settler-shepherd-01", "shelter-storm") => ShelterRoute(
-                new Vector2(24f, -80f),
-                new Vector2(26f, -84f)),
+                new Vector2(21.5f, -76.0f),
+                new Vector2(21.5f, -79.5f)),
             ("settler-gatherer-01", "shelter-storm") => ShelterRoute(
-                new Vector2(10f, -98f),
-                new Vector2(8f, -94f)),
+                new Vector2(10.8f, -95.5f),
+                new Vector2(10.5f, -92.5f)),
             ("settler-fisher-01", "shelter-storm") => ShelterRoute(
-                new Vector2(24f, -82f),
-                new Vector2(21f, -84f)),
+                new Vector2(21.0f, -82.5f),
+                new Vector2(19.5f, -84.5f)),
             ("settler-fisher-01", "shelter-storm-swamp") => ShelterRoute(
                 new Vector2(111f, 27f),
                 new Vector2(99f, 39f)),
             ("settler-youth-01", "shelter-storm") => ShelterRoute(
-                new Vector2(6f, -96f),
-                new Vector2(4f, -92f)),
+                new Vector2(4.5f, -91.8f),
+                new Vector2(2.5f, -91.5f)),
 
             _ => null
         };
